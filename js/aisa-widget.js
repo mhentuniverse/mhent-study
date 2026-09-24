@@ -270,9 +270,74 @@
             padding: 10px 14px;
             border-radius: 16px;
             font-size: 0.88rem;
-            line-height: 1.45;
+            line-height: 1.5;
             word-break: break-word;
+            overflow-wrap: break-word;
             animation: aisaPop 0.25s ease-out;
+        }
+
+        .aisa-bubble strong {
+            font-weight: 800;
+            color: inherit;
+        }
+
+        .aisa-bubble em {
+            font-style: italic;
+            color: inherit;
+        }
+
+        .aisa-bullet-row {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin: 3px 0;
+        }
+
+        .aisa-bullet-dot {
+            color: currentColor;
+            opacity: 0.85;
+            font-size: 14px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .aisa-bullet-num {
+            color: currentColor;
+            opacity: 0.9;
+            font-weight: 700;
+            font-size: 13px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .aisa-bullet-text {
+            flex: 1;
+        }
+
+        .aisa-inline-code {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+            padding: 1px 5px;
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #f472b6;
+        }
+
+        .aisa-code-block {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin: 6px 0;
+            overflow-x: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .aisa-link {
+            color: #38bdf8;
+            font-weight: 700;
+            text-decoration: underline;
         }
 
         .aisa-bubble-user {
@@ -382,6 +447,7 @@
             background: rgba(15, 23, 42, 0.9);
             border-top: 1px solid var(--aisa-border);
             display: flex;
+            align-items: flex-end;
             gap: 8px;
         }
 
@@ -395,6 +461,11 @@
             font-size: 0.88rem;
             outline: none;
             font-family: inherit;
+            resize: none;
+            height: 38px;
+            max-height: 100px;
+            line-height: 1.4;
+            box-sizing: border-box;
         }
 
         .aisa-input:focus { border-color: #ec4899; }
@@ -404,6 +475,7 @@
             border: none;
             border-radius: 12px;
             padding: 0 14px;
+            height: 38px;
             color: #ffffff;
             font-weight: 700;
             cursor: pointer;
@@ -454,11 +526,11 @@
             <div class="aisa-messages" id="aisaMessages">
                 <div class="aisa-bubble aisa-bubble-harmony">
                     <div class="aisa-speaker-tag aisa-tag-harmony">🌸 Harmony</div>
-                    ${escapeHtml(currentContext.harmony)}
+                    ${formatRichText(currentContext.harmony)}
                 </div>
                 <div class="aisa-bubble aisa-bubble-echo">
                     <div class="aisa-speaker-tag aisa-tag-echo">😈 Echo</div>
-                    ${escapeHtml(currentContext.echo)}
+                    ${formatRichText(currentContext.echo)}
                 </div>
             </div>
 
@@ -467,7 +539,7 @@
             </div>
 
             <form class="aisa-footer" id="aisaChatForm">
-                <input type="text" class="aisa-input" id="aisaUserInput" placeholder="Nhắn gửi AISA..." autocomplete="off">
+                <textarea class="aisa-input" id="aisaUserInput" rows="1" placeholder="Nhắn gửi AISA... (Shift+Enter để xuống dòng)" autocomplete="off"></textarea>
                 <button type="submit" class="aisa-btn-send" id="aisaBtnSend">Gửi →</button>
             </form>
         </div>
@@ -511,6 +583,18 @@
         submitMessage();
     };
 
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            submitMessage();
+        }
+    });
+
+    input.addEventListener('input', () => {
+        input.style.height = 'auto';
+        input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+    });
+
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         submitMessage();
@@ -523,9 +607,10 @@
         // Render user message
         const uBubble = document.createElement('div');
         uBubble.className = 'aisa-bubble aisa-bubble-user';
-        uBubble.textContent = msg;
+        uBubble.innerHTML = formatRichText(msg);
         messagesEl.appendChild(uBubble);
         input.value = '';
+        input.style.height = 'auto';
         messagesEl.scrollTop = messagesEl.scrollHeight;
 
         // Typing indicator
@@ -564,7 +649,7 @@
                         <div class="aisa-speaker-tag ${isHarmony ? 'aisa-tag-harmony' : 'aisa-tag-echo'}">
                             ${rep.avatar || (isHarmony ? '🌸' : '😈')} ${isHarmony ? 'Harmony' : 'Echo'}
                         </div>
-                        ${escapeHtml(rep.text)}
+                        ${formatRichText(rep.text)}
                     `;
                     messagesEl.appendChild(botBubble);
                 });
@@ -583,9 +668,54 @@
         }
     }
 
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+    function formatRichText(raw) {
+        if (!raw) return "";
+
+        let text = String(raw).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+        text = text.replace(/([^\n])\s+([*•\-])\s+(?=[^\s])/g, '$1\n$2 ');
+
+        const escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        text = text.replace(/[&<>"']/g, ch => escapeMap[ch]);
+
+        text = text.replace(/```(?:[a-zA-Z0-9_\-]+)?\n?([\s\S]*?)```/g, (m, code) => `<pre class="aisa-code-block"><code>${code.trim()}</code></pre>`);
+        text = text.replace(/`([^`\n]+)`/g, '<code class="aisa-inline-code">$1</code>');
+        text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="aisa-link">$1</a>');
+        text = text.replace(/(\*\*\*|___)(.*?)\1/g, '<strong><em>$2</em></strong>');
+        text = text.replace(/(\*\*|__)(.*?)\1/g, '<strong>$2</strong>');
+        text = text.replace(/\*([^\s\*](?:[^\*\n]*?[^\s\*])?)\*/g, '<em>$1</em>');
+        text = text.replace(/(^|[\s(])_([^\s_](?:[^_\n]*?[^\s_])?)_([^\w]|$)/g, '$1<em>$2</em>$3');
+        text = text.replace(/~~(.*?)~~/g, '<del>$1</del>');
+        text = text.replace(/(@AISA|@Harmony|@Echo)/gi, '<span style="color: #ec4899; font-weight: 800;">$1</span>');
+
+        const lines = text.split('\n');
+        const formattedLines = lines.map(line => {
+            const trimmed = line.trim();
+            if (/^[*•\-]\s+/.test(trimmed)) {
+                const content = trimmed.replace(/^[*•\-]\s+/, '');
+                return `<div class="aisa-bullet-row"><span class="aisa-bullet-dot">•</span><div class="aisa-bullet-text">${content}</div></div>`;
+            }
+            const numMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
+            if (numMatch) {
+                return `<div class="aisa-bullet-row"><span class="aisa-bullet-num">${numMatch[1]}.</span><div class="aisa-bullet-text">${numMatch[2]}</div></div>`;
+            }
+            return line;
+        });
+
+        let result = "";
+        for (let i = 0; i < formattedLines.length; i++) {
+            const curr = formattedLines[i];
+            if (i > 0) {
+                const prev = formattedLines[i - 1];
+                const currIsBlock = curr.startsWith('<div class="aisa-bullet-row">') || curr.startsWith('<pre class="aisa-code-block">');
+                const prevIsBlock = prev.startsWith('<div class="aisa-bullet-row">') || prev.startsWith('<pre class="aisa-code-block">');
+                if (!currIsBlock && !prevIsBlock) {
+                    result += "<br>";
+                } else if (!currIsBlock && prevIsBlock) {
+                    result += "<br>";
+                }
+            }
+            result += curr;
+        }
+        return result;
     }
 })();
