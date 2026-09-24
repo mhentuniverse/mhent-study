@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng 44 Âm Phiên Âm Quốc Tế IPA | MHEnt. Study</title>
+    <link rel="icon" type="image/png" sizes="48x48" href="/assets/icon-web.png">
+    <link rel="stylesheet" href="/css/study-core.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .char-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 12px; margin-bottom: 25px; }
+        .char-card { background: var(--study-surface); border: 1px solid var(--study-border); border-radius: 14px; padding: 14px 8px; text-align: center; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 4px; box-shadow: var(--study-shadow); }
+        .char-card:hover { transform: translateY(-3px); border-color: #6366f1; box-shadow: 0 8px 20px rgba(99, 102, 241, 0.2); }
+        .char-main { font-size: 24px; font-weight: 900; color: var(--study-text); font-family: sans-serif; }
+        .char-sub { font-size: 13px; font-weight: 700; color: #6366f1; }
+    </style>
+</head>
+<body class="theme-edu">
+
+    <nav class="study-nav">
+        <a href="/" class="nav-brand-box">
+            <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="brand-avatar">
+            <div class="brand-title-wrap">
+                <span class="brand-main-title">MHEnt. <span>Study</span></span>
+                <span class="brand-sub-badge">ENGLISH SPACE</span>
+            </div>
+        </a>
+        <div class="nav-study-links">
+            <a href="/" class="study-link">Tổng quan</a>
+            <a href="/en/index.html" class="study-link active">🇬🇧 Tiếng Anh</a>
+            <a href="/en/practice/vocab.html" class="study-link">Sổ từ vựng</a>
+            <a href="/en/exam.html" class="study-link">Thi thử AI</a>
+        </div>
+        <div class="nav-study-actions">
+            <button class="theme-toggle-btn" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
+            <a href="/en/index.html" class="auth-btn-pill" style="background: #6366f1;"><i class="fa-solid fa-arrow-left"></i> Về Hub Anh</a>
+        </div>
+    </nav>
+
+    <div class="study-breadcrumb-bar">
+        <div class="breadcrumb-nav">
+            <a href="/">Trang chủ</a> <span>/</span>
+            <a href="/en/index.html">🇬🇧 Tiếng Anh</a> <span>/</span>
+            <span class="current">Bảng 44 Âm Phiên Âm Quốc Tế (IPA)</span>
+        </div>
+        <span style="font-size: 13px; color: var(--study-text-muted);">💡 Nhấp vào từng âm để nghe phát âm mẫu</span>
+    </div>
+
+    <main class="study-wrapper">
+        <h2 style="font-size: 20px; font-weight: 900; margin-bottom: 12px; color: #6366f1;">
+            🗣️ Nguyên Âm Đơn (Monophthongs)
+        </h2>
+        <div class="char-grid" id="vowelsGrid"></div>
+
+        <h2 style="font-size: 20px; font-weight: 900; margin: 25px 0 12px 0; color: #6366f1;">
+            🎶 Nguyên Âm Đôi (Diphthongs)
+        </h2>
+        <div class="char-grid" id="diphthongsGrid"></div>
+
+        <h2 style="font-size: 20px; font-weight: 900; margin: 25px 0 12px 0; color: #6366f1;">
+            🔊 Phụ Âm Thông Dụng (Consonants)
+        </h2>
+        <div class="char-grid" id="consonantsGrid"></div>
+    </main>
+
+    <script src="/js/speech.js"></script>
+    <script>
+        const IPA_DATA = {
+            vowels: [
+                { s: '/iː/', ex: 'sheep' }, { s: '/ɪ/', ex: 'ship' }, { s: '/ʊ/', ex: 'good' }, { s: '/uː/', ex: 'shoot' },
+                { s: '/e/', ex: 'bed' }, { s: '/ə/', ex: 'teacher' }, { s: '/ɜː/', ex: 'bird' }, { s: '/ɔː/', ex: 'door' },
+                { s: '/æ/', ex: 'cat' }, { s: '/ʌ/', ex: 'up' }, { s: '/ɑː/', ex: 'far' }, { s: '/ɒ/', ex: 'on' }
+            ],
+            diphthongs: [
+                { s: '/ɪə/', ex: 'here' }, { s: '/eɪ/', ex: 'wait' }, { s: '/ʊə/', ex: 'tour' }, { s: '/ɔɪ/', ex: 'boy' },
+                { s: '/əʊ/', ex: 'show' }, { s: '/eə/', ex: 'hair' }, { s: '/aɪ/', ex: 'my' }, { s: '/aʊ/', ex: 'cow' }
+            ],
+            consonants: [
+                { s: '/p/', ex: 'pen' }, { s: '/b/', ex: 'book' }, { s: '/t/', ex: 'tea' }, { s: '/d/', ex: 'dog' },
+                { s: '/tʃ/', ex: 'chair' }, { s: '/dʒ/', ex: 'joy' }, { s: '/k/', ex: 'cat' }, { s: '/g/', ex: 'go' },
+                { s: '/f/', ex: 'fly' }, { s: '/v/', ex: 'video' }, { s: '/θ/', ex: 'think' }, { s: '/ð/', ex: 'this' },
+                { s: '/s/', ex: 'see' }, { s: '/z/', ex: 'zoo' }, { s: '/ʃ/', ex: 'shall' }, { s: '/ʒ/', ex: 'vision' },
+                { s: '/m/', ex: 'man' }, { s: '/n/', ex: 'now' }, { s: '/ŋ/', ex: 'sing' }, { s: '/h/', ex: 'hat' },
+                { s: '/l/', ex: 'love' }, { s: '/r/', ex: 'red' }, { s: '/w/', ex: 'wet' }, { s: '/j/', ex: 'yes' }
+            ]
+        };
+
+        function renderIPA(gridId, list) {
+            const grid = document.getElementById(gridId);
+            list.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'char-card';
+                card.innerHTML = `<span class="char-main">${item.s}</span><span class="char-sub">${item.ex}</span>`;
+                card.onclick = () => {
+                    window.studySpeech.speak(item.ex, 'en');
+                    card.style.transform = 'scale(0.95)';
+                    setTimeout(() => card.style.transform = '', 150);
+                };
+                grid.appendChild(card);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderIPA('vowelsGrid', IPA_DATA.vowels);
+            renderIPA('diphthongsGrid', IPA_DATA.diphthongs);
+            renderIPA('consonantsGrid', IPA_DATA.consonants);
+        });
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('mhent_dark_mode', document.body.classList.contains('dark-mode') ? 'on' : 'off');
+        }
+        if (localStorage.getItem('mhent_dark_mode') === 'on') document.body.classList.add('dark-mode');
+    </script>
+</body>
+</html>

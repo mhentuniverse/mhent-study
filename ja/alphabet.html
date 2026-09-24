@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Chữ Cái Hiragana & Katakana | MHEnt. Study</title>
+    <link rel="icon" type="image/png" sizes="48x48" href="/assets/icon-web.png">
+    <link rel="stylesheet" href="/css/study-core.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .char-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        .char-card {
+            background: var(--study-surface);
+            border: 1px solid var(--study-border);
+            border-radius: 14px;
+            padding: 16px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            box-shadow: var(--study-shadow);
+        }
+        .char-card:hover {
+            transform: translateY(-3px);
+            border-color: #ef4444;
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.2);
+        }
+        .char-main {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--study-text);
+        }
+        .char-sub {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body class="theme-edu">
+
+    <nav class="study-nav">
+        <a href="/" class="nav-brand-box">
+            <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="brand-avatar">
+            <div class="brand-title-wrap">
+                <span class="brand-main-title">MHEnt. <span>Study</span></span>
+                <span class="brand-sub-badge">JAPANESE SPACE</span>
+            </div>
+        </a>
+        <div class="nav-study-links">
+            <a href="/" class="study-link">Tổng quan</a>
+            <a href="/ja/index.html" class="study-link active">🇯🇵 Tiếng Nhật</a>
+            <a href="/ja/practice/vocab.html" class="study-link">Sổ từ vựng</a>
+            <a href="/ja/exam.html" class="study-link">Thi thử AI</a>
+        </div>
+        <div class="nav-study-actions">
+            <button class="theme-toggle-btn" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
+            <a href="/ja/index.html" class="auth-btn-pill" style="background: #ef4444;"><i class="fa-solid fa-arrow-left"></i> Về Hub Nhật</a>
+        </div>
+    </nav>
+
+    <div class="study-breadcrumb-bar">
+        <div class="breadcrumb-nav">
+            <a href="/">Trang chủ</a> <span>/</span>
+            <a href="/ja/index.html">🇯🇵 Tiếng Nhật</a> <span>/</span>
+            <span class="current">Bảng Chữ Cái Hiragana & Katakana</span>
+        </div>
+        <span style="font-size: 13px; color: var(--study-text-muted);">💡 Bấm vào từng chữ để nghe phát âm giọng Tokyo bản xứ</span>
+    </div>
+
+    <main class="study-wrapper">
+        <h2 style="font-size: 20px; font-weight: 900; margin-bottom: 14px; color: #ef4444;">
+            🌸 46 Ký Tự Hiragana (Bảng Chữ Mềm)
+        </h2>
+        <div class="char-grid" id="hiraganaGrid"></div>
+
+        <h2 style="font-size: 20px; font-weight: 900; margin: 30px 0 14px 0; color: #ef4444;">
+            ⚔️ 46 Ký Tự Katakana (Bảng Chữ Cứng)
+        </h2>
+        <div class="char-grid" id="katakanaGrid"></div>
+    </main>
+
+    <script src="/js/speech.js"></script>
+    <script>
+        const KANA_DATA = {
+            hiragana: [
+                { k: 'あ', r: 'a' }, { k: 'い', r: 'i' }, { k: 'う', r: 'u' }, { k: 'え', r: 'e' }, { k: 'お', r: 'o' },
+                { k: 'か', r: 'ka' }, { k: 'き', r: 'ki' }, { k: 'く', r: 'ku' }, { k: 'け', r: 'ke' }, { k: 'こ', r: 'ko' },
+                { k: 'さ', r: 'sa' }, { k: 'し', r: 'shi' }, { k: 'す', r: 'su' }, { k: 'せ', r: 'se' }, { k: 'そ', r: 'so' },
+                { k: 'た', r: 'ta' }, { k: 'ち', r: 'chi' }, { k: 'つ', r: 'tsu' }, { k: 'て', r: 'te' }, { k: 'と', r: 'to' },
+                { k: 'な', r: 'na' }, { k: 'に', r: 'ni' }, { k: 'ぬ', r: 'nu' }, { k: 'ね', r: 'ne' }, { k: 'の', r: 'no' },
+                { k: 'は', r: 'ha' }, { k: 'ひ', r: 'hi' }, { k: 'ふ', r: 'fu' }, { k: 'へ', r: 'he' }, { k: 'ほ', r: 'ho' },
+                { k: 'ま', r: 'ma' }, { k: 'み', r: 'mi' }, { k: 'む', r: 'mu' }, { k: 'め', r: 'me' }, { k: 'も', r: 'mo' },
+                { k: 'や', r: 'ya' }, { k: 'ゆ', r: 'yu' }, { k: 'よ', r: 'yo' },
+                { k: 'ら', r: 'ra' }, { k: 'り', r: 'ri' }, { k: 'る', r: 'ru' }, { k: 'れ', r: 're' }, { k: 'ろ', r: 'ro' },
+                { k: 'わ', r: 'wa' }, { k: 'を', r: 'wo' }, { k: 'ん', r: 'n' }
+            ],
+            katakana: [
+                { k: 'ア', r: 'a' }, { k: 'イ', r: 'i' }, { k: 'ウ', r: 'u' }, { k: 'エ', r: 'e' }, { k: 'オ', r: 'o' },
+                { k: 'カ', r: 'ka' }, { k: 'キ', r: 'ki' }, { k: 'ク', r: 'ku' }, { k: 'ケ', r: 'ke' }, { k: 'コ', r: 'ko' },
+                { k: 'サ', r: 'sa' }, { k: 'シ', r: 'shi' }, { k: 'ス', r: 'su' }, { k: 'セ', r: 'se' }, { k: 'ソ', r: 'so' },
+                { k: 'タ', r: 'ta' }, { k: 'チ', r: 'chi' }, { k: 'ツ', r: 'tsu' }, { k: 'テ', r: 'te' }, { k: 'ト', r: 'to' },
+                { k: 'ナ', r: 'na' }, { k: 'ニ', r: 'ni' }, { k: 'ヌ', r: 'nu' }, { k: 'ネ', r: 'ne' }, { k: 'ノ', r: 'no' },
+                { k: 'ハ', r: 'ha' }, { k: 'ヒ', r: 'hi' }, { k: 'フ', r: 'fu' }, { k: 'ヘ', r: 'he' }, { k: 'ホ', r: 'ho' },
+                { k: 'マ', r: 'ma' }, { k: 'ミ', r: 'mi' }, { k: 'ム', r: 'mu' }, { k: 'メ', r: 'me' }, { k: 'モ', r: 'mo' },
+                { k: 'ヤ', r: 'ya' }, { k: 'ユ', r: 'yu' }, { k: 'ヨ', r: 'yo' },
+                { k: 'ラ', r: 'ra' }, { k: 'リ', r: 'ri' }, { k: 'ル', r: 'ru' }, { k: 'レ', r: 're' }, { k: 'ロ', r: 'ro' },
+                { k: 'ワ', r: 'wa' }, { k: 'ヲ', r: 'wo' }, { k: 'ン', r: 'n' }
+            ]
+        };
+
+        function renderKana(gridId, list) {
+            const grid = document.getElementById(gridId);
+            grid.innerHTML = '';
+            list.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'char-card';
+                card.innerHTML = `<span class="char-main">${item.k}</span><span class="char-sub">${item.r}</span>`;
+                card.onclick = () => {
+                    window.studySpeech.speak(item.k, 'ja');
+                    card.style.transform = 'scale(0.95)';
+                    setTimeout(() => card.style.transform = '', 150);
+                };
+                grid.appendChild(card);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderKana('hiraganaGrid', KANA_DATA.hiragana);
+            renderKana('katakanaGrid', KANA_DATA.katakana);
+        });
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('mhent_dark_mode', document.body.classList.contains('dark-mode') ? 'on' : 'off');
+        }
+        if (localStorage.getItem('mhent_dark_mode') === 'on') document.body.classList.add('dark-mode');
+    </script>
+</body>
+</html>

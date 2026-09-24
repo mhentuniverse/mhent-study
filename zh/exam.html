@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phòng Thi Thử Nghiệm AI (Gemini) | MHEnt. Study</title>
+    <title>Phòng Thi Thử Nghiệm AI Tiếng Trung (Gemini) | MHEnt. Study</title>
     <link rel="icon" type="image/png" sizes="48x48" href="/assets/icon-web.png">
+    
     <link rel="stylesheet" href="/css/study-core.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,9 +16,9 @@
         .question-title { font-size: 1.35rem; font-weight: 800; margin-bottom: 1.25rem; }
         .options-list { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; }
         .option-item { padding: 0.85rem 1.15rem; border-radius: 14px; border: 1.5px solid var(--study-border); background: var(--study-subtle); cursor: pointer; font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 0.75rem; transition: 0.2s; }
-        .option-item:hover { border-color: #ec4899; }
+        .option-item:hover { border-color: #f59e0b; }
         .option-item.correct { border-color: #10b981; background: rgba(16, 185, 129, 0.12); color: #10b981; }
-        .option-item.wrong { border-color: #ec4899; background: rgba(236, 72, 153, 0.12); color: #ec4899; }
+        .option-item.wrong { border-color: #ef4444; background: rgba(239, 68, 68, 0.12); color: #ef4444; }
     </style>
 </head>
 <body class="theme-edu">
@@ -27,26 +28,27 @@
             <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="brand-avatar">
             <div class="brand-title-wrap">
                 <span class="brand-main-title">MHEnt. <span>Study</span></span>
-                <span class="brand-sub-badge">KOREAN SPACE</span>
+                <span class="brand-sub-badge">CHINESE SPACE</span>
             </div>
         </a>
         <div class="nav-study-links">
             <a href="/" class="study-link">Tổng quan</a>
-            <a href="/ko/index.html" class="study-link">🇰🇷 Tiếng Hàn</a>
-            <a href="/ko/alphabet.html" class="study-link">Bảng Hangeul</a>
-            <a href="/ko/practice/vocab.html" class="study-link">Sổ từ vựng</a>
-            <a href="/ko/exam.html" class="study-link active">Thi thử AI</a>
+            <a href="/zh/index.html" class="study-link">🇨🇳 Tiếng Trung</a>
+            <a href="/zh/alphabet.html" class="study-link">Bảng Pinyin</a>
+            <a href="/zh/practice/vocab.html" class="study-link">Sổ từ vựng</a>
+            <a href="/zh/practice/flashcards.html" class="study-link">Flashcards 3D</a>
+            <a href="/zh/exam.html" class="study-link active">Thi thử AI</a>
         </div>
         <div class="nav-study-actions">
             <button class="theme-toggle-btn" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
-            <a href="/ko/index.html" class="auth-btn-pill" style="background: #ec4899;"><i class="fa-solid fa-arrow-left"></i> Về Hub Hàn</a>
+            <a href="/zh/index.html" class="auth-btn-pill" style="background: #f59e0b;"><i class="fa-solid fa-arrow-left"></i> Về Hub Trung</a>
         </div>
     </nav>
 
     <div class="study-breadcrumb-bar">
         <div class="breadcrumb-nav">
             <a href="/">Trang chủ</a> <span>/</span>
-            <a href="/ko/index.html">🇰🇷 Tiếng Hàn</a> <span>/</span>
+            <a href="/zh/index.html">🇨🇳 Tiếng Trung</a> <span>/</span>
             <span class="current">Phòng Thi Thử Nghiệm AI (Gemini)</span>
         </div>
     </div>
@@ -58,30 +60,30 @@
             <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
                 <span style="font-size: 2rem;">🧠</span>
                 <div>
-                    <h1 style="font-size: 1.6rem;">Tạo Đề Thi Trí Tuệ Nhân Tạo (Gemini)</h1>
-                    <p style="color: var(--text-muted); font-size: 0.88rem;">Hệ thống sẽ dựa trên toàn bộ từ vựng cá nhân bạn đã thêm để tự động sinh đề thi</p>
+                    <h1 style="font-size: 1.6rem; color: #f59e0b;">Tạo Đề Thi Tiếng Trung HSK Cùng AI (Gemini)</h1>
+                    <p style="color: var(--study-text-muted); font-size: 0.88rem;">Hệ thống sẽ dựa trên toàn bộ kho từ vựng Hán tự và Pinyin để tạo đề thi trắc nghiệm phản xạ 2 chiều.</p>
                 </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1.5rem;">
                 <div>
-                    <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.4rem;">Chọn Giáo trình để thi</label>
-                    <select id="examDeckSelect" style="width: 100%; padding: 0.65rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-subtle); color: var(--text-primary); font-size: 0.9rem;">
+                    <label style="font-size: 0.85rem; font-weight: 700; color: var(--study-text-muted); display: block; margin-bottom: 0.4rem;">Chọn Giáo trình để thi</label>
+                    <select id="examDeckSelect" style="width: 100%; padding: 0.65rem; border-radius: var(--radius-sm); border: 1px solid var(--study-border); background: var(--study-subtle); color: inherit; font-size: 0.9rem;">
                         <!-- Options loaded dynamically -->
                     </select>
                 </div>
                 <div>
-                    <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.4rem;">Số lượng câu hỏi</label>
-                    <select id="examCountSelect" style="width: 100%; padding: 0.65rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-subtle); color: var(--text-primary); font-size: 0.9rem;">
+                    <label style="font-size: 0.85rem; font-weight: 700; color: var(--study-text-muted); display: block; margin-bottom: 0.4rem;">Số lượng câu hỏi</label>
+                    <select id="examCountSelect" style="width: 100%; padding: 0.65rem; border-radius: var(--radius-sm); border: 1px solid var(--study-border); background: var(--study-subtle); color: inherit; font-size: 0.9rem;">
                         <option value="5">5 Câu hỏi (Nhanh)</option>
                         <option value="10" selected>10 Câu hỏi (Tiêu chuẩn)</option>
-                        <option value="15">15 Câu hỏi (Chuyên sâu)</option>
+                        <option value="15">15 Câu hỏi (Toàn bộ)</option>
                     </select>
                 </div>
             </div>
 
             <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
-                <button class="btn-primary" id="btnStartExam" style="padding: 0.75rem 1.75rem; font-size: 1rem;">
+                <button class="btn-primary" id="btnStartExam" style="background: #f59e0b; padding: 0.75rem 1.75rem; font-size: 1rem;">
                     ✨ Bắt đầu Sinh đề thi
                 </button>
             </div>
@@ -90,41 +92,41 @@
         <!-- Question View -->
         <div class="quiz-card" id="quizCard">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <span class="streak-pill" id="questionCounter">Câu 1 / 10</span>
-                <span id="scoreTracker" style="font-weight: 700; color: var(--accent-edu);">Điểm: 0</span>
+                <span class="streak-pill" id="questionCounter" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">Câu 1 / 10</span>
+                <span id="scoreTracker" style="font-weight: 800; color: #f59e0b;">Điểm: 0</span>
             </div>
 
-            <h2 class="question-title" id="questionText">Nghĩa của từ này là gì?</h2>
+            <h2 class="question-title" id="questionText">Chữ Hán này có nghĩa là gì?</h2>
             
             <div class="options-list" id="optionsContainer">
                 <!-- Generated options -->
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
-                <button class="btn-speaker" id="btnAudioQuestion" title="Nghe từ">🔊 Nghe từ này</button>
-                <button class="btn-primary" id="btnNextQuestion" style="display: none;">Câu tiếp theo →</button>
+                <button class="btn-quick-tool" id="btnAudioQuestion" title="Nghe từ">🔊 Nghe từ Hán này</button>
+                <button class="auth-btn-pill" id="btnNextQuestion" style="display: none; background: #f59e0b;">Câu tiếp theo →</button>
             </div>
         </div>
 
         <!-- Result Summary -->
         <div class="config-card" id="resultCard" style="display: none; text-align: center; margin-top: 1.5rem;">
             <div style="font-size: 3.5rem; margin-bottom: 0.5rem;">🏆</div>
-            <h2 style="font-size: 1.85rem; margin-bottom: 0.5rem;">Hoàn Thành Bài Thi!</h2>
-            <p style="font-size: 1.25rem; font-weight: 700; color: var(--accent-edu); margin-bottom: 1.5rem;" id="finalScoreText">Bạn đạt 10/10 điểm (100%)</p>
+            <h2 style="font-size: 1.85rem; margin-bottom: 0.5rem;">Hoàn Thành Bài Thi Tiếng Trung!</h2>
+            <p style="font-size: 1.25rem; font-weight: 700; color: #f59e0b; margin-bottom: 1.5rem;" id="finalScoreText">Bạn đạt 10/10 điểm (100%)</p>
             <div style="display: flex; justify-content: center; gap: 1rem;">
                 <button class="btn-ghost" onclick="window.location.reload()">Làm lại bài khác</button>
-                <a href="practice/vocab.html" class="btn-primary">Về Sổ từ vựng ôn lại</a>
+                <a href="practice/vocab.html" class="auth-btn-pill" style="background: #f59e0b;">Về Sổ từ vựng ôn lại</a>
             </div>
         </div>
 
     </main>
 
     <!-- Scripts -->
-    <script src="../js/config.js"></script>
-    <script src="../js/ui-kit.js"></script>
-    <script src="../js/speech.js"></script>
-    <script src="../js/storage.js"></script>
-    <script src="../data/sample-ko.js"></script>
+    <script src="/js/config.js"></script>
+    <script src="/js/ui-kit.js"></script>
+    <script src="/js/speech.js"></script>
+    <script src="/js/storage.js"></script>
+    <script src="/data/sample-zh.js"></script>
     <script>
         let questions = [];
         let currentQIndex = 0;
@@ -133,9 +135,9 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             const selectEl = document.getElementById('examDeckSelect');
-            let decks = window.studyStorage.getDecks('ko');
-            if (decks.length === 0 && window.DEFAULT_KO_DECK) {
-                decks = [window.DEFAULT_KO_DECK];
+            let decks = window.studyStorage.getDecks('zh');
+            if (decks.length === 0 && window.DEFAULT_ZH_DECK) {
+                decks = [window.DEFAULT_ZH_DECK];
             }
             decks.forEach(d => {
                 const opt = document.createElement('option');
@@ -147,13 +149,13 @@
             document.getElementById('btnStartExam').addEventListener('click', generateExam);
             document.getElementById('btnNextQuestion').addEventListener('click', nextQuestion);
             document.getElementById('btnAudioQuestion').addEventListener('click', () => {
-                if (currentTargetWord) window.studySpeech.speak(currentTargetWord.word, 'ko');
+                if (currentTargetWord) window.studySpeech.speak(currentTargetWord.word, 'zh');
             });
         });
 
         function generateExam() {
             const deckId = document.getElementById('examDeckSelect').value;
-            const deck = window.studyStorage.getDeckById('ko', deckId) || window.DEFAULT_KO_DECK;
+            const deck = window.studyStorage.getDeckById('zh', deckId) || window.DEFAULT_ZH_DECK;
             const words = deck.words || [];
 
             if (words.length < 4) {
@@ -162,26 +164,22 @@
             }
 
             const count = Math.min(parseInt(document.getElementById('examCountSelect').value, 10), words.length);
-            
-            // Xáo trộn và lấy ngẫu nhiên câu hỏi
             const shuffled = [...words].sort(() => 0.5 - Math.random());
             questions = [];
 
             for (let i = 0; i < count; i++) {
                 const correctWord = shuffled[i];
-                // Lấy 3 đáp án nhiễu
                 const distractorWords = words.filter(w => w.id !== correctWord.id).sort(() => 0.5 - Math.random()).slice(0, 3);
                 const allChoices = [correctWord, ...distractorWords].sort(() => 0.5 - Math.random());
 
-                // Random dạng: Hỏi nghĩa hoặc hỏi từ
                 const isTypeWordToMeaning = Math.random() > 0.4;
 
                 questions.push({
                     target: correctWord,
                     type: isTypeWordToMeaning ? 'word_to_meaning' : 'meaning_to_word',
                     question: isTypeWordToMeaning 
-                        ? `Từ vựng "${correctWord.word}" ${correctWord.phonetic || ''} có nghĩa là gì?`
-                        : `Từ tiếng Hàn nào mang nghĩa là: "${correctWord.meaning}"?`,
+                        ? `Chữ Hán「${correctWord.word}」${correctWord.phonetic || ''} có nghĩa là gì?`
+                        : `Chữ Hán nào mang nghĩa là: "${correctWord.meaning}"?`,
                     correctAnswer: isTypeWordToMeaning ? correctWord.meaning : correctWord.word,
                     choices: allChoices.map(c => isTypeWordToMeaning ? c.meaning : c.word)
                 });
@@ -215,15 +213,14 @@
                 container.appendChild(item);
             });
 
-            // Tự đọc từ tiếng Hàn
             setTimeout(() => {
-                window.studySpeech.speak(q.target.word, 'ko');
+                window.studySpeech.speak(q.target.word, 'zh');
             }, 300);
         }
 
         function selectAnswer(itemEl, chosen, correct) {
             const allItems = document.querySelectorAll('.option-item');
-            allItems.forEach(el => el.style.pointerEvents = 'none'); // Khóa chọn
+            allItems.forEach(el => el.style.pointerEvents = 'none');
 
             if (chosen === correct) {
                 itemEl.classList.add('correct');
@@ -232,7 +229,6 @@
             } else {
                 itemEl.classList.add('wrong');
                 window.studyUI.playWrong();
-                // Đánh dấu đáp án đúng cho người học nhận biết
                 allItems.forEach(el => {
                     if (el.textContent === correct) el.classList.add('correct');
                 });
@@ -246,7 +242,6 @@
             if (currentQIndex + 1 < questions.length) {
                 displayQuestion(currentQIndex + 1);
             } else {
-                // Kết thúc bài thi
                 document.getElementById('quizCard').style.display = 'none';
                 document.getElementById('resultCard').style.display = 'block';
                 const pct = Math.round((score / questions.length) * 100);
@@ -254,6 +249,12 @@
                 window.studyUI.playDing();
             }
         }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('mhent_dark_mode', document.body.classList.contains('dark-mode') ? 'on' : 'off');
+        }
+        if (localStorage.getItem('mhent_dark_mode') === 'on') document.body.classList.add('dark-mode');
     </script>
 </body>
 </html>

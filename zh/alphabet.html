@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Phiên Âm Pinyin & 4 Thanh Điệu | MHEnt. Study</title>
+    <link rel="icon" type="image/png" sizes="48x48" href="/assets/icon-web.png">
+    <link rel="stylesheet" href="/css/study-core.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .char-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); gap: 12px; margin-bottom: 25px; }
+        .char-card { background: var(--study-surface); border: 1px solid var(--study-border); border-radius: 14px; padding: 14px 8px; text-align: center; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 4px; box-shadow: var(--study-shadow); }
+        .char-card:hover { transform: translateY(-3px); border-color: #f59e0b; box-shadow: 0 8px 20px rgba(245, 158, 11, 0.2); }
+        .char-main { font-size: 26px; font-weight: 900; color: var(--study-text); }
+        .char-sub { font-size: 13px; font-weight: 700; color: #f59e0b; }
+    </style>
+</head>
+<body class="theme-edu">
+
+    <nav class="study-nav">
+        <a href="/" class="nav-brand-box">
+            <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="brand-avatar">
+            <div class="brand-title-wrap">
+                <span class="brand-main-title">MHEnt. <span>Study</span></span>
+                <span class="brand-sub-badge">CHINESE SPACE</span>
+            </div>
+        </a>
+        <div class="nav-study-links">
+            <a href="/" class="study-link">Tổng quan</a>
+            <a href="/zh/index.html" class="study-link active">🇨🇳 Tiếng Trung</a>
+            <a href="/zh/practice/vocab.html" class="study-link">Sổ từ vựng</a>
+            <a href="/zh/exam.html" class="study-link">Thi thử AI</a>
+        </div>
+        <div class="nav-study-actions">
+            <button class="theme-toggle-btn" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
+            <a href="/zh/index.html" class="auth-btn-pill" style="background: #f59e0b;"><i class="fa-solid fa-arrow-left"></i> Về Hub Trung</a>
+        </div>
+    </nav>
+
+    <div class="study-breadcrumb-bar">
+        <div class="breadcrumb-nav">
+            <a href="/">Trang chủ</a> <span>/</span>
+            <a href="/zh/index.html">🇨🇳 Tiếng Trung</a> <span>/</span>
+            <span class="current">Bảng Pinyin & 4 Thanh Điệu</span>
+        </div>
+        <span style="font-size: 13px; color: var(--study-text-muted);">💡 Nhấp vào từng âm để nghe phát âm chuẩn tiếng Phổ thông</span>
+    </div>
+
+    <main class="study-wrapper">
+        <h2 style="font-size: 20px; font-weight: 900; margin-bottom: 12px; color: #f59e0b;">
+            🎵 4 Thanh Điệu Cơ Bản (四声)
+        </h2>
+        <div class="char-grid">
+            <div class="char-card" onclick="window.studySpeech.speak('mā', 'zh')"><span class="char-main">mā</span><span class="char-sub">Thanh 1 (Ngang)</span></div>
+            <div class="char-card" onclick="window.studySpeech.speak('má', 'zh')"><span class="char-main">má</span><span class="char-sub">Thanh 2 (Lên)</span></div>
+            <div class="char-card" onclick="window.studySpeech.speak('mǎ', 'zh')"><span class="char-main">mǎ</span><span class="char-sub">Thanh 3 (Xuống lên)</span></div>
+            <div class="char-card" onclick="window.studySpeech.speak('mà', 'zh')"><span class="char-main">mà</span><span class="char-sub">Thanh 4 (Xuống)</span></div>
+        </div>
+
+        <h2 style="font-size: 20px; font-weight: 900; margin: 25px 0 12px 0; color: #f59e0b;">
+            🔤 23 Thanh Mẫu (Phụ Âm Đầu - 声母)
+        </h2>
+        <div class="char-grid" id="initialsGrid"></div>
+
+        <h2 style="font-size: 20px; font-weight: 900; margin: 25px 0 12px 0; color: #f59e0b;">
+            🗣️ Vận Mẫu Cơ Bản (Vần - 韵母)
+        </h2>
+        <div class="char-grid" id="finalsGrid"></div>
+    </main>
+
+    <script src="/js/speech.js"></script>
+    <script>
+        const INITIALS = ['b', 'p', 'm', 'f', 'd', 't', 'n', 'l', 'g', 'k', 'h', 'j', 'q', 'x', 'zh', 'ch', 'sh', 'r', 'z', 'c', 's', 'y', 'w'];
+        const FINALS = ['a', 'o', 'e', 'i', 'u', 'ü', 'ai', 'ei', 'ui', 'ao', 'ou', 'iu', 'ie', 'üe', 'er', 'an', 'en', 'in', 'un', 'ang', 'eng', 'ing', 'ong'];
+
+        function renderList(gridId, list) {
+            const grid = document.getElementById(gridId);
+            list.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'char-card';
+                card.innerHTML = `<span class="char-main">${item}</span><span class="char-sub">Pinyin</span>`;
+                card.onclick = () => {
+                    window.studySpeech.speak(item, 'zh');
+                    card.style.transform = 'scale(0.95)';
+                    setTimeout(() => card.style.transform = '', 150);
+                };
+                grid.appendChild(card);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderList('initialsGrid', INITIALS);
+            renderList('finalsGrid', FINALS);
+        });
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('mhent_dark_mode', document.body.classList.contains('dark-mode') ? 'on' : 'off');
+        }
+        if (localStorage.getItem('mhent_dark_mode') === 'on') document.body.classList.add('dark-mode');
+    </script>
+</body>
+</html>

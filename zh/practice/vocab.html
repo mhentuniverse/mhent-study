@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sổ tay Từ vựng Tiếng Trung HSK | MHEnt. Study</title>
+    <link rel="icon" type="image/png" sizes="48x48" href="/assets/icon-web.png">
+    
+    <link rel="stylesheet" href="/css/study-core.css">
+    <link rel="stylesheet" href="/css/vocab-sheet.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/js/config.js"></script>
+</head>
+<body class="theme-edu">
+
+    <nav class="study-nav">
+        <a href="/" class="nav-brand-box">
+            <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="brand-avatar">
+            <div class="brand-title-wrap">
+                <span class="brand-main-title">MHEnt. <span>Study</span></span>
+                <span class="brand-sub-badge">CHINESE SPACE</span>
+            </div>
+        </a>
+        <div class="nav-study-links">
+            <a href="/" class="study-link">Tổng quan</a>
+            <a href="/zh/index.html" class="study-link">🇨🇳 Tiếng Trung</a>
+            <a href="/zh/practice/vocab.html" class="study-link active">Sổ từ vựng</a>
+            <a href="/zh/practice/flashcards.html" class="study-link">Flashcard</a>
+            <a href="/zh/exam.html" class="study-link">Thi thử AI</a>
+        </div>
+        <div class="nav-study-actions">
+            <button class="theme-toggle-btn" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
+            <a href="/zh/index.html" class="auth-btn-pill" style="background: #f59e0b;"><i class="fa-solid fa-arrow-left"></i> Về Hub Trung</a>
+        </div>
+    </nav>
+
+    <div class="study-breadcrumb-bar">
+        <div class="breadcrumb-nav">
+            <a href="/">Trang chủ</a> <span>/</span>
+            <a href="/zh/index.html">🇨🇳 Tiếng Trung</a> <span>/</span>
+            <span class="current">Sổ Tay Từ Vựng HSK 1 - 2</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <a href="./flashcards.html" class="btn-quick-tool" style="padding: 6px 12px; font-size: 12px;">🎴 Flashcards</a>
+            <a href="../exam.html" class="btn-quick-tool" style="background: #f59e0b; color: #fff; padding: 6px 12px; font-size: 12px;">🧠 Đề thi AI</a>
+        </div>
+    </div>
+
+    <main class="vocab-container">
+        
+        <section class="vocab-stats-board" style="border-top: 4px solid #f59e0b;">
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="stat-label">Tổng số từ Hán tự</span>
+                    <span class="stat-value highlight-blue" id="statTotalWords">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Đã thuộc</span>
+                    <span class="stat-value highlight-green" id="statLearnedWords">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Cần ôn tập</span>
+                    <span class="stat-value highlight-pink" id="statUnlearnedWords">0</span>
+                </div>
+                <div class="stat-progress-section">
+                    <div class="progress-header">
+                        <span>Tiến độ hoàn thành</span>
+                        <span class="highlight-blue" id="statOverallPct">0%</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-bar" id="statProgressBar" style="width: 0%; background: linear-gradient(90deg, #f59e0b, #ec4899);"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-mascot">
+                <div class="mascot-emoji">🐼</div>
+                <div>
+                    <div style="font-weight: 800; font-size: 0.95rem;">Mascot Gấu Trúc</div>
+                    <div class="mascot-message" id="mascotMessage">Học chữ Hán và Pinyin mỗi ngày nhé! 🔥</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="vocab-toolbar">
+            <div class="toolbar-left">
+                <div class="search-input-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="vocabSearch" placeholder="Tìm kiếm chữ Hán, Pinyin, nghĩa tiếng Việt...">
+                </div>
+                <select id="posFilter" class="btn-ghost" style="padding: 0.55rem 0.85rem; border-radius: 12px;">
+                    <option value="all">Tất cả loại từ</option>
+                    <option value="noun">Danh từ</option>
+                    <option value="verb">Động từ</option>
+                    <option value="adj">Tính từ</option>
+                </select>
+            </div>
+
+            <div class="toolbar-right">
+                <button class="btn-ghost" id="btnShareDeck">📤 Chia sẻ</button>
+                <button class="btn-primary" id="btnAddWord" style="background: #f59e0b;">+ Thêm từ Hán tự mới</button>
+            </div>
+        </section>
+
+        <section class="sheet-card">
+            <div class="sheet-scroll-wrap">
+                <table class="smart-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Chữ Hán (生词)</th>
+                            <th>Loại từ</th>
+                            <th>Phiên âm Pinyin</th>
+                            <th>Nghĩa tiếng Việt</th>
+                            <th>Câu ví dụ & Dịch</th>
+                            <th style="min-width: 140px;">Viết từ kiểm tra</th>
+                            <th>Kiểm tra</th>
+                            <th style="min-width: 130px;">4 Lần ôn tập</th>
+                            <th>Tỉ lệ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vocabTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Thêm Từ Mới -->
+    <div class="mhent-overlay" id="addWordModal">
+        <div class="mhent-modal">
+            <div class="modal-header">
+                <h3>✨ Thêm từ vựng tiếng Trung mới</h3>
+                <button class="btn-icon" onclick="window.sheetApp.closeAddWordModal()">✕</button>
+            </div>
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                    <label style="font-size: 13px; font-weight: 800;">Chữ Hán *</label>
+                    <input type="text" id="newWord" class="search-input-wrap" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--study-border); background: var(--study-surface); color: inherit;" placeholder="Ví dụ: 老师">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-size: 13px; font-weight: 800;">Phiên âm Pinyin</label>
+                        <input type="text" id="newPhonetic" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--study-border); background: var(--study-surface); color: inherit;" placeholder="Ví dụ: lǎoshī">
+                    </div>
+                    <div>
+                        <label style="font-size: 13px; font-weight: 800;">Loại từ</label>
+                        <select id="newPos" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--study-border); background: var(--study-surface); color: inherit;">
+                            <option value="noun">Danh từ</option>
+                            <option value="verb">Động từ</option>
+                            <option value="adj">Tính từ</option>
+                            <option value="other">Khác</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size: 13px; font-weight: 800;">Nghĩa tiếng Việt *</label>
+                    <input type="text" id="newMeaning" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--study-border); background: var(--study-surface); color: inherit;" placeholder="Ví dụ: Thầy giáo, cô giáo">
+                </div>
+                <div>
+                    <label style="font-size: 13px; font-weight: 800;">Câu ví dụ mẫu</label>
+                    <input type="text" id="newExample" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--study-border); background: var(--study-surface); color: inherit;" placeholder="Ví dụ: 老师好！">
+                </div>
+                <div>
+                    <label style="font-size: 13px; font-weight: 800;">Dịch câu ví dụ</label>
+                    <input type="text" id="newExampleTrans" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--study-border); background: var(--study-surface); color: inherit;" placeholder="Ví dụ: Em chào thầy/cô!">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-ghost" onclick="window.sheetApp.closeAddWordModal()">Hủy</button>
+                <button class="btn-primary" onclick="window.sheetApp.submitNewWord()" style="background: #f59e0b;">+ Lưu từ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Share -->
+    <div class="mhent-overlay" id="shareModal">
+        <div class="mhent-modal">
+            <div class="modal-header">
+                <h3>📤 Chia sẻ Bộ từ vựng tiếng Trung</h3>
+                <button class="btn-icon" onclick="window.sheetApp.closeShareModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 14px; margin-bottom: 12px;">Chia sẻ liên kết này để bạn bè có thể xem và clone bộ bài này vào tài khoản của họ:</p>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="shareLinkInput" readonly style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--study-border); background: var(--study-subtle); color: inherit;">
+                    <button class="btn-primary" onclick="window.sheetApp.copyShareLink()" style="background: #f59e0b;">Sao chép</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/ui-kit.js"></script>
+    <script src="/js/speech.js"></script>
+    <script src="/js/storage.js"></script>
+    <script src="/data/sample-zh.js"></script>
+    <script src="/js/vocab-sheet.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            window.sheetApp = new VocabSheetApp('zh');
+        });
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('mhent_dark_mode', document.body.classList.contains('dark-mode') ? 'on' : 'off');
+        }
+        if (localStorage.getItem('mhent_dark_mode') === 'on') document.body.classList.add('dark-mode');
+    </script>
+</body>
+</html>

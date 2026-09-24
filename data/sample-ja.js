@@ -1,5 +1,5 @@
 /**
- * MHENT STUDY - SAMPLE JAPANESE VOCABULARY DECK
+ * MHENT STUDY - SAMPLE JAPANESE VOCABULARY DECK (15 ESSENTIAL JLPT N5 WORDS)
  */
 window.DEFAULT_JA_DECK = {
     id: "ja_deck_basic_n5",
@@ -70,6 +70,136 @@ window.DEFAULT_JA_DECK = {
             meaning: "Ăn",
             example: "ラーメンを食べます。",
             exampleTrans: "Tôi ăn mì Ramen.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ja_6",
+            word: "飲む",
+            phonetic: "[のむ - Nomu]",
+            pos: "verb",
+            posLabel: "Động từ",
+            meaning: "Uống",
+            example: "冷たい水を飲みます。",
+            exampleTrans: "Tôi uống nước lạnh.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ja_7",
+            word: "行く",
+            phonetic: "[いく - Iku]",
+            pos: "verb",
+            posLabel: "Động từ",
+            meaning: "Đi đến",
+            example: "明日学校へ行きます。",
+            exampleTrans: "Ngày mai tôi sẽ đến trường.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ja_8",
+            word: "本",
+            phonetic: "[ほん - Hon]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Quyển sách",
+            example: "図書館で本を読みます。",
+            exampleTrans: "Tôi đọc sách ở thư viện.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ja_9",
+            word: "猫",
+            phonetic: "[ねこ - Neko]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Con mèo",
+            example: "白い猫が可愛いです。",
+            exampleTrans: "Chú mèo trắng rất dễ thương.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ja_10",
+            word: "水",
+            phonetic: "[みず - Mizu]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Nước uống",
+            example: "水を一杯ください。",
+            exampleTrans: "Cho tôi xin một cốc nước.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ja_11",
+            word: "桜",
+            phonetic: "[さくら - Sakura]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Hoa anh đào",
+            example: "春に桜が咲きます。",
+            exampleTrans: "Mùa xuân hoa anh đào nở rộ.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ja_12",
+            word: "家族",
+            phonetic: "[かぞく - Kazoku]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Gia đình",
+            example: "家族と一緒に住んでいます。",
+            exampleTrans: "Tôi đang sống cùng với gia đình.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ja_13",
+            word: "時間",
+            phonetic: "[じかん - Jikan]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Thời gian",
+            example: "今、時間がありません。",
+            exampleTrans: "Bây giờ tôi không có thời gian.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ja_14",
+            word: "映画",
+            phonetic: "[えいが - Eiga]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Bộ phim",
+            example: "週末に映画を見ました。",
+            exampleTrans: "Cuối tuần tôi đã xem phim.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ja_15",
+            word: "ありがとう",
+            phonetic: "[Arigatou]",
+            pos: "other",
+            posLabel: "Khác",
+            meaning: "Cảm ơn",
+            example: "いつもありがとうございます。",
+            exampleTrans: "Luôn cảm ơn bạn rất nhiều.",
             typedWord: "",
             reviews: [false, false, false, false],
             isCompleted: false

@@ -4,24 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tiếp nhận & Sao chép Tài liệu học | MHEnt. Study</title>
-    <link rel="stylesheet" href="../css/theme.css">
-    <link rel="stylesheet" href="../css/layout.css">
+    <link rel="icon" type="image/png" sizes="48x48" href="/assets/icon-web.png">
+    <link rel="stylesheet" href="/css/study-core.css">
+    <link rel="stylesheet" href="/css/layout.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .shared-hero {
             max-width: 800px;
             margin: 3rem auto;
             padding: 2rem;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
+            background: var(--study-surface);
+            border: 1px solid var(--study-border);
+            border-radius: var(--radius-card);
+            box-shadow: var(--study-shadow);
             text-align: center;
         }
         .preview-box {
             margin-top: 1.5rem;
             padding: 1.25rem;
-            background: var(--bg-subtle);
-            border-radius: var(--radius-md);
+            background: var(--study-subtle);
+            border-radius: 14px;
             text-align: left;
         }
         .preview-words-list {
@@ -32,32 +35,37 @@
         }
         .word-chip {
             padding: 0.4rem 0.75rem;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-full);
+            background: var(--study-surface);
+            border: 1px solid var(--study-border);
+            border-radius: var(--radius-pill);
             font-size: 0.85rem;
-            font-weight: 600;
+            font-weight: 700;
         }
     </style>
 </head>
-<body class="dark-mode">
+<body class="theme-edu">
 
-    <!-- Top Navbar -->
-    <header class="study-navbar">
-        <div class="brand-group">
-            <a href="../index.html" class="brand-group">
-                <div class="brand-logo-badge">M</div>
-                <div class="brand-text">
-                    <div class="brand-title">MHEnt. <span class="highlight">Study</span></div>
-                    <div class="brand-sub">Universe Learning Portal</div>
-                </div>
-            </a>
+    <nav class="study-nav">
+        <a href="/" class="nav-brand-box">
+            <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="brand-avatar">
+            <div class="brand-title-wrap">
+                <span class="brand-main-title">MHEnt. <span>Study</span></span>
+                <span class="brand-sub-badge">SHARED VAULT</span>
+            </div>
+        </a>
+        <div class="nav-study-links">
+            <a href="/" class="study-link">Tổng quan</a>
+            <a href="/ko/index.html" class="study-link">🇰🇷 Tiếng Hàn</a>
+            <a href="/ja/index.html" class="study-link">🇯🇵 Tiếng Nhật</a>
+            <a href="/zh/index.html" class="study-link">🇨🇳 Tiếng Trung</a>
+            <a href="/en/index.html" class="study-link">🇬🇧 Tiếng Anh</a>
+            <a href="/shared/index.html" class="study-link active"><i class="fa-solid fa-share-nodes"></i> Kho chia sẻ</a>
         </div>
-        <div class="nav-actions">
-            <button class="btn-icon" onclick="window.studyUI.toggleTheme()">🌓</button>
-            <a href="../index.html" class="btn-ghost">🏠 Sảnh chính</a>
+        <div class="nav-study-actions">
+            <button class="theme-toggle-btn" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
+            <a href="/" class="auth-btn-pill"><i class="fa-solid fa-house"></i> Sảnh chính</a>
         </div>
-    </header>
+    </nav>
 
     <main class="shared-hero">
         <div style="font-size: 3rem; margin-bottom: 0.5rem;">🎁</div>

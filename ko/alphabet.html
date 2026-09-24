@@ -4,95 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bảng Chữ Cái Hangeul (한글) Tương Tác | MHEnt. Study</title>
-    <link rel="stylesheet" href="../css/theme.css">
-    <link rel="stylesheet" href="../css/layout.css">
+    <link rel="icon" type="image/png" sizes="48x48" href="/assets/icon-web.png">
+    <link rel="stylesheet" href="/css/study-core.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .alphabet-container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-        }
-        .alphabet-section {
-            margin-bottom: 2.5rem;
-        }
-        .section-title {
-            font-size: 1.25rem;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .char-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 1rem;
-        }
-        .char-card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 1.25rem 0.75rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-            box-shadow: var(--shadow-sm);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.35rem;
-            user-select: none;
-        }
-        .char-card:hover {
-            transform: translateY(-4px);
-            border-color: #ec4899;
-            box-shadow: 0 8px 24px rgba(236, 72, 153, 0.25);
-            background: rgba(236, 72, 153, 0.05);
-        }
-        .char-symbol {
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: var(--text-primary);
-        }
-        .char-romaji {
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: #ec4899;
-        }
-        .char-name {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-        }
+        .alphabet-container { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
+        .alphabet-section { margin-bottom: 2.5rem; }
+        .section-title { font-size: 1.25rem; font-weight: 800; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #ec4899; }
+        .char-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); gap: 12px; }
+        .char-card { background: var(--study-surface); border: 1px solid var(--study-border); border-radius: 14px; padding: 14px 8px; text-align: center; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 4px; box-shadow: var(--study-shadow); user-select: none; }
+        .char-card:hover { transform: translateY(-3px); border-color: #ec4899; box-shadow: 0 8px 20px rgba(236, 72, 153, 0.2); }
+        .char-symbol { font-size: 28px; font-weight: 900; color: var(--study-text); }
+        .char-romaji { font-size: 13px; font-weight: 700; color: #ec4899; }
+        .char-name { font-size: 11px; font-weight: 600; color: var(--study-text-muted); }
     </style>
 </head>
-<body class="dark-mode">
+<body class="theme-edu">
 
-    <!-- Navbar -->
-    <header class="study-navbar">
-        <div class="brand-group">
-            <a href="../index.html" class="brand-group">
-                <div class="brand-logo-badge">M</div>
-                <div class="brand-text">
-                    <div class="brand-title">MHEnt. <span class="highlight">Study</span></div>
-                    <div class="brand-sub">Universe Learning Portal</div>
-                </div>
-            </a>
+    <nav class="study-nav">
+        <a href="/" class="nav-brand-box">
+            <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="brand-avatar">
+            <div class="brand-title-wrap">
+                <span class="brand-main-title">MHEnt. <span>Study</span></span>
+                <span class="brand-sub-badge">KOREAN SPACE</span>
+            </div>
+        </a>
+        <div class="nav-study-links">
+            <a href="/" class="study-link">Tổng quan</a>
+            <a href="/ko/index.html" class="study-link">🇰🇷 Tiếng Hàn</a>
+            <a href="/ko/alphabet.html" class="study-link active">Bảng Hangeul</a>
+            <a href="/ko/practice/vocab.html" class="study-link">Sổ từ vựng</a>
+            <a href="/ko/exam.html" class="study-link">Thi thử AI</a>
         </div>
-        <div class="nav-actions">
-            <button class="btn-icon" onclick="window.studyUI.toggleTheme()">🌓</button>
-            <a href="index.html" class="btn-ghost">🇰🇷 Về Hub Tiếng Hàn</a>
+        <div class="nav-study-actions">
+            <button class="theme-toggle-btn" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
+            <a href="/ko/index.html" class="auth-btn-pill" style="background: #ec4899;"><i class="fa-solid fa-arrow-left"></i> Về Hub Hàn</a>
         </div>
-    </header>
+    </nav>
 
-    <!-- Subbar -->
-    <div class="study-subbar">
-        <nav class="breadcrumb-list">
-            <a href="../index.html">Sảnh chính</a>
-            <span class="breadcrumb-sep">/</span>
-            <a href="index.html">🇰🇷 Tiếng Hàn</a>
-            <span class="breadcrumb-sep">/</span>
-            <span class="breadcrumb-current">Bảng Chữ Cái Hangeul (한글)</span>
-        </nav>
-        <span style="font-size: 0.82rem; color: var(--text-muted);">💡 Nhấp vào từng ký tự để nghe phát âm bản xứ</span>
+    <div class="study-breadcrumb-bar">
+        <div class="breadcrumb-nav">
+            <a href="/">Trang chủ</a> <span>/</span>
+            <a href="/ko/index.html">🇰🇷 Tiếng Hàn</a> <span>/</span>
+            <span class="current">Bảng Chữ Cái Hangeul (한글)</span>
+        </div>
+        <span style="font-size: 13px; color: var(--study-text-muted);">💡 Nhấp vào từng ký tự để nghe phát âm bản xứ</span>
     </div>
 
     <main class="alphabet-container">

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luyện Flashcard 3D Tiếng Hàn | MHEnt. Study</title>
+    <title>Luyện Flashcard 3D Tiếng Anh | MHEnt. Study</title>
     <link rel="icon" type="image/png" sizes="48x48" href="/assets/icon-web.png">
     
     <link rel="stylesheet" href="/css/study-core.css">
@@ -15,9 +15,9 @@
         .card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
         .card.is-flipped { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: var(--radius-card); border: 2px solid var(--study-border); background: var(--study-surface); box-shadow: var(--study-shadow); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2.5rem; text-align: center; user-select: none; }
-        .card-face-back { transform: rotateY(180deg); border-color: #ec4899; }
-        .card-word { font-size: 3.5rem; font-weight: 900; color: var(--study-text); margin-bottom: 0.5rem; }
-        .card-phonetic { font-size: 1.2rem; color: #ec4899; font-weight: 700; margin-bottom: 1.5rem; }
+        .card-face-back { transform: rotateY(180deg); border-color: #6366f1; }
+        .card-word { font-size: 3.2rem; font-weight: 900; color: var(--study-text); margin-bottom: 0.5rem; }
+        .card-phonetic { font-size: 1.2rem; color: #6366f1; font-weight: 700; margin-bottom: 1.5rem; font-family: sans-serif; }
         .card-meaning { font-size: 2rem; font-weight: 800; color: var(--study-text); margin-bottom: 0.75rem; }
         .card-example { font-size: 1.05rem; color: var(--study-text); margin-bottom: 0.35rem; }
         .card-example-trans { font-size: 0.9rem; color: var(--study-text-muted); }
@@ -35,27 +35,27 @@
             <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="brand-avatar">
             <div class="brand-title-wrap">
                 <span class="brand-main-title">MHEnt. <span>Study</span></span>
-                <span class="brand-sub-badge">KOREAN SPACE</span>
+                <span class="brand-sub-badge">ENGLISH SPACE</span>
             </div>
         </a>
         <div class="nav-study-links">
             <a href="/" class="study-link">Tổng quan</a>
-            <a href="/ko/index.html" class="study-link">🇰🇷 Tiếng Hàn</a>
-            <a href="/ko/practice/vocab.html" class="study-link">Sổ từ vựng</a>
-            <a href="/ko/practice/flashcards.html" class="study-link active">Flashcard 3D</a>
-            <a href="/ko/exam.html" class="study-link">Thi thử AI</a>
+            <a href="/en/index.html" class="study-link">🇬🇧 Tiếng Anh</a>
+            <a href="/en/practice/vocab.html" class="study-link">Sổ từ vựng</a>
+            <a href="/en/practice/flashcards.html" class="study-link active">Flashcard 3D</a>
+            <a href="/en/exam.html" class="study-link">Thi thử AI</a>
         </div>
         <div class="nav-study-actions">
             <button class="theme-toggle-btn" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
-            <a href="/ko/practice/vocab.html" class="auth-btn-pill" style="background: #ec4899;"><i class="fa-solid fa-book-open"></i> Sổ từ vựng</a>
+            <a href="/en/practice/vocab.html" class="auth-btn-pill" style="background: #6366f1;"><i class="fa-solid fa-book-open"></i> Sổ từ vựng</a>
         </div>
     </nav>
 
     <div class="study-breadcrumb-bar">
         <div class="breadcrumb-nav">
             <a href="/">Trang chủ</a> <span>/</span>
-            <a href="/ko/index.html">🇰🇷 Tiếng Hàn</a> <span>/</span>
-            <a href="/ko/practice/index.html">Luyện tập</a> <span>/</span>
+            <a href="/en/index.html">🇬🇧 Tiếng Anh</a> <span>/</span>
+            <a href="/en/practice/index.html">Luyện tập</a> <span>/</span>
             <span class="current">Flashcards 3D Phản Xạ</span>
         </div>
         <span style="font-size: 13px; color: var(--study-text-muted);">Phím tắt: [Space] lật thẻ • [← / →] đổi thẻ</span>
@@ -71,14 +71,14 @@
             <div class="card" id="studyCard">
                 <div class="card-face card-face-front">
                     <div style="font-size: 12px; font-weight: 800; letter-spacing: 0.05em; color: var(--study-text-muted); margin-bottom: 6px;" id="cardPos">DANH TỪ</div>
-                    <div class="card-word" id="cardWordFront">나라</div>
-                    <div class="card-phonetic" id="cardPhoneticFront">[나라]</div>
+                    <div class="card-word" id="cardWordFront">Entertainment</div>
+                    <div class="card-phonetic" id="cardPhoneticFront">[ˌen.təˈteɪn.mənt]</div>
                     <div style="font-size: 13px; color: var(--study-text-muted);">Bấm chuột hoặc nhấn [Space] để xem nghĩa ↻</div>
                 </div>
                 <div class="card-face card-face-back">
-                    <div class="card-meaning" id="cardMeaningBack">Đất nước, Quốc gia</div>
-                    <div class="card-example" id="cardExampleBack">한국은 아름다운 나라입니다.</div>
-                    <div class="card-example-trans" id="cardExampleTransBack">Hàn Quốc là một đất nước xinh đẹp.</div>
+                    <div class="card-meaning" id="cardMeaningBack">Giải trí, sự tiêu khiển</div>
+                    <div class="card-example" id="cardExampleBack">Music is an essential part of entertainment.</div>
+                    <div class="card-example-trans" id="cardExampleTransBack">Âm nhạc là một phần thiết yếu của ngành giải trí.</div>
                 </div>
             </div>
         </div>
@@ -99,7 +99,7 @@
     <script src="/js/ui-kit.js"></script>
     <script src="/js/speech.js"></script>
     <script src="/js/storage.js"></script>
-    <script src="/data/sample-ko.js"></script>
+    <script src="/data/sample-en.js"></script>
     <script>
         let words = [];
         let currentIndex = 0;
@@ -111,10 +111,10 @@
             
             let deck = null;
             if (deckId) {
-                deck = window.studyStorage.getDeckById('ko', deckId);
+                deck = window.studyStorage.getDeckById('en', deckId);
             }
             if (!deck) {
-                deck = window.studyStorage.getDecks('ko')[0] || window.DEFAULT_KO_DECK;
+                deck = window.studyStorage.getDecks('en')[0] || window.DEFAULT_EN_DECK;
             }
 
             words = deck ? deck.words : [];
@@ -123,7 +123,7 @@
             card.addEventListener('click', flipCard);
             document.getElementById('btnAudioCurrent').addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (words[currentIndex]) window.studySpeech.speak(words[currentIndex].word, 'ko');
+                if (words[currentIndex]) window.studySpeech.speak(words[currentIndex].word, 'en');
             });
 
             document.addEventListener('keydown', (e) => {
@@ -157,7 +157,7 @@
             document.getElementById('cardExampleTransBack').textContent = item.exampleTrans || '';
 
             setTimeout(() => {
-                window.studySpeech.speak(item.word, 'ko');
+                window.studySpeech.speak(item.word, 'en');
             }, 300);
         }
 

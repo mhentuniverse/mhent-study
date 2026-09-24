@@ -1,5 +1,5 @@
 /**
- * MHENT STUDY - SAMPLE CHINESE VOCABULARY DECK
+ * MHENT STUDY - SAMPLE CHINESE VOCABULARY DECK (15 ESSENTIAL HSK 1-2 WORDS)
  */
 window.DEFAULT_ZH_DECK = {
     id: "zh_deck_basic_hsk1",
@@ -11,6 +11,32 @@ window.DEFAULT_ZH_DECK = {
     words: [
         {
             id: "zh_1",
+            word: "你好",
+            phonetic: "[Nǐ hǎo]",
+            pos: "other",
+            posLabel: "Khác",
+            meaning: "Xin chào",
+            example: "你好，很高兴认识你。",
+            exampleTrans: "Xin chào, rất vui được làm quen với bạn.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "zh_2",
+            word: "谢谢",
+            phonetic: "[Xièxie]",
+            pos: "other",
+            posLabel: "Khác",
+            meaning: "Cảm ơn",
+            example: "谢谢你的耐心帮助。",
+            exampleTrans: "Cảm ơn sự giúp đỡ nhiệt tình của bạn.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "zh_3",
             word: "中国",
             phonetic: "[Zhōngguó]",
             pos: "noun",
@@ -23,7 +49,7 @@ window.DEFAULT_ZH_DECK = {
             isCompleted: false
         },
         {
-            id: "zh_2",
+            id: "zh_4",
             word: "学习",
             phonetic: "[Xuéxí]",
             pos: "verb",
@@ -36,7 +62,7 @@ window.DEFAULT_ZH_DECK = {
             isCompleted: false
         },
         {
-            id: "zh_3",
+            id: "zh_5",
             word: "朋友",
             phonetic: "[Péngyou]",
             pos: "noun",
@@ -49,7 +75,7 @@ window.DEFAULT_ZH_DECK = {
             isCompleted: false
         },
         {
-            id: "zh_4",
+            id: "zh_6",
             word: "漂亮",
             phonetic: "[Piàoliang]",
             pos: "adj",
@@ -57,6 +83,123 @@ window.DEFAULT_ZH_DECK = {
             meaning: "Xinh đẹp",
             example: "这件衣服非常漂亮。",
             exampleTrans: "Bộ quần áo này rất là đẹp.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "zh_7",
+            word: "老师",
+            phonetic: "[Lǎoshī]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Thầy cô giáo",
+            example: "王老师是我们的中文老师。",
+            exampleTrans: "Thầy Vương là giáo viên tiếng Trung của chúng tôi.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "zh_8",
+            word: "喜欢",
+            phonetic: "[Xǐhuan]",
+            pos: "verb",
+            posLabel: "Động từ",
+            meaning: "Thích, yêu thích",
+            example: "我很喜欢听中国音乐。",
+            exampleTrans: "Tôi rất thích nghe nhạc Trung Quốc.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "zh_9",
+            word: "喝水",
+            phonetic: "[Hē shuǐ]",
+            pos: "verb",
+            posLabel: "Động từ",
+            meaning: "Uống nước",
+            example: "每天多喝水对身体好。",
+            exampleTrans: "Mỗi ngày uống nhiều nước rất tốt cho cơ thể.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "zh_10",
+            word: "苹果",
+            phonetic: "[Píngguǒ]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Quả táo",
+            example: "我想去超市买几个红苹果。",
+            exampleTrans: "Tôi muốn đi siêu thị mua mấy quả táo đỏ.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "zh_11",
+            word: "电脑",
+            phonetic: "[Diànnǎo]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Máy vi tính",
+            example: "这台新电脑非常好用。",
+            exampleTrans: "Chiếc máy tính mới này dùng rất thích.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "zh_12",
+            word: "看书",
+            phonetic: "[Kàn shū]",
+            pos: "verb",
+            posLabel: "Động từ",
+            meaning: "Đọc sách",
+            example: "我在图书馆安静地看书。",
+            exampleTrans: "Tôi yên tĩnh đọc sách ở trong thư viện.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "zh_13",
+            word: "睡觉",
+            phonetic: "[Shuìjiào]",
+            pos: "verb",
+            posLabel: "Động từ",
+            meaning: "Đi ngủ",
+            example: "晚上十点我要去睡觉了。",
+            exampleTrans: "10 giờ đêm tôi phải đi ngủ rồi.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "zh_14",
+            word: "天气",
+            phonetic: "[Tiānqì]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Thời tiết",
+            example: "今天天气非常晴朗。",
+            exampleTrans: "Hôm nay thời tiết rất là quang đãng.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "zh_15",
+            word: "很高兴",
+            phonetic: "[Hěn gāoxìng]",
+            pos: "adj",
+            posLabel: "Tính từ",
+            meaning: "Rất vui mừng",
+            example: "今天认识你我很高兴。",
+            exampleTrans: "Hôm nay được quen biết bạn tôi rất vui.",
             typedWord: "",
             reviews: [false, false, false, false],
             isCompleted: false

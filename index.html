@@ -3,467 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MHEnt. Study Universe | Cổng Học Ngoại Ngữ Đa Vũ Trụ</title>
-    <meta name="description" content="MHEnt. Study Universe - Cổng học ngoại ngữ đa vũ trụ tiếng Hàn, tiếng Nhật, tiếng Trung và tiếng Anh.">
+    <title>MHEnt. Study | Không Gian Học Ngoại Ngữ Đa Vũ Trụ</title>
+    <meta name="description" content="Nền tảng học Tiếng Hàn, Tiếng Nhật, Tiếng Trung và Tiếng Anh với sổ từ vựng tương tác, tự kiểm tra chính tả và thi thử AI.">
     <link rel="icon" type="image/png" sizes="48x48" href="/assets/icon-web.png">
     
-    <!-- GỌI HỆ THỐNG CSS CHÍNH CỦA MHENT UNIVERSE -->
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/mhent-ui.css">
-    <link rel="stylesheet" href="/css/mhent-mobile.css">
-    
+    <link rel="stylesheet" href="/css/study-core.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="/js/config.js"></script>
-
-    <style>
-        .study-hero-banner {
-            max-width: 1200px;
-            margin: 30px auto 20px auto;
-            padding: 40px 30px;
-            background: var(--bg-glass-strong);
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            box-shadow: var(--shadow-glass);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: relative;
-            overflow: hidden;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-
-        .study-hero-banner::after {
-            content: '';
-            position: absolute;
-            top: -50px;
-            right: -50px;
-            width: 250px;
-            height: 250px;
-            background: radial-gradient(circle, rgba(14, 165, 233, 0.25), transparent 70%);
-            border-radius: 50%;
-            pointer-events: none;
-        }
-
-        .hero-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 14px;
-            border-radius: 20px;
-            background: rgba(14, 165, 233, 0.12);
-            color: var(--theme-accent);
-            font-size: 13px;
-            font-weight: 800;
-            margin-bottom: 12px;
-            border: 1px solid rgba(14, 165, 233, 0.3);
-        }
-
-        .hero-title {
-            font-size: 38px;
-            font-weight: 900;
-            line-height: 1.2;
-            color: var(--text-primary);
-            margin: 0 0 12px 0;
-            font-family: 'Nunito', sans-serif;
-        }
-
-        .hero-desc {
-            font-size: 16px;
-            color: var(--text-secondary);
-            max-width: 650px;
-            line-height: 1.6;
-            margin: 0 0 24px 0;
-        }
-
-        /* HOT TIKTOK FEATURE BANNER */
-        .tiktok-feature-box {
-            max-width: 1200px;
-            margin: 0 auto 35px auto;
-            padding: 24px 28px;
-            background: linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(14, 165, 233, 0.12));
-            border: 1.5px solid rgba(236, 72, 153, 0.3);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 20px;
-            box-shadow: 0 8px 30px rgba(236, 72, 153, 0.1);
-        }
-
-        /* 4 LANGUAGES HUB GRID */
-        .study-grid {
-            max-width: 1200px;
-            margin: 0 auto 50px auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-            gap: 24px;
-        }
-
-        .study-card {
-            background: var(--bg-glass);
-            border: 1px solid var(--border-color);
-            border-radius: 22px;
-            padding: 28px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            box-shadow: var(--shadow-soft);
-            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            backdrop-filter: blur(12px);
-        }
-
-        .study-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.15);
-            border-color: var(--card-color, var(--theme-accent));
-        }
-
-        .study-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 4px;
-            background: var(--card-color, var(--theme-accent));
-        }
-
-        .study-card.ko { --card-color: #ec4899; }
-        .study-card.ja { --card-color: #ef4444; }
-        .study-card.zh { --card-color: #f59e0b; }
-        .study-card.en { --card-color: #6366f1; }
-
-        .card-icon-wrap {
-            width: 60px;
-            height: 60px;
-            border-radius: 18px;
-            background: var(--bg-subtle, rgba(0,0,0,0.05));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            border: 1px solid var(--border-color);
-        }
-
-        .card-title {
-            font-size: 20px;
-            font-weight: 900;
-            color: var(--text-primary);
-            margin: 0;
-        }
-
-        .card-sub {
-            font-size: 13.5px;
-            font-weight: 700;
-            color: var(--text-muted);
-        }
-
-        .card-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
-
-        .card-list li {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .card-list li i {
-            color: var(--card-color);
-            font-size: 12px;
-        }
-
-        .btn-card-action {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 10px 18px;
-            border-radius: 14px;
-            background: var(--card-color);
-            color: #fff !important;
-            font-weight: 800;
-            font-size: 14px;
-            text-decoration: none;
-            cursor: pointer;
-            transition: 0.2s;
-            margin-top: auto;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
-        }
-
-        .btn-card-action:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.1);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.18);
-        }
-
-        @media (max-width: 768px) {
-            .study-hero-banner {
-                padding: 24px 20px;
-                margin: 15px 15px 20px 15px;
-            }
-            .hero-title { font-size: 26px; }
-            .tiktok-feature-box { margin: 0 15px 25px 15px; }
-            .study-grid { margin: 0 15px 40px 15px; }
-        }
-    </style>
 </head>
 <body class="theme-edu">
 
-    <!-- NAVBAR CHUẨN ĐẾ CHẾ MHENT UNIVERSE -->
-    <nav class="navbar">
-        <div class="nav-left">
-            <a onclick="window.location.href='/'" style="cursor: pointer;">
-                <img src="/assets/avt-web.jpg" alt="Avatar Web" class="avt-img">
-                <span class="logo-name">MHEnt. Universe</span>
-            </a>
+    <!-- STUDY NAVBAR CHUYÊN NGHIỆP & GỌN GÀNG -->
+    <nav class="study-nav">
+        <a href="/" class="nav-brand-box">
+            <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="brand-avatar">
+            <div class="brand-title-wrap">
+                <span class="brand-main-title">MHEnt. <span>Study</span></span>
+                <span class="brand-sub-badge">LEARNING SPACE</span>
+            </div>
+        </a>
+
+        <div class="nav-study-links">
+            <a href="/" class="study-link active"><i class="fa-solid fa-house"></i> Tổng quan</a>
+            <a href="/ko/index.html" class="study-link">🇰🇷 Tiếng Hàn</a>
+            <a href="/ja/index.html" class="study-link">🇯🇵 Tiếng Nhật</a>
+            <a href="/zh/index.html" class="study-link">🇨🇳 Tiếng Trung</a>
+            <a href="/en/index.html" class="study-link">🇬🇧 Tiếng Anh</a>
+            <a href="/shared/index.html" class="study-link"><i class="fa-solid fa-share-nodes"></i> Kho chia sẻ</a>
         </div>
 
-        <ul class="nav-links" id="nav-links">
-            <li><a onclick="window.location.href='/'" style="cursor: pointer; color: var(--theme-accent);">Study Hub</a></li>
-            <li><a onclick="window.open('https://www.mhentuniverse.com', '_blank')" style="cursor: pointer;">Đại Sảnh MHEnt</a></li>
-            <li><a onclick="window.open('https://www.mhentuniverse.com/about', '_blank')" style="cursor: pointer;">Về chúng tớ</a></li>
-        </ul>
-
-        <div class="nav-right">
-            <div class="user-section">
-                <!-- App Switcher 9 Dots -->
-                <div class="app-switcher-container" style="position: relative; display: flex; align-items: center; margin-right: 15px;">
-                    <div class="app-switcher-btn" onclick="toggleAppSwitcher()" title="Các Vũ Trụ MHEnt" style="cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; color: inherit;">
-                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-                            <circle cx="5" cy="5" r="2"></circle><circle cx="12" cy="5" r="2"></circle><circle cx="19" cy="5" r="2"></circle>
-                            <circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle>
-                            <circle cx="5" cy="19" r="2"></circle><circle cx="12" cy="19" r="2"></circle><circle cx="19" cy="19" r="2"></circle>
-                        </svg>
-                    </div>
-                    
-                    <div id="dropdown-app-switcher" class="dropdown-menu app-switcher-menu">
-                        <a onclick="window.open('https://www.mhentuniverse.com', '_blank')" class="app-item">
-                            <span class="app-icon"><i class="fa-solid fa-house"></i></span>
-                            <span class="app-name">Đại Sảnh</span>
-                        </a>
-                        <a onclick="window.open('https://www.mhentuniverse.com/cinema', '_blank')" class="app-item">
-                            <span class="app-icon"><i class="fa-solid fa-film"></i></span>
-                            <span class="app-name">Cinema</span>
-                        </a>
-                        <a onclick="window.open('https://www.mhentuniverse.com/arena', '_blank')" class="app-item">
-                            <span class="app-icon"><i class="fa-solid fa-gamepad"></i></span>
-                            <span class="app-name">Arena</span>
-                        </a>
-                        <a onclick="window.location.href='/'" class="app-item active">
-                            <span class="app-icon"><i class="fa-solid fa-graduation-cap"></i></span>
-                            <span class="app-name">Study Hub</span>
-                        </a>
-                        <a onclick="window.open('https://www.mhentuniverse.com/music', '_blank')" class="app-item">
-                            <span class="app-icon"><i class="fa-solid fa-music"></i></span>
-                            <span class="app-name">Music</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Theme Toggle Button -->
-                <button id="btn-theme-toggle" class="btn-theme" onclick="toggleDarkMode()" title="Tắt/Mở đèn">
-                    <svg viewBox="0 0 24 24" width="18" height="18" class="svg-icon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                </button>
-                
-                <!-- Nút Đăng nhập -->
-                <button id="btn-login" class="btn-login btn-with-icon" onclick="window.location.href='/login.html'">
-                    <svg viewBox="0 0 24 24" width="16" height="16" class="svg-icon"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
-                    Đăng nhập
-                </button>
-
-                <!-- Profile khi đã đăng nhập -->
-                <div id="user-profile" class="user-profile" style="position: relative; display: none;">
-                    <div onclick="toggleAccount()" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <img id="user-avatar" src="/assets/avt-web.jpg" alt="User" class="user-avatar">
-                        <span id="user-name" class="user-name">Đang tải...</span>
-                    </div>
-                    
-                    <div id="dropdown-account" class="dropdown-menu account-dropdown">
-                        <div class="dropdown-item" onclick="window.open('https://www.mhentuniverse.com/profile#info', '_blank')">
-                            <i class="fa-solid fa-user" style="margin-right: 8px;"></i> Hồ sơ chung
-                        </div>
-                        <div class="dropdown-divider"></div>
-                        <div id="btn-logout" class="dropdown-item" style="color: #ff5c8a !important; cursor: pointer;">
-                            <i class="fa-solid fa-right-from-bracket" style="margin-right: 8px;"></i> Đăng xuất
-                        </div>
-                    </div>
-                </div>
+        <div class="nav-study-actions">
+            <div class="streak-pill-btn" title="Chuỗi ngày học liên tục">
+                <span>🔥</span> <span id="streakNum">1</span> Ngày
             </div>
+            
+            <button class="theme-toggle-btn" onclick="toggleDarkMode()" title="Đổi giao diện Sáng / Tối">
+                <i class="fa-solid fa-moon"></i>
+            </button>
 
-            <div class="menu-toggle" onclick="toggleMobileMenu()">
-                <svg viewBox="0 0 24 24" width="28" height="28" class="svg-icon" style="stroke: var(--theme-accent);"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            <!-- Nút đăng nhập -->
+            <button id="btn-login" class="auth-btn-pill" onclick="window.location.href='/login.html'">
+                <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập
+            </button>
+
+            <!-- Profile khi đã đăng nhập -->
+            <div id="user-profile" class="user-chip" style="display: none;">
+                <img id="user-avatar" src="/assets/avt-web.jpg" alt="User">
+                <span id="user-name">Đang tải...</span>
+                <button id="btn-logout" class="btn-logout-tiny" title="Đăng xuất"><i class="fa-solid fa-right-from-bracket"></i></button>
             </div>
         </div>
     </nav>
 
-    <!-- BANNER HERO CHÍNH PHONG CÁCH MHENT -->
-    <div class="study-hero-banner">
-        <div>
-            <div class="hero-tag">
-                <i class="fa-solid fa-sparkles"></i> VŨ TRỤ GIÁO DỤC MHENT
-            </div>
-            <h1 class="hero-title">
-                Khám Phá Ngoại Ngữ <br>
-                <span style="color: var(--theme-accent);">Theo Phong Cách Tương Tác Mới!</span>
-            </h1>
-            <p class="hero-desc">
-                Sổ tay từ vựng tự động kiểm tra chính tả, chu kỳ ôn tập ngắt quãng 4 giai đoạn, cá nhân hóa giáo trình và sinh đề thi trắc nghiệm thông minh cùng AI Gemini.
-            </p>
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <a href="/ko/practice/vocab.html" class="btn-login" style="padding: 12px 24px; font-size: 15px; text-decoration: none;">
-                    <i class="fa-solid fa-bolt" style="margin-right: 6px;"></i> Trải nghiệm Sổ từ vựng
-                </a>
-                <a href="/shared/index.html" class="btn-theme" style="padding: 12px 20px; font-size: 14px; text-decoration: none; border-radius: 20px; font-weight: 800;">
-                    <i class="fa-solid fa-share-nodes" style="margin-right: 6px;"></i> Kho chia sẻ & Clone
-                </a>
-            </div>
-        </div>
-        <div style="display: none; @media(min-width: 900px){display: block;}">
-            <img src="/assets/icon-logo.png" alt="MHEnt Study Logo" style="width: 220px; filter: drop-shadow(0 15px 30px rgba(14, 165, 233, 0.3));">
-        </div>
-    </div>
-
-    <!-- HOT FEATURE TIKTOK VOCAB NOTEBOOK -->
-    <div class="tiktok-feature-box">
-        <div style="display: flex; align-items: center; gap: 18px;">
-            <div style="font-size: 42px;">📝</div>
-            <div>
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
-                    <span style="background: #ec4899; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 900;">TIKTOK FEATURE</span>
-                    <h3 style="font-size: 18px; margin: 0; color: var(--text-primary);">Sổ Tay Từ Vựng Tiếng Hàn Tương Tác</h3>
-                </div>
-                <p style="font-size: 14px; color: var(--text-secondary); margin: 0;">
-                    Tự gõ từ kiểm tra Đúng / Sai, 4 hộp checkbox ôn tập ngắt quãng và cập nhật tiến độ theo thời gian thực!
-                </p>
-            </div>
-        </div>
-        <a href="/ko/practice/vocab.html" class="btn-card-action" style="background: #ec4899;">
-            <i class="fa-solid fa-play"></i> Bắt đầu học ngay
-        </a>
-    </div>
-
-    <!-- 4 LANGUAGES HUBS GRID -->
-    <main class="study-grid">
+    <!-- KHUNG CHÍNH (STUDY WRAPPER) -->
+    <main class="study-wrapper">
         
-        <!-- Tiếng Hàn -->
-        <div class="study-card ko">
-            <div class="card-icon-wrap">🇰🇷</div>
-            <div>
-                <h2 class="card-title">Tiếng Hàn Quốc</h2>
-                <div class="card-sub">한국어 • Hangeul & TOPIK</div>
+        <!-- HỘP LỜI CHÀO & TỔNG QUAN HỌC TẬP -->
+        <section class="study-greeting-box">
+            <div class="greeting-text">
+                <h1>Chào mừng bạn đến với MHEnt. Study! ✨</h1>
+                <p>Hôm nay bạn muốn trau dồi từ vựng, luyện nghe hay thi thử cùng AI của ngôn ngữ nào?</p>
             </div>
-            <ul class="card-list">
-                <li><i class="fa-solid fa-circle-check"></i> Bảng chữ cái Hangeul & Audio</li>
-                <li><i class="fa-solid fa-circle-check"></i> Sổ từ vựng tương tác Đúng/Sai</li>
-                <li><i class="fa-solid fa-circle-check"></i> 4 Lần ôn tập Spaced Repetition</li>
-                <li><i class="fa-solid fa-circle-check"></i> Phòng thi thử nghiệm AI Gemini</li>
-            </ul>
-            <a href="/ko/index.html" class="btn-card-action">
-                Vào Vũ Trụ Hàn Quốc <i class="fa-solid fa-arrow-right"></i>
-            </a>
-        </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="/ko/practice/vocab.html" class="btn-quick-tool" style="background: var(--theme-accent, #0ea5e9); color: #fff; padding: 10px 18px;">
+                    <i class="fa-solid fa-book-open"></i> Vào Sổ từ vựng TikTok
+                </a>
+                <a href="/shared/index.html" class="btn-quick-tool" style="padding: 10px 18px;">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> Nhận bài chia sẻ
+                </a>
+            </div>
+        </section>
 
-        <!-- Tiếng Nhật -->
-        <div class="study-card ja">
-            <div class="card-icon-wrap">🇯🇵</div>
-            <div>
-                <h2 class="card-title">Tiếng Nhật Bản</h2>
-                <div class="card-sub">日本語 • JLPT N5 - N1</div>
+        <!-- 4 PHÒNG HỌC NGÔN NGỮ (LANGUAGE HUBS) -->
+        <div class="lang-hub-grid">
+            
+            <!-- 🇰🇷 TIẾNG HÀN -->
+            <div class="lang-hub-card ko">
+                <div class="card-top-row">
+                    <span class="card-flag-badge">🇰🇷</span>
+                    <span class="card-status-badge">15 Từ vựng TikTok</span>
+                </div>
+                <div>
+                    <h2 class="card-lang-name">Tiếng Hàn Quốc</h2>
+                    <span class="card-lang-native">한국어 • Hangeul & TOPIK</span>
+                </div>
+                <div class="card-actions-grid">
+                    <a href="/ko/alphabet.html" class="btn-quick-tool"><i class="fa-solid fa-font"></i> Bảng Hangeul</a>
+                    <a href="/ko/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i> Sổ từ vựng</a>
+                    <a href="/ko/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i> Flashcard 3D</a>
+                    <a href="/ko/exam.html" class="btn-quick-tool"><i class="fa-solid fa-brain"></i> Thi thử AI</a>
+                    <a href="/ko/index.html" class="btn-main-enter">
+                        Vào phòng học Tiếng Hàn <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
             </div>
-            <ul class="card-list">
-                <li><i class="fa-solid fa-circle-check"></i> Bảng Hiragana & Katakana</li>
-                <li><i class="fa-solid fa-circle-check"></i> Sổ từ vựng Kanji & Furigana</li>
-                <li><i class="fa-solid fa-circle-check"></i> Flashcards 3D phản xạ nhanh</li>
-                <li><i class="fa-solid fa-circle-check"></i> Sinh đề trắc nghiệm đọc hiểu AI</li>
-            </ul>
-            <a href="/ja/index.html" class="btn-card-action">
-                Vào Vũ Trụ Nhật Bản <i class="fa-solid fa-arrow-right"></i>
-            </a>
-        </div>
 
-        <!-- Tiếng Trung -->
-        <div class="study-card zh">
-            <div class="card-icon-wrap">🇨🇳</div>
-            <div>
-                <h2 class="card-title">Tiếng Trung Quốc</h2>
-                <div class="card-sub">中文 • Pinyin & HSK 1 - 6</div>
+            <!-- 🇯🇵 TIẾNG NHẬT -->
+            <div class="lang-hub-card ja">
+                <div class="card-top-row">
+                    <span class="card-flag-badge">🇯🇵</span>
+                    <span class="card-status-badge">15 Từ JLPT N5 & Kanji</span>
+                </div>
+                <div>
+                    <h2 class="card-lang-name">Tiếng Nhật Bản</h2>
+                    <span class="card-lang-native">日本語 • Hiragana & Kanji</span>
+                </div>
+                <div class="card-actions-grid">
+                    <a href="/ja/alphabet.html" class="btn-quick-tool"><i class="fa-solid fa-font"></i> Bảng Kana</a>
+                    <a href="/ja/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i> Sổ từ vựng</a>
+                    <a href="/ja/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i> Flashcard 3D</a>
+                    <a href="/ja/exam.html" class="btn-quick-tool"><i class="fa-solid fa-brain"></i> Thi thử AI</a>
+                    <a href="/ja/index.html" class="btn-main-enter">
+                        Vào phòng học Tiếng Nhật <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
             </div>
-            <ul class="card-list">
-                <li><i class="fa-solid fa-circle-check"></i> Bảng Pinyin & 4 Thanh điệu</li>
-                <li><i class="fa-solid fa-circle-check"></i> Luyện gõ và nhận diện Hán tự</li>
-                <li><i class="fa-solid fa-circle-check"></i> Sổ từ vựng chia sẻ cộng đồng</li>
-                <li><i class="fa-solid fa-circle-check"></i> Thi thử HSK từ dữ liệu cá nhân</li>
-            </ul>
-            <a href="/zh/index.html" class="btn-card-action">
-                Vào Vũ Trụ Trung Quốc <i class="fa-solid fa-arrow-right"></i>
-            </a>
-        </div>
 
-        <!-- Tiếng Anh -->
-        <div class="study-card en">
-            <div class="card-icon-wrap">🇬🇧</div>
-            <div>
-                <h2 class="card-title">Tiếng Anh</h2>
-                <div class="card-sub">English • IPA & Communication</div>
+            <!-- 🇨🇳 TIẾNG TRUNG -->
+            <div class="lang-hub-card zh">
+                <div class="card-top-row">
+                    <span class="card-flag-badge">🇨🇳</span>
+                    <span class="card-status-badge">15 Từ HSK 1 - 2 & Hán Tự</span>
+                </div>
+                <div>
+                    <h2 class="card-lang-name">Tiếng Trung Quốc</h2>
+                    <span class="card-lang-native">中文 • Pinyin & Hán Tự</span>
+                </div>
+                <div class="card-actions-grid">
+                    <a href="/zh/alphabet.html" class="btn-quick-tool"><i class="fa-solid fa-font"></i> Bảng Pinyin</a>
+                    <a href="/zh/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i> Sổ từ vựng</a>
+                    <a href="/zh/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i> Flashcard 3D</a>
+                    <a href="/zh/exam.html" class="btn-quick-tool"><i class="fa-solid fa-brain"></i> Thi thử AI</a>
+                    <a href="/zh/index.html" class="btn-main-enter">
+                        Vào phòng học Tiếng Trung <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
             </div>
-            <ul class="card-list">
-                <li><i class="fa-solid fa-circle-check"></i> Bảng 44 âm phiên âm quốc tế IPA</li>
-                <li><i class="fa-solid fa-circle-check"></i> Luyện phản xạ & Collocations</li>
-                <li><i class="fa-solid fa-circle-check"></i> Sổ từ vựng phân loại theo chủ đề</li>
-                <li><i class="fa-solid fa-circle-check"></i> Phòng thi trắc nghiệm ngữ pháp</li>
-            </ul>
-            <a href="/en/index.html" class="btn-card-action">
-                Vào Vũ Trụ Tiếng Anh <i class="fa-solid fa-arrow-right"></i>
-            </a>
+
+            <!-- 🇬🇧 TIẾNG ANH -->
+            <div class="lang-hub-card en">
+                <div class="card-top-row">
+                    <span class="card-flag-badge">🇬🇧</span>
+                    <span class="card-status-badge">44 Âm IPA & 15 Từ vựng</span>
+                </div>
+                <div>
+                    <h2 class="card-lang-name">Tiếng Anh</h2>
+                    <span class="card-lang-native">English • IPA & Expressions</span>
+                </div>
+                <div class="card-actions-grid">
+                    <a href="/en/alphabet.html" class="btn-quick-tool"><i class="fa-solid fa-font"></i> 44 Âm IPA</a>
+                    <a href="/en/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i> Sổ từ vựng</a>
+                    <a href="/en/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i> Flashcard 3D</a>
+                    <a href="/en/exam.html" class="btn-quick-tool"><i class="fa-solid fa-brain"></i> Thi thử AI</a>
+                    <a href="/en/index.html" class="btn-main-enter">
+                        Vào phòng học Tiếng Anh <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
         </div>
 
     </main>
 
-    <!-- FOOTER CHUẨN MHENT UNIVERSE -->
-    <footer>
-        <div class="footer-bottom">
-            <p style="margin-bottom: 8px;">©2026 Miyazaki Haruto Entertainment Co., Ltd. - Project MHEnt. Universe</p>
-            <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 10px;">
-                <a onclick="window.open('https://www.facebook.com/mharuto.entertainment/', '_blank')" style="cursor: pointer; color: inherit;">
-                    <i class="fa-brands fa-facebook"></i> Facebook
-                </a>
-                <span>•</span>
-                <a onclick="window.open('https://docs.mhentuniverse.com/terms', '_blank')" style="cursor: pointer; color: inherit;">
-                    Điều khoản
-                </a>
-                <span>•</span>
-                <a onclick="window.open('https://docs.mhentuniverse.com/privacy', '_blank')" style="cursor: pointer; color: inherit;">
-                    Bảo mật
-                </a>
-            </div>
-        </div>
+    <!-- FOOTER GỌN GÀNG -->
+    <footer class="study-footer">
+        <p>© 2026 Miyazaki Haruto Entertainment Co., Ltd. - <strong>Project MHEnt. Universe</strong></p>
+        <p style="margin-top: 6px;">
+            <a href="https://www.mhentuniverse.com" target="_blank" style="color: inherit; text-decoration: none; font-weight: 700;">Đại Sảnh MHEnt</a> • 
+            <a href="/login.html" style="color: inherit; text-decoration: none;">Cổng Định Danh</a> • 
+            <a href="/shared/index.html" style="color: inherit; text-decoration: none;">Chia sẻ & Clone bài học</a>
+        </p>
     </footer>
 
     <!-- SCRIPTS -->
-    <script src="/js/config.js"></script>
-    <script src="/js/mhent-ui.js"></script>
+    <script src="/js/storage.js"></script>
     <script type="module" src="/js/auth.js"></script>
     <script>
-        function toggleAppSwitcher() {
-            const dropdown = document.getElementById('dropdown-app-switcher');
-            if (dropdown) dropdown.classList.toggle('show');
-        }
-
-        function toggleAccount() {
-            const dropdown = document.getElementById('dropdown-account');
-            if (dropdown) dropdown.classList.toggle('show');
-        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const streak = window.studyStorage ? window.studyStorage.getStreak() : 1;
+            const el = document.getElementById('streakNum');
+            if (el) el.textContent = streak;
+        });
 
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
@@ -471,19 +192,6 @@
             localStorage.setItem('mhent_dark_mode', isDark ? 'on' : 'off');
         }
 
-        // Close dropdowns when clicking outside
-        window.addEventListener('click', (e) => {
-            if (!e.target.closest('.app-switcher-container')) {
-                const appDrop = document.getElementById('dropdown-app-switcher');
-                if (appDrop) appDrop.classList.remove('show');
-            }
-            if (!e.target.closest('.user-profile')) {
-                const accDrop = document.getElementById('dropdown-account');
-                if (accDrop) accDrop.classList.remove('show');
-            }
-        });
-
-        // Áp dụng trạng thái Dark mode
         if (localStorage.getItem('mhent_dark_mode') === 'on') {
             document.body.classList.add('dark-mode');
         }
