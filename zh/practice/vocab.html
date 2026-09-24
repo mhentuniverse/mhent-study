@@ -42,8 +42,8 @@
             <span class="current">Sổ Tay Từ Vựng HSK 1 - 2</span>
         </div>
         <div style="display: flex; gap: 8px;">
-            <a href="./flashcards.html" class="btn-quick-tool" style="padding: 6px 12px; font-size: 12px;">🎴 Flashcards</a>
-            <a href="../exam.html" class="btn-quick-tool" style="background: #f59e0b; color: #fff; padding: 6px 12px; font-size: 12px;">🧠 Đề thi AI</a>
+            <a href="/zh/practice/flashcards.html" class="btn-quick-tool" style="padding: 6px 12px; font-size: 12px;">🎴 Flashcards</a>
+            <a href="/zh/exam.html" class="btn-quick-tool" style="background: #f59e0b; color: #fff; padding: 6px 12px; font-size: 12px;">🧠 Đề thi AI</a>
         </div>
     </div>
 
@@ -74,14 +74,50 @@
                 </div>
             </div>
 
-            <div class="stats-mascot">
-                <div class="mascot-emoji">🐼</div>
-                <div>
-                    <div style="font-weight: 800; font-size: 0.95rem;">Mascot Gấu Trúc</div>
-                    <div class="mascot-message" id="mascotMessage">Học chữ Hán và Pinyin mỗi ngày nhé! 🔥</div>
+            <!-- AISA Copilot Mascot Center (Harmony 🌸 & Echo 😈) -->
+            <div class="aisa-mascot-box persona-harmony" id="aisaMascotBox">
+                <div class="aisa-top-bar">
+                    <span class="aisa-badge"><i class="fa-solid fa-sparkles"></i> AISA Copilot</span>
+                    <div class="aisa-persona-tabs">
+                        <button type="button" class="persona-tab active" data-persona="harmony" onclick="window.sheetApp.setMascotPersona('harmony')">🌸 Harmony</button>
+                        <button type="button" class="persona-tab" data-persona="echo" onclick="window.sheetApp.setMascotPersona('echo')">😈 Echo</button>
+                        <button type="button" class="persona-tab" data-persona="duo" onclick="window.sheetApp.setMascotPersona('duo')">✨ Song Hành</button>
+                    </div>
+                </div>
+                <div class="aisa-content">
+                    <div class="aisa-avatars" onclick="window.sheetApp.interactMascot()" title="Chạm vào để trò chuyện cùng AISA!">
+                        <div class="aisa-avatar harmony-avatar" id="avatarHarmony">
+                            <div class="avatar-ring"></div>
+                            <div class="avatar-face">🌸</div>
+                        </div>
+                        <div class="aisa-avatar echo-avatar" id="avatarEcho" style="display: none;">
+                            <div class="avatar-ring"></div>
+                            <div class="avatar-face">😈</div>
+                        </div>
+                    </div>
+                    <div class="aisa-speech-wrap">
+                        <div class="aisa-bubble" id="aisaSpeechBubble">
+                            <div class="bubble-speaker" id="aisaSpeakerName">🌸 Harmony • Cổ vũ</div>
+                            <div class="bubble-text" id="aisaSpeechText">Chào Master! Em đã sẵn sàng đồng hành cùng Master học Hán tự nà! ✨</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
+
+        <!-- Challenge / Blind Mode Bar -->
+        <div class="challenge-toolbar">
+            <span class="challenge-title"><i class="fa-solid fa-bolt"></i> Thử thách Active Recall:</span>
+            <button type="button" class="challenge-btn active" data-mode="normal" onclick="window.sheetApp.setChallengeMode('normal')">👁️ Chuẩn</button>
+            <button type="button" class="challenge-btn" data-mode="hideWord" onclick="window.sheetApp.setChallengeMode('hideWord')">🙈 Ẩn Chữ Hán</button>
+            <button type="button" class="challenge-btn" data-mode="hidePhonetic" onclick="window.sheetApp.setChallengeMode('hidePhonetic')">🎧 Ẩn Pinyin</button>
+            <button type="button" class="challenge-btn" data-mode="hideAll" onclick="window.sheetApp.setChallengeMode('hideAll')">🔥 Siêu Khó</button>
+            
+            <label class="auto-level-label" title="Tự động ẩn chữ gốc khi từ đạt 75% trở lên để thử thách trí nhớ sâu">
+                <input type="checkbox" id="chkAutoLevelUp">
+                <span>⚡ Tự tăng độ khó khi thuộc bài</span>
+            </label>
+        </div>
 
         <section class="vocab-toolbar">
             <div class="toolbar-left">
@@ -109,10 +145,25 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Chữ Hán (生词)</th>
+                            <th>
+                                <div class="th-content-wrap">
+                                    <span>Chữ Hán (生词)</span>
+                                    <button type="button" class="btn-col-toggle" id="btnMaskWord" onclick="window.sheetApp.toggleColumnMask('word')" title="Bật/Tắt ẩn chữ Hán"><i class="fa-solid fa-eye"></i></button>
+                                </div>
+                            </th>
                             <th>Loại từ</th>
-                            <th>Phiên âm Pinyin</th>
-                            <th>Nghĩa tiếng Việt</th>
+                            <th>
+                                <div class="th-content-wrap">
+                                    <span>Phiên âm Pinyin</span>
+                                    <button type="button" class="btn-col-toggle" id="btnMaskPhonetic" onclick="window.sheetApp.toggleColumnMask('phonetic')" title="Bật/Tắt ẩn Pinyin"><i class="fa-solid fa-eye"></i></button>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="th-content-wrap">
+                                    <span>Nghĩa tiếng Việt</span>
+                                    <button type="button" class="btn-col-toggle" id="btnMaskMeaning" onclick="window.sheetApp.toggleColumnMask('meaning')" title="Bật/Tắt ẩn nghĩa"><i class="fa-solid fa-eye"></i></button>
+                                </div>
+                            </th>
                             <th>Câu ví dụ & Dịch</th>
                             <th style="min-width: 140px;">Viết từ kiểm tra</th>
                             <th>Kiểm tra</th>
