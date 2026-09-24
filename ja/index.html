@@ -86,14 +86,26 @@
                 <h1 style="font-size: 28px; font-weight: 900; margin: 4px 0 8px 0;">Vũ Trụ Tiếng Nhật Bản 🇯🇵</h1>
                 <p style="font-size: 15px; color: var(--study-text-muted); margin: 0;">Luyện chữ Hiragana, Katakana, học Kanji theo phương pháp kiểm tra chính tả và thi thử AI.</p>
             </div>
-            <a href="/ja/practice/vocab.html" class="auth-btn-pill" style="background: #ef4444; padding: 12px 24px; font-size: 15px;">
-                <i class="fa-solid fa-book-open"></i> Mở Sổ từ vựng Kanji
-            </a>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="/ja/practice/vocab.html" class="auth-btn-pill" style="background: #ef4444; padding: 12px 20px; font-size: 15px;">
+                    <i class="fa-solid fa-book-open"></i> Mở Sổ từ vựng
+                </a>
+                <button type="button" class="auth-btn-pill btn-open-ai-creator" data-lang="ja" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1.5px solid #ef4444; padding: 12px 20px; font-size: 15px; cursor: pointer;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Tạo bài học mới (AI)
+                </button>
+            </div>
         </div>
 
         <h2 style="font-size: 18px; font-weight: 900; margin-bottom: 16px;">🚀 Phòng Học & Công Cụ Tiếng Nhật</h2>
         
         <div class="tool-grid">
+            <div class="tool-box btn-open-ai-creator" data-lang="ja" style="cursor: pointer; border: 1.5px dashed #ef4444;">
+                <div style="font-size: 32px;">✨</div>
+                <h3 style="font-size: 17px; font-weight: 900; margin: 0; color: #ef4444;">Tạo Bài Học Mới</h3>
+                <p style="font-size: 13.5px; color: var(--study-text-muted); margin: 0;">Tự soạn bộ từ vựng hoặc quét ảnh chụp sách, vở ghi nhờ AI bóc tách từ vựng tự động.</p>
+                <span style="color: #ef4444; font-weight: 800; font-size: 13px; margin-top: auto;">Bắt đầu tạo bài →</span>
+            </div>
+
             <a href="/ja/alphabet.html" class="tool-box">
                 <div style="font-size: 32px;">🌸</div>
                 <h3 style="font-size: 17px; font-weight: 900; margin: 0;">Bảng Hiragana & Katakana</h3>
@@ -125,6 +137,11 @@
 
     </main>
 
+    <script src="/js/config.js"></script>
+    <script src="/js/ui-kit.js"></script>
+    <script src="/js/storage.js"></script>
+    <script src="/data/sample-ja.js"></script>
+    <script src="/js/ai-deck-creator.js"></script>
     <script>
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');

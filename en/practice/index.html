@@ -100,6 +100,13 @@
         </div>
 
         <div class="practice-grid">
+            <div class="mode-box btn-open-ai-creator" data-lang="en" style="cursor: pointer; border: 2px dashed #6366f1; background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(14, 165, 233, 0.05));">
+                <div class="mode-icon">✨</div>
+                <h2 class="mode-title" style="color: #6366f1;">Tạo Bài Học Mới (AI / Thủ công)</h2>
+                <p class="mode-desc">Quét ảnh chụp giáo trình tiếng Anh, bài báo, tài liệu IELTS hoặc dán văn bản để AI tự động bóc tách từ vựng, IPA, nghĩa và ví dụ.</p>
+                <div class="mode-action" style="color: #6366f1;">Bắt đầu tạo bài ngay →</div>
+            </div>
+
             <a href="/en/practice/vocab.html" class="mode-box">
                 <div class="mode-icon">📝</div>
                 <h2 class="mode-title">Sổ Tay Từ Vựng Oxford & IELTS</h2>
@@ -123,6 +130,11 @@
         </div>
     </main>
 
+    <script src="/js/config.js"></script>
+    <script src="/js/ui-kit.js"></script>
+    <script src="/js/storage.js"></script>
+    <script src="/data/sample-en.js"></script>
+    <script src="/js/ai-deck-creator.js"></script>
     <script>
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');

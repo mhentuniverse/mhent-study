@@ -54,7 +54,21 @@ class StudyStorage {
      * Lấy danh sách bộ từ vựng theo ngôn ngữ (ko, ja, zh, en)
      */
     getDecks(lang) {
-        return this.get(`decks_${lang}`, []);
+        let decks = this.get(`decks_${lang}`, []);
+        if (!decks || decks.length === 0) {
+            const defaultDeckMap = {
+                ko: window.DEFAULT_KO_DECK,
+                ja: window.DEFAULT_JA_DECK,
+                zh: window.DEFAULT_ZH_DECK,
+                en: window.DEFAULT_EN_DECK
+            };
+            const defaultDeck = defaultDeckMap[lang];
+            if (defaultDeck) {
+                decks = [JSON.parse(JSON.stringify(defaultDeck))];
+                this.saveDecks(lang, decks);
+            }
+        }
+        return decks || [];
     }
 
     /**
@@ -70,6 +84,56 @@ class StudyStorage {
     getDeckById(lang, deckId) {
         const decks = this.getDecks(lang);
         return decks.find(d => d.id === deckId) || null;
+    }
+
+    /**
+     * Tạo một bộ từ vựng mới
+     */
+    createDeck(lang, { title, description = '', words = [] }) {
+        const newDeck = {
+            id: `${lang}_deck_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+            lang: lang,
+            title: title || `Bài học mới (${lang.toUpperCase()})`,
+            description: description || 'Bộ từ vựng do người học tạo',
+            author: 'Người học MHEnt',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            words: words
+        };
+
+        const decks = this.getDecks(lang);
+        decks.unshift(newDeck);
+        this.saveDecks(lang, decks);
+
+        // Đồng bộ Cloud
+        if (window.studyCloud && typeof window.studyCloud.saveDeck === 'function') {
+            window.studyCloud.saveDeck(newDeck).catch(console.warn);
+        }
+
+        return newDeck;
+    }
+
+    /**
+     * Thêm danh sách từ vựng vào một bộ bài hiện có
+     */
+    addWordsToDeck(lang, deckId, newWords = []) {
+        const deck = this.getDeckById(lang, deckId);
+        if (!deck) return null;
+
+        if (!Array.isArray(deck.words)) deck.words = [];
+        deck.words.push(...newWords);
+        deck.updatedAt = new Date().toISOString();
+        return this.saveDeck(lang, deck);
+    }
+
+    /**
+     * Xóa 1 bộ từ vựng theo ID
+     */
+    deleteDeck(lang, deckId) {
+        let decks = this.getDecks(lang);
+        decks = decks.filter(d => d.id !== deckId);
+        this.saveDecks(lang, decks);
+        return decks;
     }
 
     /**

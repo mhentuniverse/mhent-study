@@ -49,6 +49,25 @@
 
     <main class="vocab-container">
         
+        <!-- Thanh Quản Lý & Chuyển Đổi Bộ Bài Học -->
+        <div class="deck-selector-bar">
+            <div class="deck-info-wrap">
+                <span class="deck-icon">📚</span>
+                <div class="deck-title-box">
+                    <span class="deck-label">Bài học đang mở:</span>
+                    <select id="deckSwitcherSelect" class="deck-select-dropdown" title="Chuyển đổi giữa các bộ bài học"></select>
+                </div>
+            </div>
+            <div class="deck-actions-wrap">
+                <button type="button" class="btn-deck-action" id="btnCreateNewDeckTop">
+                    <i class="fa-solid fa-plus"></i> Tạo bài mới
+                </button>
+                <button type="button" class="btn-deck-action" id="btnAiImportCurrentDeck" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border-color: rgba(245, 158, 11, 0.3);">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> 📸 Quét ảnh / Dán chữ (AI)
+                </button>
+            </div>
+        </div>
+
         <section class="vocab-stats-board" style="border-top: 4px solid #f59e0b;">
             <div class="stats-grid">
                 <div class="stat-box">
@@ -135,7 +154,8 @@
 
             <div class="toolbar-right">
                 <button class="btn-ghost" id="btnShareDeck">📤 Chia sẻ</button>
-                <button class="btn-primary" id="btnAddWord" style="background: #f59e0b;">+ Thêm từ Hán tự mới</button>
+                <button type="button" class="btn-ghost btn-open-ai-creator" data-lang="zh" title="Dùng AI quét ảnh sách hoặc văn bản để bóc tách từ vựng"><i class="fa-solid fa-wand-magic-sparkles"></i> 📸 Nhập từ bằng AI</button>
+                <button class="btn-primary" id="btnAddWord" style="background: #f59e0b;">+ Thêm từ thủ công</button>
             </div>
         </section>
 
@@ -247,6 +267,7 @@
     <script src="/js/supabase-client.js"></script>
     <script src="/js/storage.js"></script>
     <script src="/data/sample-zh.js"></script>
+    <script src="/js/ai-deck-creator.js"></script>
     <script src="/js/vocab-sheet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {

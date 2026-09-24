@@ -231,6 +231,80 @@ class VocabSheetApp {
                 this.renderTable();
             });
         }
+
+        // Deck Switcher Select
+        const deckSwitcher = document.getElementById('deckSwitcherSelect');
+        if (deckSwitcher) {
+            deckSwitcher.addEventListener('change', (e) => {
+                const targetDeckId = e.target.value;
+                this.switchDeck(targetDeckId);
+            });
+        }
+
+        // Nút mở AI Import vào bài học hiện tại
+        const btnAiImport = document.getElementById('btnAiImportCurrentDeck');
+        if (btnAiImport) {
+            btnAiImport.addEventListener('click', () => {
+                if (window.aiDeckCreator) {
+                    window.aiDeckCreator.open({
+                        lang: this.lang,
+                        targetDeckId: this.currentDeck?.id,
+                        isImportOnly: true
+                    });
+                }
+            });
+        }
+
+        // Nút tạo bài học mới
+        const btnCreateNewDeck = document.getElementById('btnCreateNewDeckTop');
+        if (btnCreateNewDeck) {
+            btnCreateNewDeck.addEventListener('click', () => {
+                if (window.aiDeckCreator) {
+                    window.aiDeckCreator.open({
+                        lang: this.lang,
+                        targetDeckId: null,
+                        isImportOnly: false
+                    });
+                }
+            });
+        }
+    }
+
+    populateDeckSwitcher() {
+        const select = document.getElementById('deckSwitcherSelect');
+        if (!select || !window.studyStorage) return;
+
+        const decks = window.studyStorage.getDecks(this.lang);
+        select.innerHTML = '';
+
+        decks.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.id;
+            opt.textContent = `${d.title} (${(d.words || []).length} từ)`;
+            if (this.currentDeck && d.id === this.currentDeck.id) {
+                opt.selected = true;
+            }
+            select.appendChild(opt);
+        });
+    }
+
+    switchDeck(deckId) {
+        if (!window.studyStorage) return;
+        const newDeck = window.studyStorage.getDeckById(this.lang, deckId);
+        if (newDeck) {
+            this.currentDeck = newDeck;
+            const newUrl = `${window.location.pathname}?deck=${encodeURIComponent(deckId)}`;
+            window.history.pushState({}, '', newUrl);
+
+            this.revealedWords.clear();
+            this.peekingCells.clear();
+            this.renderAll();
+            this.triggerMascotSpeak('welcome');
+
+            if (window.studyUI) {
+                window.studyUI.showToast(`📖 Đã chuyển sang: ${newDeck.title}`, 'info');
+            }
+        }
     }
 
     /* ==========================================================================
@@ -407,6 +481,7 @@ class VocabSheetApp {
         if (titleEl && this.currentDeck) {
             titleEl.textContent = this.currentDeck.title;
         }
+        this.populateDeckSwitcher();
         this.updateHeaderToggleButtons();
         this.renderTable();
         this.updateStats();

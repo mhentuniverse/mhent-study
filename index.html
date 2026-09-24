@@ -69,6 +69,9 @@
                 <a href="/ko/practice/vocab.html" class="btn-quick-tool" style="background: var(--theme-accent, #0ea5e9); color: #fff; padding: 10px 18px;">
                     <i class="fa-solid fa-book-open"></i> Vào Sổ từ vựng thông minh
                 </a>
+                <button type="button" class="btn-quick-tool btn-open-ai-creator" data-lang="ja" style="background: rgba(14, 165, 233, 0.12); color: var(--accent-edu); border: 1.5px solid var(--accent-edu); padding: 10px 18px; cursor: pointer;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Tạo bài học mới (AI)
+                </button>
                 <a href="/shared/index.html" class="btn-quick-tool" style="padding: 10px 18px;">
                     <i class="fa-solid fa-cloud-arrow-down"></i> Nhận bài chia sẻ
                 </a>
@@ -177,7 +180,14 @@
     </footer>
 
     <!-- SCRIPTS -->
+    <script src="/js/config.js"></script>
+    <script src="/js/ui-kit.js"></script>
     <script src="/js/storage.js"></script>
+    <script src="/data/sample-ja.js"></script>
+    <script src="/data/sample-ko.js"></script>
+    <script src="/data/sample-zh.js"></script>
+    <script src="/data/sample-en.js"></script>
+    <script src="/js/ai-deck-creator.js"></script>
     <script type="module" src="/js/auth.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
