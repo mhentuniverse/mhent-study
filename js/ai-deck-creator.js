@@ -105,7 +105,7 @@ class AIDeckCreator {
                             <p class="ai-header-sub" id="aiModalSubTitle">Quét ảnh chụp sách giáo khoa, dán văn bản hoặc tạo bài học tùy chỉnh</p>
                         </div>
                     </div>
-                    <button type="button" class="btn-modal-close" onclick="window.aiDeckCreator.close()" aria-label="Đóng">&times;</button>
+                    <button type="button" class="btn-modal-close" onclick="window.aiDeckCreator.close()" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
                 </div>
 
                 <div class="modal-body ai-modal-body">
@@ -394,12 +394,12 @@ class AIDeckCreator {
 
         if (isImportOnly && this.targetDeckId) {
             if (metaCard) metaCard.style.display = 'none';
-            if (mainTitle) mainTitle.textContent = `Nhập Từ Bằng AI Vào Bài Học (${langConfig.flag} ${langConfig.name})`;
+            if (mainTitle) mainTitle.textContent = `Nhập Từ Bằng AI Vào Bài Học - ${langConfig.name}`;
             if (subTitle) subTitle.textContent = 'Bổ sung thêm từ vựng mới bằng cách quét ảnh sách giáo khoa hoặc dán văn bản';
             if (headerIcon) headerIcon.textContent = '📸';
         } else {
             if (metaCard) metaCard.style.display = 'block';
-            if (mainTitle) mainTitle.textContent = `Tạo Bài Học Mới (${langConfig.flag} ${langConfig.name})`;
+            if (mainTitle) mainTitle.textContent = `Tạo Bài Học Mới - ${langConfig.name}`;
             if (subTitle) subTitle.textContent = 'Quét ảnh chụp sách giáo khoa, dán văn bản hoặc tự tạo bộ bài mới theo ý cậu';
             if (headerIcon) headerIcon.textContent = '✨';
         }
@@ -576,7 +576,7 @@ Yêu cầu trả về DUY NHẤT một mảng JSON thuần tuý (JSON array of o
 ]
 `;
 
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
