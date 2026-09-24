@@ -15,9 +15,11 @@ window.MHENT_CONFIG = window.MHENT_CONFIG || {
         URL: "https://ctzkgchjheirxwejctvl.supabase.co",
         KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0emtnY2hqaGVpcnh3ZWpjdHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjA0MTgsImV4cCI6MjA5MTgzNjQxOH0.Wl-sBpH1VvcR6-Y4D4UAVm1f5_brGK3cVIHRJBEhOJ0"
     },
-    GEMINI_API_KEY: "" // Hỗ trợ đưa key hoặc lấy từ Backend/Firebase Function khi thi AI
+    GEMINI_API_KEY: "", // Quản lý an toàn qua Backend Worker hoặc localStorage('mhent_ai_api_key')
+    AISA_API_ENDPOINT: "https://api.mhentuniverse.com"
 };
 
 window.firebaseConfig = window.MHENT_CONFIG.FIREBASE;
 window.supabaseUrl = window.MHENT_CONFIG.SUPABASE.URL;
 window.supabaseKey = window.MHENT_CONFIG.SUPABASE.KEY;
+window.aisaEndpoint = window.MHENT_CONFIG.AISA_API_ENDPOINT;

@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MHEnt. Study | Không Gian Học Ngoại Ngữ Đa Vũ Trụ</title>
-    <meta name="description" content="Nền tảng học Tiếng Hàn, Tiếng Nhật, Tiếng Trung và Tiếng Anh với sổ từ vựng tương tác, tự kiểm tra chính tả và thi thử AI.">
+    <meta name="description"
+        content="Nền tảng học Tiếng Hàn, Tiếng Nhật, Tiếng Trung và Tiếng Anh với sổ từ vựng tương tác, tự kiểm tra chính tả và thi thử AI.">
     <link rel="icon" type="image/png" sizes="48x48" href="/assets/icon-web.png">
-    
+
     <link rel="stylesheet" href="/css/study-core.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="/js/config.js"></script>
 </head>
+
 <body class="theme-edu">
 
     <!-- STUDY NAVBAR CHUYÊN NGHIỆP & GỌN GÀNG -->
@@ -37,7 +40,7 @@
             <div class="streak-pill-btn" title="Chuỗi ngày học liên tục">
                 <span>🔥</span> <span id="streakNum">1</span> Ngày
             </div>
-            
+
             <button class="theme-toggle-btn" onclick="toggleDarkMode()" title="Đổi giao diện Sáng / Tối">
                 <i class="fa-solid fa-moon"></i>
             </button>
@@ -51,14 +54,15 @@
             <div id="user-profile" class="user-chip" style="display: none;">
                 <img id="user-avatar" src="/assets/avt-web.jpg" alt="User">
                 <span id="user-name">Đang tải...</span>
-                <button id="btn-logout" class="btn-logout-tiny" title="Đăng xuất"><i class="fa-solid fa-right-from-bracket"></i></button>
+                <button id="btn-logout" class="btn-logout-tiny" title="Đăng xuất"><i
+                        class="fa-solid fa-right-from-bracket"></i></button>
             </div>
         </div>
     </nav>
 
     <!-- KHUNG CHÍNH (STUDY WRAPPER) -->
     <main class="study-wrapper">
-        
+
         <!-- HỘP LỜI CHÀO & TỔNG QUAN HỌC TẬP -->
         <section class="study-greeting-box">
             <div class="greeting-text">
@@ -66,10 +70,12 @@
                 <p>Hôm nay bạn muốn trau dồi từ vựng, luyện nghe hay thi thử cùng AI của ngôn ngữ nào?</p>
             </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <a href="/ko/practice/vocab.html" class="btn-quick-tool" style="background: var(--theme-accent, #0ea5e9); color: #fff; padding: 10px 18px;">
+                <a href="/ko/practice/vocab.html" class="btn-quick-tool"
+                    style="background: var(--theme-accent, #0ea5e9); color: #fff; padding: 10px 18px;">
                     <i class="fa-solid fa-book-open"></i> Vào Sổ từ vựng thông minh
                 </a>
-                <button type="button" class="btn-quick-tool btn-open-ai-creator" data-lang="ja" style="background: rgba(14, 165, 233, 0.12); color: var(--accent-edu); border: 1.5px solid var(--accent-edu); padding: 10px 18px; cursor: pointer;">
+                <button type="button" class="btn-quick-tool btn-open-ai-creator" data-lang="ja"
+                    style="background: rgba(14, 165, 233, 0.12); color: var(--accent-edu); border: 1.5px solid var(--accent-edu); padding: 10px 18px; cursor: pointer;">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> Tạo bài học mới (AI)
                 </button>
                 <a href="/shared/index.html" class="btn-quick-tool" style="padding: 10px 18px;">
@@ -80,7 +86,7 @@
 
         <!-- 4 PHÒNG HỌC NGÔN NGỮ (LANGUAGE HUBS) -->
         <div class="lang-hub-grid">
-            
+
             <!-- 🇰🇷 TIẾNG HÀN -->
             <div class="lang-hub-card ko">
                 <div class="card-top-row">
@@ -93,8 +99,10 @@
                 </div>
                 <div class="card-actions-grid">
                     <a href="/ko/alphabet.html" class="btn-quick-tool"><i class="fa-solid fa-font"></i> Bảng Hangeul</a>
-                    <a href="/ko/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i> Sổ từ vựng</a>
-                    <a href="/ko/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i> Flashcard 3D</a>
+                    <a href="/ko/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i>
+                        Sổ từ vựng</a>
+                    <a href="/ko/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i>
+                        Flashcard 3D</a>
                     <a href="/ko/exam.html" class="btn-quick-tool"><i class="fa-solid fa-brain"></i> Thi thử AI</a>
                     <a href="/ko/index.html" class="btn-main-enter">
                         Vào phòng học Tiếng Hàn <i class="fa-solid fa-arrow-right"></i>
@@ -114,8 +122,10 @@
                 </div>
                 <div class="card-actions-grid">
                     <a href="/ja/alphabet.html" class="btn-quick-tool"><i class="fa-solid fa-font"></i> Bảng Kana</a>
-                    <a href="/ja/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i> Sổ từ vựng</a>
-                    <a href="/ja/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i> Flashcard 3D</a>
+                    <a href="/ja/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i>
+                        Sổ từ vựng</a>
+                    <a href="/ja/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i>
+                        Flashcard 3D</a>
                     <a href="/ja/exam.html" class="btn-quick-tool"><i class="fa-solid fa-brain"></i> Thi thử AI</a>
                     <a href="/ja/index.html" class="btn-main-enter">
                         Vào phòng học Tiếng Nhật <i class="fa-solid fa-arrow-right"></i>
@@ -135,8 +145,10 @@
                 </div>
                 <div class="card-actions-grid">
                     <a href="/zh/alphabet.html" class="btn-quick-tool"><i class="fa-solid fa-font"></i> Bảng Pinyin</a>
-                    <a href="/zh/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i> Sổ từ vựng</a>
-                    <a href="/zh/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i> Flashcard 3D</a>
+                    <a href="/zh/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i>
+                        Sổ từ vựng</a>
+                    <a href="/zh/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i>
+                        Flashcard 3D</a>
                     <a href="/zh/exam.html" class="btn-quick-tool"><i class="fa-solid fa-brain"></i> Thi thử AI</a>
                     <a href="/zh/index.html" class="btn-main-enter">
                         Vào phòng học Tiếng Trung <i class="fa-solid fa-arrow-right"></i>
@@ -156,8 +168,10 @@
                 </div>
                 <div class="card-actions-grid">
                     <a href="/en/alphabet.html" class="btn-quick-tool"><i class="fa-solid fa-font"></i> 44 Âm IPA</a>
-                    <a href="/en/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i> Sổ từ vựng</a>
-                    <a href="/en/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i> Flashcard 3D</a>
+                    <a href="/en/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i>
+                        Sổ từ vựng</a>
+                    <a href="/en/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i>
+                        Flashcard 3D</a>
                     <a href="/en/exam.html" class="btn-quick-tool"><i class="fa-solid fa-brain"></i> Thi thử AI</a>
                     <a href="/en/index.html" class="btn-main-enter">
                         Vào phòng học Tiếng Anh <i class="fa-solid fa-arrow-right"></i>
@@ -173,8 +187,9 @@
     <footer class="study-footer">
         <p>© 2026 Miyazaki Haruto Entertainment Co., Ltd. - <strong>Project MHEnt. Universe</strong></p>
         <p style="margin-top: 6px;">
-            <a href="https://www.mhentuniverse.com" target="_blank" style="color: inherit; text-decoration: none; font-weight: 700;">Đại Sảnh MHEnt</a> • 
-            <a href="/login.html" style="color: inherit; text-decoration: none;">Cổng Định Danh</a> • 
+            <a href="https://www.mhentuniverse.com" target="_blank"
+                style="color: inherit; text-decoration: none; font-weight: 700;">Đại Sảnh MHEnt</a> •
+            <a href="/login.html" style="color: inherit; text-decoration: none;">Cổng Định Danh</a> •
             <a href="/shared/index.html" style="color: inherit; text-decoration: none;">Chia sẻ & Clone bài học</a>
         </p>
     </footer>
@@ -188,6 +203,7 @@
     <script src="/data/sample-zh.js"></script>
     <script src="/data/sample-en.js"></script>
     <script src="/js/ai-deck-creator.js"></script>
+    <script src="/js/aisa-widget.js" defer></script>
     <script type="module" src="/js/auth.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -207,4 +223,5 @@
         }
     </script>
 </body>
+
 </html>

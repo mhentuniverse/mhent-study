@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vũ Trụ Tiếng Trung Quốc (中文) | MHEnt. Study</title>
     <link rel="icon" type="image/png" sizes="48x48" href="/assets/icon-web.png">
-    
+
     <link rel="stylesheet" href="/css/study-core.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -22,12 +23,14 @@
             flex-wrap: wrap;
             gap: 16px;
         }
+
         .tool-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
+
         .tool-box {
             background: var(--study-surface);
             border: 1px solid var(--study-border);
@@ -41,6 +44,7 @@
             text-decoration: none;
             color: inherit;
         }
+
         .tool-box:hover {
             transform: translateY(-4px);
             border-color: #f59e0b;
@@ -48,6 +52,7 @@
         }
     </style>
 </head>
+
 <body class="theme-edu">
 
     <nav class="study-nav">
@@ -67,7 +72,8 @@
         </div>
         <div class="nav-study-actions">
             <button class="theme-toggle-btn" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
-            <a href="/" class="auth-btn-pill" style="background: #f59e0b;"><i class="fa-solid fa-house"></i> Sảnh chính</a>
+            <a href="/" class="auth-btn-pill" style="background: #f59e0b;"><i class="fa-solid fa-house"></i> Sảnh
+                chính</a>
         </div>
     </nav>
 
@@ -79,59 +85,74 @@
     </div>
 
     <main class="study-wrapper">
-        
+
         <div class="hub-banner">
             <div>
-                <span style="font-size: 13px; font-weight: 800; color: #f59e0b; text-transform: uppercase;">CHINESE LEARNING SPACE</span>
+                <span style="font-size: 13px; font-weight: 800; color: #f59e0b; text-transform: uppercase;">CHINESE
+                    LEARNING SPACE</span>
                 <h1 style="font-size: 28px; font-weight: 900; margin: 4px 0 8px 0;">Vũ Trụ Tiếng Trung Quốc 🇨🇳</h1>
-                <p style="font-size: 15px; color: var(--study-text-muted); margin: 0;">Luyện thanh điệu Pinyin, nhớ chữ Hán qua bài tập viết và thi thử HSK thông minh cùng AI.</p>
+                <p style="font-size: 15px; color: var(--study-text-muted); margin: 0;">Luyện thanh điệu Pinyin, nhớ chữ
+                    Hán qua bài tập viết và thi thử HSK thông minh cùng AI.</p>
             </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <a href="/zh/practice/vocab.html" class="auth-btn-pill" style="background: #f59e0b; padding: 12px 20px; font-size: 15px;">
+                <a href="/zh/practice/vocab.html" class="auth-btn-pill"
+                    style="background: #f59e0b; padding: 12px 20px; font-size: 15px;">
                     <i class="fa-solid fa-book-open"></i> Mở Sổ từ vựng
                 </a>
-                <button type="button" class="auth-btn-pill btn-open-ai-creator" data-lang="zh" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-line: 1.5px solid #f59e0b; padding: 12px 20px; font-size: 15px; cursor: pointer; border: 1.5px solid #f59e0b;">
+                <button type="button" class="auth-btn-pill btn-open-ai-creator" data-lang="zh"
+                    style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-line: 1.5px solid #f59e0b; padding: 12px 20px; font-size: 15px; cursor: pointer; border: 1.5px solid #f59e0b;">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> Tạo bài học mới (AI)
                 </button>
             </div>
         </div>
 
         <h2 style="font-size: 18px; font-weight: 900; margin-bottom: 16px;">🚀 Phòng Học & Công Cụ Tiếng Trung</h2>
-        
+
         <div class="tool-grid">
-            <div class="tool-box btn-open-ai-creator" data-lang="zh" style="cursor: pointer; border: 1.5px dashed #f59e0b;">
+            <div class="tool-box btn-open-ai-creator" data-lang="zh"
+                style="cursor: pointer; border: 1.5px dashed #f59e0b;">
                 <div style="font-size: 32px;">✨</div>
                 <h3 style="font-size: 17px; font-weight: 900; margin: 0; color: #f59e0b;">Tạo Bài Học Mới</h3>
-                <p style="font-size: 13.5px; color: var(--study-text-muted); margin: 0;">Tự soạn bộ từ vựng hoặc quét ảnh chụp sách HSK để AI bóc tách chữ Hán và Pinyin tự động.</p>
-                <span style="color: #f59e0b; font-weight: 800; font-size: 13px; margin-top: auto;">Bắt đầu tạo bài →</span>
+                <p style="font-size: 13.5px; color: var(--study-text-muted); margin: 0;">Tự soạn bộ từ vựng hoặc quét
+                    ảnh chụp sách HSK để AI bóc tách chữ Hán và Pinyin tự động.</p>
+                <span style="color: #f59e0b; font-weight: 800; font-size: 13px; margin-top: auto;">Bắt đầu tạo bài
+                    →</span>
             </div>
 
             <a href="/zh/alphabet.html" class="tool-box">
                 <div style="font-size: 32px;">🔤</div>
                 <h3 style="font-size: 17px; font-weight: 900; margin: 0;">Bảng Pinyin & 4 Thanh Điệu</h3>
-                <p style="font-size: 13.5px; color: var(--study-text-muted); margin: 0;">Luyện thanh mẫu, vận mẫu và cách phát âm chuẩn 4 thanh điệu.</p>
-                <span style="color: #f59e0b; font-weight: 800; font-size: 13px; margin-top: auto;">Học phát âm Pinyin →</span>
+                <p style="font-size: 13.5px; color: var(--study-text-muted); margin: 0;">Luyện thanh mẫu, vận mẫu và
+                    cách phát âm chuẩn 4 thanh điệu.</p>
+                <span style="color: #f59e0b; font-weight: 800; font-size: 13px; margin-top: auto;">Học phát âm Pinyin
+                    →</span>
             </a>
 
             <a href="/zh/practice/vocab.html" class="tool-box">
                 <div style="font-size: 32px;">📝</div>
                 <h3 style="font-size: 17px; font-weight: 900; margin: 0;">Sổ Tay Từ Vựng HSK 1 - 2</h3>
-                <p style="font-size: 13.5px; color: var(--study-text-muted); margin: 0;">Gõ Pinyin và Hán tự tự chấm Đúng/Sai, 4 chu kỳ ôn tập ngắt quãng.</p>
-                <span style="color: #f59e0b; font-weight: 800; font-size: 13px; margin-top: auto;">Vào học từ vựng →</span>
+                <p style="font-size: 13.5px; color: var(--study-text-muted); margin: 0;">Gõ Pinyin và Hán tự tự chấm
+                    Đúng/Sai, 4 chu kỳ ôn tập ngắt quãng.</p>
+                <span style="color: #f59e0b; font-weight: 800; font-size: 13px; margin-top: auto;">Vào học từ vựng
+                    →</span>
             </a>
 
             <a href="/zh/practice/flashcards.html" class="tool-box">
                 <div style="font-size: 32px;">🎴</div>
                 <h3 style="font-size: 17px; font-weight: 900; margin: 0;">Flashcards 3D Chữ Hán</h3>
-                <p style="font-size: 13.5px; color: var(--study-text-muted); margin: 0;">Lật thẻ nhận diện mặt chữ Hán và luyện phản xạ âm thanh.</p>
-                <span style="color: #f59e0b; font-weight: 800; font-size: 13px; margin-top: auto;">Luyện phản xạ →</span>
+                <p style="font-size: 13.5px; color: var(--study-text-muted); margin: 0;">Lật thẻ nhận diện mặt chữ Hán
+                    và luyện phản xạ âm thanh.</p>
+                <span style="color: #f59e0b; font-weight: 800; font-size: 13px; margin-top: auto;">Luyện phản xạ
+                    →</span>
             </a>
 
             <a href="/zh/exam.html" class="tool-box">
                 <div style="font-size: 32px;">🧠</div>
                 <h3 style="font-size: 17px; font-weight: 900; margin: 0;">Phòng Thi AI</h3>
-                <p style="font-size: 13.5px; color: var(--study-text-muted); margin: 0;">Tự sinh đề kiểm tra đọc hiểu Hán tự dựa trên bài học cá nhân.</p>
-                <span style="color: #f59e0b; font-weight: 800; font-size: 13px; margin-top: auto;">Bắt đầu thi thử →</span>
+                <p style="font-size: 13.5px; color: var(--study-text-muted); margin: 0;">Tự sinh đề kiểm tra đọc hiểu
+                    Hán tự dựa trên bài học cá nhân.</p>
+                <span style="color: #f59e0b; font-weight: 800; font-size: 13px; margin-top: auto;">Bắt đầu thi thử
+                    →</span>
             </a>
         </div>
 
@@ -142,6 +163,7 @@
     <script src="/js/storage.js"></script>
     <script src="/data/sample-zh.js"></script>
     <script src="/js/ai-deck-creator.js"></script>
+    <script src="/js/aisa-widget.js" defer></script>
     <script>
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
@@ -150,4 +172,5 @@
         if (localStorage.getItem('mhent_dark_mode') === 'on') document.body.classList.add('dark-mode');
     </script>
 </body>
+
 </html>
