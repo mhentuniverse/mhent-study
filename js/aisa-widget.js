@@ -546,7 +546,7 @@
                 body: JSON.stringify({
                     message: msg,
                     mode: mode,
-                    scope: 'support' // Luồng hỗ trợ cho website
+                    scope: siteType // 'study' | 'workspace' | 'portal'
                 })
             });
 
