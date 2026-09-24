@@ -1,12 +1,12 @@
 /**
  * MHENT STUDY - SAMPLE KOREAN VOCABULARY DECK
- * Dữ liệu mẫu chuẩn xác từ Video tham khảo TikTok
+ * Dữ liệu mẫu từ vựng tiếng Hàn nhập môn
  */
 window.DEFAULT_KO_DECK = {
     id: "ko_deck_basic_countries",
     lang: "ko",
     title: "1000 Từ vựng Tiếng Hàn Cơ Bản (Chủ đề: Quốc gia & Đời sống)",
-    description: "Bộ từ vựng tiếng Hàn nhập môn chuẩn theo video TikTok mẫu với tự kiểm tra chính tả và 4 chu kỳ ôn tập.",
+    description: "Bộ từ vựng tiếng Hàn nhập môn với tự kiểm tra chính tả và 4 chu kỳ ôn tập ngắt quãng khoa học.",
     author: "MHEnt. Universe Edu",
     createdAt: "2026-09-24T12:00:00Z",
     words: [

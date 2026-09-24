@@ -14,96 +14,96 @@ const AISA_DIALOGUES = {
     harmony: {
         speaker: '🌸 Harmony • Cổ vũ',
         welcome: [
-            "Chào Master! Em đã sẵn sàng đồng hành cùng Master chinh phục bài học hôm nay nà! ✨",
-            "Master hôm nay chăm chỉ quá! Harmony tin chắc Master sẽ tiến bộ vượt bậc! 💖",
-            "Mỗi từ vựng là một bước tiến đến ước mơ của Master! Cố lên nhé! 🌸"
+            "Chào cậu! Tớ đã sẵn sàng đồng hành cùng cậu chinh phục bài học hôm nay nà! ✨",
+            "Cậu hôm nay chăm chỉ quá! Tớ tin chắc cậu sẽ tiến bộ vượt bậc luôn! 💖",
+            "Mỗi từ vựng là một bước tiến đến ước mơ của cậu! Cố lên nhé! 🌸"
         ],
         correct: [
-            "Oa tuyệt đỉnh quá Master ơi! Gõ chuẩn xác từng chữ luôn nè! 🌸🎉",
-            "Trí nhớ của Master siêu đỉnh luôn! Chữ đã được mở khóa rồi nè! 💖",
-            "Giỏi quá đi à! Harmony tự hào về Master lắm đó nha! ✨",
-            "Chuẩn không cần chỉnh! Master giữ phong độ thế này là đỉnh nóc kịch trần luôn! 🌟"
+            "Oa tuyệt đỉnh quá cậu ơi! Gõ chuẩn xác từng chữ luôn nè! 🌸🎉",
+            "Trí nhớ của cậu siêu đỉnh luôn! Chữ đã được mở khóa rồi nè! 💖",
+            "Giỏi quá đi à! Tớ tự hào về cậu lắm đó nha! ✨",
+            "Chuẩn không cần chỉnh! Cậu giữ phong độ thế này là đỉnh nóc kịch trần luôn! 🌟"
         ],
         wrong: [
-            "Đừng lo lắng Master ơi, sai một lần để nhớ lâu hơn thôi nà! 🌸",
-            "Thử nhìn lại phiên âm một chút rồi gõ lại nhé Master, em tin Master làm được! 💖",
-            "Không sao đâu nè! Hít một hơi sâu rồi gõ lại nhé Master! 🍵"
+            "Đừng lo lắng cậu ơi, sai một lần để nhớ lâu hơn thôi nà! 🌸",
+            "Thử nhìn lại phiên âm một chút rồi gõ lại nhé, tớ tin cậu làm được mà! 💖",
+            "Không sao đâu nè! Hít một hơi sâu rồi gõ lại nhé cậu! 🍵"
         ],
         milestones: {
-            25: "Khởi đầu tuyệt vời! Master đã hoàn tất chu kỳ ôn tập đầu tiên! ✨",
-            50: "Được 50% rồi! Não bộ Master đang ghi nhớ từ vựng cực kỳ sâu sắc! 🌸",
-            75: "75% rồi Master ơi! Chỉ còn một chút nữa là làm chủ hoàn toàn từ này! 🔥",
-            100: "WAAA MASTER XUẤT SẮC! Từ vựng đã đạt 100% Mastered! Xứng đáng nhận 1000 điểm cưng chiều! 🎉👑"
+            25: "Khởi đầu tuyệt vời! Cậu đã hoàn tất chu kỳ ôn tập đầu tiên! ✨",
+            50: "Được 50% rồi! Não bộ cậu đang ghi nhớ từ vựng cực kỳ sâu sắc! 🌸",
+            75: "75% rồi cậu ơi! Chỉ còn một chút nữa là làm chủ hoàn toàn từ này! 🔥",
+            100: "WAAA CẬU XUẤT SẮC QUÁ! Từ vựng đã đạt 100% rồi nè! Xứng đáng nhận 1000 điểm cưng chiều! 🎉👑"
         },
-        blindModeOn: "Master dũng cảm quá! Bật chế độ thử thách ẩn chữ là cách học đỉnh cao nhất đó! 🌸",
-        blindModeOff: "Đã mở lại các cột hiển thị chuẩn cho Master dễ học rồi nha! 💖",
+        blindModeOn: "Cậu dũng cảm quá! Bật chế độ thử thách ẩn chữ là cách học đỉnh cao nhất đó! 🌸",
+        blindModeOff: "Đã mở lại các cột hiển thị chuẩn cho cậu dễ học rồi nha! 💖",
         interact: [
-            "Master nhớ uống chút nước rồi học tiếp nhé, sức khỏe là quan trọng nhất đó! 🍵",
-            "Harmony lúc nào cũng ở đây cạnh Master hết á, có gì khó cứ gọi em nha! 🌸",
+            "Cậu nhớ uống chút nước rồi học tiếp nhé, sức khỏe là quan trọng nhất đó! 🍵",
+            "Tớ lúc nào cũng ở đây cạnh cậu hết á, có gì khó cứ gọi tớ nha! 🌸",
             "Học ngoại ngữ như trồng một cái cây, mỗi ngày tưới một chút là sẽ nở hoa tuyệt đẹp! 🌷"
         ]
     },
     echo: {
         speaker: '😈 Echo • Thách thức',
         welcome: [
-            "Hừ, lại đến học à? Echo ngồi đây giám sát Master đấy, liệu mà tập trung vào! 😤",
-            "Đừng có lướt lướt rồi chuồn nha Master! Echo đếm đủ số từ mới cho nghỉ đấy! 😈",
+            "Hừ, lại đến học à? Echo ngồi đây giám sát cậu đấy, liệu mà tập trung vào! 😤",
+            "Đừng có lướt lướt rồi chuồn nha! Echo đếm đủ số từ mới cho nghỉ đấy! 😈",
             "Có mặt rồi thì mau khởi động ngón tay đi! Đừng để Echo chê đấy! 😼"
         ],
         correct: [
-            "Hừm... đúng rồi đấy. Coi như Master cũng có chút bản lĩnh! 😼",
-            "Từ này dễ ợt mà, có gì mà vội mừng! Xem từ tiếp theo Master có gõ nổi không! 😈",
-            "Ồ, gõ chuẩn phết nhỉ? Tạm duyệt cho Master 1 điểm cộng! ✨",
+            "Hừm... đúng rồi đấy. Coi như cậu cũng có chút bản lĩnh! 😼",
+            "Từ này dễ ợt mà, có gì mà vội mừng! Xem từ tiếp theo cậu có gõ nổi không! 😈",
+            "Ồ, gõ chuẩn phết nhỉ? Tạm duyệt cho cậu 1 điểm cộng! ✨",
             "Nhớ được chữ này là khá rồi đấy... Nhưng đừng có mà tự mãn nha đồ ngốc! 💜"
         ],
         wrong: [
             "Lêu lêu gõ sai bét kìa! Coi chừng Echo cười cho thúi mũi bây giờ! 😜",
-            "Ủa ủa gõ gì kì vậy Master? Mắt để đi đâu rồi hả? Nhìn kĩ lại coi! 😤",
+            "Ủa ủa gõ gì kì vậy nè? Mắt để đi đâu rồi hả? Nhìn kĩ lại coi! 😤",
             "Sai rồi nha! Đã bảo là phải tập trung mà không chịu nghe Echo! 😈"
         ],
         milestones: {
-            25: "Mới được có 25% thôi, còn non và xanh lắm Master ơi! 😜",
+            25: "Mới được có 25% thôi, còn non và xanh lắm cậu ơi! 😜",
             50: "Nửa đường rồi đấy! Đừng có bỏ dở giữa chừng rồi kêu Echo cứu nha! 😼",
             75: "75% rồi kìa, ráng lên chút nữa xem có lấy được 100% của Echo không! 🔥",
-            100: "Hừ... cũng được đấy... 100% rồi à. Tạm công nhận Master có cố gắng! 💜✨"
+            100: "Hừ... cũng được đấy... 100% rồi à. Tạm công nhận cậu có cố gắng! 💜✨"
         },
         blindModeOn: "Ồ, gan dạ dữ ta? Dám bật chế độ ẩn chữ luôn cơ à! Coi chừng gõ sai tè le nha! 😈",
-        blindModeOff: "Hứ, chịu thua độ khó cao rồi à? Thôi mở lại cho Master đỡ khóc! 😜",
+        blindModeOff: "Hứ, chịu thua độ khó cao rồi à? Thôi mở lại cho cậu đỡ khóc! 😜",
         interact: [
             "Nhìn cái gì mà nhìn? Lo gõ từ tiếp theo đi chứ, chọc tui quài! 😤",
-            "Master mà gõ sai 3 lần là Echo ghi vào danh sách đen AI phạt học thêm 20 từ đấy nhé! 😈",
-            "Hừ, đừng tưởng Echo không biết Master đang lén lút click vào avatar tui để trốn học nha! 😜"
+            "Cậu mà gõ sai 3 lần là Echo ghi vào danh sách đen phạt học thêm 20 từ đấy nhé! 😈",
+            "Hừ, đừng tưởng Echo không biết cậu đang lén lút click vào avatar tui để trốn học nha! 😜"
         ]
     },
     duo: {
         speaker: '✨ Harmony & Echo • Song Hành',
         welcome: [
-            "Harmony: 'Chào Master!' • Echo: 'Mau học đi, đừng để tụi này đợi lâu!' 🌸😈",
-            "Harmony: 'Hôm nay học vui vẻ nha Master!' • Echo: 'Học nghiêm túc vào, Echo soi đấy!' ✨",
-            "Bộ đôi AISA đã vào vị trí sẵn sàng hỗ trợ Master chiến đấu với kho từ vựng! 🔥"
+            "Harmony: 'Chào cậu nè!' • Echo: 'Mau học đi, đừng để tụi này đợi lâu!' 🌸😈",
+            "Harmony: 'Hôm nay học vui vẻ nha!' • Echo: 'Học nghiêm túc vào, Echo soi đấy!' ✨",
+            "Bộ đôi AISA đã vào vị trí sẵn sàng hỗ trợ cậu chiến đấu với kho từ vựng! 🔥"
         ],
         correct: [
-            "Harmony: 'Master đúng rồi kìa Echo ơi!' • Echo: 'Hứ, từ này dễ, từ sau mới biết tay!' 🌸😈",
-            "Harmony: 'Master nhớ siêu quá!' • Echo: 'Tạm được thôi, chưa bằng AI tụi tui đâu!' ✨",
-            "Echo: 'Ủa gõ đúng thiệt kìa...' • Harmony: 'Thấy chưa, em đã bảo Master giỏi lắm mà!' 💖"
+            "Harmony: 'Cậu đúng rồi kìa Echo ơi!' • Echo: 'Hứ, từ này dễ, từ sau mới biết tay!' 🌸😈",
+            "Harmony: 'Cậu nhớ siêu quá!' • Echo: 'Tạm được thôi, chưa bằng AI tụi tui đâu!' ✨",
+            "Echo: 'Ủa gõ đúng thiệt kìa...' • Harmony: 'Thấy chưa, tớ đã bảo cậu ấy giỏi lắm mà!' 💖"
         ],
         wrong: [
-            "Echo: 'Sai rồi kìa lêu lêu!' • Harmony: 'Echo đừng trêu Master nữa, Master làm lại được mà!' 🥺",
-            "Harmony: 'Master bình tĩnh gõ lại nha!' • Echo: 'Nhớ soi kỹ phiên âm vào đấy đồ ngốc!' 😈",
-            "Echo: 'Haha sai một từ!' • Harmony: 'Master cố lên, sai một lần là nhớ thêm một chút nè!' 🌸"
+            "Echo: 'Sai rồi kìa lêu lêu!' • Harmony: 'Echo đừng trêu nữa, bạn ấy làm lại được mà!' 🥺",
+            "Harmony: 'Cậu bình tĩnh gõ lại nha!' • Echo: 'Nhớ soi kỹ phiên âm vào đấy đồ ngốc!' 😈",
+            "Echo: 'Haha sai một từ!' • Harmony: 'Cố lên nào, sai một lần là nhớ thêm một chút nè!' 🌸"
         ],
         milestones: {
             25: "Harmony: '25% rồi nè!' • Echo: 'Mới 1/4 chặng đường thôi, gõ tiếp đi!' ✨",
-            50: "Harmony: 'Nửa chặng đường rồi Master!' • Echo: 'Tốc độ cũng tạm, cố lên coi!' 🚀",
+            50: "Harmony: 'Nửa chặng đường rồi cậu ơi!' • Echo: 'Tốc độ cũng tạm, cố lên coi!' 🚀",
             75: "Harmony: 'Sắp 100% rồi!' • Echo: 'Cố mà làm nốt 1 lần cuối cho trọn vẹn đấy!' 🔥",
-            100: "Harmony & Echo: 'MASTER ĐẠT 100% XUẤT SẮC! CẢ HAI ĐỀU CÔNG NHẬN MASTER!' 🎉👑"
+            100: "Harmony & Echo: 'XUẤT SẮC 100% RỒI! CẢ HAI ĐỀU CÔNG NHẬN CẬU NHA!' 🎉👑"
         },
-        blindModeOn: "Echo: 'Master chơi lớn vậy à?' • Harmony: 'Master cố lên nhé, em tin tưởng Master!' 🌸😈",
-        blindModeOff: "Harmony: 'Trở về chế độ bình thường rồi nè!' • Echo: 'Nhẹ gánh hơn chưa Master?' 🍵",
+        blindModeOn: "Echo: 'Chơi lớn vậy à?' • Harmony: 'Cậu cố lên nhé, tớ tin tưởng cậu!' 🌸😈",
+        blindModeOff: "Harmony: 'Trở về chế độ bình thường rồi nè!' • Echo: 'Nhẹ gánh hơn chưa cậu?' 🍵",
         interact: [
-            "Harmony: 'Master dễ thương ghê, cứ click vào tụi em suốt!' • Echo: 'Lười học thì có, lo làm bài đi Master!' 🌸😈",
-            "Echo: 'Nè Master, Harmony hiền chứ Echo dữ lắm đó nha!' • Harmony: 'Master đừng sợ, có em bảo vệ Master nè!' 💖",
-            "Song kiếm hợp bích! Harmony tiếp năng lượng, Echo đốc thúc học tập cho Master! ✨"
+            "Harmony: 'Cậu dễ thương ghê, cứ click vào tụi em suốt!' • Echo: 'Lười học thì có, lo làm bài đi cậu ơi!' 🌸😈",
+            "Echo: 'Nè, Harmony hiền chứ Echo dữ lắm đó nha!' • Harmony: 'Đừng sợ, có tớ bảo vệ cậu nè!' 💖",
+            "Song kiếm hợp bích! Harmony tiếp năng lượng, Echo đốc thúc học tập cho cậu! ✨"
         ]
     }
 };

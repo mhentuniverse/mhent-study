@@ -4,9 +4,7 @@
 
 ---
 
-## 🌟 Tính Năng Nổi Bật
-
-### 1. 📝 Sổ Tay Từ Vựng Thông Minh (Lấy cảm hứng từ Video TikTok)
+### 1. 📝 Sổ Tay Từ Vựng Thông Minh (Active Recall & Spaced Repetition)
 - **Tự động kiểm tra đúng / sai theo thời gian thực (Active Recall):** Người học tự gõ lại từ vựng vào ô kiểm tra; hệ thống so sánh tức thì và báo **"맞음 • Đúng ✨"** (âm thanh *ding!*) hoặc **"틀림 • Sai ❌"**.
 - **Chu kỳ 4 lần ôn tập ngắt quãng (Spaced Repetition):** 4 ô checkbox tương ứng mức độ ghi nhớ (0% ➔ 25% ➔ 50% ➔ 75% ➔ 100% Hoàn thành).
 - **Dashboard Thống kê Live:** Tự động đếm Tổng số từ, Số từ đã thuộc, Số từ cần ôn, và thanh tiến độ % toàn bộ giáo trình cùng Mascot động viên.
@@ -23,7 +21,7 @@
   - Bấm **"Đồng ý sao chép"** -> Bản sao độc lập được tạo trong tài khoản người nhận để tự do học và chỉnh sửa.
 - **Kiểu 2 (Drive-like Shared Vault):** Xem các bộ bài trong mục "Được chia sẻ với tôi" và bấm Clone bất kỳ lúc nào.
 
-### 4. 🧠 Phòng Thi Trí Tuệ Nhân Tạo (AI Gemini)
+### 4. 🧠 Phòng Thi Trí Tuệ Nhân Tạo (AI Exam)
 - Tự động sinh đề kiểm tra trắc nghiệm và điền từ dựa trên chính kho từ vựng người học đã nhập.
 - Tự chấm điểm và hiển thị đáp án giải thích.
 
@@ -40,10 +38,10 @@ mhent-study/
 ├── ko/                         # 🇰🇷 VŨ TRỤ TIẾNG HÀN
 │   ├── index.html              # Hub tiếng Hàn & Studio quản lý Decks
 │   ├── alphabet.html           # Bảng chữ cái Hangeul tương tác (Nghe phát âm từng chữ)
-│   ├── exam.html               # Phòng thi thử nghiệm AI Gemini
+│   ├── exam.html               # Phòng thi thử nghiệm AI
 │   └── practice/               # Thư mục phòng luyện tập
 │       ├── index.html          # Menu chọn chế độ luyện tập
-│       ├── vocab.html          # Sổ tay từ vựng tương tác (Tính năng theo video TikTok)
+│       ├── vocab.html          # Sổ tay từ vựng tương tác thông minh
 │       └── flashcards.html     # Flashcards 3D lật thẻ không gian
 │
 ├── ja/                         # 🇯🇵 VŨ TRỤ TIẾNG NHẬT
@@ -62,7 +60,7 @@ mhent-study/
 ├── css/
 │   ├── theme.css               # Biến màu MHEnt, Dark/Light Mode, Glassmorphism, Font CJK
 │   ├── layout.css              # Thanh điều hướng Navbar, Breadcrumbs, Modals, Toasts
-│   └── vocab-sheet.css         # Phong cách bảng từ vựng thông minh theo video TikTok
+│   └── vocab-sheet.css         # Phong cách bảng từ vựng thông minh MHEnt Universe
 │
 ├── js/
 │   ├── config.js               # Cấu hình tập trung Firebase & Supabase (đồng bộ MHEnt)
