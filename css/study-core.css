@@ -3,6 +3,34 @@
    Thiết kế chuẩn EdTech: Dễ học - Dễ nhìn - Rõ nét chữ CJK - Không phân tâm
    ========================================================================== */
 
+/* 1. Global Box-Sizing & Layout Reset */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--study-bg);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--study-border);
+    border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--theme-accent, #0ea5e9);
+}
+
 :root {
     --study-bg: #f8fafc;
     --study-surface: #ffffff;
@@ -23,22 +51,37 @@
     --radius-pill: 9999px;
 
     /* Tương thích ngược cho các thành phần UI */
+    --bg-primary: var(--study-bg);
     --bg-surface: var(--study-surface);
     --bg-subtle: var(--study-subtle);
+    --bg-glass: rgba(255, 255, 255, 0.85);
+    --bg-glass-strong: rgba(255, 255, 255, 0.96);
     --border-color: var(--study-border);
+    --border-glass: rgba(255, 255, 255, 0.6);
     --text-primary: var(--study-text);
     --text-secondary: var(--study-text-muted);
     --text-muted: var(--study-text-muted);
+    --radius-sm: 8px;
+    --radius-md: 12px;
     --radius-lg: 16px;
-    --radius-md: 10px;
     --radius-full: 9999px;
-    --transition-fast: 0.15s ease;
+    --transition-fast: 0.18s ease;
+    --transition-normal: 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     --accent-edu: #0ea5e9;
-    --accent-edu-glow: rgba(14, 165, 233, 0.2);
+    --accent-edu-glow: rgba(14, 165, 233, 0.25);
     --accent-korea: #ec4899;
+    --accent-japan: #ef4444;
+    --accent-china: #f59e0b;
+    --accent-english: #6366f1;
     --success: #10b981;
+    --success-bg: rgba(16, 185, 129, 0.12);
     --error: #ef4444;
+    --error-bg: rgba(239, 68, 68, 0.12);
+    --warning: #f59e0b;
+    --warning-bg: rgba(245, 158, 11, 0.12);
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+    --shadow-glass: 0 8px 32px rgba(14, 165, 233, 0.08);
 
     /* AISA Mascot Copilot Palette */
     --aisa-harmony: #f472b6;
@@ -58,19 +101,25 @@ body.dark-mode {
     --study-shadow: 0 4px 25px rgba(0, 0, 0, 0.4);
     --study-shadow-hover: 0 14px 40px rgba(0, 0, 0, 0.55);
 
+    --bg-primary: var(--study-bg);
     --bg-surface: var(--study-surface);
     --bg-subtle: var(--study-subtle);
+    --bg-glass: rgba(19, 27, 46, 0.85);
+    --bg-glass-strong: rgba(19, 27, 46, 0.96);
     --border-color: var(--study-border);
+    --border-glass: rgba(255, 255, 255, 0.08);
     --text-primary: var(--study-text);
     --text-secondary: var(--study-text-muted);
     --text-muted: var(--study-text-muted);
     --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.5);
+    --shadow-glass: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
 
 body {
     background-color: var(--study-bg);
     color: var(--study-text);
-    font-family: 'Nunito', sans-serif;
+    font-family: 'Nunito', 'Noto Sans JP', 'Noto Sans KR', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
     margin: 0;
     padding: 0;
     line-height: 1.6;
@@ -482,4 +531,243 @@ body {
     text-align: center;
     font-size: 13px;
     color: var(--study-text-muted);
+}
+
+/* ==========================================================================
+   4. NÚT BẤM TIỆN ÍCH CHUẨN MHENT STUDY (BUTTON UTILITIES)
+   ========================================================================== */
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.25rem;
+    border-radius: var(--radius-pill);
+    background: var(--theme-accent, #0ea5e9);
+    color: #ffffff !important;
+    font-weight: 800;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(14, 165, 233, 0.3);
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.btn-primary:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(14, 165, 233, 0.45);
+}
+
+.btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.15rem;
+    border-radius: var(--radius-pill);
+    background: var(--study-subtle);
+    border: 1px solid var(--study-border);
+    color: var(--study-text);
+    font-weight: 800;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.btn-ghost:hover {
+    background: var(--study-border);
+    color: var(--study-text);
+    transform: translateY(-1px);
+}
+
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--study-subtle);
+    border: 1px solid var(--study-border);
+    color: var(--study-text);
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    user-select: none;
+    padding: 0;
+}
+
+.btn-icon:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+    transform: scale(1.05);
+}
+
+/* ==========================================================================
+   5. HỆ THỐNG MODAL POPUP & OVERLAY (MODAL OVERLAY SYSTEM)
+   ========================================================================== */
+.mhent-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 7, 18, 0.72);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.mhent-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+}
+
+.mhent-modal {
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: var(--study-surface);
+    border: 1px solid var(--study-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--study-shadow-hover);
+    transform: translateY(20px) scale(0.96);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.mhent-overlay.active .mhent-modal {
+    transform: translateY(0) scale(1);
+}
+
+.modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--study-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: var(--study-surface);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--study-text);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    color: var(--study-text);
+}
+
+.modal-footer {
+    padding: 1rem 1.5rem;
+    background: var(--study-subtle);
+    border-top: 1px solid var(--study-border);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+/* Modal Form Controls */
+.modal-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--study-text);
+    margin-bottom: 6px;
+}
+
+.modal-input,
+.modal-select {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--study-border);
+    background: var(--study-subtle);
+    color: var(--study-text);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    outline: none;
+    transition: all var(--transition-fast);
+}
+
+.modal-input:focus,
+.modal-select:focus {
+    border-color: var(--theme-accent, #0ea5e9);
+    background: var(--study-surface);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.25);
+}
+
+/* ==========================================================================
+   6. HỆ THỐNG THÔNG BÁO TOAST (TOAST NOTIFICATIONS)
+   ========================================================================== */
+#study-toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+    max-width: 90vw;
+}
+
+.study-toast {
+    pointer-events: auto;
+    min-width: 280px;
+    max-width: 420px;
+    padding: 0.85rem 1.15rem;
+    border-radius: var(--radius-md);
+    background: var(--study-surface);
+    border: 1px solid var(--study-border);
+    box-shadow: var(--study-shadow-hover);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--study-text);
+    animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.study-toast.success { border-left: 4px solid var(--success); }
+.study-toast.error { border-left: 4px solid var(--error); }
+.study-toast.info { border-left: 4px solid var(--accent-edu); }
+
+@keyframes toastSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

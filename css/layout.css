@@ -192,12 +192,14 @@
     padding: 1rem;
     opacity: 0;
     pointer-events: none;
-    transition: opacity var(--transition-normal);
+    visibility: hidden;
+    transition: opacity var(--transition-normal), visibility var(--transition-normal);
 }
 
 .mhent-overlay.active {
     opacity: 1;
     pointer-events: auto;
+    visibility: visible;
 }
 
 .mhent-modal {

@@ -178,25 +178,25 @@
     </main>
 
     <!-- Modal Thêm Từ Mới -->
-    <div class="mhent-overlay" id="addWordModal">
+    <div class="mhent-overlay" id="addWordModal" onclick="if(event.target === this) window.sheetApp.closeAddWordModal()">
         <div class="mhent-modal">
             <div class="modal-header">
                 <h3>✨ Thêm từ vựng tiếng Nhật mới</h3>
                 <button class="btn-icon" onclick="window.sheetApp.closeAddWordModal()">✕</button>
             </div>
-            <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div class="modal-body">
                 <div>
-                    <label style="font-size: 13px; font-weight: 800;">Từ Kanji / Hiragana *</label>
-                    <input type="text" id="newWord" class="search-input-wrap" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--study-border); background: var(--study-surface); color: inherit;" placeholder="Ví dụ: 桜 (Hoa anh đào)">
+                    <label class="modal-label">Từ Kanji / Hiragana *</label>
+                    <input type="text" id="newWord" class="modal-input" placeholder="Ví dụ: 桜 (Hoa anh đào)">
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div>
-                        <label style="font-size: 13px; font-weight: 800;">Furigana / Romaji</label>
-                        <input type="text" id="newPhonetic" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--study-border); background: var(--study-surface); color: inherit;" placeholder="Ví dụ: sakura">
+                        <label class="modal-label">Furigana / Romaji</label>
+                        <input type="text" id="newPhonetic" class="modal-input" placeholder="Ví dụ: sakura">
                     </div>
                     <div>
-                        <label style="font-size: 13px; font-weight: 800;">Loại từ</label>
-                        <select id="newPos" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--study-border); background: var(--study-surface); color: inherit;">
+                        <label class="modal-label">Loại từ</label>
+                        <select id="newPos" class="modal-select">
                             <option value="noun">Danh từ</option>
                             <option value="verb">Động từ</option>
                             <option value="adj">Tính từ</option>
@@ -205,16 +205,16 @@
                     </div>
                 </div>
                 <div>
-                    <label style="font-size: 13px; font-weight: 800;">Nghĩa tiếng Việt *</label>
-                    <input type="text" id="newMeaning" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--study-border); background: var(--study-surface); color: inherit;" placeholder="Ví dụ: Hoa anh đào Nhật Bản">
+                    <label class="modal-label">Nghĩa tiếng Việt *</label>
+                    <input type="text" id="newMeaning" class="modal-input" placeholder="Ví dụ: Hoa anh đào Nhật Bản">
                 </div>
                 <div>
-                    <label style="font-size: 13px; font-weight: 800;">Câu ví dụ mẫu</label>
-                    <input type="text" id="newExample" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--study-border); background: var(--study-surface); color: inherit;" placeholder="Ví dụ: 桜がとても綺麗です。">
+                    <label class="modal-label">Câu ví dụ mẫu</label>
+                    <input type="text" id="newExample" class="modal-input" placeholder="Ví dụ: 桜がとても綺麗です。">
                 </div>
                 <div>
-                    <label style="font-size: 13px; font-weight: 800;">Dịch câu ví dụ</label>
-                    <input type="text" id="newExampleTrans" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--study-border); background: var(--study-surface); color: inherit;" placeholder="Ví dụ: Hoa anh đào rất là đẹp.">
+                    <label class="modal-label">Dịch câu ví dụ</label>
+                    <input type="text" id="newExampleTrans" class="modal-input" placeholder="Ví dụ: Hoa anh đào rất là đẹp.">
                 </div>
             </div>
             <div class="modal-footer">
@@ -225,16 +225,16 @@
     </div>
 
     <!-- Modal Share -->
-    <div class="mhent-overlay" id="shareModal">
+    <div class="mhent-overlay" id="shareModal" onclick="if(event.target === this) window.sheetApp.closeShareModal()">
         <div class="mhent-modal">
             <div class="modal-header">
                 <h3>📤 Chia sẻ Bộ từ vựng tiếng Nhật</h3>
                 <button class="btn-icon" onclick="window.sheetApp.closeShareModal()">✕</button>
             </div>
             <div class="modal-body">
-                <p style="font-size: 14px; margin-bottom: 12px;">Chia sẻ liên kết này để bạn bè có thể xem và clone bộ bài này vào tài khoản của họ:</p>
+                <p style="font-size: 14px; margin-bottom: 12px; color: var(--study-text-muted);">Chia sẻ liên kết này để bạn bè có thể xem và clone bộ bài này vào tài khoản của họ:</p>
                 <div style="display: flex; gap: 8px;">
-                    <input type="text" id="shareLinkInput" readonly style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--study-border); background: var(--study-subtle); color: inherit;">
+                    <input type="text" id="shareLinkInput" class="modal-input" readonly style="flex: 1;">
                     <button class="btn-primary" onclick="window.sheetApp.copyShareLink()" style="background: #ef4444;">Sao chép</button>
                 </div>
             </div>

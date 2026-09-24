@@ -176,7 +176,7 @@
     </main>
 
     <!-- Modal Popup Clone Prompt -->
-    <div class="mhent-overlay" id="clonePromptModal">
+    <div class="mhent-overlay" id="clonePromptModal" onclick="if(event.target === this) document.getElementById('clonePromptModal').classList.remove('active')">
         <div class="mhent-modal">
             <div class="modal-header">
                 <h3 style="font-size: 1.15rem;">🎉 Nhận Bộ tài liệu học mới</h3>
