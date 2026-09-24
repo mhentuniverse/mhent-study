@@ -1,0 +1,184 @@
+/* ==========================================================================
+   MHEnt. UI LIBRARY - THE ULTIMATE ALERT & POPUP SYSTEM (V1.3 - Smooth Fade Edition)
+   ========================================================================== */
+
+/* ==========================================
+   1. THÔNG BÁO NHANH (TOAST NOTIFICATION)
+   ========================================== */
+#mhent-toast-container {
+    position: fixed;
+    top: 25px;
+    right: 25px;
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+}
+
+.mhent-toast {
+    pointer-events: auto;
+    width: 320px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    border-left: 6px solid #10b981;
+    /* Hiệu ứng trượt vào mượt mà */
+    animation: toastFadeInRight 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.mhent-toast.error { border-left-color: #ef4444; }
+.mhent-toast.info { border-left-color: #f59e0b; }
+.mhent-toast.success { border-left-color: #10b981; }
+
+.mhent-toast-icon { flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.mhent-toast-icon svg { width: 26px; height: 26px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+
+.mhent-toast-content { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.mhent-toast-title { font-family: 'Nunito', sans-serif; font-weight: 900; color: #1e293b; font-size: 15px; margin-bottom: 2px; }
+.mhent-toast-desc { font-family: 'Nunito', sans-serif; color: #64748b; font-size: 13.5px; font-weight: 700; line-height: 1.4; }
+
+/* ==========================================
+   2. BẢNG THÔNG BÁO Ở GIỮA (POPUP & CONFIRM)
+   ========================================== */
+.mhent-ui-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(6px);
+    z-index: 999998; display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    /* Hiệu ứng Fade cho lớp nền mờ */
+    transition: opacity 0.3s ease-out;
+}
+
+.mhent-ui-overlay.show { opacity: 1; pointer-events: auto; }
+
+.mhent-ui-box {
+    background: #ffffff; width: 90%; max-width: 400px; padding: 35px 30px;
+    border-radius: 24px; text-align: center;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15); border: 1px solid rgba(0, 0, 0, 0.05);
+    /* Bắt đầu ở trạng thái thu nhỏ và lệch xuống xíu */
+    transform: scale(0.9) translateY(20px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.mhent-ui-overlay.show .mhent-ui-box {
+    /* Trạng thái hiện ra hoàn chỉnh */
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+/* KHI ĐÓNG POPUP (THÊM CLASS OUT) */
+.mhent-ui-overlay.out { opacity: 0; pointer-events: none; }
+.mhent-ui-overlay.out .mhent-ui-box {
+    /* Hiệu ứng lặn xuống và thu nhỏ mượt mà khi đóng */
+    transform: scale(0.9) translateY(10px);
+    opacity: 0;
+}
+
+.mhent-ui-icon { margin-bottom: 20px; display: inline-block; padding: 15px; border-radius: 50%; }
+.mhent-ui-box.success .mhent-ui-icon { background: rgba(16, 185, 129, 0.1); }
+.mhent-ui-box.error .mhent-ui-icon { background: rgba(239, 68, 68, 0.1); }
+.mhent-ui-box.warning .mhent-ui-icon { background: rgba(245, 158, 11, 0.1); }
+
+.mhent-ui-title { font-family: 'Nunito', sans-serif; font-size: 22px; font-weight: 900; color: #1e293b; margin: 0 0 10px 0; }
+.mhent-ui-msg { font-family: 'Nunito', sans-serif; font-size: 15px; color: #64748b; font-weight: 700; line-height: 1.6; margin: 0 0 25px 0; }
+
+/* ==========================================
+   3. HỆ THỐNG NÚT BẤM (BUTTONS)
+   ========================================== */
+.mhent-ui-actions { display: flex; gap: 12px; justify-content: center; }
+.mhent-ui-btn-primary, .mhent-ui-btn-outline { font-family: 'Nunito', sans-serif; flex: 1; padding: 14px; border-radius: 14px; font-weight: 800; font-size: 15px; cursor: pointer; transition: all 0.2s ease; border: none; outline: none; }
+.mhent-ui-btn-primary { background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3); }
+.mhent-ui-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(14, 165, 233, 0.4); }
+.mhent-ui-btn-outline { background: #f1f5f9; color: #475569; }
+.mhent-ui-btn-outline:hover { background: #e2e8f0; color: #1e293b; }
+
+.mhent-ui-box.warning .mhent-ui-btn-primary { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
+.mhent-ui-box.warning .mhent-ui-btn-primary:hover { box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4); }
+
+/* ==========================================
+   4. HIỆU ỨNG CHUYỂN ĐỘNG (ANIMATIONS) DÀNH CHO TOAST
+   ========================================== */
+@keyframes toastFadeInRight {
+    0% { opacity: 0; transform: translateX(50px) scale(0.95); }
+    100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes toastFadeOut {
+    0% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0.9) translateY(-20px); } /* Bay lên và mờ đi */
+}
+
+/* ==========================================
+   5. HỖ TRỢ CHẾ ĐỘ TỐI (DARK MODE)
+   ========================================== */
+body.dark-mode .mhent-toast { background: rgba(30, 41, 59, 0.95); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
+body.dark-mode .mhent-toast-title { color: #f8fafc; }
+body.dark-mode .mhent-toast-desc { color: #94a3b8; }
+body.dark-mode .mhent-ui-box { background: #1e293b; border-color: #334155; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4); }
+body.dark-mode .mhent-ui-title { color: #f8fafc; }
+body.dark-mode .mhent-ui-msg { color: #cbd5e1; }
+body.dark-mode .mhent-ui-btn-outline { background: #334155; color: #cbd5e1; }
+body.dark-mode .mhent-ui-btn-outline:hover { background: #475569; color: #f8fafc; }
+
+/* ==========================================
+   6. RESPONSIVE (MÀN HÌNH ĐIỆN THOẠI)
+   ========================================== */
+@media (max-width: 480px) {
+    #mhent-toast-container { top: 20px; left: 20px; right: 20px; }
+    .mhent-toast { width: 100%; box-sizing: border-box; }
+    .mhent-ui-box { padding: 25px 20px; }
+    .mhent-ui-title { font-size: 20px; }
+    .mhent-ui-actions { flex-direction: column; }
+}
+.mhent-toast-icon svg { width: 26px !important; height: 26px !important; display: block !important; flex-shrink: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+.mhent-ui-icon svg { width: 50px !important; height: 50px !important; display: block !important; margin: 0 auto; }
+
+/* ==========================================
+   TYPING POPUP STYLES (ĐÃ MƯỢT HƠN)
+========================================== */
+#mhent-typing-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 9999; opacity: 0; transition: opacity 0.3s ease; }
+#mhent-typing-overlay.show { opacity: 1; }
+
+.mhent-typing-box { background: #ffffff; padding: 25px 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 15px; border: 2px solid #e2e8f0; transform: scale(0.9); opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+#mhent-typing-overlay.show .mhent-typing-box { transform: scale(1); opacity: 1; }
+
+body.dark-mode .mhent-typing-box { background: #1e293b; border-color: #334155; }
+.mhent-typing-indicator { display: flex; gap: 6px; }
+.mhent-typing-indicator span { width: 12px; height: 12px; border-radius: 50%; display: inline-block; background: var(--hub-color, #6366f1); animation: mhentBouncing 1.4s infinite ease-in-out both; }
+.mhent-typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+.mhent-typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+.mhent-typing-text { font-size: 15px; font-weight: 800; color: #334155; }
+body.dark-mode .mhent-typing-text { color: #f8fafc; }
+@keyframes mhentBouncing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+/* ==========================================
+   INPUT POPUP STYLES (ĐÃ MƯỢT HƠN)
+========================================== */
+#mhent-input-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 9999; opacity: 0; transition: opacity 0.3s ease; }
+#mhent-input-overlay.show { opacity: 1; }
+
+.mhent-input-box { background: #ffffff; padding: 25px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 90%; max-width: 400px; border: 2px solid #e2e8f0; text-align: left; transform: scale(0.9); opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+#mhent-input-overlay.show .mhent-input-box { transform: scale(1); opacity: 1; }
+
+body.dark-mode .mhent-input-box { background: #1e293b; border-color: #334155; }
+.mhent-input-title { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 15px; }
+body.dark-mode .mhent-input-title { color: #f8fafc; }
+.mhent-input-field { width: 100%; padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 700; color: #1e293b; outline: none; transition: 0.2s; background: #f8fafc; margin-bottom: 20px; box-sizing: border-box; }
+.mhent-input-field:focus { border-color: var(--hub-color, #6366f1); background: #ffffff; }
+body.dark-mode .mhent-input-field { background: #0f172a; border-color: #475569; color: #f8fafc; }
+body.dark-mode .mhent-input-field:focus { border-color: var(--hub-color, #6366f1); background: #1e293b; }
+.mhent-input-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.mhent-input-actions button { padding: 10px 20px; border: none; border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800; cursor: pointer; transition: 0.2s; }
+.mhent-btn-cancel { background: #f1f5f9; color: #64748b; }
+.mhent-btn-cancel:hover { background: #e2e8f0; }
+body.dark-mode .mhent-btn-cancel { background: #334155; color: #cbd5e1; }
+body.dark-mode .mhent-btn-cancel:hover { background: #475569; }
+.mhent-btn-confirm { background: var(--hub-color, #6366f1); color: #ffffff; }
+.mhent-btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 4px 10px var(--hub-bg, rgba(99,102,241,0.3)); }

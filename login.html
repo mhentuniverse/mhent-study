@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cổng Định Danh - MHEnt. Study Universe</title>
+    <link rel="icon" type="image/png" sizes="48x48" href="/assets/icon-web.png">
+    
+    <!-- GỌI HỆ THỐNG CSS CHÍNH CỦA MHENT UNIVERSE -->
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/mhent-ui.css">
+    <link rel="stylesheet" href="/css/mhent-mobile.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/js/config.js"></script>
+    <style>
+        .popup-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(16px);
+            z-index: 10000; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        .spinner-loader {
+            width: 52px; height: 52px;
+            border: 4px solid rgba(14, 165, 233, 0.2);
+            border-top: 4px solid var(--theme-accent, #0ea5e9);
+            border-radius: 50%;
+            animation: spinLoader 0.8s linear infinite;
+        }
+        @keyframes spinLoader {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .btn-mhent-sso {
+            width: 100%;
+            padding: 12px;
+            border-radius: 20px;
+            border: 2px solid var(--theme-accent);
+            background: rgba(14, 165, 233, 0.1);
+            color: var(--text-primary);
+            font-weight: 800;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-bottom: 12px;
+            font-family: 'Nunito', sans-serif;
+        }
+        .btn-mhent-sso:hover {
+            background: var(--theme-accent);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+        }
+    </style>
+</head>
+<body class="theme-edu gradient-bg">
+
+    <!-- NAVBAR CHUẨN MHENT UNIVERSE -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <a onclick="window.location.href='/'" style="cursor: pointer;">
+                <img src="/assets/avt-web.jpg" alt="Avatar Web" class="avt-img">
+                <span class="logo-name">MHEnt. Universe</span>
+            </a>
+        </div>
+
+        <ul class="nav-links" id="nav-links">
+            <li><a onclick="window.location.href='/'" style="cursor: pointer; color: var(--theme-accent);">Study Hub</a></li>
+            <li><a onclick="window.open('https://www.mhentuniverse.com', '_blank')" style="cursor: pointer;">Đại Sảnh MHEnt</a></li>
+        </ul>
+
+        <div class="nav-right">
+            <button id="btn-theme-toggle" class="btn-theme" onclick="toggleDarkMode()" title="Tắt/Mở đèn">
+                <svg viewBox="0 0 24 24" width="18" height="18" class="svg-icon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay" class="popup-overlay" style="display: none;">
+        <div class="spinner-loader"></div>
+        <h2 id="loading-text" style="color: var(--theme-accent); margin-top: 20px; font-weight: 800; text-align: center; font-size: 20px;">Đang kết nối mây...</h2>
+    </div>
+
+    <!-- KHUNG ĐĂNG NHẬP -->
+    <div class="login-page">
+        <div class="login-box">
+            <img src="/assets/avt-web.jpg" alt="MHEnt Logo" style="width: 80px; border-radius: 50%; margin-bottom: 15px; border: 2px solid var(--theme-accent);">
+            <h1 style="color: var(--theme-accent); font-size: 28px; margin: 0 0 5px 0;">CỔNG ĐỊNH DANH</h1>
+            <p style="color: var(--text-secondary); font-weight: bold; margin-bottom: 25px;">Đăng nhập để lưu tiến độ và bộ giáo trình của bạn!</p>
+            
+            <!-- NÚT ĐĂNG NHẬP NHANH TỪ MHENT UNIVERSE -->
+            <button class="btn-mhent-sso" onclick="loginWithMHEntUniverse()">
+                <img src="/assets/avt-web.jpg" alt="MHEnt Logo" style="width: 22px; height: 22px; border-radius: 50%;">
+                Đăng nhập từ MHEnt. Universe
+            </button>
+
+            <div class="auth-divider" style="margin: 15px 0;">Hoặc dùng tài khoản</div>
+
+            <div class="auth-tabs">
+                <button id="btn-tab-login" class="auth-tab-btn active" onclick="switchTab('login')">Đăng Nhập</button>
+                <button id="btn-tab-register" class="auth-tab-btn" onclick="switchTab('register')">Đăng Ký</button>
+            </div>
+
+            <!-- TAB ĐĂNG NHẬP -->
+            <div id="tab-login" class="auth-content active">
+                <div class="auth-form">
+                    <input type="email" id="login-email" class="auth-input" placeholder="Địa chỉ Email..." required>
+                    
+                    <div class="password-wrapper">
+                        <input type="password" id="login-password" class="auth-input" placeholder="Mật khẩu..." required>
+                        <i class="fa-solid fa-eye toggle-password" onclick="togglePassword('login-password', this)"></i>
+                    </div>
+
+                    <div style="text-align: right; margin-top: -5px; margin-bottom: 15px;">
+                        <a href="#" onclick="forgotPassword(); return false;" style="font-size: 13px; color: var(--theme-accent); font-weight: 800; text-decoration: none;">Quên mật khẩu?</a>
+                    </div>
+
+                    <button id="btn-login-email" class="btn-email-login">
+                        <i class="fa-solid fa-right-to-bracket" style="margin-right: 5px;"></i> Đăng Nhập
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB ĐĂNG KÝ -->
+            <div id="tab-register" class="auth-content">
+                <div class="auth-form">
+                    <input type="email" id="reg-email" class="auth-input" placeholder="Nhập Email mới..." required>
+                    
+                    <div class="password-wrapper">
+                        <input type="password" id="reg-password" class="auth-input" placeholder="Tạo mật khẩu (Tối thiểu 6 ký tự)..." required>
+                        <i class="fa-solid fa-eye toggle-password" onclick="togglePassword('reg-password', this)"></i>
+                    </div>
+                    
+                    <div class="password-wrapper">
+                        <input type="password" id="reg-confirm-password" class="auth-input" placeholder="Nhập lại mật khẩu..." required>
+                        <i class="fa-solid fa-eye toggle-password" onclick="togglePassword('reg-confirm-password', this)"></i>
+                    </div>
+
+                    <button id="btn-register-email" class="btn-email-register">
+                        <i class="fa-solid fa-passport" style="margin-right: 5px;"></i> Tạo Tài Khoản
+                    </button>
+                </div>
+            </div>
+
+            <div class="auth-divider">Hoặc</div>
+            
+            <button id="btn-login-google" class="btn-google" type="button">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width: 20px;">
+                Tiếp tục với Google
+            </button>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <a onclick="window.location.href='/'" class="btn-back-login" style="cursor: pointer;">
+                    <i class="fa-solid fa-arrow-left"></i> Quay lại Study Hub
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT XỬ LÝ AUTH -->
+    <script type="module">
+        import { 
+            auth, 
+            db, 
+            provider, 
+            signInWithPopup, 
+            signInWithRedirect, 
+            getRedirectResult,
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, 
+            sendPasswordResetEmail 
+        } from "/js/auth.js";
+        import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+
+        function showLoading(text) {
+            loadingText.textContent = text || 'Đang xử lý...';
+            loadingOverlay.style.display = 'flex';
+        }
+        function hideLoading() {
+            loadingOverlay.style.display = 'none';
+        }
+
+        // Xử lý chuyển hướng sau khi đăng nhập thành công
+        async function handleLoginSuccess(user) {
+            showLoading("Đang khởi tạo phiên làm việc...");
+            try {
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+
+                if (!userSnap.exists()) {
+                    await setDoc(userRef, { 
+                        email: user.email || "", 
+                        displayName: user.displayName || user.email.split('@')[0],
+                        photoURL: user.photoURL || "/assets/avt-web.jpg",
+                        role: "user", 
+                        createdAt: new Date().toISOString()
+                    }, { merge: true });
+                }
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const redirect = urlParams.get('redirect') || '/';
+
+                setTimeout(() => {
+                    window.location.href = redirect;
+                }, 800);
+            } catch (err) {
+                console.error("Lỗi cập nhật profile:", err);
+                window.location.href = '/';
+            }
+        }
+
+        // Đăng nhập Google
+        document.getElementById('btn-login-google').addEventListener('click', async () => {
+            showLoading("Đang kết nối Google...");
+            try {
+                const result = await signInWithPopup(auth, provider);
+                await handleLoginSuccess(result.user);
+            } catch (error) {
+                hideLoading();
+                if (error.code !== 'auth/popup-closed-by-user') {
+                    alert('Lỗi đăng nhập Google: ' + error.message);
+                }
+            }
+        });
+
+        // Đăng nhập Email
+        document.getElementById('btn-login-email').addEventListener('click', async () => {
+            const email = document.getElementById('login-email').value.trim();
+            const pass = document.getElementById('login-password').value.trim();
+            if (!email || !pass) return alert('Vui lòng điền đủ Email và Mật khẩu!');
+
+            showLoading("Đang xác thực thông tin...");
+            try {
+                const cred = await signInWithEmailAndPassword(auth, email, pass);
+                await handleLoginSuccess(cred.user);
+            } catch (err) {
+                hideLoading();
+                alert('Sai email hoặc mật khẩu rùi!');
+            }
+        });
+
+        // Đăng ký Email
+        document.getElementById('btn-register-email').addEventListener('click', async () => {
+            const email = document.getElementById('reg-email').value.trim();
+            const pass = document.getElementById('reg-password').value.trim();
+            const confirmPass = document.getElementById('reg-confirm-password').value.trim();
+
+            if (!email || !pass || !confirmPass) return alert('Vui lòng điền đủ thông tin!');
+            if (pass.length < 6) return alert('Mật khẩu ít nhất 6 ký tự nhé!');
+            if (pass !== confirmPass) return alert('Hai mật khẩu không khớp nhau!');
+
+            showLoading("Đang tạo tài khoản mới...");
+            try {
+                const cred = await createUserWithEmailAndPassword(auth, email, pass);
+                await handleLoginSuccess(cred.user);
+            } catch (err) {
+                hideLoading();
+                alert('Lỗi: ' + (err.message || 'Không thể tạo tài khoản'));
+            }
+        });
+
+        // SSO từ MHEnt Universe
+        window.loginWithMHEntUniverse = function() {
+            const currentUrl = encodeURIComponent(window.location.origin + '/');
+            // Chuyển hướng sang trang đăng nhập chính của MHEnt Universe kèm redirect URL
+            window.location.href = `https://www.mhentuniverse.com/login?redirect=${currentUrl}`;
+        };
+
+        // Quên mật khẩu
+        window.forgotPassword = async function() {
+            const email = prompt("Nhập địa chỉ Email của bạn để nhận liên kết đổi mật khẩu:");
+            if (email && email.includes('@')) {
+                showLoading("Đang gửi email đặt lại mật khẩu...");
+                try {
+                    await sendPasswordResetEmail(auth, email.trim());
+                    hideLoading();
+                    alert(`Đã gửi thư đặt lại mật khẩu đến ${email}!`);
+                } catch (e) {
+                    hideLoading();
+                    alert('Lỗi: ' + e.message);
+                }
+            }
+        };
+
+        window.switchTab = function(type) {
+            document.querySelectorAll('.auth-tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.auth-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`btn-tab-${type}`).classList.add('active');
+            document.getElementById(`tab-${type}`).classList.add('active');
+        };
+
+        window.togglePassword = function(inputId, icon) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        };
+
+        window.toggleDarkMode = function() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('mhent_dark_mode', isDark ? 'on' : 'off');
+        };
+
+        // Khởi tạo Dark mode theo cấu hình MHEnt
+        if (localStorage.getItem('mhent_dark_mode') === 'on' || localStorage.getItem('mhent_theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+</body>
+</html>

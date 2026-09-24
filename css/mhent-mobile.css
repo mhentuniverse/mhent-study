@@ -1,0 +1,548 @@
+/* ==========================================================================
+   MHEnt. UNIVERSE - MOBILE UI & APP-LIKE EXPERIENCE (V1.0)
+   Tối ưu chuyên biệt cho thiết bị di động (Smartphones & Mini Tablets < 768px)
+   ========================================================================== */
+
+/* ==============================================================
+   0. THIẾT LẬP NỀN TẢNG & TỐI ƯU CẢM ỨNG (TOUCH OPTIMIZATIONS)
+   ============================================================== */
+@media screen and (max-width: 768px) {
+    /* Loại bỏ hiện tượng nháy màu xanh/xám khi chạm ngón tay vào nút trên iOS/Android */
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Ép khung nội dung chính luôn chừa khoảng trống 85px ở sát đáy 
+       để nội dung không bao giờ bị che khuất bởi Thanh Điều Hướng Đáy (Bottom Nav) */
+    body, main, .movie-section, .arena-section, .desc-container, .profile-container {
+        padding-bottom: 85px !important;
+    }
+
+    /* Đảm bảo các vùng cuộn mượt mà theo quán tính ngón tay */
+    .table-container, .admin-table-container, .ep-list-container, .notif-body {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* ==============================================================
+   1. THANH ĐIỀU HƯỚNG ĐÁY CHUẨN APP (BOTTOM NAVIGATION BAR)
+   ============================================================== */
+/* Mặc định trên Máy tính: Ẩn hoàn toàn thanh điều hướng đáy */
+.mhent-bottom-nav {
+    display: none;
+}
+
+@media screen and (max-width: 768px) {
+    /* Ẩn menu cồng kềnh trên Navbar đỉnh của máy tính */
+    .navbar .nav-links,
+    .navbar .menu-toggle {
+        display: none !important;
+    }
+
+    /* Tinh chỉnh lại Navbar đỉnh cho gọn gàng hơn trên điện thoại */
+    .navbar {
+        padding: 8px 15px !important;
+        height: 55px !important;
+    }
+
+    .navbar .logo-name {
+        font-size: 17px !important;
+    }
+
+    .navbar .avt-img {
+        width: 32px !important;
+        height: 32px !important;
+    }
+
+    /* Kích hoạt Thanh Điều Hướng Đáy cố định */
+    .mhent-bottom-nav {
+        display: flex !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 65px;
+        background: var(--bg-glass-strong, rgba(255, 255, 255, 0.95));
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid var(--border-color, rgba(203, 213, 225, 0.6));
+        justify-content: space-around;
+        align-items: center;
+        z-index: 99999;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+        
+        /* Hỗ trợ vùng an toàn (Safe Area) cho iPhone X trở lên (lõm đáy) */
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        box-sizing: content-box;
+    }
+
+    body.dark-mode .mhent-bottom-nav {
+        background: var(--bg-glass-strong, rgba(15, 23, 42, 0.96));
+        border-top-color: rgba(51, 65, 85, 0.8);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Các nút bấm trên Bottom Nav */
+    .bottom-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        color: var(--text-secondary, #64748b);
+        font-family: 'Nunito', sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        gap: 4px;
+        height: 100%;
+        transition: all 0.2s ease;
+        user-select: none;
+    }
+
+    .bottom-nav-item svg,
+    .bottom-nav-item i {
+        font-size: 20px;
+        width: 22px;
+        height: 22px;
+        stroke-width: 2;
+        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    /* Trạng thái đang chọn (Active) hoặc Hover */
+    .bottom-nav-item.active,
+    .bottom-nav-item:active {
+        color: var(--theme-accent, #ff85a2);
+        font-weight: 900;
+    }
+
+    .bottom-nav-item.active svg,
+    .bottom-nav-item.active i {
+        transform: scale(1.15) translateY(-2px);
+        color: var(--theme-accent, #ff85a2);
+    }
+
+    /* Đốm sáng nhỏ dưới icon đang active */
+    .bottom-nav-item.active::after {
+        content: '';
+        width: 4px;
+        height: 4px;
+        background: var(--theme-accent, #ff85a2);
+        border-radius: 50%;
+        position: absolute;
+        bottom: 6px;
+    }
+}
+
+/* ==============================================================
+   2. HỆ THỐNG POPUP & MODAL MÀN HÌNH PHỤ TRÊN MOBILE (CENTERED POPUPS)
+   Tối ưu: Mọi màn hình phụ đều bật ra CHÍNH GIỮA, bo tròn đều 4 góc, có hiệu ứng POP
+   ============================================================== */
+@media screen and (max-width: 768px) {
+    /* 1. Ép lớp nền tối mờ (Overlay) luôn căn giữa hộp thoại theo cả 2 trục */
+    .modal-overlay,
+    .mhent-ui-overlay,
+    .overlay,
+    #trailerModal {
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 16px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 2. Định dạng lại toàn bộ Khung Popup: Nằm giữa, bo tròn đều 22px */
+    .modal-box,
+    .modal-content,
+    .mhent-ui-box,
+    .popup-box {
+        width: calc(100vw - 32px) !important;
+        max-width: 420px !important;
+        margin: auto !important;
+        border-radius: 22px !important;
+        padding: 24px 20px !important;
+        max-height: 85vh !important;
+        overflow-y: auto !important;
+        position: relative !important;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35) !important;
+    }
+
+    /* 3. Tiễn bay thanh gạch kéo màu xám (Drag handle) vô duyên trên đỉnh Popup */
+    .modal-box::before,
+    .modal-content::before,
+    .mhent-ui-box::before,
+    .popup-box::before {
+        display: none !important;
+    }
+
+    /* 4. CHỈ KHI POPUP ĐƯỢC KÍCH HOẠT THÌ MỚI PHÓNG TO & HIỆN RA */
+    .modal-overlay.active .modal-box,
+    .modal-overlay.active .modal-content,
+    .mhent-ui-overlay.show .mhent-ui-box,
+    .overlay.active .popup-box,
+    .modal[style*="display: block"] .modal-content,
+    .modal[style*="display: flex"] .modal-content {
+        transform: scale(1) !important;
+        opacity: 1 !important;
+    }
+
+    /* Khi đóng Popup -> Mờ và thu nhỏ lại */
+    .mhent-ui-overlay.out .mhent-ui-box,
+    .modal-overlay.out .modal-box,
+    .overlay.out .popup-box {
+        transform: scale(0.9) !important;
+        opacity: 0 !important;
+    }
+
+    /* 5. ⚡ TRỊ TRIỆT ĐỂ LỖI LIỆT NÚT PLAY & NÚT TẮT BỊ CẮT TRÊN TRAILER PHIM */
+    #trailerModal .modal-content {
+        max-width: 100% !important;
+        padding: 10px !important;
+        border-radius: 16px !important;
+        overflow: visible !important; /* Giữ nguyên để nút tắt (X) không bị chém góc */
+        
+        /* CHÌA KHÓA VÀNG: Tắt toàn bộ scale/transform trên mobile để không bị lệch tọa độ cảm ứng ngón tay! */
+        transform: none !important;
+        animation: trailerFadeOnly 0.25s ease forwards !important;
+    }
+
+    @keyframes trailerFadeOnly {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    #trailerModal .close-btn {
+        top: -12px !important;
+        right: -12px !important;
+        width: 34px !important;
+        height: 34px !important;
+        font-size: 18px !important;
+        z-index: 99999 !important;
+    }
+
+    /* Ép khung video nhận trọn vẹn 100% lực chạm cảm ứng của ngón tay */
+    #trailerModal iframe {
+        position: relative !important;
+        z-index: 50 !important;
+        pointer-events: auto !important;
+        touch-action: auto !important;
+    }
+}
+
+/* ==============================================================
+   3. LƯỚI VUỐT NGANG SIÊU MƯỢT (HORIZONTAL SWIPE FEED)
+   ============================================================== */
+@media screen and (max-width: 768px) {
+    /* Áp dụng cho các danh sách phim hoặc hội thi có class .mobile-swipe-feed */
+    .mobile-swipe-feed {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        gap: 15px !important;
+        padding: 5px 10px 20px 10px !important;
+        
+        /* Bắt điểm dừng cuộn mượt mà từng thẻ (Snap Scrolling) */
+        scroll-snap-type: x mandatory;
+        
+        /* Ẩn thanh cuộn xấu xí trên di động */
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE 10+ */
+    }
+
+    .mobile-swipe-feed::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
+
+    /* Tinh chỉnh thẻ con bên trong Lưới vuốt ngang */
+    .mobile-swipe-feed .movie-card {
+        flex: 0 0 145px !important; /* Cố định chiều rộng 145px cho phim */
+        width: 145px !important;
+        scroll-snap-align: start;
+    }
+
+    .mobile-swipe-feed .quiz-card,
+    .mobile-swipe-feed .cw-card {
+        flex: 0 0 280px !important; /* Cố định chiều rộng 280px cho bài quiz/tiếp tục xem */
+        width: 280px !important;
+        scroll-snap-align: center;
+    }
+}
+
+/* ==============================================================
+   4. TINH CHỈNH CHI TIẾT & NÚT BẤM DỄ CHẠM (TOUCH TARGETS)
+   ============================================================== */
+@media screen and (max-width: 768px) {
+    /* Đảm bảo mọi nút hành động đều có độ cao tối thiểu 44px (Chuẩn Apple Human Interface) */
+    button, 
+    .btn-primary, 
+    .btn-action, 
+    .btn-start-quiz, 
+    .btn-save-profile, 
+    .btn-admin {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Các nút hành động chính giãn full 100% chiều ngang cho dễ bấm bằng 1 tay */
+    .btn-group, 
+    .nav-buttons, 
+    .mhent-ui-actions {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 10px !important;
+    }
+
+    .btn-group a, 
+    .btn-group button, 
+    .nav-buttons button, 
+    .mhent-ui-actions button {
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    /* Bảng Dropdown thông báo & tải khoản mở rộng vừa vặn màn hình di động */
+    .dropdown-menu.notif-dropdown,
+    .dropdown-menu.account-dropdown {
+        position: fixed !important;
+        top: 60px !important;
+        right: 10px !important;
+        left: 10px !important;
+        width: calc(100% - 20px) !important;
+        max-width: none !important;
+        max-height: calc(100vh - 150px) !important;
+        overflow-y: auto !important;
+    }
+
+    .dropdown-menu::before {
+        display: none !important; /* Ẩn mũi tên tam giác trên di động cho sạch */
+    }
+}
+
+/* ==========================================================================
+   5. DỌN DẸP NAVBAR ĐỈNH & TẠO MENU TRƯỢT NGANG (SIDE DRAWER V2.0)
+   ========================================================================== */
+@media screen and (max-width: 768px) {
+    /* 1. DỌN SẠCH NAVBAR TRÊN ĐỈNH */
+    /* Ẩn tên và avatar bé tí trên Navbar đỉnh để chống ngộp thở */
+    .navbar .user-profile .user-name,
+    .navbar .user-profile .user-avatar {
+        display: none !important;
+    }
+    
+    /* Ẩn nút Dark Mode trên Navbar đỉnh vì đã chuyển nó vào trong Menu trượt */
+    .navbar #btn-theme-toggle {
+        display: none !important;
+    }
+
+    /* Thu gọn khoảng cách các nút bên phải cho cân đối */
+    .navbar .user-section {
+        gap: 10px !important;
+    }
+
+    /* 2. HIỆU ỨNG NỀN MỜ CHO MENU TRƯỢT (OVERLAY) */
+    .mhent-drawer-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+        z-index: 1000000; opacity: 0; pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+    .mhent-drawer-overlay.show { opacity: 1; pointer-events: auto; }
+
+    /* 3. KHUNG MENU TRƯỢT TỪ CẠNH PHẢI VÀO (SIDE DRAWER) */
+    .mhent-side-drawer {
+        position: fixed; top: 0; right: 0; width: 82%; max-width: 310px; height: 100%;
+        background: var(--bg-glass-strong, rgba(255, 255, 255, 0.98));
+        backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+        box-shadow: -10px 0 35px rgba(0, 0, 0, 0.2); z-index: 1000001;
+        transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+        display: flex; flex-direction: column; padding: 25px 20px; box-sizing: border-box;
+        border-left: 1px solid var(--border-color, rgba(203, 213, 225, 0.6));
+        overflow-y: auto;
+    }
+    body.dark-mode .mhent-side-drawer {
+        background: var(--bg-glass-strong, rgba(15, 23, 42, 0.98));
+        border-left-color: rgba(51, 65, 85, 0.8);
+        box-shadow: -10px 0 35px rgba(0, 0, 0, 0.6);
+    }
+    .mhent-drawer-overlay.show .mhent-side-drawer {
+        transform: translateX(0);
+    }
+
+    /* 4. CÁC THÀNH PHẦN BÊN TRONG DRAWER */
+    .drawer-header {
+        display: flex; flex-direction: column; align-items: center; text-align: center;
+        padding-bottom: 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; position: relative;
+    }
+    .drawer-avt {
+        width: 80px; height: 80px; border-radius: 50%; object-fit: cover;
+        border: 3px solid var(--theme-accent, #ff85a2); box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 10px;
+    }
+    .drawer-name { font-size: 18px; font-weight: 900; color: var(--text-primary); margin: 0 0 4px 0; }
+    .drawer-email { font-size: 12.5px; color: var(--text-secondary); margin: 0 0 10px 0; }
+    .drawer-close-btn {
+        position: absolute; top: -5px; right: 0; background: transparent; border: none;
+        color: var(--text-muted); font-size: 24px; cursor: pointer; padding: 5px;
+    }
+
+    .drawer-menu-list { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .drawer-item {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 15px; border-radius: 14px; font-weight: 800; font-size: 14.5px;
+        color: var(--text-primary); text-decoration: none; transition: 0.2s;
+        background: rgba(0,0,0,0.02); border: 1px solid transparent; cursor: pointer;
+    }
+    body.dark-mode .drawer-item { background: rgba(255,255,255,0.03); }
+    .drawer-item:active, .drawer-item:hover {
+        background: rgba(255, 133, 162, 0.1); color: var(--theme-accent, #ff85a2); border-color: rgba(255, 133, 162, 0.3);
+    }
+    .drawer-item-left { display: flex; align-items: center; gap: 12px; }
+    .drawer-item-left i, .drawer-item-left svg { font-size: 18px; width: 20px; color: var(--theme-accent, #ff85a2); }
+
+    .drawer-footer { padding-top: 20px; border-top: 1px solid var(--border-color); margin-top: 15px; }
+    .drawer-btn-logout {
+        width: 100%; padding: 12px; border-radius: 14px; font-weight: 900; font-size: 14.5px;
+        background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);
+        display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: 0.2s;
+    }
+    .drawer-btn-logout:active { background: #ef4444; color: white; }
+}
+
+/* ==========================================================================
+   6. BIẾN SIDEBAR ADMIN / STUDIO THÀNH MENU TRƯỢT TRÁI (ĐÃ FIX LỖI ÁM ĐEN!)
+   ========================================================================== */
+@media screen and (max-width: 768px) {
+    /* Ép Sidebar không nằm xoay ngang nữa mà ẩn sang cạnh trái màn hình */
+    .admin-layout .admin-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 78% !important;
+        max-width: 280px !important;
+        height: 100vh !important;
+        background: var(--bg-glass-strong, rgba(255, 255, 255, 0.98)) !important;
+        backdrop-filter: blur(25px) !important;
+        -webkit-backdrop-filter: blur(25px) !important;
+        z-index: 1000001 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow-y: auto !important;
+        padding: 25px 20px !important;
+        border-right: 1px solid var(--border-color, rgba(203, 213, 225, 0.8)) !important;
+        
+        /* Ẩn sang trái -100% */
+        transform: translateX(-100%) !important;
+        /* ⚡ TRỊ TRIỆT ĐỂ LỖI ÁM ĐEN: Khi đóng lại thì xóa sạch bóng (box-shadow: none) */
+        box-shadow: none !important; 
+        transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s ease !important;
+    }
+
+    body.dark-mode .admin-layout .admin-sidebar {
+        background: var(--bg-glass-strong, rgba(15, 23, 42, 0.98)) !important;
+        border-right-color: rgba(51, 65, 85, 0.8) !important;
+        box-shadow: none !important; /* Xóa bóng khi đóng ở Dark Mode */
+    }
+
+    /* ⚡ KHI MỞ MENU RA (.show-mobile) -> TRƯỢT VÀO VÀ HIỆN BÓNG ĐEN */
+    .admin-layout .admin-sidebar.show-mobile {
+        transform: translateX(0) !important;
+        box-shadow: 15px 0 35px rgba(0, 0, 0, 0.25) !important;
+    }
+
+    body.dark-mode .admin-layout .admin-sidebar.show-mobile {
+        box-shadow: 15px 0 35px rgba(0, 0, 0, 0.7) !important;
+    }
+
+    /* Làm đẹp lại các nút menu bên trong Left Drawer */
+    .admin-layout .admin-sidebar .admin-menu-item {
+        margin-bottom: 8px !important;
+        padding: 14px 18px !important;
+        border-radius: 14px !important;
+        font-size: 15px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+    }
+    
+    .admin-layout .admin-sidebar .admin-menu-item span,
+    .admin-layout .admin-sidebar .admin-menu-item i {
+        display: inline-block !important;
+    }
+
+    .admin-layout .admin-sidebar .admin-menu-item:active {
+        transform: scale(0.98);
+    }
+}
+
+/* ==========================================================================
+   7. HIỆU ỨNG CHUYỂN ĐỘNG CHUẨN APP NATIVE (APP ANIMATIONS V1.0)
+   ========================================================================== */
+@media screen and (max-width: 768px) {
+    /* --- 1. HIỆU ỨNG TRƯỢT TRANG & TAB MƯỢT MÀ --- */
+    /* Mỗi khi chuyển tab hoặc mở trang, nội dung sẽ lướt từ dưới lên */
+    main, .admin-content, .movie-section, .arena-section, .desc-container, .profile-container, .admin-tab.active {
+        animation: appPageSlideUp 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
+    }
+
+    @keyframes appPageSlideUp {
+        0% {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* --- 2. HIỆU ỨNG NẢY LÒ XO CHO BOTTOM NAV BAR --- */
+    /* Khi icon được active (chọn), nó sẽ nảy bật lên rồi hạ xuống vị trí chuẩn */
+    .bottom-nav-item.active svg,
+    .bottom-nav-item.active i {
+        animation: navIconBounce 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+    }
+
+    @keyframes navIconBounce {
+        0% {
+            transform: scale(1) translateY(0);
+        }
+        40% {
+            transform: scale(1.35) translateY(-8px); /* Bật mạnh lên trên */
+        }
+        70% {
+            transform: scale(1.1) translateY(-1px);  /* Rớt xuống nhẹ */
+        }
+        100% {
+            transform: scale(1.18) translateY(-3px); /* Dừng ở vị trí active */
+        }
+    }
+
+    /* --- 3. HIỆU ỨNG CHẠM NGÓN TAY (TAP FEEDBACK) --- */
+    /* Khi bấm ngón tay vào nút trên Bottom Nav, nút sẽ lõm xuống nhẹ */
+    .bottom-nav-item:active {
+        transform: scale(0.88);
+        transition: transform 0.1s ease;
+    }
+
+    /* Hiệu ứng trượt qua lại cho các thẻ Card phim và bài thi khi chạm vào */
+    .movie-card:active, .quiz-card:active, .cw-card:active {
+        transform: scale(0.96) !important;
+        transition: transform 0.15s ease !important;
+    }
+}
+
+/* ==============================================================
+   ⚡ TRỊ LỖI APP SWITCHER BỊ KÉO DÀI HẾT MÀN HÌNH TRÊN MOBILE
+   ============================================================== */
+@media screen and (max-width: 768px) {
+    .dropdown-menu.app-switcher-menu {
+        position: fixed !important;
+        top: 55px !important;
+        right: 12px !important;
+        left: auto !important; /* Ngắt lực kéo từ cạnh trái màn hình */
+        width: 280px !important; /* Khóa cứng chiều rộng chuẩn như Cinema */
+        max-width: calc(100vw - 24px) !important;
+        margin: 0 !important;
+        transform-origin: top right !important;
+    }
+}
