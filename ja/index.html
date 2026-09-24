@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiếng Nhật Bản (日本語) | MHEnt. Study</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <style>
+        .hub-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+        .hub-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 3rem;
+        }
+        .tool-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            transition: all var(--transition-normal);
+            box-shadow: var(--shadow-sm);
+        }
+        .tool-card:hover {
+            transform: translateY(-4px);
+            border-color: #ef4444;
+            box-shadow: var(--shadow-md);
+        }
+        .deck-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+    </style>
+</head>
+<body class="dark-mode">
+
+    <!-- Navbar -->
+    <header class="study-navbar">
+        <div class="brand-group">
+            <a href="../index.html" class="brand-group">
+                <div class="brand-logo-badge" style="background: linear-gradient(135deg, #dc2626, #ef4444);">M</div>
+                <div class="brand-text">
+                    <div class="brand-title">MHEnt. <span class="highlight" style="background: linear-gradient(135deg, #ef4444, #f87171); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Study</span></div>
+                    <div class="brand-sub">Universe Learning Portal</div>
+                </div>
+            </a>
+        </div>
+        <div class="nav-actions">
+            <button class="btn-icon" onclick="window.studyUI.toggleTheme()">🌓</button>
+            <a href="../index.html" class="btn-ghost">🏠 Sảnh chính</a>
+        </div>
+    </header>
+
+    <div class="study-subbar">
+        <nav class="breadcrumb-list">
+            <a href="../index.html">Sảnh chính</a>
+            <span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-current">🇯🇵 Tiếng Nhật Bản (日本語)</span>
+        </nav>
+    </div>
+
+    <main class="hub-container">
+        
+        <div class="hub-header">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="font-size: 3rem;">🇯🇵</div>
+                <div>
+                    <h1 style="font-size: 1.85rem;">Vũ Trụ Tiếng Nhật Bản</h1>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Hiragana • Katakana • Kanji JLPT • Sổ từ vựng • Đề thi AI</p>
+                </div>
+            </div>
+            <a href="../ko/practice/vocab.html" class="btn-primary" style="background: linear-gradient(135deg, #dc2626, #ef4444);">
+                📝 Trải nghiệm Sổ từ vựng mẫu
+            </a>
+        </div>
+
+        <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">🚀 Phòng Luyện Tập & Công Cụ</h2>
+        <div class="tools-grid">
+            
+            <a href="alphabet.html" class="tool-card">
+                <div style="font-size: 2.2rem;">🌸</div>
+                <h3 style="font-size: 1.15rem;">Bảng Chữ Cái Hiragana & Katakana</h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Học 46 chữ Hiragana và 46 chữ Katakana kèm âm thanh phát âm bản xứ.</p>
+                <span style="color: #ef4444; font-weight: 700; font-size: 0.85rem; margin-top: auto;">Mở bảng chữ cái →</span>
+            </a>
+
+            <div class="tool-card">
+                <div style="font-size: 2.2rem;">📝</div>
+                <h3 style="font-size: 1.15rem;">Sổ Tay Từ Vựng Kanji N5</h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Tự gõ Kanji kiểm tra đúng/sai, lặp lại ngắt quãng 4 chu kỳ và phát âm.</p>
+                <span style="color: #ef4444; font-weight: 700; font-size: 0.85rem; margin-top: auto;">Đang kích hoạt...</span>
+            </div>
+
+            <div class="tool-card">
+                <div style="font-size: 2.2rem;">🎴</div>
+                <h3 style="font-size: 1.15rem;">Flashcards 3D</h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Luyện phản xạ nhớ mặt chữ Kanji và từ vựng Minna no Nihongo.</p>
+                <span style="color: #ef4444; font-weight: 700; font-size: 0.85rem; margin-top: auto;">Sắp ra mắt</span>
+            </div>
+
+            <div class="tool-card">
+                <div style="font-size: 2.2rem;">🧠</div>
+                <h3 style="font-size: 1.15rem;">Phòng Thi AI (Gemini)</h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Tạo đề thi trắc nghiệm Kanji & ngữ pháp JLPT tự động từ dữ liệu cá nhân.</p>
+                <span style="color: #ef4444; font-weight: 700; font-size: 0.85rem; margin-top: auto;">Sắp ra mắt</span>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../js/ui-kit.js"></script>
+    <script src="../js/speech.js"></script>
+    <script src="../js/storage.js"></script>
+    <script src="../data/sample-ja.js"></script>
+</body>
+</html>

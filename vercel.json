@@ -1,0 +1,9 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/__/auth/:path*",
+      "destination": "https://mhentuniverse.firebaseapp.com/__/auth/:path*"
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng Luyện Tập Tiếng Hàn | MHEnt. Study</title>
+    <link rel="stylesheet" href="../../css/theme.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <style>
+        .practice-container {
+            max-width: 1000px;
+            margin: 2.5rem auto;
+            padding: 0 1.5rem;
+        }
+        .modes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        .mode-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            transition: all var(--transition-normal);
+            box-shadow: var(--shadow-sm);
+        }
+        .mode-card:hover {
+            transform: translateY(-4px);
+            border-color: #ec4899;
+            box-shadow: var(--shadow-md);
+        }
+    </style>
+</head>
+<body class="dark-mode">
+
+    <!-- Navbar -->
+    <header class="study-navbar">
+        <div class="brand-group">
+            <a href="../../index.html" class="brand-group">
+                <div class="brand-logo-badge">M</div>
+                <div class="brand-text">
+                    <div class="brand-title">MHEnt. <span class="highlight">Study</span></div>
+                    <div class="brand-sub">Universe Learning Portal</div>
+                </div>
+            </a>
+        </div>
+        <div class="nav-actions">
+            <button class="btn-icon" onclick="window.studyUI.toggleTheme()">🌓</button>
+            <a href="../index.html" class="btn-ghost">🇰🇷 Về Hub Tiếng Hàn</a>
+        </div>
+    </header>
+
+    <div class="study-subbar">
+        <nav class="breadcrumb-list">
+            <a href="../../index.html">Sảnh chính</a>
+            <span class="breadcrumb-sep">/</span>
+            <a href="../index.html">🇰🇷 Tiếng Hàn</a>
+            <span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-current">Chọn Chế Độ Luyện Tập</span>
+        </nav>
+    </div>
+
+    <main class="practice-container">
+        <h1 style="font-size: 1.85rem; margin-bottom: 0.5rem;">🏋️ Phòng Luyện Tập Đa Năng</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">Chọn chế độ luyện tập phù hợp với mục tiêu học của bạn hôm nay</p>
+
+        <div class="modes-grid">
+            
+            <a href="vocab.html" class="mode-card" style="border-color: rgba(236, 72, 153, 0.4);">
+                <div style="font-size: 2.5rem;">📝</div>
+                <h2 style="font-size: 1.25rem;">Sổ Tay Từ Vựng Thông Minh</h2>
+                <p style="font-size: 0.88rem; color: var(--text-secondary);">
+                    Gõ từ tự động kiểm tra Đúng/Sai tức thì, theo dõi chu kỳ 4 lần ôn tập và cập nhật tiến độ theo thời gian thực.
+                </p>
+                <span style="color: #ec4899; font-weight: 700; font-size: 0.88rem; margin-top: auto;">Mở sổ học từ →</span>
+            </a>
+
+            <a href="flashcards.html" class="mode-card">
+                <div style="font-size: 2.5rem;">🎴</div>
+                <h2 style="font-size: 1.25rem;">Flashcards 3D Phản Xạ</h2>
+                <p style="font-size: 0.88rem; color: var(--text-secondary);">
+                    Lật thẻ không gian 3D, nghe giọng phát âm bản xứ tự động và đánh giá mức độ ghi nhớ theo thuật toán ngắt quãng.
+                </p>
+                <span style="color: #ec4899; font-weight: 700; font-size: 0.88rem; margin-top: auto;">Luyện phản xạ nhanh →</span>
+            </a>
+
+            <a href="../exam.html" class="mode-card">
+                <div style="font-size: 2.5rem;">🧠</div>
+                <h2 style="font-size: 1.25rem;">Phòng Thi Trí Tuệ Nhân Tạo</h2>
+                <p style="font-size: 0.88rem; color: var(--text-secondary);">
+                    Tự động tạo bài kiểm tra trắc nghiệm và điền từ thông minh dựa trên chính những từ vựng bạn tự nhập vào.
+                </p>
+                <span style="color: #ec4899; font-weight: 700; font-size: 0.88rem; margin-top: auto;">Bắt đầu thi thử →</span>
+            </a>
+
+            <a href="../alphabet.html" class="mode-card">
+                <div style="font-size: 2.5rem;">🔤</div>
+                <h2 style="font-size: 1.25rem;">Bảng Chữ Cái Hangeul</h2>
+                <p style="font-size: 0.88rem; color: var(--text-secondary);">
+                    Luyện nhớ mặt chữ và nghe phát âm chuẩn cho toàn bộ 19 phụ âm và 21 nguyên âm tiếng Hàn.
+                </p>
+                <span style="color: #ec4899; font-weight: 700; font-size: 0.88rem; margin-top: auto;">Ôn lại bảng chữ cái →</span>
+            </a>
+
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="../../js/config.js"></script>
+    <script src="../../js/ui-kit.js"></script>
+</body>
+</html>

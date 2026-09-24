@@ -1,0 +1,170 @@
+/**
+ * MHENT STUDY - SAMPLE KOREAN VOCABULARY DECK
+ * Dữ liệu mẫu chuẩn xác từ Video tham khảo TikTok
+ */
+window.DEFAULT_KO_DECK = {
+    id: "ko_deck_basic_countries",
+    lang: "ko",
+    title: "1000 Từ vựng Tiếng Hàn Cơ Bản (Chủ đề: Quốc gia & Đời sống)",
+    description: "Bộ từ vựng tiếng Hàn nhập môn chuẩn theo video TikTok mẫu với tự kiểm tra chính tả và 4 chu kỳ ôn tập.",
+    author: "MHEnt. Universe Edu",
+    createdAt: "2026-09-24T12:00:00Z",
+    words: [
+        {
+            id: "ko_1",
+            word: "나라",
+            phonetic: "[나라]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Đất nước, Quốc gia",
+            example: "한국은 아름다운 나라입니다.",
+            exampleTrans: "Hàn Quốc là một đất nước xinh đẹp.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ko_2",
+            word: "국적",
+            phonetic: "[국쩍]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Quốc tịch",
+            example: "국적 취득은 쉬운 일이 아닙니다.",
+            exampleTrans: "Quốc tịch của tôi là Việt Nam.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ko_3",
+            word: "도시",
+            phonetic: "[도시]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Thành phố",
+            example: "서울은 정말 크고 멋진 도시입니다.",
+            exampleTrans: "Seoul là một thành phố lớn và tráng lệ.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ko_4",
+            word: "베트남",
+            phonetic: "[베트남]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Việt Nam",
+            example: "저는 베트남에서 온 유학생입니다.",
+            exampleTrans: "Tôi là người Việt Nam.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ko_5",
+            word: "한국",
+            phonetic: "[한국]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Hàn Quốc",
+            example: "저는 한국 음식을 아주 좋아해요.",
+            exampleTrans: "Món ăn Hàn Quốc rất ngon.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ko_6",
+            word: "중국",
+            phonetic: "[중국]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Trung Quốc",
+            example: "언젠가 중국에 여행 가보고 싶어요.",
+            exampleTrans: "Tôi muốn đi du lịch Trung Quốc.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ko_7",
+            word: "일본",
+            phonetic: "[일본]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Nhật Bản",
+            example: "친구와 함께 일본어를 배워요.",
+            exampleTrans: "Tôi học tiếng Nhật cùng bạn.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ko_8",
+            word: "미국",
+            phonetic: "[미국]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Nước Mỹ",
+            example: "제 친척은 미국 뉴욕에 살아요.",
+            exampleTrans: "Người thân của tôi sống ở Mỹ.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ko_9",
+            word: "태국",
+            phonetic: "[태국]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Thái Lan",
+            example: "저는 매콤한 태국 음식을 사랑해요.",
+            exampleTrans: "Tôi rất thích món ăn Thái Lan cay nồng.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ko_10",
+            word: "언어",
+            phonetic: "[어너]",
+            pos: "noun",
+            posLabel: "Danh từ",
+            meaning: "Ngôn ngữ, tiếng",
+            example: "한국어는 배울수록 매력적인 언어예요.",
+            exampleTrans: "Tiếng Hàn là một ngôn ngữ rất thú vị.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ko_11",
+            word: "공부하다",
+            phonetic: "[공부하다]",
+            pos: "verb",
+            posLabel: "Động từ",
+            meaning: "Học tập",
+            example: "매일 저녁 도서관에서 한국어를 공부해요.",
+            exampleTrans: "Mỗi tối tôi đều học tiếng Hàn tại thư viện.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "ko_12",
+            word: "아름답다",
+            phonetic: "[아름답따]",
+            pos: "adj",
+            posLabel: "Tính từ",
+            meaning: "Xinh đẹp, tuyệt mỹ",
+            example: "제주도의 바다는 정말 아름다워요.",
+            exampleTrans: "Biển ở đảo Jeju thật sự rất đẹp.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        }
+    ]
+};

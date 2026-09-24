@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luyện Flashcard 3D Tiếng Hàn | MHEnt. Study</title>
+    <link rel="stylesheet" href="../../css/theme.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <style>
+        .flashcard-wrapper {
+            max-width: 680px;
+            margin: 2.5rem auto;
+            padding: 0 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .progress-header-wrap {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        /* 3D Flip Card Container */
+        .scene {
+            width: 100%;
+            height: 380px;
+            perspective: 1200px;
+        }
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: var(--radius-lg);
+            border: 2px solid var(--border-color);
+            background: var(--bg-surface);
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem;
+            text-align: center;
+            user-select: none;
+        }
+        .card-face-back {
+            transform: rotateY(180deg);
+            background: linear-gradient(135deg, var(--bg-surface), var(--bg-subtle));
+            border-color: #ec4899;
+        }
+        .card-word {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        .card-phonetic {
+            font-size: 1.2rem;
+            color: #ec4899;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        .card-meaning {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+        }
+        .card-example {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.35rem;
+        }
+        .card-example-trans {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        /* Action SRS Buttons */
+        .controls-row {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            width: 100%;
+            justify-content: center;
+        }
+        .btn-grade {
+            flex: 1;
+            padding: 0.85rem;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            transition: all var(--transition-fast);
+        }
+        .btn-again { background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .btn-good { background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .btn-grade:hover { transform: translateY(-3px); filter: brightness(1.1); }
+    </style>
+</head>
+<body class="dark-mode">
+
+    <!-- Navbar -->
+    <header class="study-navbar">
+        <div class="brand-group">
+            <a href="../../index.html" class="brand-group">
+                <div class="brand-logo-badge">M</div>
+                <div class="brand-text">
+                    <div class="brand-title">MHEnt. <span class="highlight">Study</span></div>
+                    <div class="brand-sub">Universe Learning Portal</div>
+                </div>
+            </a>
+        </div>
+        <div class="nav-actions">
+            <button class="btn-icon" onclick="window.studyUI.toggleTheme()">🌓</button>
+            <a href="./vocab.html" class="btn-ghost">📝 Xem Sổ từ vựng</a>
+        </div>
+    </header>
+
+    <div class="study-subbar">
+        <nav class="breadcrumb-list">
+            <a href="../../index.html">Sảnh chính</a>
+            <span class="breadcrumb-sep">/</span>
+            <a href="../index.html">🇰🇷 Tiếng Hàn</a>
+            <span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-current">Flashcards 3D Phản xạ</span>
+        </nav>
+        <span style="font-size: 0.82rem; color: var(--text-muted);">Phím tắt: [Space] để lật thẻ • [Phím mũi tên] để đổi thẻ</span>
+    </div>
+
+    <main class="flashcard-wrapper">
+        
+        <div class="progress-header-wrap">
+            <span style="font-weight: 700; font-size: 0.95rem;" id="cardCounter">Thẻ 1 / 12</span>
+            <button class="btn-speaker" id="btnAudioCurrent" title="Nghe phát âm">🔊 Nghe</button>
+        </div>
+
+        <!-- 3D Card -->
+        <div class="scene">
+            <div class="card" id="studyCard">
+                <!-- Mặt trước (Từ tiếng Hàn) -->
+                <div class="card-face card-face-front">
+                    <div style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.5rem;" id="cardPos">
+                        DANH TỪ
+                    </div>
+                    <div class="card-word" id="cardWordFront">나라</div>
+                    <div class="card-phonetic" id="cardPhoneticFront">[나라]</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">Nhấp chuột hoặc nhấn [Space] để xem nghĩa ↻</div>
+                </div>
+                <!-- Mặt sau (Nghĩa & Ví dụ) -->
+                <div class="card-face card-face-back">
+                    <div class="card-meaning" id="cardMeaningBack">Đất nước, Quốc gia</div>
+                    <div class="card-example" id="cardExampleBack">한국은 아름다운 나라입니다.</div>
+                    <div class="card-example-trans" id="cardExampleTransBack">Hàn Quốc là một đất nước xinh đẹp.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="controls-row">
+            <button class="btn-grade btn-again" onclick="nextCard(false)">
+                <span>❌ Chưa thuộc</span>
+                <span style="font-size: 0.75rem; opacity: 0.8;">Ôn lại sớm</span>
+            </button>
+            <button class="btn-grade btn-good" onclick="nextCard(true)">
+                <span>✨ Đã thuộc</span>
+                <span style="font-size: 0.75rem; opacity: 0.8;">Tiếp tục</span>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="../../js/config.js"></script>
+    <script src="../../js/ui-kit.js"></script>
+    <script src="../../js/speech.js"></script>
+    <script src="../../js/storage.js"></script>
+    <script src="../../data/sample-ko.js"></script>
+    <script>
+        let words = [];
+        let currentIndex = 0;
+        const card = document.getElementById('studyCard');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const deckId = urlParams.get('deck');
+            
+            let deck = null;
+            if (deckId) {
+                deck = window.studyStorage.getDeckById('ko', deckId);
+            }
+            if (!deck) {
+                deck = window.studyStorage.getDecks('ko')[0] || window.DEFAULT_KO_DECK;
+            }
+
+            words = deck ? deck.words : [];
+            if (words.length > 0) {
+                loadCard(0);
+            }
+
+            // Click flip
+            card.addEventListener('click', flipCard);
+
+            // Audio button
+            document.getElementById('btnAudioCurrent').addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (words[currentIndex]) {
+                    window.studySpeech.speak(words[currentIndex].word, 'ko');
+                }
+            });
+
+            // Keyboard shortcut
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    flipCard();
+                } else if (e.code === 'ArrowRight') {
+                    nextCard(true);
+                } else if (e.code === 'ArrowLeft') {
+                    nextCard(false);
+                }
+            });
+        });
+
+        function flipCard() {
+            card.classList.toggle('is-flipped');
+        }
+
+        function loadCard(index) {
+            if (index < 0 || index >= words.length) return;
+            currentIndex = index;
+            card.classList.remove('is-flipped');
+
+            const item = words[currentIndex];
+            document.getElementById('cardCounter').textContent = `Thẻ ${currentIndex + 1} / ${words.length}`;
+            document.getElementById('cardPos').textContent = item.posLabel || 'TỪ VỰNG';
+            document.getElementById('cardWordFront').textContent = item.word;
+            document.getElementById('cardPhoneticFront').textContent = item.phonetic || '';
+            document.getElementById('cardMeaningBack').textContent = item.meaning;
+            document.getElementById('cardExampleBack').textContent = item.example || '';
+            document.getElementById('cardExampleTransBack').textContent = item.exampleTrans || '';
+
+            // Tự động đọc phát âm
+            setTimeout(() => {
+                window.studySpeech.speak(item.word, 'ko');
+            }, 300);
+        }
+
+        function nextCard(isKnown) {
+            if (isKnown) {
+                window.studyUI.playDing();
+            }
+            if (currentIndex + 1 < words.length) {
+                loadCard(currentIndex + 1);
+            } else {
+                window.studyUI.showToast('🎉 Chúc mừng! Cậu đã hoàn thành tất cả thẻ trong bộ này!', 'success');
+                setTimeout(() => {
+                    loadCard(0);
+                }, 1500);
+            }
+        }
+    </script>
+</body>
+</html>

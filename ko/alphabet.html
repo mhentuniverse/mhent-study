@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Chữ Cái Hangeul (한글) Tương Tác | MHEnt. Study</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <style>
+        .alphabet-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+        .alphabet-section {
+            margin-bottom: 2.5rem;
+        }
+        .section-title {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .char-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 1rem;
+        }
+        .char-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1.25rem 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.35rem;
+            user-select: none;
+        }
+        .char-card:hover {
+            transform: translateY(-4px);
+            border-color: #ec4899;
+            box-shadow: 0 8px 24px rgba(236, 72, 153, 0.25);
+            background: rgba(236, 72, 153, 0.05);
+        }
+        .char-symbol {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .char-romaji {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #ec4899;
+        }
+        .char-name {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body class="dark-mode">
+
+    <!-- Navbar -->
+    <header class="study-navbar">
+        <div class="brand-group">
+            <a href="../index.html" class="brand-group">
+                <div class="brand-logo-badge">M</div>
+                <div class="brand-text">
+                    <div class="brand-title">MHEnt. <span class="highlight">Study</span></div>
+                    <div class="brand-sub">Universe Learning Portal</div>
+                </div>
+            </a>
+        </div>
+        <div class="nav-actions">
+            <button class="btn-icon" onclick="window.studyUI.toggleTheme()">🌓</button>
+            <a href="index.html" class="btn-ghost">🇰🇷 Về Hub Tiếng Hàn</a>
+        </div>
+    </header>
+
+    <!-- Subbar -->
+    <div class="study-subbar">
+        <nav class="breadcrumb-list">
+            <a href="../index.html">Sảnh chính</a>
+            <span class="breadcrumb-sep">/</span>
+            <a href="index.html">🇰🇷 Tiếng Hàn</a>
+            <span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-current">Bảng Chữ Cái Hangeul (한글)</span>
+        </nav>
+        <span style="font-size: 0.82rem; color: var(--text-muted);">💡 Nhấp vào từng ký tự để nghe phát âm bản xứ</span>
+    </div>
+
+    <main class="alphabet-container">
+        
+        <!-- Phụ âm cơ bản -->
+        <section class="alphabet-section">
+            <h2 class="section-title">
+                <span>🔊</span> 14 Phụ Âm Cơ Bản (기본 자음)
+            </h2>
+            <div class="char-grid" id="basicConsonants"></div>
+        </section>
+
+        <!-- Phụ âm đôi -->
+        <section class="alphabet-section">
+            <h2 class="section-title">
+                <span>🔊</span> 5 Phụ Âm Căng / Đôi (쌍자음)
+            </h2>
+            <div class="char-grid" id="doubleConsonants"></div>
+        </section>
+
+        <!-- Nguyên âm cơ bản -->
+        <section class="alphabet-section">
+            <h2 class="section-title">
+                <span>🔊</span> 10 Nguyên Âm Cơ Bản (기본 모음)
+            </h2>
+            <div class="char-grid" id="basicVowels"></div>
+        </section>
+
+        <!-- Nguyên âm kép -->
+        <section class="alphabet-section">
+            <h2 class="section-title">
+                <span>🔊</span> 11 Nguyên Âm Mở Rộng / Kép (이중 모음)
+            </h2>
+            <div class="char-grid" id="compoundVowels"></div>
+        </section>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../js/ui-kit.js"></script>
+    <script src="../js/speech.js"></script>
+    <script src="../js/storage.js"></script>
+    <script>
+        const HANGEUL_DATA = {
+            basicConsonants: [
+                { char: 'ㄱ', romaji: 'g/k', name: 'giyeok' },
+                { char: 'ㄴ', romaji: 'n', name: 'nieun' },
+                { char: 'ㄷ', romaji: 'd/t', name: 'digeut' },
+                { char: 'ㄹ', romaji: 'r/l', name: 'rieul' },
+                { char: 'ㅁ', romaji: 'm', name: 'mieum' },
+                { char: 'ㅂ', romaji: 'b/p', name: 'bieup' },
+                { char: 'ㅅ', romaji: 's', name: 'siot' },
+                { char: 'ㅇ', romaji: 'ng/câm', name: 'ieung' },
+                { char: 'ㅈ', romaji: 'j', name: 'jieut' },
+                { char: 'ㅊ', romaji: 'ch', name: 'chieut' },
+                { char: 'ㅋ', romaji: 'k', name: 'kieuk' },
+                { char: 'ㅌ', romaji: 't', name: 'tieut' },
+                { char: 'ㅍ', romaji: 'p', name: 'pieup' },
+                { char: 'ㅎ', romaji: 'h', name: 'hieut' }
+            ],
+            doubleConsonants: [
+                { char: 'ㄲ', romaji: 'kk', name: 'ssanggiyeok' },
+                { char: 'ㄸ', romaji: 'tt', name: 'ssangdigeut' },
+                { char: 'ㅃ', romaji: 'pp', name: 'ssangbieup' },
+                { char: 'ㅆ', romaji: 'ss', name: 'ssangsiot' },
+                { char: 'ㅉ', romaji: 'jj', name: 'ssangjieut' }
+            ],
+            basicVowels: [
+                { char: 'ㅏ', romaji: 'a', name: 'a' },
+                { char: 'ㅑ', romaji: 'ya', name: 'ya' },
+                { char: 'ㅓ', romaji: 'eo', name: 'eo' },
+                { char: 'ㅕ', romaji: 'yeo', name: 'yeo' },
+                { char: 'ㅗ', romaji: 'o', name: 'o' },
+                { char: 'ㅛ', romaji: 'yo', name: 'yo' },
+                { char: 'ㅜ', romaji: 'u', name: 'u' },
+                { char: 'ㅠ', romaji: 'yu', name: 'yu' },
+                { char: 'ㅡ', romaji: 'eu', name: 'eu' },
+                { char: 'ㅣ', romaji: 'i', name: 'i' }
+            ],
+            compoundVowels: [
+                { char: 'ㅐ', romaji: 'ae', name: 'ae' },
+                { char: 'ㅒ', romaji: 'yae', name: 'yae' },
+                { char: 'ㅔ', romaji: 'e', name: 'e' },
+                { char: 'ㅖ', romaji: 'ye', name: 'ye' },
+                { char: 'ㅘ', romaji: 'wa', name: 'wa' },
+                { char: 'ㅙ', romaji: 'wae', name: 'wae' },
+                { char: 'ㅚ', romaji: 'oe', name: 'oe' },
+                { char: 'ㅝ', romaji: 'wo', name: 'wo' },
+                { char: 'ㅞ', romaji: 'we', name: 'we' },
+                { char: 'ㅟ', romaji: 'wi', name: 'wi' },
+                { char: 'ㅢ', romaji: 'ui', name: 'ui' }
+            ]
+        };
+
+        function renderGrid(containerId, list) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            list.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'char-card';
+                card.innerHTML = `
+                    <div class="char-symbol">${item.char}</div>
+                    <div class="char-romaji">${item.romaji}</div>
+                    <div class="char-name">${item.name}</div>
+                `;
+                card.addEventListener('click', () => {
+                    window.studySpeech.speak(item.char, 'ko');
+                    card.style.transform = 'scale(0.95)';
+                    setTimeout(() => card.style.transform = '', 150);
+                });
+                container.appendChild(card);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderGrid('basicConsonants', HANGEUL_DATA.basicConsonants);
+            renderGrid('doubleConsonants', HANGEUL_DATA.doubleConsonants);
+            renderGrid('basicVowels', HANGEUL_DATA.basicVowels);
+            renderGrid('compoundVowels', HANGEUL_DATA.compoundVowels);
+        });
+    </script>
+</body>
+</html>

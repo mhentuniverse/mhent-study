@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng Thi Thử Nghiệm AI (Gemini) | MHEnt. Study</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <style>
+        .exam-container {
+            max-width: 860px;
+            margin: 2.5rem auto;
+            padding: 0 1.5rem;
+        }
+        .config-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .quiz-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-top: 1.5rem;
+            display: none;
+        }
+        .question-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            margin-bottom: 1.25rem;
+        }
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .option-item {
+            padding: 0.85rem 1.15rem;
+            border-radius: var(--radius-md);
+            border: 1.5px solid var(--border-color);
+            background: var(--bg-subtle);
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all var(--transition-fast);
+        }
+        .option-item:hover {
+            border-color: #ec4899;
+            background: rgba(236, 72, 153, 0.05);
+        }
+        .option-item.selected {
+            border-color: #ec4899;
+            background: rgba(236, 72, 153, 0.12);
+        }
+        .option-item.correct {
+            border-color: var(--success);
+            background: var(--success-bg);
+            color: var(--success);
+        }
+        .option-item.wrong {
+            border-color: var(--error);
+            background: var(--error-bg);
+            color: var(--error);
+        }
+    </style>
+</head>
+<body class="dark-mode">
+
+    <!-- Navbar -->
+    <header class="study-navbar">
+        <div class="brand-group">
+            <a href="../index.html" class="brand-group">
+                <div class="brand-logo-badge">M</div>
+                <div class="brand-text">
+                    <div class="brand-title">MHEnt. <span class="highlight">Study</span></div>
+                    <div class="brand-sub">Universe Learning Portal</div>
+                </div>
+            </a>
+        </div>
+        <div class="nav-actions">
+            <button class="btn-icon" onclick="window.studyUI.toggleTheme()">🌓</button>
+            <a href="index.html" class="btn-ghost">🇰🇷 Về Hub Tiếng Hàn</a>
+        </div>
+    </header>
+
+    <!-- Subbar -->
+    <div class="study-subbar">
+        <nav class="breadcrumb-list">
+            <a href="../index.html">Sảnh chính</a>
+            <span class="breadcrumb-sep">/</span>
+            <a href="index.html">🇰🇷 Tiếng Hàn</a>
+            <span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-current">Phòng Thi Thử Nghiệm AI (Gemini)</span>
+        </nav>
+    </div>
+
+    <main class="exam-container">
+        
+        <!-- Setup Configuration Card -->
+        <div class="config-card" id="examSetupCard">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <span style="font-size: 2rem;">🧠</span>
+                <div>
+                    <h1 style="font-size: 1.6rem;">Tạo Đề Thi Trí Tuệ Nhân Tạo (Gemini)</h1>
+                    <p style="color: var(--text-muted); font-size: 0.88rem;">Hệ thống sẽ dựa trên toàn bộ từ vựng cá nhân bạn đã thêm để tự động sinh đề thi</p>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1.5rem;">
+                <div>
+                    <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.4rem;">Chọn Giáo trình để thi</label>
+                    <select id="examDeckSelect" style="width: 100%; padding: 0.65rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-subtle); color: var(--text-primary); font-size: 0.9rem;">
+                        <!-- Options loaded dynamically -->
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.4rem;">Số lượng câu hỏi</label>
+                    <select id="examCountSelect" style="width: 100%; padding: 0.65rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-subtle); color: var(--text-primary); font-size: 0.9rem;">
+                        <option value="5">5 Câu hỏi (Nhanh)</option>
+                        <option value="10" selected>10 Câu hỏi (Tiêu chuẩn)</option>
+                        <option value="15">15 Câu hỏi (Chuyên sâu)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+                <button class="btn-primary" id="btnStartExam" style="padding: 0.75rem 1.75rem; font-size: 1rem;">
+                    ✨ Bắt đầu Sinh đề thi
+                </button>
+            </div>
+        </div>
+
+        <!-- Question View -->
+        <div class="quiz-card" id="quizCard">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span class="streak-pill" id="questionCounter">Câu 1 / 10</span>
+                <span id="scoreTracker" style="font-weight: 700; color: var(--accent-edu);">Điểm: 0</span>
+            </div>
+
+            <h2 class="question-title" id="questionText">Nghĩa của từ này là gì?</h2>
+            
+            <div class="options-list" id="optionsContainer">
+                <!-- Generated options -->
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
+                <button class="btn-speaker" id="btnAudioQuestion" title="Nghe từ">🔊 Nghe từ này</button>
+                <button class="btn-primary" id="btnNextQuestion" style="display: none;">Câu tiếp theo →</button>
+            </div>
+        </div>
+
+        <!-- Result Summary -->
+        <div class="config-card" id="resultCard" style="display: none; text-align: center; margin-top: 1.5rem;">
+            <div style="font-size: 3.5rem; margin-bottom: 0.5rem;">🏆</div>
+            <h2 style="font-size: 1.85rem; margin-bottom: 0.5rem;">Hoàn Thành Bài Thi!</h2>
+            <p style="font-size: 1.25rem; font-weight: 700; color: var(--accent-edu); margin-bottom: 1.5rem;" id="finalScoreText">Bạn đạt 10/10 điểm (100%)</p>
+            <div style="display: flex; justify-content: center; gap: 1rem;">
+                <button class="btn-ghost" onclick="window.location.reload()">Làm lại bài khác</button>
+                <a href="practice/vocab.html" class="btn-primary">Về Sổ từ vựng ôn lại</a>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../js/ui-kit.js"></script>
+    <script src="../js/speech.js"></script>
+    <script src="../js/storage.js"></script>
+    <script src="../data/sample-ko.js"></script>
+    <script>
+        let questions = [];
+        let currentQIndex = 0;
+        let score = 0;
+        let currentTargetWord = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const selectEl = document.getElementById('examDeckSelect');
+            let decks = window.studyStorage.getDecks('ko');
+            if (decks.length === 0 && window.DEFAULT_KO_DECK) {
+                decks = [window.DEFAULT_KO_DECK];
+            }
+            decks.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.id;
+                opt.textContent = `${d.title} (${(d.words || []).length} từ)`;
+                selectEl.appendChild(opt);
+            });
+
+            document.getElementById('btnStartExam').addEventListener('click', generateExam);
+            document.getElementById('btnNextQuestion').addEventListener('click', nextQuestion);
+            document.getElementById('btnAudioQuestion').addEventListener('click', () => {
+                if (currentTargetWord) window.studySpeech.speak(currentTargetWord.word, 'ko');
+            });
+        });
+
+        function generateExam() {
+            const deckId = document.getElementById('examDeckSelect').value;
+            const deck = window.studyStorage.getDeckById('ko', deckId) || window.DEFAULT_KO_DECK;
+            const words = deck.words || [];
+
+            if (words.length < 4) {
+                window.studyUI.showToast('Bộ từ vựng cần ít nhất 4 từ để tạo đề thi!', 'error');
+                return;
+            }
+
+            const count = Math.min(parseInt(document.getElementById('examCountSelect').value, 10), words.length);
+            
+            // Xáo trộn và lấy ngẫu nhiên câu hỏi
+            const shuffled = [...words].sort(() => 0.5 - Math.random());
+            questions = [];
+
+            for (let i = 0; i < count; i++) {
+                const correctWord = shuffled[i];
+                // Lấy 3 đáp án nhiễu
+                const distractorWords = words.filter(w => w.id !== correctWord.id).sort(() => 0.5 - Math.random()).slice(0, 3);
+                const allChoices = [correctWord, ...distractorWords].sort(() => 0.5 - Math.random());
+
+                // Random dạng: Hỏi nghĩa hoặc hỏi từ
+                const isTypeWordToMeaning = Math.random() > 0.4;
+
+                questions.push({
+                    target: correctWord,
+                    type: isTypeWordToMeaning ? 'word_to_meaning' : 'meaning_to_word',
+                    question: isTypeWordToMeaning 
+                        ? `Từ vựng "${correctWord.word}" ${correctWord.phonetic || ''} có nghĩa là gì?`
+                        : `Từ tiếng Hàn nào mang nghĩa là: "${correctWord.meaning}"?`,
+                    correctAnswer: isTypeWordToMeaning ? correctWord.meaning : correctWord.word,
+                    choices: allChoices.map(c => isTypeWordToMeaning ? c.meaning : c.word)
+                });
+            }
+
+            currentQIndex = 0;
+            score = 0;
+            document.getElementById('examSetupCard').style.display = 'none';
+            document.getElementById('quizCard').style.display = 'block';
+            displayQuestion(0);
+        }
+
+        function displayQuestion(index) {
+            currentQIndex = index;
+            const q = questions[index];
+            currentTargetWord = q.target;
+
+            document.getElementById('questionCounter').textContent = `Câu ${index + 1} / ${questions.length}`;
+            document.getElementById('scoreTracker').textContent = `Điểm: ${score}`;
+            document.getElementById('questionText').textContent = q.question;
+            document.getElementById('btnNextQuestion').style.display = 'none';
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            q.choices.forEach(choice => {
+                const item = document.createElement('div');
+                item.className = 'option-item';
+                item.textContent = choice;
+                item.addEventListener('click', () => selectAnswer(item, choice, q.correctAnswer));
+                container.appendChild(item);
+            });
+
+            // Tự đọc từ tiếng Hàn
+            setTimeout(() => {
+                window.studySpeech.speak(q.target.word, 'ko');
+            }, 300);
+        }
+
+        function selectAnswer(itemEl, chosen, correct) {
+            const allItems = document.querySelectorAll('.option-item');
+            allItems.forEach(el => el.style.pointerEvents = 'none'); // Khóa chọn
+
+            if (chosen === correct) {
+                itemEl.classList.add('correct');
+                score += 1;
+                window.studyUI.playDing();
+            } else {
+                itemEl.classList.add('wrong');
+                window.studyUI.playWrong();
+                // Đánh dấu đáp án đúng cho người học nhận biết
+                allItems.forEach(el => {
+                    if (el.textContent === correct) el.classList.add('correct');
+                });
+            }
+
+            document.getElementById('scoreTracker').textContent = `Điểm: ${score}`;
+            document.getElementById('btnNextQuestion').style.display = 'block';
+        }
+
+        function nextQuestion() {
+            if (currentQIndex + 1 < questions.length) {
+                displayQuestion(currentQIndex + 1);
+            } else {
+                // Kết thúc bài thi
+                document.getElementById('quizCard').style.display = 'none';
+                document.getElementById('resultCard').style.display = 'block';
+                const pct = Math.round((score / questions.length) * 100);
+                document.getElementById('finalScoreText').textContent = `Bạn đạt ${score}/${questions.length} điểm (${pct}%)`;
+                window.studyUI.playDing();
+            }
+        }
+    </script>
+</body>
+</html>

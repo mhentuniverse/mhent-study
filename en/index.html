@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiếng Anh (English) | MHEnt. Study</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <style>
+        .hub-container { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
+        .hub-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); }
+        .tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; }
+        .tool-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; transition: all var(--transition-normal); box-shadow: var(--shadow-sm); }
+        .tool-card:hover { transform: translateY(-4px); border-color: #6366f1; box-shadow: var(--shadow-md); }
+    </style>
+</head>
+<body class="dark-mode">
+    <header class="study-navbar">
+        <div class="brand-group">
+            <a href="../index.html" class="brand-group">
+                <div class="brand-logo-badge" style="background: linear-gradient(135deg, #4f46e5, #6366f1);">M</div>
+                <div class="brand-text">
+                    <div class="brand-title">MHEnt. <span class="highlight" style="background: linear-gradient(135deg, #6366f1, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Study</span></div>
+                    <div class="brand-sub">Universe Learning Portal</div>
+                </div>
+            </a>
+        </div>
+        <div class="nav-actions">
+            <button class="btn-icon" onclick="window.studyUI.toggleTheme()">🌓</button>
+            <a href="../index.html" class="btn-ghost">🏠 Sảnh chính</a>
+        </div>
+    </header>
+
+    <div class="study-subbar">
+        <nav class="breadcrumb-list">
+            <a href="../index.html">Sảnh chính</a>
+            <span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-current">🇬🇧 Tiếng Anh (English)</span>
+        </nav>
+    </div>
+
+    <main class="hub-container">
+        <div class="hub-header">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="font-size: 3rem;">🇬🇧</div>
+                <div>
+                    <h1 style="font-size: 1.85rem;">Vũ Trụ Tiếng Anh</h1>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Bảng 44 âm IPA • Từ vựng theo chủ đề • Sổ từ vựng tương tác • Đề thi AI</p>
+                </div>
+            </div>
+            <a href="../ko/practice/vocab.html" class="btn-primary" style="background: linear-gradient(135deg, #4f46e5, #6366f1);">
+                📝 Trải nghiệm Sổ từ vựng mẫu
+            </a>
+        </div>
+
+        <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">🚀 Phòng Luyện Tập & Công Cụ</h2>
+        <div class="tools-grid">
+            <div class="tool-card">
+                <div style="font-size: 2.2rem;">🎙️</div>
+                <h3 style="font-size: 1.15rem;">Bảng Phiên Âm Quốc Tế IPA</h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">44 âm chuẩn Anh - Mỹ, khẩu hình miệng và luyện phát âm từng âm tiết.</p>
+                <span style="color: #6366f1; font-weight: 700; font-size: 0.85rem; margin-top: auto;">Sắp ra mắt</span>
+            </div>
+            <div class="tool-card">
+                <div style="font-size: 2.2rem;">📝</div>
+                <h3 style="font-size: 1.15rem;">Sổ Tay Từ Vựng Thông Minh</h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Tự gõ chính tả tiếng Anh, chấm điểm đúng/sai và ôn tập ngắt quãng 4 chu kỳ.</p>
+                <span style="color: #6366f1; font-weight: 700; font-size: 0.85rem; margin-top: auto;">Đang kích hoạt...</span>
+            </div>
+            <div class="tool-card">
+                <div style="font-size: 2.2rem;">🧠</div>
+                <h3 style="font-size: 1.15rem;">Phòng Thi AI (Gemini)</h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Tự động tạo câu hỏi trắc nghiệm ngữ pháp & collocations từ từ vựng bạn tự nhập.</p>
+                <span style="color: #6366f1; font-weight: 700; font-size: 0.85rem; margin-top: auto;">Sắp ra mắt</span>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/ui-kit.js"></script>
+    <script src="../js/speech.js"></script>
+    <script src="../js/storage.js"></script>
+</body>
+</html>

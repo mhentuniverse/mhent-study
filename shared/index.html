@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiếp nhận & Sao chép Tài liệu học | MHEnt. Study</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <style>
+        .shared-hero {
+            max-width: 800px;
+            margin: 3rem auto;
+            padding: 2rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            text-align: center;
+        }
+        .preview-box {
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            background: var(--bg-subtle);
+            border-radius: var(--radius-md);
+            text-align: left;
+        }
+        .preview-words-list {
+            margin-top: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .word-chip {
+            padding: 0.4rem 0.75rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-full);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="dark-mode">
+
+    <!-- Top Navbar -->
+    <header class="study-navbar">
+        <div class="brand-group">
+            <a href="../index.html" class="brand-group">
+                <div class="brand-logo-badge">M</div>
+                <div class="brand-text">
+                    <div class="brand-title">MHEnt. <span class="highlight">Study</span></div>
+                    <div class="brand-sub">Universe Learning Portal</div>
+                </div>
+            </a>
+        </div>
+        <div class="nav-actions">
+            <button class="btn-icon" onclick="window.studyUI.toggleTheme()">🌓</button>
+            <a href="../index.html" class="btn-ghost">🏠 Sảnh chính</a>
+        </div>
+    </header>
+
+    <main class="shared-hero">
+        <div style="font-size: 3rem; margin-bottom: 0.5rem;">🎁</div>
+        <h1 style="font-size: 1.75rem; margin-bottom: 0.5rem;" id="sharedDeckTitle">Đang tải bộ tài liệu được chia sẻ...</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;" id="sharedDeckDesc">Vui lòng đợi giây lát</p>
+
+        <div class="preview-box" id="previewContainer" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 700; font-size: 0.9rem;" id="deckAuthorTag">Tác giả: ...</span>
+                <span class="streak-pill" id="deckWordCountTag">0 từ</span>
+            </div>
+            <div class="preview-words-list" id="previewWords"></div>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 1rem;">
+            <a href="../index.html" class="btn-ghost">Về trang chủ</a>
+            <button class="btn-primary" id="btnCloneNow" style="padding: 0.75rem 1.5rem; font-size: 1rem;" disabled>
+                📥 Sao chép (Clone) vào tài khoản của tôi
+            </button>
+        </div>
+    </main>
+
+    <!-- Modal Popup Clone Prompt (Tự động kích hoạt khi có link share) -->
+    <div class="mhent-overlay" id="clonePromptModal">
+        <div class="mhent-modal">
+            <div class="modal-header">
+                <h3 style="font-size: 1.15rem;">🎉 Nhận Bộ tài liệu học mới</h3>
+                <button class="btn-icon" onclick="document.getElementById('clonePromptModal').classList.remove('active')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.95rem; color: var(--text-primary); line-height: 1.6;">
+                    Bạn vừa nhận được bộ giáo trình: <strong id="modalDeckTitle" style="color: var(--accent-edu);">...</strong>
+                </p>
+                <p style="font-size: 0.88rem; color: var(--text-secondary); margin-top: 0.6rem;">
+                    Bạn có muốn <strong>sao chép (Clone)</strong> toàn bộ dữ liệu này vào kho cá nhân không? 
+                    Sau khi clone, bạn có thể tự do học tập, ghi chú, và chỉnh sửa mà không ảnh hưởng tới bản gốc!
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-ghost" onclick="document.getElementById('clonePromptModal').classList.remove('active')">Xem trước</button>
+                <button class="btn-primary" id="btnModalConfirmClone">🚀 Đồng ý & Clone ngay</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../js/ui-kit.js"></script>
+    <script src="../js/speech.js"></script>
+    <script src="../js/storage.js"></script>
+    <script>
+        let targetDeck = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const dataParam = urlParams.get('data');
+
+            if (dataParam) {
+                try {
+                    const jsonStr = decodeURIComponent(escape(atob(decodeURIComponent(dataParam))));
+                    targetDeck = JSON.parse(jsonStr);
+                    renderDeckPreview(targetDeck);
+                } catch (e) {
+                    console.error('Không thể giải mã dữ liệu deck:', e);
+                    document.getElementById('sharedDeckTitle').textContent = '⚠️ Liên kết chia sẻ không hợp lệ hoặc đã hết hạn';
+                }
+            } else {
+                document.getElementById('sharedDeckTitle').textContent = 'Không tìm thấy dữ liệu bộ bài được chia sẻ';
+            }
+
+            document.getElementById('btnCloneNow').addEventListener('click', executeClone);
+            document.getElementById('btnModalConfirmClone').addEventListener('click', executeClone);
+        });
+
+        function renderDeckPreview(deck) {
+            document.getElementById('sharedDeckTitle').textContent = deck.title || 'Bộ tài liệu ngoại ngữ';
+            document.getElementById('sharedDeckDesc').textContent = deck.description || 'Được chia sẻ qua MHEnt Universe Study';
+            document.getElementById('deckAuthorTag').textContent = `Tác giả: ${deck.author || 'MHEnt User'}`;
+            document.getElementById('deckWordCountTag').textContent = `${(deck.words || []).length} từ vựng`;
+
+            const wordsBox = document.getElementById('previewWords');
+            wordsBox.innerHTML = '';
+            (deck.words || []).slice(0, 15).forEach(w => {
+                const chip = document.createElement('span');
+                chip.className = 'word-chip';
+                chip.textContent = `${w.word} (${w.meaning})`;
+                wordsBox.appendChild(chip);
+            });
+
+            document.getElementById('previewContainer').style.display = 'block';
+            document.getElementById('btnCloneNow').removeAttribute('disabled');
+
+            // Bật Modal Popup chào mừng & hỏi clone
+            document.getElementById('modalDeckTitle').textContent = deck.title;
+            document.getElementById('clonePromptModal').classList.add('active');
+        }
+
+        function executeClone() {
+            if (!targetDeck) return;
+            const cloned = window.studyStorage.cloneDeck(targetDeck);
+            window.studyUI.playDing();
+            window.studyUI.showToast('🎉 Đã sao chép bộ bài thành công vào kho cá nhân của bạn!', 'success');
+
+            // Điều hướng người dùng tới phòng luyện tập với deck mới
+            setTimeout(() => {
+                const lang = targetDeck.lang || 'ko';
+                window.location.href = `../${lang}/practice/vocab.html?deck=${cloned.id}`;
+            }, 1200);
+        }
+    </script>
+</body>
+</html>
