@@ -34,9 +34,17 @@ class VocabSheetApp {
         } else if (savedDecks.length > 0) {
             this.currentDeck = savedDecks[0];
         } else {
-            // Khởi tạo deck mặc định từ sample
-            if (this.lang === 'ko' && window.DEFAULT_KO_DECK) {
-                this.currentDeck = JSON.parse(JSON.stringify(window.DEFAULT_KO_DECK));
+            // Khởi tạo deck mặc định từ sample theo từng ngôn ngữ
+            const defaultDeckMap = {
+                ko: window.DEFAULT_KO_DECK,
+                ja: window.DEFAULT_JA_DECK,
+                zh: window.DEFAULT_ZH_DECK,
+                en: window.DEFAULT_EN_DECK
+            };
+            const defaultDeck = defaultDeckMap[this.lang];
+
+            if (defaultDeck) {
+                this.currentDeck = JSON.parse(JSON.stringify(defaultDeck));
                 window.studyStorage.saveDeck(this.lang, this.currentDeck);
             } else {
                 // Generic deck

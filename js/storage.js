@@ -1,6 +1,6 @@
 /**
  * MHENT STUDY - STORAGE & DECK MANAGEMENT ENGINE
- * Quản lý LocalStorage & Đồng bộ Cloud (Firestore / Supabase)
+ * Quản lý LocalStorage & Đồng bộ Cloud Supabase
  * Xử lý Tạo Deck, Thêm từ, Sao lưu, Clone bộ bài chia sẻ
  */
 class StudyStorage {
@@ -17,10 +17,8 @@ class StudyStorage {
         if (streakData.lastDate !== today) {
             const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
             if (streakData.lastDate === yesterday) {
-                // Tiếp tục streak
                 streakData.current += 1;
             } else {
-                // Đứt chuỗi, bắt đầu lại
                 streakData.current = 1;
             }
             streakData.lastDate = today;
@@ -75,7 +73,7 @@ class StudyStorage {
     }
 
     /**
-     * Lưu hoặc cập nhật 1 bộ từ vựng
+     * Lưu hoặc cập nhật 1 bộ từ vựng (Lưu Local + Đồng bộ Supabase Cloud)
      */
     saveDeck(lang, deck) {
         const decks = this.getDecks(lang);
@@ -88,6 +86,18 @@ class StudyStorage {
             decks.unshift(deck);
         }
         this.saveDecks(lang, decks);
+
+        // Tự động đồng bộ lên Supabase Cloud trong nền
+        if (window.studyCloud && typeof window.studyCloud.saveDeck === 'function') {
+            window.studyCloud.saveDeck(deck).then(res => {
+                if (res.success) {
+                    console.log('[Study Storage] ☁️ Đã đồng bộ bộ bài lên Supabase:', deck.id);
+                }
+            }).catch(e => {
+                console.warn('[Study Storage] Không thể đồng bộ Supabase:', e);
+            });
+        }
+
         return deck;
     }
 
@@ -116,13 +126,19 @@ class StudyStorage {
     }
 
     /**
-     * Tạo chuỗi link chia sẻ bộ bài
+     * Tạo chuỗi link chia sẻ bộ bài (Lưu Supabase và trả về URL rút gọn)
      */
     generateShareLink(deck) {
         const base = window.location.origin;
-        // Mã hóa thông tin cơ bản để có thể chia sẻ trực tiếp qua URL hoặc Cloud ID
+
+        // Lưu vào Supabase Cloud trước
+        if (window.studyCloud && typeof window.studyCloud.saveDeck === 'function') {
+            window.studyCloud.saveDeck(deck).catch(console.error);
+        }
+
+        // Mã hóa dữ liệu dự phòng (dual-mode: vừa có ID Cloud vừa có data dự phòng)
         const deckDataEncoded = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(deck)))));
-        return `${base}/shared/?data=${deckDataEncoded}`;
+        return `${base}/shared/?id=${encodeURIComponent(deck.id)}&lang=${deck.lang || 'ko'}&data=${deckDataEncoded}`;
     }
 }
 

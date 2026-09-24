@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tiếp nhận & Sao chép Tài liệu học | MHEnt. Study</title>
+    <title>Kho Giáo Trình & Tiếp Nhận Chia Sẻ | MHEnt. Study Cloud</title>
     <link rel="icon" type="image/png" sizes="48x48" href="/assets/icon-web.png">
+    
     <link rel="stylesheet" href="/css/study-core.css">
-    <link rel="stylesheet" href="/css/layout.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .shared-hero {
             max-width: 800px;
-            margin: 3rem auto;
+            margin: 2.5rem auto;
             padding: 2rem;
             background: var(--study-surface);
             border: 1px solid var(--study-border);
@@ -26,12 +26,15 @@
             background: var(--study-subtle);
             border-radius: 14px;
             text-align: left;
+            border: 1px solid var(--study-border);
         }
         .preview-words-list {
             margin-top: 1rem;
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
+            max-height: 220px;
+            overflow-y: auto;
         }
         .word-chip {
             padding: 0.4rem 0.75rem;
@@ -40,6 +43,57 @@
             border-radius: var(--radius-pill);
             font-size: 0.85rem;
             font-weight: 700;
+        }
+        /* Community Shared Decks Grid */
+        .community-header {
+            margin-bottom: 24px;
+            text-align: left;
+        }
+        .deck-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            padding-bottom: 4px;
+        }
+        .deck-tab-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--study-border);
+            background: var(--study-surface);
+            font-weight: 800;
+            font-size: 13.5px;
+            cursor: pointer;
+            color: inherit;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .deck-tab-btn.active {
+            background: var(--study-accent);
+            color: #fff;
+            border-color: var(--study-accent);
+        }
+        .community-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        .shared-deck-card {
+            background: var(--study-surface);
+            border: 1px solid var(--study-border);
+            border-radius: var(--radius-card);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: var(--study-shadow);
+            transition: 0.2s;
+            text-align: left;
+        }
+        .shared-deck-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--study-accent);
+            box-shadow: var(--study-shadow-hover);
         }
     </style>
 </head>
@@ -50,7 +104,7 @@
             <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="brand-avatar">
             <div class="brand-title-wrap">
                 <span class="brand-main-title">MHEnt. <span>Study</span></span>
-                <span class="brand-sub-badge">SHARED VAULT</span>
+                <span class="brand-sub-badge">CLOUD DRIVE</span>
             </div>
         </a>
         <div class="nav-study-links">
@@ -67,28 +121,61 @@
         </div>
     </nav>
 
-    <main class="shared-hero">
-        <div style="font-size: 3rem; margin-bottom: 0.5rem;">🎁</div>
-        <h1 style="font-size: 1.75rem; margin-bottom: 0.5rem;" id="sharedDeckTitle">Đang tải bộ tài liệu được chia sẻ...</h1>
-        <p style="color: var(--text-secondary); font-size: 0.95rem;" id="sharedDeckDesc">Vui lòng đợi giây lát</p>
-
-        <div class="preview-box" id="previewContainer" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: 700; font-size: 0.9rem;" id="deckAuthorTag">Tác giả: ...</span>
-                <span class="streak-pill" id="deckWordCountTag">0 từ</span>
-            </div>
-            <div class="preview-words-list" id="previewWords"></div>
+    <div class="study-breadcrumb-bar">
+        <div class="breadcrumb-nav">
+            <a href="/">Trang chủ</a> <span>/</span>
+            <span class="current">Kho Dữ Liệu Giáo Trình Supabase Cloud</span>
         </div>
+    </div>
 
-        <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 1rem;">
-            <a href="../index.html" class="btn-ghost">Về trang chủ</a>
-            <button class="btn-primary" id="btnCloneNow" style="padding: 0.75rem 1.5rem; font-size: 1rem;" disabled>
-                📥 Sao chép (Clone) vào tài khoản của tôi
-            </button>
+    <!-- KHUNG TIẾP NHẬN BÀI CHIA SẺ CỤ THỂ (KHI CÓ ID HOẶC DATA TRÊN URL) -->
+    <main class="study-wrapper" id="singleShareContainer" style="display: none;">
+        <div class="shared-hero">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">🎁</div>
+            <h1 style="font-size: 1.75rem; margin-bottom: 0.5rem;" id="sharedDeckTitle">Đang tải bộ tài liệu từ Supabase Cloud...</h1>
+            <p style="color: var(--study-text-muted); font-size: 0.95rem;" id="sharedDeckDesc">Vui lòng đợi giây lát</p>
+
+            <div class="preview-box" id="previewContainer" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 800; font-size: 0.9rem;" id="deckAuthorTag">Tác giả: ...</span>
+                    <span class="streak-pill-btn" id="deckWordCountTag">0 từ</span>
+                </div>
+                <div class="preview-words-list" id="previewWords"></div>
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                <a href="/shared/index.html" class="btn-ghost">Khám phá kho chung</a>
+                <button class="auth-btn-pill" id="btnCloneNow" style="padding: 0.75rem 1.75rem; font-size: 1rem;" disabled>
+                    📥 Sao chép (Clone) vào kho cá nhân
+                </button>
+            </div>
         </div>
     </main>
 
-    <!-- Modal Popup Clone Prompt (Tự động kích hoạt khi có link share) -->
+    <!-- KHUNG KHO CHUNG CLOUD DRIVE (KHI KHÔNG CÓ PARAM TRÊN URL) -->
+    <main class="study-wrapper" id="communityVaultContainer" style="display: none;">
+        <div class="community-header">
+            <div style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(99, 102, 241, 0.1)); border: 1px solid rgba(14, 165, 233, 0.3); border-radius: var(--radius-card); padding: 24px; margin-bottom: 24px;">
+                <span style="font-size: 13px; font-weight: 800; color: #0ea5e9; text-transform: uppercase;">SUPABASE COMMUNITY VAULT</span>
+                <h1 style="font-size: 26px; font-weight: 900; margin: 4px 0 8px 0;">🌐 Kho Giáo Trình Chia Sẻ Cộng Đồng</h1>
+                <p style="font-size: 14.5px; color: var(--study-text-muted); margin: 0;">Khám phá các bộ từ vựng được đóng góp bởi cộng đồng học viên MHEnt Universe. Bạn có thể xem trước và clone trực tiếp vào kho học của mình!</p>
+            </div>
+
+            <div class="deck-tabs">
+                <button class="deck-tab-btn active" onclick="switchVaultTab('all', this)">Tất cả</button>
+                <button class="deck-tab-btn" onclick="switchVaultTab('ko', this)">🇰🇷 Tiếng Hàn</button>
+                <button class="deck-tab-btn" onclick="switchVaultTab('ja', this)">🇯🇵 Tiếng Nhật</button>
+                <button class="deck-tab-btn" onclick="switchVaultTab('zh', this)">🇨🇳 Tiếng Trung</button>
+                <button class="deck-tab-btn" onclick="switchVaultTab('en', this)">🇬🇧 Tiếng Anh</button>
+            </div>
+        </div>
+
+        <div class="community-grid" id="communityGrid">
+            <!-- Dynamic Decks Loaded from Supabase Cloud -->
+        </div>
+    </main>
+
+    <!-- Modal Popup Clone Prompt -->
     <div class="mhent-overlay" id="clonePromptModal">
         <div class="mhent-modal">
             <div class="modal-header">
@@ -96,59 +183,94 @@
                 <button class="btn-icon" onclick="document.getElementById('clonePromptModal').classList.remove('active')">✕</button>
             </div>
             <div class="modal-body">
-                <p style="font-size: 0.95rem; color: var(--text-primary); line-height: 1.6;">
-                    Bạn vừa nhận được bộ giáo trình: <strong id="modalDeckTitle" style="color: var(--accent-edu);">...</strong>
+                <p style="font-size: 0.95rem; color: var(--study-text); line-height: 1.6;">
+                    Bạn vừa nhận được bộ giáo trình: <strong id="modalDeckTitle" style="color: var(--study-accent);">...</strong>
                 </p>
-                <p style="font-size: 0.88rem; color: var(--text-secondary); margin-top: 0.6rem;">
-                    Bạn có muốn <strong>sao chép (Clone)</strong> toàn bộ dữ liệu này vào kho cá nhân không? 
-                    Sau khi clone, bạn có thể tự do học tập, ghi chú, và chỉnh sửa mà không ảnh hưởng tới bản gốc!
+                <p style="font-size: 0.88rem; color: var(--study-text-muted); margin-top: 0.6rem;">
+                    Bạn có muốn <strong>sao chép (Clone)</strong> toàn bộ dữ liệu này vào kho cá nhân trên Supabase không? 
+                    Sau khi clone, bạn có thể tự do học tập, chấm điểm và thêm từ mới mà không ảnh hưởng tới bản gốc!
                 </p>
             </div>
             <div class="modal-footer">
                 <button class="btn-ghost" onclick="document.getElementById('clonePromptModal').classList.remove('active')">Xem trước</button>
-                <button class="btn-primary" id="btnModalConfirmClone">🚀 Đồng ý & Clone ngay</button>
+                <button class="auth-btn-pill" id="btnModalConfirmClone">🚀 Đồng ý & Clone ngay</button>
             </div>
         </div>
     </div>
 
     <!-- Scripts -->
-    <script src="../js/config.js"></script>
-    <script src="../js/ui-kit.js"></script>
-    <script src="../js/speech.js"></script>
-    <script src="../js/storage.js"></script>
+    <script src="/js/config.js"></script>
+    <script src="/js/ui-kit.js"></script>
+    <script src="/js/speech.js"></script>
+    <script src="/js/supabase-client.js"></script>
+    <script src="/js/storage.js"></script>
+    <script src="/data/sample-ko.js"></script>
+    <script src="/data/sample-ja.js"></script>
+    <script src="/data/sample-zh.js"></script>
+    <script src="/data/sample-en.js"></script>
     <script>
         let targetDeck = null;
+        let allCommunityDecks = [];
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
+            const deckId = urlParams.get('id');
             const dataParam = urlParams.get('data');
 
-            if (dataParam) {
-                try {
-                    const jsonStr = decodeURIComponent(escape(atob(decodeURIComponent(dataParam))));
-                    targetDeck = JSON.parse(jsonStr);
-                    renderDeckPreview(targetDeck);
-                } catch (e) {
-                    console.error('Không thể giải mã dữ liệu deck:', e);
-                    document.getElementById('sharedDeckTitle').textContent = '⚠️ Liên kết chia sẻ không hợp lệ hoặc đã hết hạn';
-                }
+            if (deckId || dataParam) {
+                // Chế độ nhận bài chia sẻ cụ thể
+                document.getElementById('singleShareContainer').style.display = 'block';
+                await loadSpecificDeck(deckId, dataParam);
             } else {
-                document.getElementById('sharedDeckTitle').textContent = 'Không tìm thấy dữ liệu bộ bài được chia sẻ';
+                // Chế độ Khám phá Kho chung Cloud Drive
+                document.getElementById('communityVaultContainer').style.display = 'block';
+                await loadCommunityVault();
             }
 
             document.getElementById('btnCloneNow').addEventListener('click', executeClone);
             document.getElementById('btnModalConfirmClone').addEventListener('click', executeClone);
         });
 
+        async function loadSpecificDeck(deckId, dataParam) {
+            // 1. Thử tải từ Supabase Cloud bằng ID
+            if (deckId && window.studyCloud) {
+                try {
+                    const cloudDeck = await window.studyCloud.getDeck(deckId);
+                    if (cloudDeck && Array.isArray(cloudDeck.words)) {
+                        targetDeck = cloudDeck;
+                        renderDeckPreview(targetDeck);
+                        return;
+                    }
+                } catch (e) {
+                    console.warn('Lỗi tải từ Supabase:', e);
+                }
+            }
+
+            // 2. Fallback sang dữ liệu Base64 URL param
+            if (dataParam) {
+                try {
+                    const jsonStr = decodeURIComponent(escape(atob(decodeURIComponent(dataParam))));
+                    targetDeck = JSON.parse(jsonStr);
+                    renderDeckPreview(targetDeck);
+                    return;
+                } catch (e) {
+                    console.error('Không thể giải mã dữ liệu deck:', e);
+                }
+            }
+
+            document.getElementById('sharedDeckTitle').textContent = '⚠️ Không tìm thấy hoặc liên kết chia sẻ đã hết hạn';
+            document.getElementById('sharedDeckDesc').textContent = 'Bộ bài có thể đã được tác giả gỡ khỏi Supabase Cloud.';
+        }
+
         function renderDeckPreview(deck) {
             document.getElementById('sharedDeckTitle').textContent = deck.title || 'Bộ tài liệu ngoại ngữ';
-            document.getElementById('sharedDeckDesc').textContent = deck.description || 'Được chia sẻ qua MHEnt Universe Study';
-            document.getElementById('deckAuthorTag').textContent = `Tác giả: ${deck.author || 'MHEnt User'}`;
+            document.getElementById('sharedDeckDesc').textContent = deck.description || 'Được chia sẻ qua MHEnt Universe Study Cloud';
+            document.getElementById('deckAuthorTag').textContent = `Tác giả: ${deck.author || 'Thành viên MHEnt'}`;
             document.getElementById('deckWordCountTag').textContent = `${(deck.words || []).length} từ vựng`;
 
             const wordsBox = document.getElementById('previewWords');
             wordsBox.innerHTML = '';
-            (deck.words || []).slice(0, 15).forEach(w => {
+            (deck.words || []).slice(0, 20).forEach(w => {
                 const chip = document.createElement('span');
                 chip.className = 'word-chip';
                 chip.textContent = `${w.word} (${w.meaning})`;
@@ -158,7 +280,7 @@
             document.getElementById('previewContainer').style.display = 'block';
             document.getElementById('btnCloneNow').removeAttribute('disabled');
 
-            // Bật Modal Popup chào mừng & hỏi clone
+            // Hiển thị modal prompt
             document.getElementById('modalDeckTitle').textContent = deck.title;
             document.getElementById('clonePromptModal').classList.add('active');
         }
@@ -166,15 +288,102 @@
         function executeClone() {
             if (!targetDeck) return;
             const cloned = window.studyStorage.cloneDeck(targetDeck);
-            window.studyUI.playDing();
-            window.studyUI.showToast('🎉 Đã sao chép bộ bài thành công vào kho cá nhân của bạn!', 'success');
+            if (window.studyUI) {
+                window.studyUI.playDing();
+                window.studyUI.showToast('🎉 Đã sao chép bộ bài thành công vào kho cá nhân trên Supabase Cloud!', 'success');
+            }
 
-            // Điều hướng người dùng tới phòng luyện tập với deck mới
             setTimeout(() => {
                 const lang = targetDeck.lang || 'ko';
-                window.location.href = `../${lang}/practice/vocab.html?deck=${cloned.id}`;
+                window.location.href = `/${lang}/practice/vocab.html?deck=${cloned.id}`;
             }, 1200);
         }
+
+        async function loadCommunityVault() {
+            const grid = document.getElementById('communityGrid');
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--study-text-muted);">Đang tải dữ liệu từ Supabase Cloud... ☁️</div>';
+
+            // Tải từ Supabase
+            let cloudDecks = [];
+            if (window.studyCloud) {
+                cloudDecks = await window.studyCloud.listSharedDecks();
+            }
+
+            // Gộp với các bộ bài mẫu mặc định nếu chưa có
+            const defaultDecks = [
+                window.DEFAULT_KO_DECK,
+                window.DEFAULT_JA_DECK,
+                window.DEFAULT_ZH_DECK,
+                window.DEFAULT_EN_DECK
+            ].filter(Boolean);
+
+            allCommunityDecks = [...cloudDecks];
+            defaultDecks.forEach(def => {
+                if (!allCommunityDecks.some(d => d.id === def.id)) {
+                    allCommunityDecks.push(def);
+                }
+            });
+
+            renderCommunityList(allCommunityDecks);
+        }
+
+        function renderCommunityList(decks) {
+            const grid = document.getElementById('communityGrid');
+            grid.innerHTML = '';
+
+            if (decks.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--study-text-muted);">Chưa có bộ giáo trình nào trong danh mục này. Hãy là người đầu tiên chia sẻ! ✨</div>';
+                return;
+            }
+
+            const flagMap = { ko: '🇰🇷 Tiếng Hàn', ja: '🇯🇵 Tiếng Nhật', zh: '🇨🇳 Tiếng Trung', en: '🇬🇧 Tiếng Anh' };
+
+            decks.forEach(deck => {
+                const card = document.createElement('div');
+                card.className = 'shared-deck-card';
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="card-status-badge">${flagMap[deck.lang] || '🌍 Ngoại ngữ'}</span>
+                        <span style="font-size: 12px; font-weight: 800; color: var(--study-text-muted);">${(deck.words || []).length} từ</span>
+                    </div>
+                    <h3 style="font-size: 16px; font-weight: 900; margin: 0;">${deck.title}</h3>
+                    <p style="font-size: 13px; color: var(--study-text-muted); margin: 0; line-height: 1.4;">${deck.description || 'Bộ từ vựng tương tác'}</p>
+                    <div style="font-size: 12px; font-weight: 700; color: var(--study-text-muted); margin-top: auto;">
+                        Tác giả: <strong>${deck.author || 'MHEnt User'}</strong>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                        <a href="/${deck.lang || 'ko'}/practice/vocab.html?deck=${deck.id}" class="btn-ghost" style="flex: 1; text-align: center; padding: 6px 10px; font-size: 13px;">Học thử</a>
+                        <button class="auth-btn-pill" style="padding: 6px 12px; font-size: 13px;" onclick="cloneFromList('${deck.id}')">📥 Clone</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function switchVaultTab(lang, btn) {
+            document.querySelectorAll('.deck-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            if (lang === 'all') {
+                renderCommunityList(allCommunityDecks);
+            } else {
+                const filtered = allCommunityDecks.filter(d => d.lang === lang);
+                renderCommunityList(filtered);
+            }
+        }
+
+        function cloneFromList(deckId) {
+            const deck = allCommunityDecks.find(d => d.id === deckId);
+            if (!deck) return;
+            targetDeck = deck;
+            executeClone();
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('mhent_dark_mode', document.body.classList.contains('dark-mode') ? 'on' : 'off');
+        }
+        if (localStorage.getItem('mhent_dark_mode') === 'on') document.body.classList.add('dark-mode');
     </script>
 </body>
 </html>
