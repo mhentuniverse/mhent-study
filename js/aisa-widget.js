@@ -672,7 +672,6 @@
         if (!raw) return "";
 
         let text = String(raw).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-        text = text.replace(/([^\n])\s+([*•\-])\s+(?=[^\s])/g, '$1\n$2 ');
 
         const escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
         text = text.replace(/[&<>"']/g, ch => escapeMap[ch]);
