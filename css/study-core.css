@@ -524,13 +524,207 @@ body {
     letter-spacing: 0.02em;
 }
 
-/* Footer gọn gàng */
+/* Footer gọn gàng (Legacy) */
 .study-footer {
     padding: 30px 24px;
     border-top: 1px solid var(--study-border);
     text-align: center;
     font-size: 13px;
     color: var(--study-text-muted);
+}
+
+/* ==========================================================================
+   MHENT STUDY MEGA FOOTER (PREMIER ECOSYSTEM DIRECTORY)
+   ========================================================================== */
+.study-mega-footer {
+    background-color: var(--study-surface-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--study-border);
+    padding: 48px 0 24px;
+    width: 100%;
+    margin-top: auto;
+    position: relative;
+    z-index: 10;
+    text-align: left;
+    color: var(--study-text-secondary);
+}
+
+.study-mega-footer .footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.study-mega-footer .footer-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 36px;
+    margin-bottom: 36px;
+}
+
+.study-mega-footer .footer-brand-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.study-mega-footer .footer-brand-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--study-text-primary);
+}
+
+.study-mega-footer .footer-brand-logo {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid var(--study-primary);
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.35);
+}
+
+.study-mega-footer .footer-brand-name {
+    font-size: 1.15rem;
+    font-weight: 900;
+    letter-spacing: -0.2px;
+    background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.study-mega-footer .footer-brand-slogan {
+    font-size: 0.85rem;
+    color: var(--study-text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.study-mega-footer .footer-corp-meta {
+    font-size: 0.78rem;
+    color: var(--study-text-muted);
+    line-height: 1.5;
+}
+
+.study-mega-footer .footer-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #10b981;
+    width: fit-content;
+}
+
+.study-mega-footer .pulse-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+    animation: statusPulse 2s infinite ease-in-out;
+}
+
+.study-mega-footer .footer-col-heading {
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--study-text-primary);
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.study-mega-footer .footer-links-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.study-mega-footer .footer-nav-link {
+    text-decoration: none;
+    color: var(--study-text-secondary);
+    font-size: 0.84rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.study-mega-footer .footer-nav-link:hover {
+    color: var(--study-primary);
+    transform: translateX(3px);
+}
+
+.study-mega-footer .footer-divider {
+    height: 1px;
+    background: var(--study-border);
+    margin: 28px 0 20px 0;
+}
+
+.study-mega-footer .footer-bottom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--study-text-muted);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.study-mega-footer .footer-social-strip {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.study-mega-footer .footer-social-strip a {
+    color: var(--study-text-secondary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+.study-mega-footer .footer-social-strip a:hover {
+    color: var(--study-primary);
+}
+
+@media (max-width: 900px) {
+    .study-mega-footer .footer-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 28px;
+    }
+    .study-mega-footer .footer-brand-col {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 580px) {
+    .study-mega-footer .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+    .study-mega-footer .footer-bottom-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
 }
 
 /* ==========================================================================
