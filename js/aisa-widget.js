@@ -24,6 +24,12 @@
         siteType = 'study';
     } else if (host.includes('workspace') || path.includes('workspace')) {
         siteType = 'workspace';
+    } else if (path.includes('cinema')) {
+        siteType = 'cinema';
+    } else if (path.includes('arena')) {
+        siteType = 'arena';
+    } else if (path.includes('game')) {
+        siteType = 'game';
     }
 
     const CONTEXT_GREETINGS = {
@@ -38,6 +44,24 @@
             harmony: 'Chào cậu! Em ở đây để hỗ trợ cậu quản lý công việc, sắp xếp ghi chú và cổ vũ cậu hoàn thành deadline hôm nay nè! ✨',
             echo: 'Lại cắm đầu làm việc rồi sao? Đừng có quên uống nước với chớp mắt đấy nhé, mệt thì bảo tụi này pha trò cho nghe!',
             chips: ['📋 Lên checklist việc cần làm', '💡 Gợi ý ý tưởng mới', '☕ Động viên tớ đi']
+        },
+        cinema: {
+            tooltip: '🎬 Xem phim cùng AISA!',
+            harmony: 'Chào mừng bạn đến với MHEnt Cinema! Hôm nay bạn muốn tìm Anime hay Series gì để em gợi ý cho nha! ✨',
+            echo: 'Tới rạp chiếu rồi à! Đang có phim gì cuốn không, cần Echo review chân thực hay spoil nhẹ không nào?',
+            chips: ['🍿 Gợi ý anime hay', '🎬 Lịch chiếu mới nhất', '✨ Top phim thịnh hành']
+        },
+        arena: {
+            tooltip: '⚡ Đấu trí cùng AISA Arena!',
+            harmony: 'Chào bạn! Chúc bạn có những phút giây tranh tài kiến thức thật bùng nổ và giành điểm cao nhé! 🏆',
+            echo: 'Vào Đấu trường rồi thì thể hiện bản lĩnh đi nhé! Có tự tin phá kỷ lục hôm nay không đấy?',
+            chips: ['🏆 Cách tính điểm Quiz', '🔥 Thử thách hôm nay', '💡 Mẹo trả lời nhanh']
+        },
+        game: {
+            tooltip: '🎮 Chơi cờ cùng AISA!',
+            harmony: 'Chào bạn! Chúc bạn có những ván cờ thật thư giãn và rèn luyện tư duy đỉnh cao nhé! ♟️',
+            echo: 'Làm ván Cờ Vua hay Cờ Tướng xem trình độ tới đâu nào! Đừng để bị chiếu bí sớm nha!',
+            chips: ['♟️ Khai cuộc hay', '🧠 Luật chơi cờ', '✨ Chơi ván mới']
         },
         portal: {
             tooltip: '🪐 Trò chuyện cùng AISA Universe!',
@@ -91,33 +115,82 @@
             color: var(--aisa-text);
         }
 
-        /* ☀️ LIGHT MODE ADAPTATION (ĐỒNG BỘ TUYỆT ĐỐI KHI WEB CHỦ NỀN SÁNG) */
+        /* ☀️ LIGHT MODE ADAPTATION (ĐỒNG BỘ TUYỆT ĐỐI KHI WEB CHỦ NỀN SÁNG - TƯƠNG PHẢN CAO SẮC NÉT) */
         #aisa-widget-root.aisa-light {
-            --aisa-surface: rgba(255, 255, 255, 0.96);
-            --aisa-header-bg: rgba(248, 250, 252, 0.94);
-            --aisa-footer-bg: rgba(248, 250, 252, 0.96);
-            --aisa-chips-bar-bg: rgba(241, 245, 249, 0.85);
+            --aisa-surface: #ffffff;
+            --aisa-header-bg: #f8fafc;
+            --aisa-footer-bg: #f8fafc;
+            --aisa-chips-bar-bg: #f1f5f9;
             --aisa-input-bg: #ffffff;
-            --aisa-tooltip-bg: rgba(255, 255, 255, 0.98);
+            --aisa-tooltip-bg: #ffffff;
             --aisa-tooltip-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
-            --aisa-border: rgba(0, 0, 0, 0.1);
-            --aisa-text: #1e293b;
+            --aisa-border: rgba(0, 0, 0, 0.12);
+            --aisa-text: #0f172a;
             --aisa-text-title: #0f172a;
             --aisa-text-sub: #64748b;
-            --aisa-select-bg: rgba(0, 0, 0, 0.05);
-            --aisa-select-color: #334155;
+            --aisa-select-bg: #f1f5f9;
+            --aisa-select-color: #0f172a;
             --aisa-select-opt-bg: #ffffff;
             --aisa-select-opt-color: #0f172a;
-            --aisa-chip-bg: rgba(0, 0, 0, 0.04);
-            --aisa-chip-border: rgba(0, 0, 0, 0.08);
-            --aisa-chip-text: #475569;
-            --aisa-bubble-harmony-bg: rgba(244, 114, 182, 0.14);
-            --aisa-bubble-harmony-border: rgba(244, 114, 182, 0.45);
-            --aisa-bubble-harmony-text: #831843;
-            --aisa-bubble-echo-bg: rgba(139, 92, 246, 0.14);
-            --aisa-bubble-echo-border: rgba(139, 92, 246, 0.45);
-            --aisa-bubble-echo-text: #4c1d95;
+            --aisa-chip-bg: #ffffff;
+            --aisa-chip-border: #cbd5e1;
+            --aisa-chip-text: #1e293b;
+            --aisa-bubble-harmony-bg: #fdf2f8;
+            --aisa-bubble-harmony-border: #fbcfe8;
+            --aisa-bubble-harmony-text: #831843; /* Hồng rượu trầm, siêu tương phản trên nền hồng nhạt */
+            --aisa-bubble-echo-bg: #f5f3ff;
+            --aisa-bubble-echo-border: #ddd6fe;
+            --aisa-bubble-echo-text: #3b0764; /* Tím hoàng gia trầm, siêu tương phản trên nền tím nhạt */
             --aisa-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 0 25px rgba(236, 72, 153, 0.12);
+        }
+
+        #aisa-widget-root.aisa-light .aisa-tag-harmony {
+            color: #be185d;
+            font-weight: 800;
+        }
+
+        #aisa-widget-root.aisa-light .aisa-tag-echo {
+            color: #6d28d9;
+            font-weight: 800;
+        }
+
+        #aisa-widget-root.aisa-light .aisa-bubble strong {
+            color: #0f172a;
+        }
+
+        #aisa-widget-root.aisa-light .aisa-chip {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #1e293b;
+            font-weight: 700;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        #aisa-widget-root.aisa-light .aisa-chip:hover {
+            background: #fdf2f8;
+            border-color: #f472b6;
+            color: #be185d;
+        }
+
+        #aisa-widget-root.aisa-light .aisa-input {
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            color: #0f172a;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+        }
+
+        #aisa-widget-root.aisa-light .aisa-input::placeholder {
+            color: #64748b;
+        }
+
+        #aisa-widget-root.aisa-light .aisa-input:focus {
+            border-color: #ec4899;
+        }
+
+        #aisa-widget-root.aisa-light .aisa-mode-select {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
         }
 
         /* Nút nổi Floating Button */
@@ -400,17 +473,17 @@
 
         .aisa-bubble-harmony {
             align-self: flex-start;
-            background: rgba(236, 72, 153, 0.15);
-            border: 1px solid rgba(236, 72, 153, 0.35);
-            color: #fdf2f8;
+            background: var(--aisa-bubble-harmony-bg);
+            border: 1px solid var(--aisa-bubble-harmony-border);
+            color: var(--aisa-bubble-harmony-text);
             border-bottom-left-radius: 4px;
         }
 
         .aisa-bubble-echo {
             align-self: flex-start;
-            background: rgba(139, 92, 246, 0.15);
-            border: 1px solid rgba(139, 92, 246, 0.35);
-            color: #f5f3ff;
+            background: var(--aisa-bubble-echo-bg);
+            border: 1px solid var(--aisa-bubble-echo-border);
+            color: var(--aisa-bubble-echo-text);
             border-bottom-left-radius: 4px;
         }
 
