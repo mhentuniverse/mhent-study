@@ -652,9 +652,9 @@ window.toggleAdminLeftDrawer = function() {
             overlay.classList.add('show');
         }, 10);
     }
-};
-
-// 5. HÀM VẼ MENU ĐÁY TỰ ĐỘNG
+// ==========================================
+// 5. HÀM VẼ MENU ĐÁY TỰ ĐỘNG DÀNH CHO STUDY
+// ==========================================
 window.renderBottomNav = function() {
     if (window.innerWidth > 768) return;
 
@@ -666,113 +666,150 @@ window.renderBottomNav = function() {
         document.body.appendChild(nav);
     }
 
-    let favApps = JSON.parse(localStorage.getItem('mhent_custom_nav') || '["cinema", "arena"]');
-    let currentPath = window.location.pathname;
+    let p = window.location.pathname;
+    let isHome = (p === '/' || p === '/index.html' || p.endsWith('/mhent-study/index.html') || p.endsWith('/mhent-study/'));
+    let isKo = p.includes('/ko/');
+    let isJa = p.includes('/ja/');
+    let isZh = p.includes('/zh/');
+    let isEn = p.includes('/en/');
 
-    let isHomeActive = (currentPath === '/' || currentPath === '/index.html') ? 'active' : '';
     let html = `
-        <a onclick="window.location.href='/'" class="bottom-nav-item ${isHomeActive}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
-            <span>Đại Sảnh</span>
+        <a href="/" class="bottom-nav-item ${isHome ? 'active' : ''}">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <span>Tổng Quan</span>
         </a>
-    `;
-
-    favApps.forEach(appKey => {
-        let app = MHENT_UNIVERSES[appKey];
-        if (app) {
-            let isActive = currentPath.startsWith(app.path) ? 'active' : '';
-            html += `
-                <a onclick="window.location.href='${app.path}'" class="bottom-nav-item ${isActive}">
-                    ${app.icon}
-                    <span>${app.name}</span>
-                </a>
-            `;
-        }
-    });
-
-    let isProfileActive = currentPath.includes('/profile') ? 'active' : '';
-    html += `
-        <a onclick="window.openSideDrawer(); return false;" class="bottom-nav-item ${isProfileActive}" style="cursor: pointer;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            <span>Hồ Sơ</span>
+        <a href="/ko/index.html" class="bottom-nav-item ${isKo ? 'active' : ''}" data-lang="ko">
+            <span class="nav-emoji">🇰🇷</span>
+            <span>Hàn</span>
+        </a>
+        <a href="/ja/index.html" class="bottom-nav-item ${isJa ? 'active' : ''}" data-lang="ja">
+            <span class="nav-emoji">🇯🇵</span>
+            <span>Nhật</span>
+        </a>
+        <a href="/zh/index.html" class="bottom-nav-item ${isZh ? 'active' : ''}" data-lang="zh">
+            <span class="nav-emoji">🇨🇳</span>
+            <span>Trung</span>
+        </a>
+        <a onclick="window.openSideDrawer(); return false;" class="bottom-nav-item ${isEn ? 'active' : ''}" style="cursor: pointer;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle><circle cx="5" cy="12" r="1.5"></circle></svg>
+            <span>Menu</span>
         </a>
     `;
 
     nav.innerHTML = html;
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-    window.renderBottomNav();
+// ==========================================
+// 6. MENU TRƯỢT TIỆN ÍCH DÀNH CHO STUDY (SIDE DRAWER)
+// ==========================================
+window.openSideDrawer = function() {
+    let oldOverlay = document.getElementById('mhent-study-drawer-overlay');
+    if (oldOverlay) oldOverlay.remove();
 
-    let adminBrand = document.querySelector('.master-header .brand');
-    if (adminBrand) {
-        adminBrand.style.cursor = "pointer";
-        adminBrand.title = "Bấm để mở Menu chức năng";
-        if (window.innerWidth <= 768) {
-            adminBrand.innerHTML = `<i class="fa-solid fa-bars" style="margin-right: 8px; color: var(--theme-accent, #ff85a2);"></i>` + adminBrand.innerHTML;
-        }
-        adminBrand.onclick = function() { window.toggleAdminLeftDrawer(); };
-    }
-});
+    let cachedProfile = {};
+    try { cachedProfile = JSON.parse(localStorage.getItem('mhent_user_profile') || '{}'); } catch(e) {}
+    let nameEl = document.getElementById('user-name');
+    let avtEl = document.getElementById('user-avatar');
+    let streak = window.studyStorage ? window.studyStorage.getStreak() : (document.getElementById('streakNum')?.innerText || '1');
 
-// 6. HÀM MỞ BẢNG CHỌN VŨ TRỤ YÊU THÍCH
-window.openNavCustomizer = function() {
-    let favApps = JSON.parse(localStorage.getItem('mhent_custom_nav') || '["cinema", "arena"]');
-    
-    let appsHTML = '';
-    for (let key in MHENT_UNIVERSES) {
-        let app = MHENT_UNIVERSES[key];
-        let isChecked = favApps.includes(key) ? 'checked' : '';
-        appsHTML += `
-            <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; background: rgba(0,0,0,0.03); border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 8px; cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 800; color: var(--text-primary);">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="color: ${app.color};">${app.icon}</span>
-                    <span>MHEnt. ${app.name}</span>
-                </div>
-                <input type="checkbox" name="custom_app_item" value="${key}" ${isChecked} style="width: 18px; height: 18px; accent-color: ${app.color}; cursor: pointer;">
-            </label>
-        `;
-    }
+    let userName = (nameEl && nameEl.innerText !== "Đang tải...") ? nameEl.innerText : (cachedProfile.displayName || "Học Viên MHEnt");
+    let userAvt = (avtEl && avtEl.src) ? avtEl.src : (cachedProfile.photoURL || "/assets/avt-web.jpg");
+
+    let isLoggedOut = !nameEl || window.getComputedStyle(nameEl.closest('#user-profile') || document.body).display === 'none';
 
     let overlay = document.createElement('div');
-    overlay.className = 'mhent-ui-overlay show';
-    overlay.id = 'modal-nav-customizer';
+    overlay.id = 'mhent-study-drawer-overlay';
+    overlay.className = 'mhent-drawer-overlay';
+    overlay.onclick = function(e) {
+        if (e.target === overlay) {
+            overlay.classList.remove('show');
+            setTimeout(() => overlay.remove(), 350);
+        }
+    };
+
     overlay.innerHTML = `
-        <div class="mhent-ui-box" style="text-align: left; max-width: 420px;">
-            <h3 style="font-weight: 900; color: var(--text-primary); margin-top: 0; margin-bottom: 5px; text-align: center;">Tùy chỉnh Menu Đáy 📱</h3>
-            <p style="color: var(--text-secondary); font-size: 13.5px; text-align: center; margin-bottom: 20px;">Chọn từ 1 đến 3 vũ trụ cậu hay ghé thăm nhất để ghim xuống thanh điều hướng nhé!</p>
-            
-            <div style="max-height: 300px; overflow-y: auto; margin-bottom: 20px; padding-right: 5px;">
-                ${appsHTML}
+        <div class="mhent-side-drawer">
+            <div class="drawer-header">
+                <button class="drawer-close-btn" onclick="document.getElementById('mhent-study-drawer-overlay').classList.remove('show'); setTimeout(()=>document.getElementById('mhent-study-drawer-overlay').remove(), 350);">&times;</button>
+                <img src="${userAvt}" class="drawer-avt" alt="Avatar">
+                <h4 class="drawer-name">${userName}</h4>
+                <div class="drawer-streak-badge">🔥 Chuỗi học: ${streak} Ngày</div>
             </div>
 
-            <div style="display: flex; gap: 10px;">
-                <button onclick="document.getElementById('modal-nav-customizer').remove()" class="mhent-ui-btn-outline" style="flex: 1;">Hủy</button>
-                <button onclick="saveCustomNav()" class="mhent-ui-btn-primary" style="flex: 1; background: var(--theme-accent, #ff85a2);">Lưu Ngay</button>
+            <div class="drawer-menu-list">
+                <div class="drawer-group-title">Khám Phá Ngôn Ngữ</div>
+                <a href="/en/index.html" class="drawer-item">
+                    <div class="drawer-item-left">
+                        <span style="font-size: 18px;">🇬🇧</span>
+                        <span>Tiếng Anh (English)</span>
+                    </div>
+                    <span style="font-size: 12px; color: var(--study-text-muted);">Mở ➔</span>
+                </a>
+                <a href="/shared/index.html" class="drawer-item">
+                    <div class="drawer-item-left">
+                        <i class="fa-solid fa-share-nodes"></i>
+                        <span>Kho Bài Học Chia Sẻ</span>
+                    </div>
+                </a>
+
+                <div class="drawer-group-title">Công Cụ Học Thông Minh</div>
+                <div class="drawer-item" onclick="if(window.openAiDeckCreator){ window.openAiDeckCreator(); document.getElementById('mhent-study-drawer-overlay').remove(); } else { window.location.href='/'; }">
+                    <div class="drawer-item-left">
+                        <i class="fa-solid fa-wand-magic-sparkles" style="color: #ec4899;"></i>
+                        <span>Tạo Bài Bằng AI (Harmony & Echo)</span>
+                    </div>
+                    <span style="font-size: 11px; padding: 2px 6px; border-radius: 6px; background: rgba(236,72,153,0.15); color: #ec4899; font-weight: 800;">AI</span>
+                </div>
+                <a href="/ko/practice/vocab.html" class="drawer-item">
+                    <div class="drawer-item-left">
+                        <i class="fa-solid fa-book-open"></i>
+                        <span>Sổ Từ Vựng Tương Tác</span>
+                    </div>
+                </a>
+
+                <div class="drawer-group-title">Hệ Thống & Vũ Trụ</div>
+                <div class="drawer-item" onclick="if(typeof toggleDarkMode==='function') toggleDarkMode();">
+                    <div class="drawer-item-left">
+                        <i class="fa-solid fa-moon"></i>
+                        <span>Đổi Chế Độ Sáng / Tối</span>
+                    </div>
+                </div>
+                <a href="https://mhentuniverse.com" class="drawer-item">
+                    <div class="drawer-item-left">
+                        <i class="fa-solid fa-globe"></i>
+                        <span>Về Đại Sảnh MHEnt Universe</span>
+                    </div>
+                    <span style="font-size: 12px; color: var(--study-text-muted);">↗</span>
+                </a>
+            </div>
+
+            <div class="drawer-footer">
+                ${isLoggedOut ? `
+                    <button class="auth-btn-pill" style="width: 100%; justify-content: center; min-height: 42px;" onclick="window.location.href='/login.html'">
+                        <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập
+                    </button>
+                ` : `
+                    <button class="drawer-btn-logout" onclick="if(document.getElementById('btn-logout')) document.getElementById('btn-logout').click();">
+                        <i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất
+                    </button>
+                `}
             </div>
         </div>
     `;
+
     document.body.appendChild(overlay);
+    setTimeout(() => overlay.classList.add('show'), 10);
 };
 
-// 7. HÀM LƯU LẠI VÀ VẼ LẠI MENU NGAY LẬP TỨC
-window.saveCustomNav = function() {
-    let checkedBoxes = document.querySelectorAll('input[name="custom_app_item"]:checked');
-    if (checkedBoxes.length < 1 || checkedBoxes.length > 3) {
-        if (typeof showToast === 'function') showToast("Lỗi", "Cậu vui lòng chọn từ 1 đến 3 vũ trụ nhé!", "error");
-        else alert("Vui lòng chọn từ 1 đến 3 vũ trụ!");
-        return;
-    }
-
-    let selectedApps = [];
-    checkedBoxes.forEach(box => selectedApps.push(box.value));
-
-    localStorage.setItem('mhent_custom_nav', JSON.stringify(selectedApps));
-
-    let modal = document.getElementById('modal-nav-customizer');
-    if (modal) modal.remove();
-
+document.addEventListener("DOMContentLoaded", () => {
     window.renderBottomNav();
 
-    if (typeof showToast === 'function') showToast("Thành công", "Đã cập nhật thanh Menu của cậu!", "success");
-};
+    // Nhấp vào avatar người dùng trên Navbar để mở Drawer
+    let avt = document.getElementById('user-avatar');
+    if (avt) {
+        avt.style.cursor = 'pointer';
+        avt.onclick = function() {
+            if (window.innerWidth <= 768) window.openSideDrawer();
+        };
+    }
+});

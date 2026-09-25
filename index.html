@@ -10,6 +10,8 @@
     <link rel="icon" type="image/png" sizes="48x48" href="/assets/icon-web.png">
 
     <link rel="stylesheet" href="/css/study-core.css">
+    <link rel="stylesheet" href="/css/mhent-ui.css">
+    <link rel="stylesheet" href="/css/mhent-mobile.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Kiểm tra Dark Mode ngay lập tức trước khi Render để tránh chớp trắng (Anti-FOUC) -->
@@ -73,6 +75,11 @@
                 <button id="btn-logout" class="btn-logout-tiny" title="Đăng xuất"><i
                         class="fa-solid fa-right-from-bracket"></i></button>
             </div>
+
+            <!-- Nút bật Menu Drawer trên mobile -->
+            <button class="mobile-drawer-toggle" onclick="window.openSideDrawer()" title="Menu Tiện Ích">
+                <i class="fa-solid fa-bars"></i>
+            </button>
         </div>
     </nav>
 
@@ -281,6 +288,7 @@
 
     <!-- SCRIPTS -->
     <script src="/js/config.js"></script>
+    <script src="/js/mhent-ui.js"></script>
     <script src="/js/ui-kit.js"></script>
     <script src="/js/storage.js"></script>
     <script src="/data/sample-ja.js"></script>
