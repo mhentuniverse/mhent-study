@@ -12,6 +12,22 @@
     <link rel="stylesheet" href="/css/study-core.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Kiểm tra Dark Mode ngay lập tức trước khi Render để tránh chớp trắng (Anti-FOUC) -->
+    <script>
+        (function() {
+            function getCookie(name) {
+                const match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+                return match ? decodeURIComponent(match[3]) : null;
+            }
+            const saved = localStorage.getItem('mhent_dark_mode') || getCookie('mhent_dark_mode');
+            const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (saved === 'on' || (!saved && systemDark)) {
+                document.documentElement.classList.add('dark-mode');
+            } else {
+                document.documentElement.classList.remove('dark-mode');
+            }
+        })();
+    </script>
     <script src="/js/config.js"></script>
 </head>
 
@@ -214,11 +230,14 @@
 
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
+            document.documentElement.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
             localStorage.setItem('mhent_dark_mode', isDark ? 'on' : 'off');
+            // Lưu Cookie dùng chung cho toàn bộ các subdomain (*.mhentuniverse.com)
+            document.cookie = `mhent_dark_mode=${isDark ? 'on' : 'off'}; domain=.mhentuniverse.com; path=/; max-age=31536000; SameSite=Lax`;
         }
 
-        if (localStorage.getItem('mhent_dark_mode') === 'on') {
+        if (document.documentElement.classList.contains('dark-mode') || localStorage.getItem('mhent_dark_mode') === 'on') {
             document.body.classList.add('dark-mode');
         }
     </script>

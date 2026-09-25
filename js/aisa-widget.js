@@ -60,13 +60,64 @@
             right: 24px;
             z-index: 999999;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            color: #f8fafc;
             --aisa-harmony: #f472b6;
             --aisa-echo: #a78bfa;
             --aisa-user: #0284c7;
-            --aisa-bg: #0b1120;
-            --aisa-surface: rgba(15, 23, 42, 0.92);
+            --aisa-surface: rgba(15, 23, 42, 0.94);
+            --aisa-header-bg: rgba(15, 23, 42, 0.85);
+            --aisa-footer-bg: rgba(15, 23, 42, 0.92);
+            --aisa-chips-bar-bg: rgba(15, 23, 42, 0.5);
+            --aisa-input-bg: rgba(2, 6, 23, 0.7);
+            --aisa-tooltip-bg: rgba(15, 23, 42, 0.95);
+            --aisa-tooltip-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
             --aisa-border: rgba(255, 255, 255, 0.12);
+            --aisa-text: #f8fafc;
+            --aisa-text-title: #ffffff;
+            --aisa-text-sub: #94a3b8;
+            --aisa-select-bg: rgba(255, 255, 255, 0.08);
+            --aisa-select-color: #cbd5e1;
+            --aisa-select-opt-bg: #0f172a;
+            --aisa-select-opt-color: #ffffff;
+            --aisa-chip-bg: rgba(255, 255, 255, 0.06);
+            --aisa-chip-border: rgba(255, 255, 255, 0.12);
+            --aisa-chip-text: #cbd5e1;
+            --aisa-bubble-harmony-bg: rgba(236, 72, 153, 0.16);
+            --aisa-bubble-harmony-border: rgba(236, 72, 153, 0.35);
+            --aisa-bubble-harmony-text: #fdf2f8;
+            --aisa-bubble-echo-bg: rgba(139, 92, 246, 0.16);
+            --aisa-bubble-echo-border: rgba(139, 92, 246, 0.35);
+            --aisa-bubble-echo-text: #f5f3ff;
+            --aisa-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 35px rgba(139, 92, 246, 0.15);
+            color: var(--aisa-text);
+        }
+
+        /* ☀️ LIGHT MODE ADAPTATION (ĐỒNG BỘ TUYỆT ĐỐI KHI WEB CHỦ NỀN SÁNG) */
+        #aisa-widget-root.aisa-light {
+            --aisa-surface: rgba(255, 255, 255, 0.96);
+            --aisa-header-bg: rgba(248, 250, 252, 0.94);
+            --aisa-footer-bg: rgba(248, 250, 252, 0.96);
+            --aisa-chips-bar-bg: rgba(241, 245, 249, 0.85);
+            --aisa-input-bg: #ffffff;
+            --aisa-tooltip-bg: rgba(255, 255, 255, 0.98);
+            --aisa-tooltip-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+            --aisa-border: rgba(0, 0, 0, 0.1);
+            --aisa-text: #1e293b;
+            --aisa-text-title: #0f172a;
+            --aisa-text-sub: #64748b;
+            --aisa-select-bg: rgba(0, 0, 0, 0.05);
+            --aisa-select-color: #334155;
+            --aisa-select-opt-bg: #ffffff;
+            --aisa-select-opt-color: #0f172a;
+            --aisa-chip-bg: rgba(0, 0, 0, 0.04);
+            --aisa-chip-border: rgba(0, 0, 0, 0.08);
+            --aisa-chip-text: #475569;
+            --aisa-bubble-harmony-bg: rgba(244, 114, 182, 0.14);
+            --aisa-bubble-harmony-border: rgba(244, 114, 182, 0.45);
+            --aisa-bubble-harmony-text: #831843;
+            --aisa-bubble-echo-bg: rgba(139, 92, 246, 0.14);
+            --aisa-bubble-echo-border: rgba(139, 92, 246, 0.45);
+            --aisa-bubble-echo-text: #4c1d95;
+            --aisa-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 0 25px rgba(236, 72, 153, 0.12);
         }
 
         /* Nút nổi Floating Button */
@@ -155,7 +206,7 @@
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--aisa-border);
             border-radius: 22px;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 35px rgba(139, 92, 246, 0.15);
+            box-shadow: var(--aisa-shadow);
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -175,7 +226,7 @@
         /* Header Chat */
         .aisa-header {
             padding: 14px 18px;
-            background: rgba(15, 23, 42, 0.8);
+            background: var(--aisa-header-bg);
             border-bottom: 1px solid var(--aisa-border);
             display: flex;
             align-items: center;
@@ -197,7 +248,7 @@
             margin: 0;
             font-size: 0.95rem;
             font-weight: 800;
-            color: #ffffff;
+            color: var(--aisa-text-title);
             letter-spacing: 0.3px;
         }
 
@@ -218,9 +269,9 @@
         }
 
         .aisa-mode-select {
-            background: rgba(255, 255, 255, 0.08);
+            background: var(--aisa-select-bg);
             border: 1px solid var(--aisa-border);
-            color: #cbd5e1;
+            color: var(--aisa-select-color);
             border-radius: 8px;
             padding: 4px 8px;
             font-size: 0.72rem;
@@ -230,14 +281,14 @@
         }
 
         .aisa-mode-select option {
-            background: #0f172a;
-            color: #ffffff;
+            background: var(--aisa-select-opt-bg);
+            color: var(--aisa-select-opt-color);
         }
 
         .aisa-btn-close {
             background: transparent;
             border: none;
-            color: #94a3b8;
+            color: var(--aisa-text-sub);
             font-size: 1.2rem;
             width: 28px;
             height: 28px;
@@ -250,8 +301,8 @@
         }
 
         .aisa-btn-close:hover {
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.1);
+            color: var(--aisa-text-title);
+            background: var(--aisa-chip-bg);
         }
 
         /* Danh Sách Tin Nhắn */
@@ -412,24 +463,24 @@
         /* Gợi Ý Nhanh (Quick Chips) */
         .aisa-chips-bar {
             padding: 6px 14px;
-            background: rgba(15, 23, 42, 0.5);
+            background: var(--aisa-chips-bar-bg);
             display: flex;
             gap: 6px;
             overflow-x: auto;
             white-space: nowrap;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 1px solid var(--aisa-border);
             scrollbar-width: none;
         }
 
         .aisa-chips-bar::-webkit-scrollbar { display: none; }
 
         .aisa-chip {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: var(--aisa-chip-bg);
+            border: 1px solid var(--aisa-chip-border);
             border-radius: 12px;
             padding: 4px 10px;
             font-size: 0.72rem;
-            color: #cbd5e1;
+            color: var(--aisa-chip-text);
             cursor: pointer;
             transition: 0.2s;
             flex-shrink: 0;
@@ -438,13 +489,13 @@
         .aisa-chip:hover {
             background: rgba(236, 72, 153, 0.2);
             border-color: rgba(236, 72, 153, 0.4);
-            color: #ffffff;
+            color: var(--aisa-text-title);
         }
 
         /* Khung Nhập Tin Nhắn */
         .aisa-footer {
             padding: 10px 14px;
-            background: rgba(15, 23, 42, 0.9);
+            background: var(--aisa-footer-bg);
             border-top: 1px solid var(--aisa-border);
             display: flex;
             align-items: flex-end;
@@ -453,11 +504,11 @@
 
         .aisa-input {
             flex: 1;
-            background: rgba(2, 6, 23, 0.7);
+            background: var(--aisa-input-bg);
             border: 1px solid var(--aisa-border);
             border-radius: 12px;
             padding: 8px 12px;
-            color: #ffffff;
+            color: var(--aisa-text-title);
             font-size: 0.88rem;
             outline: none;
             font-family: inherit;
@@ -466,6 +517,10 @@
             max-height: 100px;
             line-height: 1.4;
             box-sizing: border-box;
+        }
+
+        .aisa-input::placeholder {
+            color: var(--aisa-text-sub);
         }
 
         .aisa-input:focus { border-color: #ec4899; }
@@ -545,6 +600,39 @@
         </div>
     `;
     document.body.appendChild(root);
+
+    // =========================================================================
+    // ĐỒNG BỘ DARK / LIGHT MODE TỰ ĐỘNG THEO WEB CHỦ (REALTIME THEME SYNC)
+    // =========================================================================
+    function getThemeCookie() {
+        const match = document.cookie.match(new RegExp('(^|;\\s*)mhent_dark_mode=([^;]*)'));
+        return match ? decodeURIComponent(match[2]) : null;
+    }
+
+    function syncTheme() {
+        const isDark = document.body.classList.contains('dark-mode') || 
+                       document.documentElement.classList.contains('dark-mode') ||
+                       localStorage.getItem('mhent_dark_mode') === 'on' ||
+                       getThemeCookie() === 'on';
+
+        const widgetRoot = document.getElementById('aisa-widget-root');
+        if (widgetRoot) {
+            if (isDark) {
+                widgetRoot.classList.remove('aisa-light');
+                widgetRoot.classList.add('aisa-dark');
+            } else {
+                widgetRoot.classList.remove('aisa-dark');
+                widgetRoot.classList.add('aisa-light');
+            }
+        }
+    }
+
+    // Lắng nghe thay đổi class trên <body> và <html> khi bấm nút Mặt trời / Mặt trăng
+    const themeObserver = new MutationObserver(syncTheme);
+    themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    window.addEventListener('storage', syncTheme);
+    syncTheme();
 
     // Logic Tương Tác
     const fab = document.getElementById('aisaFab');
