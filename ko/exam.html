@@ -1,6 +1,22 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
+<!-- Kiểm tra Dark Mode ngay lập tức trước khi Render để tránh chớp trắng (Anti-FOUC) -->
+    <script>
+        (function() {
+            function getCookie(name) {
+                const match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+                return match ? decodeURIComponent(match[3]) : null;
+            }
+            const saved = localStorage.getItem('mhent_dark_mode') || getCookie('mhent_dark_mode');
+            const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (saved === 'on' || (!saved && systemDark)) {
+                document.documentElement.classList.add('dark-mode');
+            } else {
+                document.documentElement.classList.remove('dark-mode');
+            }
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phòng Thi Thử Nghiệm AI Tiếng Hàn | MHEnt. Study</title>
@@ -118,6 +134,86 @@
         </div>
 
     </main>
+
+<!-- MEGA FOOTER PREMIER STUDY DIRECTORY -->
+    <footer class="study-mega-footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <!-- Cột 1: Thương hiệu MHEnt Study -->
+                <div class="footer-brand-col">
+                    <a href="/" class="footer-brand-title">
+                        <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="footer-brand-logo">
+                        <span class="footer-brand-name">MHEnt. Study</span>
+                    </a>
+                    <p class="footer-brand-slogan">
+                        Không Gian Học Ngoại Ngữ Đa Vũ Trụ. Hệ thống ôn tập thẻ ghi nhớ 3D, sổ từ vựng thông minh và thi thử trắc nghiệm cùng AI.
+                    </p>
+                    <div class="footer-corp-meta">
+                        Một phân khu học thuật trực thuộc <strong>Project MHEnt. Universe</strong>.<br>
+                        Vận hành bởi Miyazaki Haruto Entertainment Co., Ltd.
+                    </div>
+                    <div class="footer-status-pill">
+                        <span class="pulse-dot"></span>
+                        <span>MHEnt Study Node: Hoạt động bình thường</span>
+                    </div>
+                </div>
+
+                <!-- Cột 2: Các Phòng Học Ngoại Ngữ -->
+                <div class="footer-col">
+                    <h3 class="footer-col-heading">📚 Không Gian Học Tập</h3>
+                    <ul class="footer-links-list">
+                        <li><a href="/ja/index.html" class="footer-nav-link">🇯🇵 Tiếng Nhật (JLPT N5-N1)</a></li>
+                        <li><a href="/ko/index.html" class="footer-nav-link">🇰🇷 Tiếng Hàn (Hangeul & TOPIK)</a></li>
+                        <li><a href="/zh/index.html" class="footer-nav-link">🇨🇳 Tiếng Trung (HSK & Pinyin)</a></li>
+                        <li><a href="/en/index.html" class="footer-nav-link">🇬🇧 Tiếng Anh (44 Âm IPA)</a></li>
+                        <li><a href="/shared/index.html" class="footer-nav-link">📂 Kho Bộ Thẻ Chia Sẻ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Cột 3: Công Cụ & Trợ Lý AISA -->
+                <div class="footer-col">
+                    <h3 class="footer-col-heading">🌸 Công Cụ & AI</h3>
+                    <ul class="footer-links-list">
+                        <li><a href="https://aisa.mhentuniverse.com" target="_blank" class="footer-nav-link">AISA Sanctuary (AI Companion)</a></li>
+                        <li><a href="/login.html" class="footer-nav-link">Cổng Định Danh Học Viên</a></li>
+                        <li><a href="https://workspace.mhentuniverse.com" target="_blank" class="footer-nav-link">MHEnt Workspace</a></li>
+                        <li><a href="https://www.mhentuniverse.com" target="_blank" class="footer-nav-link">Đại Sảnh MHEnt Universe</a></li>
+                        <li><a href="https://www.mhentuniverse.com/cinema" target="_blank" class="footer-nav-link">MHEnt Cinema (Giải trí)</a></li>
+                    </ul>
+                </div>
+
+                <!-- Cột 4: Hệ Thống & Pháp Lý -->
+                <div class="footer-col">
+                    <h3 class="footer-col-heading">⚖️ Pháp Lý & Hỗ Trợ</h3>
+                    <ul class="footer-links-list">
+                        <li><a href="https://docs.mhentuniverse.com/terms" target="_blank" class="footer-nav-link">Điều khoản dịch vụ</a></li>
+                        <li><a href="https://docs.mhentuniverse.com/privacy" target="_blank" class="footer-nav-link">Chính sách bảo mật</a></li>
+                        <li><a href="https://www.mhentuniverse.com/about" target="_blank" class="footer-nav-link">Về chúng tớ & Đóng góp ý kiến</a></li>
+                        <li><a href="https://www.facebook.com/mhentuniverse" target="_blank" class="footer-nav-link">Cộng đồng MHEnt Universe</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-divider"></div>
+
+            <div class="footer-bottom-row">
+                <div>
+                    © 2026 <strong>Miyazaki Haruto Entertainment Co., Ltd.</strong> All rights reserved.
+                </div>
+                <div class="footer-social-strip">
+                    <a href="https://www.facebook.com/mharuto.entertainment/" target="_blank">
+                        <i class="fa-brands fa-facebook"></i> Fanpage
+                    </a>
+                    <span>•</span>
+                    <a href="https://www.facebook.com/mhentuniverse" target="_blank">
+                        <i class="fa-solid fa-users"></i> Community
+                    </a>
+                    <span>•</span>
+                    <span style="opacity: 0.65;">Study v2.0</span>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <!-- Scripts -->
     <script src="/js/config.js"></script>
