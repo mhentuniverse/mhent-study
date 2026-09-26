@@ -1,7 +1,6 @@
 /* ==========================================================================
-   MHENT STUDY - MOBILE UI & APP-LIKE EXPERIENCE (V2.0)
-   Tối ưu chuyên biệt cho trải nghiệm học ngoại ngữ trên di động (< 768px)
-   Kế thừa chuẩn thiết kế MHEnt. Universe Mobile Standard
+   MHENT STUDY - MOBILE UI & APP-LIKE EXPERIENCE (V2.1 COMPACT)
+   Tối ưu chuyên biệt cho trải nghiệm học ngoại ngữ: Thoáng đãng, thanh lịch, vừa vặn
    ========================================================================== */
 
 /* ==============================================================
@@ -12,75 +11,77 @@
         -webkit-tap-highlight-color: transparent;
     }
 
-    /* Chừa khoảng trống 85px sát đáy để không bị Bottom Nav che khuất */
     body, main, .study-wrapper, .vocab-container, .exam-container, .practice-container {
-        padding-bottom: 85px !important;
+        padding-bottom: 68px !important;
     }
 
-    /* Cuộn mượt theo quán tính ngón tay */
     .vocab-table-wrap, .deck-grid, .shared-grid, .alphabet-grid, .table-responsive {
         -webkit-overflow-scrolling: touch;
     }
 
-    /* Tối ưu typography CJK trên màn hình điện thoại */
     .cjk-char, .vocab-word, .kanji-char, .hanzi-char {
-        font-size: 1.15em;
+        font-size: 1.1em;
         letter-spacing: 0.02em;
     }
 }
 
 /* ==============================================================
-   1. TINH CHỈNH TOP NAVBAR TRÊN MOBILE
+   1. TINH CHỈNH TOP NAVBAR TRÊN MOBILE (GỌN GÀNG, KHÔNG RỐI)
    ============================================================== */
 @media screen and (max-width: 768px) {
     .study-nav, .study-navbar {
-        padding: 8px 14px !important;
-        height: 54px !important;
+        padding: 6px 12px !important;
+        height: 48px !important;
         box-sizing: border-box !important;
     }
 
     .brand-avatar, .brand-logo-badge {
-        width: 32px !important;
-        height: 32px !important;
+        width: 28px !important;
+        height: 28px !important;
     }
 
     .brand-main-title {
-        font-size: 16px !important;
+        font-size: 15px !important;
+        font-weight: 800 !important;
     }
 
     .brand-sub-badge, .brand-sub {
         display: none !important;
     }
 
-    /* Ẩn dải liên kết ngôn ngữ cồng kềnh trên Navbar đỉnh (đã có Bottom Nav) */
     .nav-study-links, .study-nav-links {
         display: none !important;
     }
 
-    /* Giữ streak pill nhỏ gọn trên đỉnh */
     .streak-pill-btn, .streak-pill {
-        padding: 4px 8px !important;
-        font-size: 12px !important;
-        gap: 4px !important;
+        padding: 3px 8px !important;
+        font-size: 11px !important;
+        gap: 3px !important;
+        height: 28px !important;
     }
 
-    /* Nút đổi Dark Mode trên top ẩn bớt để tránh rối mắt, đưa vào Drawer */
     .theme-toggle-btn {
         display: none !important;
     }
 
-    /* Nút đăng nhập hoặc avatar gọn gàng */
     .auth-btn-pill {
-        padding: 5px 12px !important;
-        font-size: 12px !important;
+        padding: 4px 10px !important;
+        font-size: 11.5px !important;
+        height: 28px !important;
     }
 
     .user-chip {
-        padding: 3px 8px 3px 3px !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        cursor: pointer !important;
     }
-    .user-chip #user-name {
-        display: none !important; /* Ẩn tên dài trên topbar */
+    .user-chip img, .user-chip #user-avatar {
+        width: 28px !important;
+        height: 28px !important;
+        border: 1.5px solid var(--theme-accent, #0ea5e9) !important;
     }
+    .user-chip #user-name,
     .user-chip .btn-logout-tiny {
         display: none !important;
     }
@@ -90,21 +91,20 @@
         display: flex !important;
         align-items: center;
         justify-content: center;
-        width: 34px;
-        height: 34px;
+        width: 30px;
+        height: 30px;
         border-radius: 50%;
         background: var(--study-subtle);
         border: 1px solid var(--study-border);
         color: var(--study-text);
         cursor: pointer;
-        font-size: 14px;
+        font-size: 13px;
         flex-shrink: 0;
-        transition: 0.2s;
+        transition: 0.15s;
     }
     .mobile-drawer-toggle:active {
         transform: scale(0.9);
         background: rgba(14, 165, 233, 0.15);
-        color: var(--theme-accent, #0ea5e9);
     }
 }
 
@@ -122,7 +122,7 @@
         bottom: 0;
         left: 0;
         width: 100%;
-        height: 62px;
+        height: 54px;
         background: var(--bg-glass-strong, rgba(255, 255, 255, 0.96));
         backdrop-filter: blur(24px);
         -webkit-backdrop-filter: blur(24px);
@@ -130,15 +130,15 @@
         justify-content: space-around;
         align-items: center;
         z-index: 99999;
-        box-shadow: 0 -4px 22px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.05);
         padding-bottom: env(safe-area-inset-bottom, 0px);
         box-sizing: content-box;
     }
 
     body.dark-mode .mhent-bottom-nav {
         background: var(--bg-glass-strong, rgba(19, 27, 46, 0.96));
-        border-top-color: rgba(255, 255, 255, 0.1);
-        box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.45);
+        border-top-color: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.45);
     }
 
     .bottom-nav-item {
@@ -150,9 +150,9 @@
         text-decoration: none;
         color: var(--text-secondary, #64748b);
         font-family: 'Nunito', sans-serif;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 700;
-        gap: 3px;
+        gap: 2px;
         height: 100%;
         transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         user-select: none;
@@ -162,16 +162,15 @@
     .bottom-nav-item svg,
     .bottom-nav-item i,
     .bottom-nav-item .nav-emoji {
-        font-size: 19px;
-        width: 22px;
-        height: 22px;
+        font-size: 17px;
+        width: 19px;
+        height: 19px;
         display: flex;
         align-items: center;
         justify-content: center;
         transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
-    /* Active State */
     .bottom-nav-item.active {
         color: var(--theme-accent, #0ea5e9);
         font-weight: 900;
@@ -180,34 +179,32 @@
     .bottom-nav-item.active svg,
     .bottom-nav-item.active i,
     .bottom-nav-item.active .nav-emoji {
-        transform: scale(1.18) translateY(-2px);
+        transform: scale(1.15) translateY(-1px);
         animation: navIconBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
 
-    /* Điểm sáng nhỏ dưới icon active */
     .bottom-nav-item.active::after {
         content: '';
-        width: 4px;
-        height: 4px;
+        width: 3.5px;
+        height: 3.5px;
         background: var(--theme-accent, #0ea5e9);
         border-radius: 50%;
         position: absolute;
-        bottom: 5px;
-        box-shadow: 0 0 6px var(--theme-accent, #0ea5e9);
+        bottom: 3px;
+        box-shadow: 0 0 5px var(--theme-accent, #0ea5e9);
     }
 
-    /* Màu sắc đặc trưng từng ngôn ngữ khi active */
     .bottom-nav-item[data-lang="ko"].active { color: #ec4899; }
-    .bottom-nav-item[data-lang="ko"].active::after { background: #ec4899; box-shadow: 0 0 6px #ec4899; }
+    .bottom-nav-item[data-lang="ko"].active::after { background: #ec4899; box-shadow: 0 0 5px #ec4899; }
 
     .bottom-nav-item[data-lang="ja"].active { color: #ef4444; }
-    .bottom-nav-item[data-lang="ja"].active::after { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+    .bottom-nav-item[data-lang="ja"].active::after { background: #ef4444; box-shadow: 0 0 5px #ef4444; }
 
     .bottom-nav-item[data-lang="zh"].active { color: #f59e0b; }
-    .bottom-nav-item[data-lang="zh"].active::after { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+    .bottom-nav-item[data-lang="zh"].active::after { background: #f59e0b; box-shadow: 0 0 5px #f59e0b; }
 
     .bottom-nav-item:active {
-        transform: scale(0.88);
+        transform: scale(0.9);
     }
 }
 
@@ -234,20 +231,20 @@
     .mhent-side-drawer {
         position: fixed;
         top: 0; right: 0;
-        width: 84%;
-        max-width: 320px;
+        width: 82%;
+        max-width: 300px;
         height: 100%;
         height: 100dvh;
         background: var(--bg-glass-strong, rgba(255, 255, 255, 0.98));
         backdrop-filter: blur(28px);
         -webkit-backdrop-filter: blur(28px);
-        box-shadow: -15px 0 40px rgba(0, 0, 0, 0.2);
+        box-shadow: -15px 0 35px rgba(0, 0, 0, 0.2);
         z-index: 1000001;
         transform: translateX(100%);
         transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
         display: flex;
         flex-direction: column;
-        padding: 24px 18px;
+        padding: 20px 16px;
         box-sizing: border-box;
         border-left: 1px solid var(--border-color, rgba(226, 232, 240, 0.8));
         overflow-y: auto;
@@ -256,59 +253,50 @@
     body.dark-mode .mhent-side-drawer {
         background: var(--bg-glass-strong, rgba(19, 27, 46, 0.98));
         border-left-color: rgba(255, 255, 255, 0.1);
-        box-shadow: -15px 0 45px rgba(0, 0, 0, 0.6);
+        box-shadow: -15px 0 40px rgba(0, 0, 0, 0.6);
     }
 
     .mhent-drawer-overlay.show .mhent-side-drawer {
         transform: translateX(0);
     }
 
-    /* Drawer Header */
     .drawer-header {
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
-        padding-bottom: 18px;
+        padding-bottom: 14px;
         border-bottom: 1px solid var(--border-color);
-        margin-bottom: 16px;
+        margin-bottom: 12px;
         position: relative;
     }
 
     .drawer-avt {
-        width: 72px;
-        height: 72px;
+        width: 60px;
+        height: 60px;
         border-radius: 50%;
         object-fit: cover;
-        border: 3px solid var(--theme-accent, #0ea5e9);
-        box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
-        margin-bottom: 8px;
+        border: 2.5px solid var(--theme-accent, #0ea5e9);
+        margin-bottom: 6px;
     }
 
     .drawer-name {
-        font-size: 17px;
-        font-weight: 900;
-        color: var(--study-text);
+        font-size: 15px;
+        font-weight: 800;
         margin: 0 0 2px 0;
-    }
-
-    .drawer-email {
-        font-size: 12px;
-        color: var(--study-text-muted);
-        margin: 0 0 8px 0;
     }
 
     .drawer-streak-badge {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        padding: 4px 12px;
+        gap: 4px;
+        padding: 3px 10px;
         border-radius: 99px;
-        background: rgba(249, 115, 22, 0.15);
-        border: 1px solid rgba(249, 115, 22, 0.35);
+        background: rgba(249, 115, 22, 0.12);
+        border: 1px solid rgba(249, 115, 22, 0.3);
         color: #f97316;
         font-weight: 800;
-        font-size: 12px;
+        font-size: 11px;
     }
 
     .drawer-close-btn {
@@ -318,266 +306,377 @@
         background: transparent;
         border: none;
         color: var(--study-text-muted);
-        font-size: 22px;
+        font-size: 20px;
         cursor: pointer;
         padding: 4px;
     }
 
-    /* Menu Items */
     .drawer-menu-list {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 5px;
         flex: 1;
     }
 
     .drawer-group-title {
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 800;
         color: var(--study-text-muted);
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        margin: 10px 0 4px 6px;
+        margin: 8px 0 2px 4px;
     }
 
     .drawer-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 11px 14px;
-        border-radius: 12px;
-        font-weight: 800;
-        font-size: 14px;
-        color: var(--study-text);
-        text-decoration: none;
-        transition: 0.2s;
+        padding: 9px 12px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 13px;
         background: var(--study-subtle);
-        border: 1px solid transparent;
-        cursor: pointer;
-    }
-
-    .drawer-item:active, .drawer-item:hover {
-        background: rgba(14, 165, 233, 0.12);
-        color: var(--theme-accent, #0ea5e9);
-        border-color: rgba(14, 165, 233, 0.3);
-    }
-
-    .drawer-item-left {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .drawer-item-left i, .drawer-item-left svg {
-        font-size: 17px;
-        width: 20px;
-        color: var(--theme-accent, #0ea5e9);
-    }
-
-    .drawer-footer {
-        padding-top: 14px;
-        border-top: 1px solid var(--border-color);
-        margin-top: 12px;
     }
 
     .drawer-btn-logout {
-        width: 100%;
-        padding: 11px;
-        border-radius: 12px;
-        font-weight: 800;
-        font-size: 14px;
-        background: rgba(239, 68, 68, 0.1);
+        padding: 8px 14px;
+        border-radius: 10px;
+        background: rgba(239, 68, 68, 0.12);
         color: #ef4444;
         border: 1px solid rgba(239, 68, 68, 0.3);
+        font-weight: 800;
+        font-size: 12.5px;
+        width: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 6px;
         cursor: pointer;
         transition: 0.2s;
-    }
-    .drawer-btn-logout:active {
-        background: #ef4444;
-        color: #fff;
     }
 }
 
 /* ==============================================================
-   4. TỐI ƯU CÁC KHỐI NỘI DUNG CHÍNH (STUDY HUBS & DECKS)
+   4. TỐI ƯU CÁC KHỐI NỘI DUNG CHÍNH (GỌN GÀNG, THOÁNG ĐÃNG)
    ============================================================== */
 @media screen and (max-width: 768px) {
     .study-wrapper {
-        padding: 14px 12px !important;
+        padding: 10px 10px 80px 10px !important;
     }
 
-    /* Hộp lời chào */
+    /* Hộp lời chào: Nhẹ nhàng, thanh thoát, không chiếm màn hình */
     .study-greeting-box {
-        padding: 18px 16px !important;
-        margin-bottom: 16px !important;
-        border-radius: 16px !important;
+        padding: 12px 14px !important;
+        margin-bottom: 12px !important;
+        border-radius: 14px !important;
         flex-direction: column !important;
         align-items: stretch !important;
-        gap: 14px !important;
-    }
-
-    .greeting-text h1 {
-        font-size: 20px !important;
-        line-height: 1.3 !important;
-    }
-
-    .greeting-text p {
-        font-size: 13.5px !important;
-    }
-
-    .btn-quick-tool {
-        width: 100% !important;
-        box-sizing: border-box !important;
-        justify-content: center !important;
-        min-height: 44px !important;
-        font-size: 14px !important;
-    }
-
-    /* 4 Thẻ Ngôn Ngữ Hub Grid: Xếp thành 2 cột hoặc 1 cột rõ ràng */
-    .lang-hub-grid {
-        grid-template-columns: 1fr !important;
-        gap: 14px !important;
-        margin-bottom: 20px !important;
-    }
-
-    .lang-hub-card {
-        padding: 18px 16px !important;
-        border-radius: 18px !important;
-        gap: 10px !important;
-    }
-
-    .card-main-info h2 {
-        font-size: 18px !important;
-    }
-
-    .card-actions-row {
-        flex-direction: column !important;
         gap: 8px !important;
     }
 
-    .card-actions-row a, .card-actions-row button {
+    .greeting-text h1 {
+        font-size: 15.5px !important;
+        line-height: 1.3 !important;
+        margin: 0 0 2px 0 !important;
+    }
+
+    .greeting-text p {
+        font-size: 11px !important;
+        line-height: 1.35 !important;
+        color: var(--study-text-muted) !important;
+        margin: 0 0 6px 0 !important;
+    }
+
+    /* Bố cục 3 nút thao tác nhanh trên Banner */
+    .study-greeting-box > div:last-child {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 6px !important;
         width: 100% !important;
-        min-height: 42px !important;
+    }
+
+    .study-greeting-box .btn-quick-tool {
+        width: 100% !important;
+        padding: 6px 8px !important;
+        min-height: 32px !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        border-radius: 9px !important;
         justify-content: center !important;
+        box-sizing: border-box !important;
+        white-space: nowrap !important;
+        flex: none !important;
+    }
+
+    .study-greeting-box .btn-quick-tool:first-child {
+        grid-column: span 2 !important;
+        min-height: 35px !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+    }
+
+    /* Thẻ Ngôn Ngữ Hub Cards: Nhỏ gọn, vừa vặn ngón tay */
+    .lang-hub-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .lang-hub-card {
+        padding: 12px 14px !important;
+        border-radius: 14px !important;
+        gap: 6px !important;
+    }
+
+    .card-top-row {
+        margin-bottom: 0 !important;
+    }
+
+    .card-flag-badge {
+        font-size: 20px !important;
+    }
+
+    .card-status-badge {
+        padding: 2px 7px !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        border-radius: 99px !important;
+    }
+
+    .card-lang-name {
+        font-size: 15px !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
+    }
+
+    .card-lang-native {
+        font-size: 11px !important;
+        font-weight: 600 !important;
+    }
+
+    /* Lưới các nút hành động con bên trong card: 2x2 cực gọn */
+    .card-actions-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 5px !important;
+        margin-top: 4px !important;
+        width: 100% !important;
+    }
+
+    .card-actions-grid .btn-quick-tool {
+        padding: 5px 6px !important;
+        min-height: 30px !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        border-radius: 8px !important;
+        gap: 4px !important;
+        flex: none !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        justify-content: center !important;
+    }
+
+    .card-actions-grid .btn-quick-tool i {
+        font-size: 11px !important;
+    }
+
+    .btn-main-enter {
+        grid-column: span 2 !important;
+        padding: 7px 12px !important;
+        min-height: 34px !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+        border-radius: 9px !important;
+        margin-top: 2px !important;
+        gap: 6px !important;
+    }
+
+    /* Hub Banner & Tool Grid cho các phòng học con (ko/ja/zh/en) */
+    .hub-banner {
+        padding: 12px 14px !important;
+        margin-bottom: 12px !important;
+        border-radius: 14px !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+
+    .hub-banner h1 {
+        font-size: 16px !important;
+        margin: 2px 0 4px 0 !important;
+    }
+
+    .hub-banner p {
+        font-size: 11px !important;
+        line-height: 1.35 !important;
+    }
+
+    .hub-banner .auth-btn-pill {
+        padding: 6px 12px !important;
+        font-size: 11.5px !important;
+        min-height: 32px !important;
+        flex: 1 1 calc(50% - 4px) !important;
+    }
+
+    .tool-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .tool-box {
+        padding: 10px !important;
+        border-radius: 12px !important;
+        gap: 6px !important;
+    }
+
+    .tool-box h3 {
+        font-size: 13px !important;
+        margin: 0 !important;
+    }
+
+    .tool-box p {
+        font-size: 11px !important;
+        line-height: 1.3 !important;
+    }
+
+    .tool-icon {
+        font-size: 20px !important;
     }
 
     /* Thước Breadcrumb */
     .study-breadcrumb-bar {
-        padding: 8px 14px !important;
-        font-size: 12px !important;
+        padding: 6px 10px !important;
+        font-size: 11px !important;
     }
 
     /* Bảng từ vựng (Vocab Sheet) */
-    .vocab-table-container {
-        padding: 10px !important;
-        border-radius: 16px !important;
+    .vocab-container {
+        padding: 8px !important;
+    }
+
+    .vocab-stats-board {
+        padding: 12px !important;
+        margin-bottom: 10px !important;
+        border-radius: 12px !important;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 6px !important;
+    }
+
+    .stat-label {
+        font-size: 9.5px !important;
+    }
+
+    .stat-value {
+        font-size: 1.25rem !important;
     }
 
     .vocab-controls-bar {
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 10px !important;
+        gap: 6px !important;
+        padding: 8px 10px !important;
     }
 
     .vocab-search-input {
-        width: 100% !important;
-        min-height: 44px !important;
+        min-height: 34px !important;
+        font-size: 12px !important;
     }
 
-    /* Nút phát âm to rõ */
-    .btn-audio-speak {
-        width: 38px !important;
-        height: 38px !important;
-        font-size: 16px !important;
+    .vocab-table-container {
+        padding: 6px !important;
+        border-radius: 12px !important;
     }
 
-    /* Flashcard lật chữ */
-    .flashcard-stage {
-        padding: 10px !important;
+    .vocab-table th, .vocab-table td {
+        padding: 6px 5px !important;
+        font-size: 11.5px !important;
     }
 
+    .input-test-word {
+        min-height: 28px !important;
+        font-size: 11.5px !important;
+        padding: 2px 6px !important;
+    }
+
+    .review-checkbox {
+        width: 17px !important;
+        height: 17px !important;
+    }
+
+    /* Flashcard */
     .flashcard-box {
-        width: 100% !important;
-        max-width: 340px !important;
-        height: 230px !important;
-        border-radius: 20px !important;
+        max-width: 300px !important;
+        height: 180px !important;
+        border-radius: 14px !important;
     }
 
-    .flashcard-actions {
-        width: 100% !important;
-        max-width: 340px !important;
-        justify-content: space-between !important;
+    /* Nâng AISA Mascot Widget không che lấp nút bấm */
+    #aisa-widget-root {
+        bottom: 64px !important;
+        right: 12px !important;
+        z-index: 99998 !important;
     }
 
-    .flashcard-actions button {
-        min-height: 44px !important;
-        flex: 1 !important;
+    #aisa-widget-root .aisa-fab {
+        width: 44px !important;
+        height: 44px !important;
+        box-shadow: 0 4px 14px rgba(236, 72, 153, 0.4) !important;
+    }
+
+    #aisa-widget-root .aisa-fab-icons {
+        font-size: 1.15rem !important;
+    }
+
+    #aisa-widget-root .aisa-fab-badge {
+        width: 10px !important;
+        height: 10px !important;
+        top: -1px !important;
+        right: -1px !important;
+    }
+
+    /* Ẩn bong bóng chào mừng trên mobile để không chắn nút của người dùng */
+    #aisa-widget-root .aisa-tooltip-bubble {
+        display: none !important;
     }
 }
 
 /* ==============================================================
-   5. POPUP & MODAL CĂN GIỮA CHUẨN MHENT UNIVERSE
+   5. POPUP & MODAL CĂN GIỮA
    ============================================================== */
 @media screen and (max-width: 768px) {
     .modal-overlay, .mhent-ui-overlay, .overlay {
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 16px !important;
-        box-sizing: border-box !important;
+        padding: 12px !important;
     }
 
     .modal-box, .modal-content, .mhent-ui-box, .ai-deck-modal {
-        width: calc(100vw - 32px) !important;
-        max-width: 440px !important;
-        margin: auto !important;
-        border-radius: 22px !important;
-        padding: 22px 18px !important;
-        max-height: 85vh !important;
-        overflow-y: auto !important;
-        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45) !important;
-        position: relative !important;
-    }
-
-    .modal-actions, .mhent-ui-actions {
-        flex-direction: column !important;
-        width: 100% !important;
-        gap: 10px !important;
+        width: calc(100vw - 24px) !important;
+        max-width: 400px !important;
+        border-radius: 18px !important;
+        padding: 18px 14px !important;
     }
 
     .modal-actions button, .mhent-ui-actions button {
-        width: 100% !important;
-        min-height: 44px !important;
-        margin: 0 !important;
+        min-height: 38px !important;
+        font-size: 13px !important;
     }
 }
 
 /* ==============================================================
-   6. HIỆU ỨNG CHUYỂN TRANG APP NATIVE
+   6. HIỆU ỨNG CHUYỂN TRANG
    ============================================================== */
 @media screen and (max-width: 768px) {
     main, .study-wrapper {
-        animation: appPageSlideUp 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
+        animation: appPageSlideUp 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
     }
 
     @keyframes appPageSlideUp {
-        0% {
-            opacity: 0;
-            transform: translateY(16px);
-        }
-        100% {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        0% { opacity: 0; transform: translateY(12px); }
+        100% { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes navIconBounce {
         0% { transform: scale(1) translateY(0); }
-        40% { transform: scale(1.3) translateY(-6px); }
-        70% { transform: scale(1.08) translateY(-1px); }
-        100% { transform: scale(1.18) translateY(-2px); }
+        40% { transform: scale(1.25) translateY(-4px); }
+        70% { transform: scale(1.05) translateY(-1px); }
+        100% { transform: scale(1.15) translateY(-1px); }
     }
 }

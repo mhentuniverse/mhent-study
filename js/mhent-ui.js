@@ -652,6 +652,8 @@ window.toggleAdminLeftDrawer = function() {
             overlay.classList.add('show');
         }, 10);
     }
+};
+
 // ==========================================
 // 5. HÀM VẼ MENU ĐÁY TỰ ĐỘNG DÀNH CHO STUDY
 // ==========================================
