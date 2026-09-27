@@ -56,7 +56,12 @@
 
         <div class="nav-study-actions">
             <div class="streak-pill-btn" title="Chuỗi ngày học liên tục">
-                <span>🔥</span> <span id="streakNum">1</span> Ngày
+                <span style="display:inline-flex; align-items:center;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="#f97316">
+                        <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+                    </svg>
+                </span>
+                <span id="streakNum">1</span> Ngày
             </div>
 
             <button class="theme-toggle-btn" onclick="toggleDarkMode()" title="Đổi giao diện Sáng / Tối">
@@ -231,19 +236,19 @@
 
                 <!-- Cột 2: Các Phòng Học Ngoại Ngữ -->
                 <div class="footer-col">
-                    <h3 class="footer-col-heading">📚 Không Gian Học Tập</h3>
+                    <h3 class="footer-col-heading"><i class="fa-solid fa-book-open" style="margin-right: 6px;"></i> Không Gian Học Tập</h3>
                     <ul class="footer-links-list">
                         <li><a onclick="window.location.href='/ja/index.html'" class="footer-nav-link">🇯🇵 Tiếng Nhật (JLPT N5-N1)</a></li>
                         <li><a onclick="window.location.href='/ko/index.html'" class="footer-nav-link">🇰🇷 Tiếng Hàn (Hangeul & TOPIK)</a></li>
                         <li><a onclick="window.location.href='/zh/index.html'" class="footer-nav-link">🇨🇳 Tiếng Trung (HSK & Pinyin)</a></li>
                         <li><a onclick="window.location.href='/en/index.html'" class="footer-nav-link">🇬🇧 Tiếng Anh (44 Âm IPA)</a></li>
-                        <li><a onclick="window.location.href='/shared/index.html'" class="footer-nav-link">📂 Kho Bộ Thẻ Chia Sẻ</a></li>
+                        <li><a onclick="window.location.href='/shared/index.html'" class="footer-nav-link"><i class="fa-solid fa-folder-open" style="margin-right: 4px;"></i> Kho Bộ Thẻ Chia Sẻ</a></li>
                     </ul>
                 </div>
 
                 <!-- Cột 3: Đại Sảnh & Giải Trí -->
                 <div class="footer-col">
-                    <h3 class="footer-col-heading">🎬 Đại Sảnh & Giải Trí</h3>
+                    <h3 class="footer-col-heading"><i class="fa-solid fa-film" style="margin-right: 6px;"></i> Đại Sảnh & Giải Trí</h3>
                     <ul class="footer-links-list">
                         <li><a onclick="window.open('https://www.mhentuniverse.com', '_blank')" class="footer-nav-link">Đại Sảnh MHEnt Universe</a></li>
                         <li><a onclick="window.open('https://www.mhentuniverse.com/cinema', '_blank')" class="footer-nav-link">MHEnt Cinema (Anime & Movie)</a></li>
@@ -255,7 +260,7 @@
 
                 <!-- Cột 4: Hệ Thống & Pháp Lý -->
                 <div class="footer-col">
-                    <h3 class="footer-col-heading">⚖️ Pháp Lý & Hỗ Trợ</h3>
+                    <h3 class="footer-col-heading"><i class="fa-solid fa-scale-balanced" style="margin-right: 6px;"></i> Pháp Lý & Hỗ Trợ</h3>
                     <ul class="footer-links-list">
                         <li><a onclick="window.open('https://docs.mhentuniverse.com/terms', '_blank')" class="footer-nav-link">Điều khoản dịch vụ</a></li>
                         <li><a onclick="window.open('https://docs.mhentuniverse.com/privacy', '_blank')" class="footer-nav-link">Chính sách bảo mật</a></li>
