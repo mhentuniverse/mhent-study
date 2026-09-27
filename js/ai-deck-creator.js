@@ -840,7 +840,8 @@ Trả về DUY NHẤT một mảng JSON thuần tuý:
                 <td>
                     <input type="text" class="ai-table-input" id="ai-meaning-${index}" value="${this.escapeHtml(item.meaning)}" 
                         placeholder="Nghĩa tiếng Việt..."
-                        oninput="window.aiDeckCreator.updateItemField(${index}, 'meaning', this.value)">
+                        oninput="window.aiDeckCreator.updateItemField(${index}, 'meaning', this.value)"
+                        onchange="window.aiDeckCreator.onMeaningInputBlurred(${index})">
                 </td>
                 <td>
                     <div class="ai-input-with-action">
@@ -875,15 +876,32 @@ Trả về DUY NHẤT một mảng JSON thuần tuý:
 
         // Nếu câu ví dụ chưa có (người dùng vừa gõ từ mới vào dòng trắng)
         if (!item.example || !item.example.trim()) {
-            this.autoGenerateWordDetails(index, false);
+            this.autoGenerateWordDetails(index, false, 'word');
         }
     }
 
-    async autoGenerateWordDetails(index, forceRewrite = false) {
+    onMeaningInputBlurred(index) {
         const item = this.extractedWords[index];
-        if (!item || !item.word || !item.word.trim()) return;
+        if (!item) return;
+        const meaning = item.meaning ? item.meaning.trim() : '';
+        if (!meaning) return;
 
-        const word = item.word.trim();
+        // Nếu từ gốc chưa có hoặc câu ví dụ chưa có
+        if (!item.word || !item.word.trim() || !item.example || !item.example.trim()) {
+            this.autoGenerateWordDetails(index, false, 'meaning');
+        }
+    }
+
+    async autoGenerateWordDetails(index, forceRewrite = false, sourceField = 'word') {
+        const item = this.extractedWords[index];
+        if (!item) return;
+
+        const word = item.word ? item.word.trim() : '';
+        const meaning = item.meaning ? item.meaning.trim() : '';
+        const query = sourceField === 'meaning' ? (meaning || word) : (word || meaning);
+        if (!query) return;
+
+        const inputWord = document.getElementById(`ai-word-${index}`);
         const inputExample = document.getElementById(`ai-example-${index}`);
         const inputTrans = document.getElementById(`ai-exampleTrans-${index}`);
         const sparkleBtn = document.getElementById(`ai-sparkle-${index}`);
@@ -896,6 +914,9 @@ Trả về DUY NHẤT một mảng JSON thuần tuý:
             inputTrans.classList.add('ai-generating');
             inputTrans.placeholder = '✨ Đang dịch ví dụ...';
         }
+        if (inputWord && sourceField === 'meaning' && !inputWord.value.trim()) {
+            inputWord.classList.add('ai-generating');
+        }
         if (sparkleBtn) {
             sparkleBtn.innerHTML = '⏳';
             sparkleBtn.disabled = true;
@@ -905,26 +926,41 @@ Trả về DUY NHẤT một mảng JSON thuần tuý:
             const apiKey = this.getApiKey();
             let resultData = null;
 
-            if (apiKey) {
-                const langConfig = this.getLangConfig(this.currentLang);
-                const prompt = `Từ vựng: "${word}" (${langConfig.name} - mã ngôn ngữ: ${this.currentLang}).
-Nhiệm vụ: Hãy tạo thông tin học tập đầy đủ cho từ vựng này:
-- "phonetic": Phiên âm chuẩn theo định dạng ${langConfig.phonetic}.
-- "pos": Loại từ (chọn một trong: "noun", "verb", "adj", hoặc "other").
-- "posLabel": Nhãn tiếng Việt tương ứng ("Danh từ", "Động từ", "Tính từ", hoặc "Khác").
-- "meaning": Nghĩa tiếng Việt súc tích, chuẩn xác.
-- "example": Một câu ví dụ ngắn gọn, tự nhiên, phổ biến hàng ngày bằng ${langConfig.name} có chứa từ "${word}".
-- "exampleTrans": Dịch câu ví dụ sang tiếng Việt.
+            // 1. Thử gọi API AISA Worker nếu khả dụng
+            try {
+                const endpoint = window.aisaEndpoint || 'https://api.mhentuniverse.com';
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 6000);
+                const workerRes = await fetch(`${endpoint}/api/generate-example`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    signal: controller.signal,
+                    body: JSON.stringify({
+                        word: sourceField === 'word' ? query : '',
+                        meaning: sourceField === 'meaning' ? query : '',
+                        field: sourceField,
+                        lang: this.currentLang,
+                        model: window.aisaModel || 'aisa-scholar-v1'
+                    })
+                });
+                clearTimeout(timeoutId);
+                if (workerRes.ok) {
+                    const json = await workerRes.json();
+                    if (json.data && (json.data.meaning || json.data.word)) {
+                        resultData = json.data;
+                    }
+                }
+            } catch (wErr) {}
 
-Yêu cầu trả về DUY NHẤT một JSON object hợp lệ, không bọc markdown:
-{
-  "phonetic": "...",
-  "pos": "noun",
-  "posLabel": "Danh từ",
-  "meaning": "...",
-  "example": "...",
-  "exampleTrans": "..."
-}`;
+            // 2. Thử gọi Google Gemini trực tiếp nếu có API key
+            if (!resultData && apiKey) {
+                const langConfig = this.getLangConfig(this.currentLang);
+                const prompt = sourceField === 'meaning'
+                    ? `Nghĩa tiếng Việt: "${query}". Nhiệm vụ: Tìm từ vựng ${langConfig.name} (${this.currentLang}) tương ứng, phiên âm theo ${langConfig.phonetic}, từ loại, nghĩa chuẩn, câu ví dụ và dịch câu ví dụ.
+Trả về DUY NHẤT JSON: {"word":"...","phonetic":"...","pos":"noun","posLabel":"Danh từ","meaning":"...","example":"...","exampleTrans":"..."}`
+                    : `Từ vựng: "${query}" (${langConfig.name} - ${this.currentLang}).
+Nhiệm vụ: Tạo phiên âm ${langConfig.phonetic}, từ loại, nghĩa tiếng Việt, câu ví dụ và dịch ví dụ.
+Trả về DUY NHẤT JSON: {"word":"${query}","phonetic":"...","pos":"noun","posLabel":"Danh từ","meaning":"...","example":"...","exampleTrans":"..."}`;
 
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`, {
                     method: 'POST',
@@ -947,11 +983,15 @@ Yêu cầu trả về DUY NHẤT một JSON object hợp lệ, không bọc mark
 
             if (!resultData) {
                 // Heuristic smart local generator
-                await new Promise(r => setTimeout(r, 250));
-                resultData = this.smartLocalWordDetails(word, this.currentLang);
+                await new Promise(r => setTimeout(r, 200));
+                resultData = this.smartLocalWordDetails(query, this.currentLang);
             }
 
             // Gán dữ liệu vào item model
+            if (resultData.word && (!item.word || sourceField === 'meaning')) {
+                item.word = resultData.word;
+                if (inputWord) inputWord.value = item.word;
+            }
             item.example = resultData.example || item.example || '';
             item.exampleTrans = resultData.exampleTrans || item.exampleTrans || '';
             if (!item.phonetic || forceRewrite) item.phonetic = resultData.phonetic || item.phonetic;

@@ -792,7 +792,8 @@
                 body: JSON.stringify({
                     message: msg,
                     mode: mode,
-                    scope: siteType // 'study' | 'workspace' | 'portal'
+                    scope: siteType, // 'study' | 'workspace' | 'portal'
+                    model: (window.MHENT_CONFIG && window.MHENT_CONFIG.AISA_MODEL) || 'aisa-scholar-v1'
                 })
             });
 

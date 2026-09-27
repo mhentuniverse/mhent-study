@@ -41,6 +41,11 @@ const AISA_DIALOGUES = {
             "Cậu nhớ uống chút nước rồi học tiếp nhé, sức khỏe là quan trọng nhất đó! 🍵",
             "Tớ lúc nào cũng ở đây cạnh cậu hết á, có gì khó cứ gọi tớ nha! 🌸",
             "Học ngoại ngữ như trồng một cái cây, mỗi ngày tưới một chút là sẽ nở hoa tuyệt đẹp! 🌷"
+        ],
+        autofill: [
+            "Tớ đã tra cứu phiên âm, nghĩa và đặt câu ví dụ xịn xò cho từ này rồi nè! 🌸✨",
+            "Woa từ này hay quá! Tớ đã điền đầy đủ ví dụ và Romaji cho cậu rồi nhé! 💖",
+            "AISA đã tự động điền xong hết các ô rồi! Cậu xem qua rồi bấm Lưu từ nhé! ✨"
         ]
     },
     echo: {
@@ -73,6 +78,11 @@ const AISA_DIALOGUES = {
             "Nhìn cái gì mà nhìn? Lo gõ từ tiếp theo đi chứ, chọc tui quài! 😤",
             "Cậu mà gõ sai 3 lần là Echo ghi vào danh sách đen phạt học thêm 20 từ đấy nhé! 😈",
             "Hừ, đừng tưởng Echo không biết cậu đang lén lút click vào avatar tui để trốn học nha! 😜"
+        ],
+        autofill: [
+            "Echo điền mẫu cho rồi đấy! Lo mà học từ mới đi, đừng có lười nha! 😈",
+            "Ví dụ sắc lẹm luôn! Đọc kỹ rồi thuộc bài cho Echo nhờ! 😼",
+            "Hừm... từ này cũng tạm. Echo viết sẵn ví dụ cho cậu luôn rồi đấy! ✨"
         ]
     },
     duo: {
@@ -104,6 +114,10 @@ const AISA_DIALOGUES = {
             "Harmony: 'Cậu dễ thương ghê, cứ click vào tụi em suốt!' • Echo: 'Lười học thì có, lo làm bài đi cậu ơi!' 🌸😈",
             "Echo: 'Nè, Harmony hiền chứ Echo dữ lắm đó nha!' • Harmony: 'Đừng sợ, có tớ bảo vệ cậu nè!' 💖",
             "Song kiếm hợp bích! Harmony tiếp năng lượng, Echo đốc thúc học tập cho cậu! ✨"
+        ],
+        autofill: [
+            "Harmony: 'Tớ điền nghĩa và ví dụ rồi nè!' • Echo: 'Mau học đi đấy đồ ngốc!' 🌸😈",
+            "Song kiếm hợp bích! Bộ đôi AISA đã tự động hoàn thành mọi thông tin từ vựng cho cậu! ✨"
         ]
     }
 };
@@ -137,12 +151,18 @@ class VocabSheetApp {
         // Tập hợp các ô đang được xem hé tạm thời (Peek)
         this.peekingCells = new Set();
 
+        // Trạng thái tự động điền & chỉnh sửa
+        this.editingWordId = null;
+        this.autoFillDebounceTimer = null;
+        this.isAutoFilling = false;
+
         this.init();
     }
 
     init() {
         this.loadDeck();
         this.bindEvents();
+        this.bindAutoFillEvents();
         this.initMascotUI();
         this.renderAll();
     }
@@ -373,6 +393,9 @@ class VocabSheetApp {
             text = personaData.blindModeOn;
         } else if (type === 'blindModeOff') {
             text = personaData.blindModeOff;
+        } else if (type === 'autofill') {
+            const list = personaData.autofill || personaData.welcome;
+            text = list[Math.floor(Math.random() * list.length)];
         } else if (type === 'interact') {
             const list = personaData.interact;
             text = list[Math.floor(Math.random() * list.length)];
@@ -512,7 +535,7 @@ class VocabSheetApp {
         if (filtered.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="10" style="text-align: center; padding: 3rem; color: var(--study-text-muted);">
+                    <td colspan="11" style="text-align: center; padding: 3rem; color: var(--study-text-muted);">
                         <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📖</div>
                         <p style="font-weight: 700;">Chưa có từ vựng nào trong danh sách này.</p>
                         <button class="btn-primary" style="margin-top: 1rem; border-radius: 9999px; padding: 8px 20px;" onclick="window.sheetApp.openAddWordModal()">+ Thêm từ đầu tiên</button>
@@ -656,6 +679,13 @@ class VocabSheetApp {
                         ${pct}%
                     </span>
                 </td>
+                <!-- Cột Thao tác Sửa / Xóa -->
+                <td style="text-align: center;">
+                    <div style="display: flex; gap: 4px; justify-content: center;">
+                        <button type="button" class="btn-row-action" onclick="window.sheetApp.openEditWordModal('${item.id}')" title="Sửa từ vựng"><i class="fa-solid fa-pen"></i></button>
+                        <button type="button" class="btn-row-action btn-del" onclick="window.sheetApp.deleteWord('${item.id}')" title="Xóa từ này"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                </td>
             `;
 
             tbody.appendChild(tr);
@@ -785,14 +815,523 @@ class VocabSheetApp {
         if (elBar) elBar.style.width = `${overallPct}%`;
     }
 
+    /* ==========================================================================
+       AISA BIDIRECTIONAL AUTO-FILL & MODAL MANAGEMENT
+       ========================================================================== */
+    bindAutoFillEvents() {
+        const inputWord = document.getElementById('newWord');
+        const inputMeaning = document.getElementById('newMeaning');
+        const inputPhonetic = document.getElementById('newPhonetic');
+
+        if (inputWord) {
+            inputWord.addEventListener('input', (e) => {
+                const val = e.target.value.trim();
+                clearTimeout(this.autoFillDebounceTimer);
+                if (val.length >= 1) {
+                    this.autoFillDebounceTimer = setTimeout(() => {
+                        this.autoFillWordDetails('word', val);
+                    }, 650);
+                }
+            });
+            inputWord.addEventListener('blur', (e) => {
+                const val = e.target.value.trim();
+                const meaningVal = document.getElementById('newMeaning')?.value.trim();
+                const exampleVal = document.getElementById('newExample')?.value.trim();
+                if (val.length >= 1 && (!meaningVal || !exampleVal)) {
+                    clearTimeout(this.autoFillDebounceTimer);
+                    this.autoFillWordDetails('word', val);
+                }
+            });
+        }
+
+        if (inputMeaning) {
+            inputMeaning.addEventListener('input', (e) => {
+                const val = e.target.value.trim();
+                const currentWord = document.getElementById('newWord')?.value.trim();
+                clearTimeout(this.autoFillDebounceTimer);
+                if (val.length >= 2 && !currentWord) {
+                    this.autoFillDebounceTimer = setTimeout(() => {
+                        this.autoFillWordDetails('meaning', val);
+                    }, 750);
+                }
+            });
+            inputMeaning.addEventListener('blur', (e) => {
+                const val = e.target.value.trim();
+                const currentWord = document.getElementById('newWord')?.value.trim();
+                if (val.length >= 2 && !currentWord) {
+                    clearTimeout(this.autoFillDebounceTimer);
+                    this.autoFillWordDetails('meaning', val);
+                }
+            });
+        }
+
+        if (inputPhonetic) {
+            inputPhonetic.addEventListener('input', (e) => {
+                const val = e.target.value.trim();
+                const currentWord = document.getElementById('newWord')?.value.trim();
+                clearTimeout(this.autoFillDebounceTimer);
+                if (val.length >= 2 && !currentWord) {
+                    this.autoFillDebounceTimer = setTimeout(() => {
+                        this.autoFillWordDetails('phonetic', val);
+                    }, 800);
+                }
+            });
+        }
+    }
+
+    triggerFieldAutoFill() {
+        const wordVal = document.getElementById('newWord')?.value.trim();
+        const meaningVal = document.getElementById('newMeaning')?.value.trim();
+        const phoneticVal = document.getElementById('newPhonetic')?.value.trim();
+
+        if (wordVal) {
+            this.autoFillWordDetails('word', wordVal, true);
+        } else if (meaningVal) {
+            this.autoFillWordDetails('meaning', meaningVal, true);
+        } else if (phoneticVal) {
+            this.autoFillWordDetails('phonetic', phoneticVal, true);
+        } else {
+            const statusEl = document.getElementById('aiModalStatusText');
+            if (statusEl) {
+                statusEl.textContent = '⚠️ Cậu hãy nhập ít nhất Từ vựng hoặc Nghĩa tiếng Việt để AISA tra cứu nhé!';
+                statusEl.className = 'ai-assist-status is-loading';
+                setTimeout(() => {
+                    statusEl.className = 'ai-assist-status';
+                    statusEl.textContent = '💡 Gõ từ gốc hoặc nghĩa tiếng Việt, AISA sẽ tự động điền các ô còn lại giúp cậu!';
+                }, 2500);
+            }
+        }
+    }
+
+    async autoFillWordDetails(field, query, force = false) {
+        if (!query || this.isAutoFilling) return;
+        this.isAutoFilling = true;
+
+        const assistBox = document.getElementById('modalAiAssistBox');
+        const statusEl = document.getElementById('aiModalStatusText');
+        const triggerBtn = document.getElementById('btnTriggerAutoFill');
+
+        const inputWord = document.getElementById('newWord');
+        const inputPhonetic = document.getElementById('newPhonetic');
+        const selectPos = document.getElementById('newPos');
+        const inputMeaning = document.getElementById('newMeaning');
+        const inputExample = document.getElementById('newExample');
+        const inputExampleTrans = document.getElementById('newExampleTrans');
+
+        if (assistBox) assistBox.classList.add('is-loading');
+        if (statusEl) {
+            statusEl.className = 'ai-assist-status is-loading';
+            statusEl.textContent = `🌸 AISA đang tra cứu nghĩa, phiên âm và ví dụ cho "${query}"... ✨`;
+        }
+        if (triggerBtn) {
+            triggerBtn.disabled = true;
+            triggerBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ✨ Đang điền...';
+        }
+
+        const targets = [
+            { el: inputWord, key: 'word' },
+            { el: inputPhonetic, key: 'phonetic' },
+            { el: inputMeaning, key: 'meaning' },
+            { el: inputExample, key: 'example' },
+            { el: inputExampleTrans, key: 'exampleTrans' }
+        ];
+
+        targets.forEach(t => {
+            if (t.el && (field !== t.key || force) && (!t.el.value.trim() || force)) {
+                t.el.classList.add('ai-generating');
+            }
+        });
+
+        try {
+            const resultData = await this.lookupWordDetails(query, field, this.lang);
+
+            if (resultData) {
+                // Điền từ gốc nếu trống hoặc force
+                if (inputWord && (field !== 'word' || force) && (!inputWord.value.trim() || force) && resultData.word) {
+                    inputWord.value = resultData.word;
+                    this.highlightField(inputWord);
+                }
+
+                // Điền phiên âm / Romaji
+                if (inputPhonetic && (!inputPhonetic.value.trim() || force) && resultData.phonetic) {
+                    const cleanPhonetic = String(resultData.phonetic).replace(/^\[|\]$/g, '').trim();
+                    inputPhonetic.value = cleanPhonetic;
+                    this.highlightField(inputPhonetic);
+                }
+
+                // Điền loại từ
+                if (selectPos && resultData.pos) {
+                    selectPos.value = resultData.pos;
+                    this.highlightField(selectPos);
+                }
+
+                // Điền nghĩa tiếng Việt
+                if (inputMeaning && (field !== 'meaning' || force) && (!inputMeaning.value.trim() || force) && resultData.meaning) {
+                    inputMeaning.value = resultData.meaning;
+                    this.highlightField(inputMeaning);
+                }
+
+                // Điền câu ví dụ mẫu
+                if (inputExample && (!inputExample.value.trim() || force) && resultData.example) {
+                    inputExample.value = resultData.example;
+                    this.highlightField(inputExample);
+                }
+
+                // Điền dịch câu ví dụ
+                if (inputExampleTrans && (!inputExampleTrans.value.trim() || force) && resultData.exampleTrans) {
+                    inputExampleTrans.value = resultData.exampleTrans;
+                    this.highlightField(inputExampleTrans);
+                }
+
+                if (statusEl) {
+                    statusEl.className = 'ai-assist-status is-success';
+                    statusEl.textContent = '✨ Đã tự động điền xong mọi ô! Cậu kiểm tra lại rồi bấm Lưu từ nhé. 🌸';
+                }
+
+                this.triggerMascotSpeak('autofill');
+                if (window.studyUI) window.studyUI.playDing();
+            } else {
+                if (statusEl) {
+                    statusEl.className = 'ai-assist-status';
+                    statusEl.textContent = '💡 AISA chưa tìm thấy từ này, cậu có thể tự gõ bổ sung nhen!';
+                }
+            }
+        } catch (err) {
+            console.warn('[AISA AutoFill Warning]:', err);
+            if (statusEl) {
+                statusEl.className = 'ai-assist-status';
+                statusEl.textContent = '💡 Cậu có thể tự điền hoặc bấm "AISA Điền Hộ Tớ" để thử lại nhé!';
+            }
+        } finally {
+            this.isAutoFilling = false;
+            if (assistBox) assistBox.classList.remove('is-loading');
+            if (triggerBtn) {
+                triggerBtn.disabled = false;
+                triggerBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> ✨ AISA Điền Hộ Tớ';
+            }
+            targets.forEach(t => {
+                if (t.el) t.el.classList.remove('ai-generating');
+            });
+        }
+    }
+
+    highlightField(el) {
+        if (!el) return;
+        el.classList.remove('ai-filled-highlight');
+        void el.offsetWidth;
+        el.classList.add('ai-filled-highlight');
+        setTimeout(() => {
+            el.classList.remove('ai-filled-highlight');
+        }, 1800);
+    }
+
+    async lookupWordDetails(query, field, lang) {
+        const cleanQuery = query.toLowerCase().trim();
+
+        // 1. Kiểm tra từ điển tức thì có sẵn (Instant Cache & Built-in Dictionary)
+        const cached = this.checkLocalDictionary(cleanQuery, field, lang);
+        if (cached) return cached;
+
+        // 2. Tra cứu từ bài học hiện tại hoặc các bộ thẻ có sẵn trong trình duyệt
+        const deckMatched = this.checkExistingDecks(cleanQuery, field, lang);
+        if (deckMatched) return deckMatched;
+
+        // 3. Gọi Cloudflare Workers AISA API (/api/generate-example)
+        try {
+            const endpoint = window.aisaEndpoint || 'https://api.mhentuniverse.com';
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 6500);
+
+            const res = await fetch(`${endpoint}/api/generate-example`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal,
+                body: JSON.stringify({
+                    word: field === 'word' ? query : '',
+                    meaning: field === 'meaning' ? query : '',
+                    phonetic: field === 'phonetic' ? query : '',
+                    field,
+                    lang,
+                    model: window.aisaModel || 'aisa-scholar-v1'
+                })
+            });
+            clearTimeout(timeoutId);
+
+            if (res.ok) {
+                const json = await res.json();
+                if (json.data && (json.data.meaning || json.data.word || json.data.example)) {
+                    return json.data;
+                }
+            }
+        } catch (apiErr) {
+            console.warn('[AISA Worker fetch skipped or timeout, fallback to Direct Gemini / Local Heuristics]:', apiErr.message);
+        }
+
+        // 4. Trực tiếp gọi Google Gemini nếu có API Key người dùng cấu hình
+        const apiKey = localStorage.getItem('mhent_ai_api_key') || (window.MHENT_CONFIG && window.MHENT_CONFIG.GEMINI_API_KEY) || '';
+        if (apiKey) {
+            try {
+                const langNames = { ja: 'tiếng Nhật', ko: 'tiếng Hàn', zh: 'tiếng Trung', en: 'tiếng Anh' };
+                const langName = langNames[lang] || 'tiếng Nhật';
+                const prompt = `Từ khóa: "${query}" (${field === 'meaning' ? 'Nghĩa tiếng Việt' : 'Từ vựng ' + langName}).
+Nhiệm vụ: Tìm thông tin học tập đầy đủ:
+- "word": Từ gốc chính xác bằng ${langName}.
+- "phonetic": Phiên âm chuẩn (Furigana/Romaji cho Nhật, Romaja cho Hàn, Pinyin cho Trung, IPA cho Anh).
+- "pos": "noun"|"verb"|"adj"|"other".
+- "posLabel": "Danh từ"|"Động từ"|"Tính từ"|"Khác".
+- "meaning": Nghĩa tiếng Việt chuẩn xác.
+- "example": 1 câu ví dụ ngắn gọn tự nhiên bằng ${langName}.
+- "exampleTrans": Dịch câu ví dụ sang tiếng Việt.
+Trả về DUY NHẤT một chuỗi JSON hợp lệ:
+{"word":"...","phonetic":"...","pos":"noun","posLabel":"Danh từ","meaning":"...","example":"...","exampleTrans":"..."}`;
+
+                const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { responseMimeType: 'application/json', temperature: 0.2 }
+                    })
+                });
+
+                if (geminiRes.ok) {
+                    const data = await geminiRes.json();
+                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    const parsed = typeof text === 'string' ? JSON.parse(text) : null;
+                    if (parsed && (parsed.meaning || parsed.word)) {
+                        return parsed;
+                    }
+                }
+            } catch (geminiErr) {
+                console.warn('[Gemini direct error]:', geminiErr.message);
+            }
+        }
+
+        // 5. Dự phòng Heuristic thông minh
+        return this.smartLocalWordDetails(query, field, lang);
+    }
+
+    checkLocalDictionary(cleanQuery, field, lang) {
+        const dict = {
+            ja: [
+                { word: '桜', phonetic: '[さくら - Sakura]', pos: 'noun', posLabel: 'Danh từ', meaning: 'Hoa anh đào', example: '春になると、桜がとても綺麗に咲きます。', exampleTrans: 'Khi mùa xuân đến, hoa anh đào nở rất là đẹp.' },
+                { word: '日本', phonetic: '[にほん - Nihon]', pos: 'noun', posLabel: 'Danh từ', meaning: 'Nhật Bản', example: '私は日本が好きです。', exampleTrans: 'Tôi rất thích đất nước Nhật Bản.' },
+                { word: '先生', phonetic: '[せんせい - Sensei]', pos: 'noun', posLabel: 'Danh từ', meaning: 'Thầy cô giáo', example: '先生、いつもありがとうございます。', exampleTrans: 'Thưa thầy/cô, em cảm ơn vì đã luôn dạy dỗ.' },
+                { word: '友達', phonetic: '[ともだち - Tomodachi]', pos: 'noun', posLabel: 'Danh từ', meaning: 'Bạn bè', example: '友達と映画を見に行きます。', exampleTrans: 'Tôi cùng bạn bè đi xem phim.' },
+                { word: '食べる', phonetic: '[たべる - Taberu]', pos: 'verb', posLabel: 'Động từ', meaning: 'Ăn', example: '毎朝美味しいパンを食べます。', exampleTrans: 'Mỗi sáng tôi đều ăn bánh mì ngon.' },
+                { word: '飲む', phonetic: '[のむ - Nomu]', pos: 'verb', posLabel: 'Động từ', meaning: 'Uống', example: '冷たい水を飲みます。', exampleTrans: 'Tôi uống nước lạnh.' },
+                { word: '行く', phonetic: '[いく - Iku]', pos: 'verb', posLabel: 'Động từ', meaning: 'Đi', example: '明日学校へ行きます。', exampleTrans: 'Ngày mai tôi sẽ đến trường.' },
+                { word: '本', phonetic: '[ほん - Hon]', pos: 'noun', posLabel: 'Danh từ', meaning: 'Sách, quyển sách', example: '図書館で面白い本を読みました。', exampleTrans: 'Tôi đã đọc một cuốn sách rất thú vị ở thư viện.' },
+                { word: '猫', phonetic: '[ねこ - Neko]', pos: 'noun', posLabel: 'Danh từ', meaning: 'Con mèo', example: '私の家には可愛い猫がいます。', exampleTrans: 'Nhà tôi có một chú mèo rất đáng yêu.' },
+                { word: '美しい', phonetic: '[うつくしい - Utsukushii]', pos: 'adj', posLabel: 'Tính từ', meaning: 'Xinh đẹp, tuyệt đẹp', example: '富士山はとても美しいです。', exampleTrans: 'Núi Phú Sĩ thực sự rất đẹp.' },
+                { word: 'ありがとう', phonetic: '[ありがとう - Arigatou]', pos: 'other', posLabel: 'Khác', meaning: 'Cảm ơn', example: '手伝ってくれてありがとう。', exampleTrans: 'Cảm ơn bạn đã giúp đỡ tôi.' }
+            ],
+            ko: [
+                { word: '사랑', phonetic: '[sarang]', pos: 'noun', posLabel: 'Danh từ', meaning: 'Tình yêu, yêu thương', example: '사랑해요.', exampleTrans: 'Tôi yêu bạn.' },
+                { word: '친구', phonetic: '[chingu]', pos: 'noun', posLabel: 'Danh từ', meaning: 'Bạn bè', example: '내일 친구를 만나요.', exampleTrans: 'Ngày mai tôi gặp bạn bè.' },
+                { word: '학교', phonetic: '[hakgyo]', pos: 'noun', posLabel: 'Danh từ', meaning: 'Trường học', example: '우리는 매일 학교에 갑니다.', exampleTrans: 'Chúng tôi đến trường mỗi ngày.' },
+                { word: '선생님', phonetic: '[seonsaengnim]', pos: 'noun', posLabel: 'Danh từ', meaning: 'Thầy cô giáo', example: '선생님, 감사합니다.', exampleTrans: 'Em cảm ơn thầy/cô giáo.' },
+                { word: '먹다', phonetic: '[meokda]', pos: 'verb', posLabel: 'Động từ', meaning: 'Ăn', example: '맛있는 비빔밥을 먹어요.', exampleTrans: 'Tôi ăn món cơm trộn Bibimbap ngon lành.' },
+                { word: '행복하다', phonetic: '[haengbokhada]', pos: 'adj', posLabel: 'Tính từ', meaning: 'Hạnh phúc', example: '지금 너무 행복해요.', exampleTrans: 'Bây giờ tôi rất hạnh phúc.' },
+                { word: '하늘', phonetic: '[haneul]', pos: 'noun', posLabel: 'Danh từ', meaning: 'Bầu trời', example: '오늘 하늘이 정말 맑아요.', exampleTrans: 'Hôm nay bầu trời thật trong xanh.' }
+            ],
+            zh: [
+                { word: '老师', phonetic: '[lǎoshī]', pos: 'noun', posLabel: 'Danh từ', meaning: 'Thầy giáo, cô giáo', example: '老师好！', exampleTrans: 'Em chào thầy/cô!' },
+                { word: '学生', phonetic: '[xuéshēng]', pos: 'noun', posLabel: 'Danh từ', meaning: 'Học sinh, sinh viên', example: '我是大学生。', exampleTrans: 'Tôi là sinh viên đại học.' },
+                { word: '朋友', phonetic: '[péngyǒu]', pos: 'noun', posLabel: 'Danh từ', meaning: 'Bạn bè', example: '我们是好朋友。', exampleTrans: 'Chúng tôi là bạn tốt của nhau.' },
+                { word: '谢谢', phonetic: '[xièxiè]', pos: 'other', posLabel: 'Khác', meaning: 'Cảm ơn', example: '非常谢谢你的帮助！', exampleTrans: 'Rất cảm ơn sự giúp đỡ của bạn!' },
+                { word: '学习', phonetic: '[xuéxí]', pos: 'verb', posLabel: 'Động từ', meaning: 'Học tập', example: '我喜欢学习汉语。', exampleTrans: 'Tôi thích học tiếng Trung.' }
+            ],
+            en: [
+                { word: 'Opportunity', phonetic: '[/ˌɒp.əˈtʃuː.nə.ti/]', pos: 'noun', posLabel: 'Danh từ', meaning: 'Cơ hội, thời cơ', example: 'This is a great opportunity.', exampleTrans: 'Đây là một cơ hội tuyệt vời.' },
+                { word: 'Resilient', phonetic: '[/rɪˈzɪl.jənt/]', pos: 'adj', posLabel: 'Tính từ', meaning: 'Kiên cường, phục hồi nhanh', example: 'She is very resilient under pressure.', exampleTrans: 'Cô ấy rất kiên cường trước áp lực.' },
+                { word: 'Accomplish', phonetic: '[/əˈkʌm.plɪʃ/]', pos: 'verb', posLabel: 'Động từ', meaning: 'Hoàn thành, đạt được', example: 'You can accomplish your goal.', exampleTrans: 'Bạn có thể đạt được mục tiêu của mình.' },
+                { word: 'Friend', phonetic: '[/frend/]', pos: 'noun', posLabel: 'Danh từ', meaning: 'Bạn bè', example: 'A friend in need is a friend indeed.', exampleTrans: 'Hoạn nạn mới biết bạn hiền.' }
+            ]
+        };
+
+        const list = dict[lang] || dict.ja;
+        return list.find(item => {
+            if (field === 'meaning') {
+                return item.meaning.toLowerCase().includes(cleanQuery) || cleanQuery.includes(item.meaning.toLowerCase());
+            }
+            if (field === 'phonetic') {
+                return item.phonetic.toLowerCase().includes(cleanQuery);
+            }
+            return item.word.toLowerCase() === cleanQuery || item.word.toLowerCase().includes(cleanQuery);
+        }) || null;
+    }
+
+    checkExistingDecks(cleanQuery, field, lang) {
+        const decks = window.studyStorage ? window.studyStorage.getDecks(lang) : [];
+        for (const deck of decks) {
+            if (Array.isArray(deck.words)) {
+                const match = deck.words.find(w => {
+                    if (field === 'meaning') {
+                        return w.meaning && (w.meaning.toLowerCase().includes(cleanQuery) || cleanQuery.includes(w.meaning.toLowerCase()));
+                    }
+                    if (field === 'phonetic') {
+                        return w.phonetic && w.phonetic.toLowerCase().includes(cleanQuery);
+                    }
+                    return w.word && (w.word.toLowerCase() === cleanQuery || w.word.toLowerCase().includes(cleanQuery));
+                });
+                if (match) {
+                    return {
+                        word: match.word,
+                        phonetic: match.phonetic,
+                        pos: match.pos || 'noun',
+                        posLabel: match.posLabel || 'Danh từ',
+                        meaning: match.meaning,
+                        example: match.example,
+                        exampleTrans: match.exampleTrans
+                    };
+                }
+            }
+        }
+        return null;
+    }
+
+    smartLocalWordDetails(query, field, lang) {
+        let word = query;
+        let pos = 'noun';
+        let posLabel = 'Danh từ';
+        let phonetic = `[${query}]`;
+        let meaning = field === 'meaning' ? query : `Nghĩa của ${query}`;
+        let example = '';
+        let exampleTrans = '';
+
+        if (lang === 'ja') {
+            if (field === 'meaning') {
+                word = query;
+                example = `私は${query}が好きです。`;
+                exampleTrans = `Tôi rất thích ${query}.`;
+            } else if (/[うくぐすつぬぶむる]$/.test(query)) {
+                pos = 'verb';
+                posLabel = 'Động từ';
+                example = `毎日${query}ことがあります。`;
+                exampleTrans = `Tôi có thói quen ${query} mỗi ngày.`;
+            } else if (/い$/.test(query)) {
+                pos = 'adj';
+                posLabel = 'Tính từ';
+                example = `これはとても${query}ですね。`;
+                exampleTrans = `Cái này thực sự rất ${query}.`;
+            } else {
+                example = `これはとても大切な${query}です。`;
+                exampleTrans = `Đây là ${query} rất quan trọng.`;
+            }
+            phonetic = `[${word}]`;
+        } else if (lang === 'ko') {
+            if (/하다$|다$/.test(query)) {
+                pos = 'verb';
+                posLabel = 'Động từ';
+                example = `저는 매일 친구와 ${query}.`;
+                exampleTrans = `Tôi ${query} cùng bạn bè mỗi ngày.`;
+            } else {
+                example = `이것은 우리가 좋아하는 ${query}입니다.`;
+                exampleTrans = `Đây là ${query} mà chúng tôi yêu thích.`;
+            }
+            phonetic = `[${word}]`;
+        } else if (lang === 'zh') {
+            example = `我们应该认真学习${query}。`;
+            exampleTrans = `Chúng ta nên nghiêm túc học tập ${query}.`;
+            phonetic = `[${word}]`;
+        } else {
+            if (/ly$/.test(query)) {
+                pos = 'adj';
+                posLabel = 'Tính từ';
+                example = `He spoke ${query} to everyone.`;
+                exampleTrans = `Anh ấy đã nói chuyện một cách ${query} với mọi người.`;
+            } else {
+                example = `It is important to understand "${query}" in daily practice.`;
+                exampleTrans = `Việc thấu hiểu "${query}" trong luyện tập hàng ngày là rất quan trọng.`;
+            }
+            phonetic = `[/${query.toLowerCase()}/]`;
+        }
+
+        return { word, phonetic, pos, posLabel, meaning, example, exampleTrans };
+    }
+
     openAddWordModal() {
+        this.editingWordId = null;
         const modal = document.getElementById('addWordModal');
+        const titleEl = document.getElementById('addWordModalTitle');
+        const submitBtn = document.getElementById('btnSubmitWord');
+        const statusEl = document.getElementById('aiModalStatusText');
+
+        if (titleEl) {
+            const langNames = { ja: 'tiếng Nhật', ko: 'tiếng Hàn', zh: 'tiếng Trung', en: 'tiếng Anh' };
+            titleEl.textContent = `✨ Thêm từ vựng ${langNames[this.lang] || ''} mới`;
+        }
+        if (submitBtn) {
+            submitBtn.textContent = '+ Lưu từ';
+        }
+        if (statusEl) {
+            statusEl.className = 'ai-assist-status';
+            statusEl.textContent = '💡 Gõ từ gốc hoặc nghĩa tiếng Việt, AISA sẽ tự động điền các ô còn lại giúp cậu!';
+        }
+
+        document.getElementById('newWord').value = '';
+        document.getElementById('newPhonetic').value = '';
+        document.getElementById('newMeaning').value = '';
+        document.getElementById('newExample').value = '';
+        document.getElementById('newExampleTrans').value = '';
+
+        if (modal) modal.classList.add('active');
+        setTimeout(() => {
+            const inputWord = document.getElementById('newWord');
+            if (inputWord) inputWord.focus();
+        }, 80);
+    }
+
+    openEditWordModal(wordId) {
+        if (!this.currentDeck || !Array.isArray(this.currentDeck.words)) return;
+        const wordObj = this.currentDeck.words.find(w => w.id === wordId);
+        if (!wordObj) return;
+
+        this.editingWordId = wordId;
+        const modal = document.getElementById('addWordModal');
+        const titleEl = document.getElementById('addWordModalTitle');
+        const submitBtn = document.getElementById('btnSubmitWord');
+        const statusEl = document.getElementById('aiModalStatusText');
+
+        if (titleEl) {
+            titleEl.textContent = `✏️ Chỉnh sửa từ vựng: ${wordObj.word}`;
+        }
+        if (submitBtn) {
+            submitBtn.textContent = '💾 Cập nhật từ';
+        }
+        if (statusEl) {
+            statusEl.className = 'ai-assist-status';
+            statusEl.textContent = '💡 Cậu có thể sửa hoặc bấm "AISA Điền Hộ Tớ" để tạo lại ví dụ mới!';
+        }
+
+        document.getElementById('newWord').value = wordObj.word || '';
+        document.getElementById('newPhonetic').value = (wordObj.phonetic || '').replace(/^\[|\]$/g, '');
+        document.getElementById('newPos').value = wordObj.pos || 'noun';
+        document.getElementById('newMeaning').value = wordObj.meaning || '';
+        document.getElementById('newExample').value = wordObj.example || '';
+        document.getElementById('newExampleTrans').value = wordObj.exampleTrans || '';
+
         if (modal) modal.classList.add('active');
     }
 
     closeAddWordModal() {
         const modal = document.getElementById('addWordModal');
         if (modal) modal.classList.remove('active');
+        this.editingWordId = null;
+    }
+
+    deleteWord(wordId) {
+        if (!this.currentDeck || !Array.isArray(this.currentDeck.words)) return;
+        const wordObj = this.currentDeck.words.find(w => w.id === wordId);
+        if (!wordObj) return;
+
+        if (confirm(`Cậu có chắc muốn xóa từ "${wordObj.word}" khỏi bài học không?`)) {
+            this.currentDeck.words = this.currentDeck.words.filter(w => w.id !== wordId);
+            this.saveCurrentDeck();
+            this.renderAll();
+            if (window.studyUI) window.studyUI.showToast(`🗑️ Đã xóa từ "${wordObj.word}" thành công!`, 'info');
+        }
     }
 
     submitNewWord() {
@@ -810,34 +1349,49 @@ class VocabSheetApp {
 
         const posLabels = { noun: 'Danh từ', verb: 'Động từ', adj: 'Tính từ', other: 'Khác' };
 
-        const newWordObj = {
-            id: `word_${Date.now()}`,
-            word,
-            phonetic: phonetic ? `[${phonetic}]` : '',
-            pos,
-            posLabel: posLabels[pos] || 'Khác',
-            meaning,
-            example,
-            exampleTrans,
-            typedWord: '',
-            reviews: [false, false, false, false],
-            isCompleted: false
-        };
+        if (this.editingWordId) {
+            const wordObj = this.currentDeck.words.find(w => w.id === this.editingWordId);
+            if (wordObj) {
+                wordObj.word = word;
+                wordObj.phonetic = phonetic ? `[${phonetic}]` : '';
+                wordObj.pos = pos;
+                wordObj.posLabel = posLabels[pos] || 'Khác';
+                wordObj.meaning = meaning;
+                wordObj.example = example;
+                wordObj.exampleTrans = exampleTrans;
+            }
+            this.saveCurrentDeck();
+            this.renderAll();
+            this.closeAddWordModal();
 
-        this.currentDeck.words.push(newWordObj);
-        this.saveCurrentDeck();
-        this.renderAll();
-        this.closeAddWordModal();
+            if (window.studyUI) {
+                window.studyUI.showToast('✨ Đã cập nhật từ vựng thành công!', 'success');
+                window.studyUI.playDing();
+            }
+        } else {
+            const newWordObj = {
+                id: `word_${Date.now()}`,
+                word,
+                phonetic: phonetic ? `[${phonetic}]` : '',
+                pos,
+                posLabel: posLabels[pos] || 'Khác',
+                meaning,
+                example,
+                exampleTrans,
+                typedWord: '',
+                reviews: [false, false, false, false],
+                isCompleted: false
+            };
 
-        document.getElementById('newWord').value = '';
-        document.getElementById('newPhonetic').value = '';
-        document.getElementById('newMeaning').value = '';
-        document.getElementById('newExample').value = '';
-        document.getElementById('newExampleTrans').value = '';
+            this.currentDeck.words.push(newWordObj);
+            this.saveCurrentDeck();
+            this.renderAll();
+            this.closeAddWordModal();
 
-        if (window.studyUI) {
-            window.studyUI.showToast('✨ Đã thêm từ vựng thành công!', 'success');
-            window.studyUI.playDing();
+            if (window.studyUI) {
+                window.studyUI.showToast('✨ Đã thêm từ vựng thành công!', 'success');
+                window.studyUI.playDing();
+            }
         }
     }
 

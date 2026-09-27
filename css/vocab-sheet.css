@@ -799,3 +799,158 @@
     color: var(--success);
     font-weight: 800;
 }
+
+/* ==========================================================================
+   AISA VOCAB MODAL AUTO-FILL ASSISTANT & HIGHLIGHTS
+   ========================================================================== */
+.modal-ai-assist-box {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(244, 114, 182, 0.06), rgba(99, 102, 241, 0.06));
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 14px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.modal-ai-assist-box.is-loading {
+    border-color: rgba(244, 114, 182, 0.6);
+    box-shadow: 0 0 16px rgba(244, 114, 182, 0.25);
+    background: linear-gradient(135deg, rgba(244, 114, 182, 0.12), rgba(99, 102, 241, 0.12));
+}
+
+.ai-assist-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.ai-assist-mascot-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--study-text);
+}
+
+.ai-assist-mascot-pill .mascot-emoji {
+    font-size: 16px;
+    display: inline-block;
+    animation: aisaMascotFloat 3s ease-in-out infinite;
+}
+
+@keyframes aisaMascotFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-3px) rotate(4deg); }
+}
+
+.btn-ai-autofill-trigger {
+    background: linear-gradient(135deg, #ef4444, #ec4899);
+    color: #fff;
+    border: none;
+    border-radius: 9999px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.btn-ai-autofill-trigger:hover {
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.45);
+}
+
+.btn-ai-autofill-trigger:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.btn-ai-autofill-trigger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.ai-assist-status {
+    font-size: 12px;
+    color: var(--study-text-muted);
+    line-height: 1.4;
+    transition: all 0.25s ease;
+}
+
+.ai-assist-status.is-loading {
+    color: #ec4899;
+    font-weight: 700;
+}
+
+.ai-assist-status.is-success {
+    color: #10b981;
+    font-weight: 700;
+}
+
+/* Shimmer loading effect khi AISA đang sinh dữ liệu cho input */
+.modal-input.ai-generating {
+    background: linear-gradient(90deg, rgba(239, 68, 68, 0.05) 0%, rgba(244, 114, 182, 0.2) 50%, rgba(239, 68, 68, 0.05) 100%);
+    background-size: 200% 100%;
+    animation: aiInputShimmer 1.4s infinite linear;
+    border-color: rgba(244, 114, 182, 0.5) !important;
+}
+
+@keyframes aiInputShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Hiệu ứng phát sáng nhẹ sau khi trường được tự động điền xong */
+.modal-input.ai-filled-highlight,
+.modal-select.ai-filled-highlight {
+    animation: aiFieldGlow 1.8s ease-out forwards;
+}
+
+@keyframes aiFieldGlow {
+    0% {
+        border-color: #10b981 !important;
+        box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+    }
+    100% {
+        border-color: var(--study-border);
+        box-shadow: none;
+    }
+}
+
+/* Row action buttons trong bảng từ vựng */
+.btn-row-action {
+    background: transparent;
+    border: 1px solid var(--study-border);
+    color: var(--study-text-muted);
+    border-radius: 8px;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-row-action:hover {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    border-color: #3b82f6;
+    transform: scale(1.08);
+}
+
+.btn-row-action.btn-del:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-color: #ef4444;
+}
+

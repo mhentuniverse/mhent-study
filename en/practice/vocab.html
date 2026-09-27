@@ -205,6 +205,7 @@
                             <th>Kiểm tra</th>
                             <th style="min-width: 130px;">4 Lần ôn tập</th>
                             <th>Tỉ lệ</th>
+                            <th style="width: 70px; text-align: center;">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="vocabTableBody"></tbody>
@@ -297,10 +298,26 @@
     <div class="mhent-overlay" id="addWordModal" onclick="if(event.target === this) window.sheetApp.closeAddWordModal()">
         <div class="mhent-modal">
             <div class="modal-header">
-                <h3>✨ Thêm từ vựng tiếng Anh mới</h3>
+                <h3 id="addWordModalTitle">✨ Thêm từ vựng tiếng Anh mới</h3>
                 <button class="btn-icon" onclick="window.sheetApp.closeAddWordModal()">✕</button>
             </div>
             <div class="modal-body">
+                <!-- AISA Auto-fill Assistant Bar -->
+                <div class="modal-ai-assist-box" id="modalAiAssistBox">
+                    <div class="ai-assist-header">
+                        <div class="ai-assist-mascot-pill">
+                            <span class="mascot-emoji">🌸</span>
+                            <span>AISA Tự Động Điền</span>
+                        </div>
+                        <button type="button" class="btn-ai-autofill-trigger" id="btnTriggerAutoFill" onclick="window.sheetApp.triggerFieldAutoFill()" title="Tự động điền các ô dựa vào nội dung cậu đã nhập" style="background: linear-gradient(135deg, #6366f1, #ec4899);">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> ✨ AISA Điền Hộ Tớ
+                        </button>
+                    </div>
+                    <div class="ai-assist-status" id="aiModalStatusText">
+                        💡 Gõ từ gốc hoặc nghĩa tiếng Việt, AISA sẽ tự động điền các ô còn lại giúp cậu!
+                    </div>
+                </div>
+
                 <div>
                     <label class="modal-label">Từ tiếng Anh *</label>
                     <input type="text" id="newWord" class="modal-input" placeholder="Ví dụ: Opportunity">
@@ -335,7 +352,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn-ghost" onclick="window.sheetApp.closeAddWordModal()">Hủy</button>
-                <button class="btn-primary" onclick="window.sheetApp.submitNewWord()" style="background: #6366f1;">+ Lưu từ</button>
+                <button class="btn-primary" id="btnSubmitWord" onclick="window.sheetApp.submitNewWord()" style="background: #6366f1;">+ Lưu từ</button>
             </div>
         </div>
     </div>
