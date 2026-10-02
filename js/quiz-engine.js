@@ -111,7 +111,10 @@ function injectCSS() {
     @keyframes qeSlideIn { from{opacity:0;transform:translateY(18px) scale(0.98)} to{opacity:1;transform:none} }
     .qe-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--qa),#a855f7); }
     .qe-type-badge { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:800; letter-spacing:0.07em; text-transform:uppercase; color:var(--qa); background:rgba(var(--qa-rgb),0.1); padding:3px 10px; border-radius:9999px; margin-bottom:14px; }
-    .qe-word-display { font-size:3rem; font-weight:900; text-align:center; color:var(--study-text); margin:16px 0 8px; line-height:1.2; min-height:64px; display:flex; align-items:center; justify-content:center; gap:12px; word-break:break-all; }
+    .qe-word-display { font-size:3rem; font-weight:900; text-align:center; color:var(--study-text); margin:16px 0 8px; line-height:1.2; min-height:64px; display:flex; align-items:center; justify-content:center; gap:12px; word-break:break-word; }
+    .qe-word-display.is-sentence { font-size:1.5rem; line-height:1.7; word-break:normal; word-wrap:break-word; font-weight:800; max-width:680px; margin:14px auto 10px; display:block; text-align:center; }
+    .qe-blank-fill { display:inline-block; min-width:96px; padding:2px 14px; margin:0 4px; border-bottom:3.5px solid var(--qa); color:var(--qa); font-weight:900; text-align:center; background:rgba(var(--qa-rgb),0.12); border-radius:6px 6px 0 0; animation:qeBlankPulse 2s infinite ease-in-out; letter-spacing:2px; vertical-align:middle; }
+    @keyframes qeBlankPulse { 0%,100%{border-color:var(--qa);box-shadow:0 2px 8px rgba(var(--qa-rgb),0.25)} 50%{border-color:#a855f7;box-shadow:0 2px 14px rgba(168,85,247,0.45)} }
     .qe-phonetic { font-size:1rem; color:var(--qa); font-weight:700; text-align:center; margin-bottom:8px; }
     .qe-context { font-size:14px; color:var(--study-text-muted); text-align:center; margin-bottom:20px; line-height:1.6; }
     .qe-context strong { color:var(--qa); font-weight:900; }
@@ -333,7 +336,8 @@ function renderApp() {
           <div class="qe-scr-answer" id="qeScrAnswer"></div>
           <div class="qe-scr-tiles" id="qeScrTiles"></div>
           <div class="qe-scr-btns">
-            <button class="qe-scr-clear" onclick="QE.clearScramble()">↩️ Xóa lại</button>
+            <button class="qe-scr-clear" onclick="QE.clearScramble()">↩️ Xóa hết</button>
+            <button class="qe-scr-clear" onclick="QE.removeLastTile()" style="max-width:115px;">⌫ Xóa chữ</button>
             <button class="qe-scr-submit" onclick="QE.submitScramble()"><i class="fa-solid fa-check"></i> Xác nhận <kbd class="qe-kbd" style="color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.3);font-size:10px;">Enter</kbd></button>
           </div>
         </div>
@@ -478,10 +482,10 @@ function buildQuestions(words, total) {
     // Filter out invalid types for this word
     const valid = pool.filter(t => {
       if (t === 'scramble' && word.word.length < 2) return false;
-      if (t === 'mcq_fill' && !word.example) return false;
+      if (t === 'mcq_fill' && !word.example && USE_TYPES.length > 1) return false;
       return true;
     });
-    if (!valid.length) valid.push('mcq_meaning_word');
+    if (!valid.length) valid.push(USE_TYPES[0] || 'mcq_meaning_word');
     const type = valid[Math.floor(Math.random() * valid.length)];
     const distractors = shuffle(words.filter(w => w.id !== word.id)).slice(0, 3);
     return { word, type, distractors };
@@ -517,6 +521,7 @@ function renderQuestion(q) {
 
   const badge = $('qeBadge');
   const display = $('qeDisplay');
+  display.className = 'qe-word-display';
 
   switch (type) {
     case 'mcq_meaning_word':
@@ -542,9 +547,12 @@ function renderQuestion(q) {
 
     case 'mcq_fill': {
       badge.textContent = '📝 Điền Từ Vào Câu (ABCD)';
-      const blank = (word.example || '').replace(word.word, '___________');
-      display.style.fontSize = '1rem'; display.textContent = '';
-      $('qeContext').innerHTML = `<strong>${esc(blank)}</strong><br><span style="font-size:12px;opacity:0.7;">${esc(word.exampleTrans || '')}</span>`;
+      display.classList.add('is-sentence');
+      const blankObj = makeFillBlank(word.example, word);
+      display.innerHTML = blankObj.html;
+      if (word.exampleTrans) {
+        $('qeContext').innerHTML = `<span style="font-size:14px;color:var(--study-text-muted);font-weight:600;">${esc(word.exampleTrans)}</span>`;
+      }
       renderOpts(shuffle([word.word, ...distractors.map(d => d.word)]), word.word);
       $('qeKbdHint').style.display = 'flex'; break;
     }
@@ -614,15 +622,28 @@ function submitTyping() {
   if (!val) return;
   answered = true; stopTimer();
   const word = questions[currentIdx].word;
-  const ok = norm(val) === norm(word.word);
+
+  let ok = norm(val) === norm(word.word);
+  if (!ok && word.phonetic) {
+    const cleanPhon = norm(word.phonetic.replace(/[\[\]\/\(\)\-–—]/g, ' '));
+    const phonParts = word.phonetic.replace(/[\[\]\/\(\)]/g, ' ').split(/[\s\-–—]+/).map(p => norm(p)).filter(p => p.length >= 1);
+    if (norm(val) === cleanPhon || phonParts.includes(norm(val))) {
+      ok = true;
+    }
+  }
+
   inp.disabled = true;
   inp.className = 'qe-type-input ' + (ok ? 'correct' : 'wrong');
-  handleResult(ok, word, ok ? '' : `Đáp án đúng: ${word.word}`);
+  const feedbackMsg = ok
+    ? (norm(val) === norm(word.word) ? '' : `Chính xác! (${word.word} — ${word.phonetic || ''})`)
+    : `Đáp án đúng: ${word.word}${word.phonetic ? ' ' + word.phonetic : ''}`;
+  handleResult(ok, word, feedbackMsg);
 }
 
 /* ── Scramble ────────────────────────────────────────────────────── */
 function buildScramble(wordStr) {
-  scrambleTileMap = shuffle(wordStr.split('')).map((ch, i) => ({ ch, idx: i, used: false }));
+  const cleanChars = (wordStr || '').split('').filter(ch => ch.trim() !== '' && !/[.,!?;:\/\\()\[\]]/.test(ch));
+  scrambleTileMap = shuffle(cleanChars).map((ch, i) => ({ ch, idx: i, used: false }));
   scrambleAnswer = [];
   $('qeScrAnswer').innerHTML = '';
   $('qeScrAnswer').className = 'qe-scr-answer';
@@ -634,6 +655,17 @@ function buildScramble(wordStr) {
     el.addEventListener('click', () => addTile(i, el));
     $('qeScrTiles').appendChild(el);
   });
+}
+
+function removeLastTile() {
+  if (answered || !scrambleAnswer.length) return;
+  const last = scrambleAnswer.pop();
+  scrambleTileMap[last.ti].used = false;
+  document.querySelector(`[data-ti="${last.ti}"]`)?.classList.remove('used');
+  const ansEl = $('qeScrAnswer');
+  if (ansEl && ansEl.lastElementChild) {
+    ansEl.lastElementChild.remove();
+  }
 }
 
 function addTile(ti, el) {
@@ -917,7 +949,108 @@ function setupKeyboard() {
     else if (e.code === 'KeyL') usePerk('listen');
     else if (e.code === 'KeyH' && !answered) usePerk('hint');
     else if (e.code === 'KeyS' && !answered) usePerk('skip');
+    else if (e.code === 'Backspace') {
+      if (!answered && $('qeScramble').style.display !== 'none') {
+        e.preventDefault();
+        removeLastTile();
+      }
+    }
+    else if (!answered && $('qeScramble').style.display !== 'none' && e.key && e.key.length === 1) {
+      const targetChar = e.key.toLowerCase();
+      const match = scrambleTileMap.find(t => !t.used && t.ch.toLowerCase() === targetChar);
+      if (match) {
+        const el = document.querySelector(`[data-ti="${match.idx}"]`);
+        if (el) addTile(match.idx, el);
+      }
+    }
   });
+}
+
+/* ── Smart Blank Generator for mcq_fill ──────────────────────────── */
+function makeFillBlank(example, wordObj) {
+  const blankHtml = '<span class="qe-blank-fill">___________</span>';
+  if (!example) return { html: `${blankHtml} <span style="font-size:0.9em;opacity:0.85;">(${esc(wordObj.meaning || '')})</span>`, raw: `___________ (${wordObj.meaning || ''})` };
+
+  const rawWord = (wordObj.word || '').trim();
+  const phonetic = (wordObj.phonetic || '').replace(/[\[\]\/\-–—]/g, ' ').trim();
+  const rxEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  // Check if string is predominantly Latin (English, Romaji, Pinyin, etc.)
+  const isLatin = /^[a-zA-Z\s'-]+$/.test(rawWord);
+
+  if (isLatin) {
+    // 1. Exact English word match with word boundary
+    const rxExact = new RegExp('\\b' + rxEsc(rawWord) + '\\b', 'i');
+    if (rxExact.test(example)) {
+      return {
+        html: esc(example).replace(rxExact, blankHtml),
+        raw: example.replace(rxExact, '___________')
+      };
+    }
+
+    // 2. English inflected form (stem + suffixes like s, es, ed, ing, er, d)
+    let stem = rawWord.toLowerCase();
+    stem = stem.replace(/e$/, '').replace(/(?:ing|ies|es|ed|er|ly|s)$/, '');
+    if (stem.length >= 3) {
+      const rxInflected = new RegExp('\\b' + rxEsc(stem) + '[a-zA-Z]*\\b', 'i');
+      if (rxInflected.test(example)) {
+        return {
+          html: esc(example).replace(rxInflected, blankHtml),
+          raw: example.replace(rxInflected, '___________')
+        };
+      }
+    }
+
+    // 3. Fallback for Latin: match the entire word containing rawWord
+    const rxWordContaining = new RegExp('\\b[a-zA-Z]*' + rxEsc(rawWord) + '[a-zA-Z]*\\b', 'i');
+    if (rxWordContaining.test(example)) {
+      return {
+        html: esc(example).replace(rxWordContaining, blankHtml),
+        raw: example.replace(rxWordContaining, '___________')
+      };
+    }
+  } else {
+    // CJK (Japanese, Korean, Chinese)
+    // 1. Exact match of rawWord in example
+    const rxExactCJK = new RegExp(rxEsc(rawWord));
+    if (rxExactCJK.test(example)) {
+      return {
+        html: esc(example).replace(rxExactCJK, blankHtml),
+        raw: example.replace(rxExactCJK, '___________')
+      };
+    }
+
+    // 2. CJK Verb/Adjective root stripping (e.g. 食べる -> 食べ, 사랑하다 -> 사랑)
+    const cjkRoot = rawWord.replace(/(?:하다|다|[うくぐすつぬぶむるい])$/, '');
+    if (cjkRoot.length >= 1) {
+      const rxCjkRoot = new RegExp(rxEsc(cjkRoot) + '[\u3040-\u309F\uAC00-\uD7AF]*');
+      if (rxCjkRoot.test(example)) {
+        return {
+          html: esc(example).replace(rxCjkRoot, blankHtml),
+          raw: example.replace(rxCjkRoot, '___________')
+        };
+      }
+    }
+
+    // 3. Phonetic/Furigana tokens (e.g. Kanji word with Hiragana reading in example)
+    const phoneticTokens = phonetic.split(/\s+/).filter(t => t.length >= 2);
+    for (const token of phoneticTokens) {
+      const tokenRoot = token.replace(/(?:하다|다|[うくぐすつぬぶむるい])$/, '');
+      const rxToken = new RegExp(rxEsc(tokenRoot.length >= 2 ? tokenRoot : token) + '[\u3040-\u309F\uAC00-\uD7AF]*');
+      if (rxToken.test(example)) {
+        return {
+          html: esc(example).replace(rxToken, blankHtml),
+          raw: example.replace(rxToken, '___________')
+        };
+      }
+    }
+  }
+
+  // 4. Safe fallback: Prepend blank to example sentence
+  return {
+    html: `${blankHtml} ${esc(example)}`,
+    raw: `___________ ${example}`
+  };
 }
 
 /* ── Utils ───────────────────────────────────────────────────────── */
@@ -948,7 +1081,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ── Global API ──────────────────────────────────────────────────── */
 window.QE = {
   startQuiz, selectOpt, submitTyping, typeKeydown,
-  clearScramble, submitScramble, addTile,
+  clearScramble, removeLastTile, submitScramble, addTile,
   next, usePerk, filterResult, retryWrong,
   speak, speakPulse
 };
