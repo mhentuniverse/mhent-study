@@ -1,0 +1,1494 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<!-- Anti-FOUC Dark Mode -->
+    <script>
+        (function() {
+            function getCookie(name) {
+                const match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+                return match ? decodeURIComponent(match[3]) : null;
+            }
+            const saved = localStorage.getItem('mhent_dark_mode') || getCookie('mhent_dark_mode');
+            const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (saved === 'on' || (!saved && systemDark)) {
+                document.documentElement.classList.add('dark-mode');
+            } else {
+                document.documentElement.classList.remove('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Tổng Hợp Tiếng Nhật | MHEnt. Study</title>
+    <link rel="icon" type="image/png" sizes="48x48" href="/assets/icon-web.png">
+    <link rel="stylesheet" href="/css/study-core.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* =============================================
+           QUIZ ENGINE CORE - MHEnt. Study
+           ============================================= */
+        :root {
+            --quiz-accent: #ef4444;
+            --quiz-accent-glow: rgba(239, 68, 68, 0.25);
+            --quiz-correct: #10b981;
+            --quiz-wrong: #ef4444;
+            --quiz-warn: #f59e0b;
+        }
+
+        /* --- HUD Bar trên đầu --- */
+        .quiz-hud {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--study-surface);
+            border-bottom: 1px solid var(--study-border);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            backdrop-filter: blur(12px);
+        }
+        .quiz-hud-progress {
+            flex: 1;
+            height: 6px;
+            background: var(--study-border);
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+        .quiz-hud-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--quiz-accent), #a855f7);
+            border-radius: 9999px;
+            transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .quiz-hud-stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--study-text-muted);
+            white-space: nowrap;
+        }
+        .quiz-hud-stat .val {
+            color: var(--study-text);
+            font-size: 14px;
+        }
+
+        /* Combo streak badge */
+        .combo-badge {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(168,85,247,0.15));
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 900;
+            color: var(--quiz-accent);
+            transition: all 0.3s;
+        }
+        .combo-badge.x2 {
+            background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(239,68,68,0.15));
+            border-color: rgba(245,158,11,0.4);
+            color: #f59e0b;
+            animation: comboPulse 0.5s ease;
+        }
+        @keyframes comboPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.18); }
+            100% { transform: scale(1); }
+        }
+
+        /* Timer arc */
+        .timer-wrap {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+        }
+        .timer-svg {
+            transform: rotate(-90deg);
+            width: 44px;
+            height: 44px;
+        }
+        .timer-track { fill: none; stroke: var(--study-border); stroke-width: 4; }
+        .timer-arc {
+            fill: none;
+            stroke: var(--quiz-accent);
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-dasharray: 113;
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 1s linear, stroke 0.3s;
+        }
+        .timer-arc.warn { stroke: var(--quiz-warn); }
+        .timer-arc.danger { stroke: var(--quiz-wrong); }
+        .timer-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 900;
+            color: var(--study-text);
+        }
+
+        /* --- Main Quiz Area --- */
+        .quiz-main {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 24px 20px 120px;
+        }
+
+        /* Question card */
+        .question-card {
+            background: var(--study-surface);
+            border: 1px solid var(--study-border);
+            border-radius: var(--radius-card);
+            padding: 28px;
+            box-shadow: var(--study-shadow);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            animation: slideInCard 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideInCard {
+            from { opacity: 0; transform: translateY(18px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .question-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--quiz-accent), #a855f7);
+        }
+
+        .q-type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: var(--quiz-accent);
+            background: rgba(239,68,68,0.1);
+            padding: 3px 10px;
+            border-radius: 9999px;
+            margin-bottom: 14px;
+        }
+        .q-word-display {
+            font-size: 3rem;
+            font-weight: 900;
+            text-align: center;
+            color: var(--study-text);
+            margin: 16px 0 8px;
+            line-height: 1.2;
+            min-height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        .q-phonetic {
+            font-size: 1rem;
+            color: var(--quiz-accent);
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .q-context {
+            font-size: 14px;
+            color: var(--study-text-muted);
+            text-align: center;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .q-context strong {
+            color: var(--quiz-accent);
+            font-weight: 900;
+        }
+
+        /* Btn nghe */
+        .btn-listen {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            border-radius: 9999px;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.25);
+            color: var(--quiz-accent);
+            font-weight: 800;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-listen:hover { background: rgba(239,68,68,0.18); transform: scale(1.03); }
+        .btn-listen.pulsing { animation: listenPulse 0.6s ease; }
+        @keyframes listenPulse {
+            0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+            50% { box-shadow: 0 0 0 10px rgba(239,68,68,0.2); }
+        }
+
+        /* --- ABCD Options --- */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .option-btn {
+            padding: 14px 16px;
+            border-radius: 14px;
+            border: 2px solid var(--study-border);
+            background: var(--study-surface);
+            color: var(--study-text);
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Nunito', sans-serif;
+            cursor: pointer;
+            transition: all 0.18s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-align: left;
+            line-height: 1.4;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--quiz-accent);
+            background: rgba(239,68,68,0.06);
+            transform: translateY(-2px);
+            box-shadow: var(--study-shadow-hover);
+        }
+        .option-btn .opt-key {
+            width: 26px;
+            height: 26px;
+            border-radius: 7px;
+            background: var(--study-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 900;
+            flex-shrink: 0;
+            color: var(--study-text-muted);
+            transition: 0.18s;
+        }
+        .option-btn:hover:not(:disabled) .opt-key {
+            background: rgba(239,68,68,0.15);
+            color: var(--quiz-accent);
+        }
+        .option-btn.correct {
+            border-color: var(--quiz-correct);
+            background: rgba(16,185,129,0.12);
+            color: var(--quiz-correct);
+            animation: correctPop 0.4s ease;
+        }
+        .option-btn.correct .opt-key {
+            background: rgba(16,185,129,0.2);
+            color: var(--quiz-correct);
+        }
+        .option-btn.wrong {
+            border-color: var(--quiz-wrong);
+            background: rgba(239,68,68,0.1);
+            color: var(--quiz-wrong);
+            animation: wrongShake 0.4s ease;
+        }
+        .option-btn.wrong .opt-key {
+            background: rgba(239,68,68,0.15);
+            color: var(--quiz-wrong);
+        }
+        @keyframes correctPop {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.04); }
+            100% { transform: scale(1); }
+        }
+        @keyframes wrongShake {
+            0%,100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+        @media (max-width: 540px) {
+            .options-grid { grid-template-columns: 1fr; }
+            .q-word-display { font-size: 2.2rem; }
+        }
+
+        /* --- Typing Input --- */
+        .typing-area { margin-top: 8px; }
+        .typing-input {
+            width: 100%;
+            padding: 16px 18px;
+            border-radius: 14px;
+            border: 2px solid var(--study-border);
+            background: var(--study-surface);
+            color: var(--study-text);
+            font-size: 1.25rem;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+        }
+        .typing-input:focus {
+            border-color: var(--quiz-accent);
+            box-shadow: 0 0 0 3px rgba(239,68,68,0.15);
+        }
+        .typing-input.correct {
+            border-color: var(--quiz-correct);
+            background: rgba(16,185,129,0.06);
+            color: var(--quiz-correct);
+        }
+        .typing-input.wrong {
+            border-color: var(--quiz-wrong);
+            background: rgba(239,68,68,0.06);
+            animation: wrongShake 0.35s ease;
+        }
+        .typing-submit-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            border: none;
+            background: linear-gradient(135deg, var(--quiz-accent), #a855f7);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 900;
+            font-family: 'Nunito', sans-serif;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .typing-submit-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .typing-submit-btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+        .typing-hint {
+            font-size: 12px;
+            color: var(--study-text-muted);
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        /* Word Scramble tiles */
+        .scramble-area { margin-top: 8px; }
+        .scramble-answer-box {
+            min-height: 60px;
+            background: var(--study-subtle);
+            border: 2px dashed var(--study-border);
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+        .scramble-answer-box.correct { border-color: var(--quiz-correct); background: rgba(16,185,129,0.07); }
+        .scramble-answer-box.wrong { border-color: var(--quiz-wrong); animation: wrongShake 0.35s ease; }
+        .scramble-tiles {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .tile {
+            padding: 10px 16px;
+            background: var(--study-surface);
+            border: 2px solid var(--study-border);
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.18s;
+            user-select: none;
+        }
+        .tile:hover { border-color: var(--quiz-accent); background: rgba(239,68,68,0.06); transform: translateY(-2px); }
+        .tile.used { opacity: 0.25; pointer-events: none; }
+        .tile.answer-tile {
+            background: rgba(239,68,68,0.08);
+            border-color: rgba(239,68,68,0.4);
+            color: var(--quiz-accent);
+        }
+        .tile.answer-tile:hover { background: rgba(239,68,68,0.1); border-color: var(--quiz-wrong); }
+
+        /* --- Feedback bar --- */
+        .feedback-bar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 200;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .feedback-bar.show { transform: translateY(0); }
+        .feedback-bar.correct-fb { background: linear-gradient(135deg, rgba(16,185,129,0.97), rgba(6,148,104,0.97)); }
+        .feedback-bar.wrong-fb   { background: linear-gradient(135deg, rgba(239,68,68,0.97), rgba(220,38,38,0.97)); }
+        .feedback-icon { font-size: 28px; }
+        .feedback-main { flex: 1; }
+        .feedback-label { font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 0.07em; }
+        .feedback-answer { font-size: 18px; font-weight: 900; color: #fff; }
+        .feedback-next-btn {
+            padding: 12px 28px;
+            border-radius: 9999px;
+            background: rgba(255,255,255,0.25);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: #fff;
+            font-weight: 900;
+            font-size: 14px;
+            font-family: 'Nunito', sans-serif;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .feedback-next-btn:hover { background: rgba(255,255,255,0.4); }
+
+        /* Bonus x2 Toast */
+        .bonus-pop {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            opacity: 0;
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 9999px;
+            font-weight: 900;
+            font-size: 14px;
+            z-index: 300;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+        .bonus-pop.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* --- Perks Bar --- */
+        .perks-bar {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        .perk-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            padding: 8px 16px;
+            border-radius: 12px;
+            border: 1.5px solid var(--study-border);
+            background: var(--study-surface);
+            color: var(--study-text);
+            font-size: 12px;
+            font-weight: 800;
+            font-family: 'Nunito', sans-serif;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .perk-btn:hover:not(:disabled) { border-color: var(--quiz-accent); background: rgba(239,68,68,0.06); }
+        .perk-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .perk-btn .perk-icon { font-size: 18px; }
+        .perk-count {
+            font-size: 10px;
+            background: var(--study-subtle);
+            border-radius: 9999px;
+            padding: 0 6px;
+            color: var(--study-text-muted);
+        }
+
+        /* --- Result Screen --- */
+        .result-screen {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .result-screen.show { display: block; animation: slideInCard 0.5s ease; }
+        .result-score-ring {
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 24px;
+            position: relative;
+        }
+        .result-score-ring svg { transform: rotate(-90deg); }
+        .result-score-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .result-pct { font-size: 32px; font-weight: 900; color: var(--study-text); }
+        .result-label { font-size: 11px; color: var(--study-text-muted); font-weight: 700; }
+        .result-stats {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin: 20px 0 32px;
+            flex-wrap: wrap;
+        }
+        .result-stat-box {
+            background: var(--study-subtle);
+            border-radius: 14px;
+            padding: 14px 20px;
+            min-width: 80px;
+        }
+        .result-stat-val { font-size: 26px; font-weight: 900; color: var(--study-text); }
+        .result-stat-lbl { font-size: 11px; color: var(--study-text-muted); font-weight: 700; margin-top: 2px; }
+        .result-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .btn-result {
+            padding: 13px 28px;
+            border-radius: 9999px;
+            font-weight: 900;
+            font-size: 14px;
+            font-family: 'Nunito', sans-serif;
+            cursor: pointer;
+            transition: 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-result-primary {
+            background: linear-gradient(135deg, var(--quiz-accent), #a855f7);
+            color: #fff;
+            border: none;
+        }
+        .btn-result-secondary {
+            background: var(--study-surface);
+            color: var(--study-text);
+            border: 2px solid var(--study-border);
+        }
+        .btn-result:hover { transform: translateY(-2px); box-shadow: var(--study-shadow-hover); }
+
+        /* Keyboard hint strip */
+        .kbd-hint {
+            font-size: 11.5px;
+            color: var(--study-text-muted);
+            text-align: center;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+        kbd {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 5px;
+            border: 1px solid var(--study-border);
+            background: var(--study-subtle);
+            font-size: 10.5px;
+            font-family: monospace;
+            font-weight: 700;
+            color: var(--study-text-muted);
+        }
+    </style>
+</head>
+<body class="theme-edu">
+
+    <!-- NAV -->
+    <nav class="study-nav">
+        <a href="/" class="nav-brand-box">
+            <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="brand-avatar">
+            <div class="brand-title-wrap">
+                <span class="brand-main-title">MHEnt. <span>Study</span></span>
+                <span class="brand-sub-badge">JAPANESE SPACE</span>
+            </div>
+        </a>
+        <div class="nav-study-links">
+            <a href="/" class="study-link">Tổng quan</a>
+            <a href="/ja/index.html" class="study-link">🇯🇵 Tiếng Nhật</a>
+            <a href="/ja/practice/vocab.html" class="study-link">Sổ từ vựng</a>
+            <a href="/ja/practice/flashcards.html" class="study-link">Flashcard 3D</a>
+            <a href="/ja/practice/quiz.html" class="study-link active">Quiz Tổng Hợp</a>
+        </div>
+        <div class="nav-study-actions">
+            <button class="theme-toggle-btn" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
+            <a href="/ja/practice/index.html" class="auth-btn-pill" style="background: #ec4899;"><i class="fa-solid fa-arrow-left"></i> Luyện tập</a>
+        </div>
+    </nav>
+
+    <!-- BREADCRUMB -->
+    <div class="study-breadcrumb-bar">
+        <div class="breadcrumb-nav">
+            <a href="/">Trang chủ</a> <span>/</span>
+            <a href="/ja/index.html">🇯🇵 Tiếng Nhật</a> <span>/</span>
+            <a href="/ja/practice/index.html">Luyện tập</a> <span>/</span>
+            <span class="current">Quiz Tổng Hợp</span>
+        </div>
+        <span style="font-size: 13px; color: var(--study-text-muted);">⌨️ 1/2/3/4 chọn đáp án • Enter xác nhận • Space tiếp theo • L nghe</span>
+    </div>
+
+    <!-- QUIZ HUD -->
+    <div class="quiz-hud" id="quizHud" style="display:none;">
+        <div class="quiz-hud-stat">
+            <i class="fa-solid fa-circle-question" style="color:var(--quiz-accent)"></i>
+            <span class="val" id="hudQNum">1/20</span>
+        </div>
+        <div class="quiz-hud-progress">
+            <div class="quiz-hud-progress-fill" id="hudProgressFill" style="width:5%"></div>
+        </div>
+        <div class="combo-badge" id="comboBadge">
+            🔥 Combo <span id="comboCount">0</span>
+        </div>
+        <div class="quiz-hud-stat">
+            <i class="fa-solid fa-star" style="color:#f59e0b"></i>
+            <span class="val" id="hudScore">0</span>
+        </div>
+        <div class="timer-wrap" id="timerWrap">
+            <svg class="timer-svg" viewBox="0 0 44 44">
+                <circle class="timer-track" cx="22" cy="22" r="18"/>
+                <circle class="timer-arc" id="timerArc" cx="22" cy="22" r="18"/>
+            </svg>
+            <div class="timer-text" id="timerText">15</div>
+        </div>
+    </div>
+
+    <!-- MAIN -->
+    <main class="quiz-main" id="quizMain">
+
+        <!-- START SCREEN -->
+        <div id="startScreen">
+            <div style="background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(168,85,247,0.1)); border: 1px solid rgba(239,68,68,0.3); border-radius: var(--radius-card); padding: 28px; margin-bottom: 24px; text-align:center;">
+                <span style="font-size: 13px; font-weight: 800; color: #ef4444; text-transform: uppercase;">QUIZ ARENA</span>
+                <h1 style="font-size: 26px; font-weight: 900; margin: 6px 0 10px;">🎯 Quiz Tổng Hợp Tiếng Nhật</h1>
+                <p style="font-size: 14.5px; color: var(--study-text-muted); margin: 0 auto; max-width: 520px;">Tổng hợp <strong>7 dạng câu hỏi</strong> trộn ngẫu nhiên — ABCD, Gõ từ, Nghe hiểu, Điền từ, và Sắp xếp chữ. Combo đúng liên tiếp để nhân đôi điểm!</p>
+            </div>
+
+            <!-- Deck selector -->
+            <div style="background: var(--study-surface); border: 1px solid var(--study-border); border-radius: var(--radius-card); padding: 20px; margin-bottom: 16px; box-shadow: var(--study-shadow);">
+                <label style="font-size:13px; font-weight:800; color:var(--study-text-muted); display:block; margin-bottom:8px;">📚 CHỌN BỘ TỪ VỰNG</label>
+                <select id="deckSelector" style="width:100%; padding:12px 14px; border-radius:12px; border:2px solid var(--study-border); background:var(--study-subtle); color:var(--study-text); font-size:14px; font-weight:700; font-family:'Nunito',sans-serif; outline:none; cursor:pointer;"></select>
+            </div>
+
+            <!-- Settings -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
+                <div style="background: var(--study-surface); border: 1px solid var(--study-border); border-radius: 16px; padding: 16px; box-shadow: var(--study-shadow);">
+                    <label style="font-size:12px; font-weight:800; color:var(--study-text-muted); display:block; margin-bottom:6px;">🎲 SỐ CÂU HỎI</label>
+                    <select id="questionCount" style="width:100%; padding:8px 10px; border-radius:10px; border:1.5px solid var(--study-border); background:var(--study-subtle); color:var(--study-text); font-size:14px; font-weight:700; font-family:'Nunito',sans-serif; outline:none;">
+                        <option value="10">10 câu — Nhanh</option>
+                        <option value="20" selected>20 câu — Tiêu chuẩn</option>
+                        <option value="30">30 câu — Toàn diện</option>
+                        <option value="all">Tất cả từ trong bộ</option>
+                    </select>
+                </div>
+                <div style="background: var(--study-surface); border: 1px solid var(--study-border); border-radius: 16px; padding: 16px; box-shadow: var(--study-shadow);">
+                    <label style="font-size:12px; font-weight:800; color:var(--study-text-muted); display:block; margin-bottom:6px;">⏱️ THỜI GIAN MỖI CÂU</label>
+                    <select id="timerSetting" style="width:100%; padding:8px 10px; border-radius:10px; border:1.5px solid var(--study-border); background:var(--study-subtle); color:var(--study-text); font-size:14px; font-weight:700; font-family:'Nunito',sans-serif; outline:none;">
+                        <option value="0">Không giới hạn</option>
+                        <option value="15" selected>15 giây</option>
+                        <option value="20">20 giây</option>
+                        <option value="30">30 giây</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Mode list -->
+            <div style="background: var(--study-surface); border: 1px solid var(--study-border); border-radius: var(--radius-card); padding: 18px; margin-bottom: 24px; box-shadow: var(--study-shadow);">
+                <p style="font-size:12px; font-weight:800; color:var(--study-text-muted); text-transform:uppercase; margin-bottom:12px;">📋 CÁC DẠNG CÂU HỎI TRONG BÀI</p>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:8px;">
+                    <div style="padding:10px 12px; border-radius:10px; background:var(--study-subtle); font-size:13px; font-weight:700;">🎯 Nghĩa → Chọn từ (ABCD)</div>
+                    <div style="padding:10px 12px; border-radius:10px; background:var(--study-subtle); font-size:13px; font-weight:700;">🎯 Từ → Chọn nghĩa (ABCD)</div>
+                    <div style="padding:10px 12px; border-radius:10px; background:var(--study-subtle); font-size:13px; font-weight:700;">🔊 Nghe → Chọn từ (ABCD)</div>
+                    <div style="padding:10px 12px; border-radius:10px; background:var(--study-subtle); font-size:13px; font-weight:700;">📝 Điền từ vào câu (ABCD)</div>
+                    <div style="padding:10px 12px; border-radius:10px; background:var(--study-subtle); font-size:13px; font-weight:700;">✍️ Nghĩa → Gõ từ</div>
+                    <div style="padding:10px 12px; border-radius:10px; background:var(--study-subtle); font-size:13px; font-weight:700;">🔊 Nghe → Gõ từ</div>
+                    <div style="padding:10px 12px; border-radius:10px; background:var(--study-subtle); font-size:13px; font-weight:700;">🔀 Sắp xếp chữ cái (Scramble)</div>
+                </div>
+            </div>
+
+            <button onclick="startQuiz()" style="width:100%; padding:18px; border-radius:16px; border:none; background:linear-gradient(135deg, #ec4899, #a855f7); color:#fff; font-size:17px; font-weight:900; font-family:'Nunito',sans-serif; cursor:pointer; transition:0.2s; display:flex; align-items:center; justify-content:center; gap:10px;">
+                <i class="fa-solid fa-play"></i> Bắt Đầu Quiz!
+            </button>
+        </div>
+
+        <!-- QUESTION AREA -->
+        <div id="questionArea" style="display:none;">
+            <!-- Perks -->
+            <div class="perks-bar">
+                <button class="perk-btn" id="perkSkip" onclick="usePerk('skip')" title="Bỏ qua câu này (S)">
+                    <span class="perk-icon">⏭️</span>
+                    <span>Bỏ qua</span>
+                    <span class="perk-count" id="perkSkipCount">×3</span>
+                </button>
+                <button class="perk-btn" id="perkHint" onclick="usePerk('hint')" title="Xem gợi ý chữ cái đầu (H)">
+                    <span class="perk-icon">💡</span>
+                    <span>Gợi ý</span>
+                    <span class="perk-count" id="perkHintCount">×3</span>
+                </button>
+                <button class="perk-btn" id="perkListen" onclick="usePerk('listen')" title="Nghe phát âm (L)">
+                    <span class="perk-icon">🔊</span>
+                    <span>Nghe</span>
+                    <span class="perk-count" id="perkListenCount">×5</span>
+                </button>
+            </div>
+
+            <!-- Question card -->
+            <div class="question-card" id="questionCard">
+                <div class="q-type-badge" id="qTypeBadge">🎯 Trắc Nghiệm</div>
+                <div class="q-word-display" id="qWordDisplay">나라</div>
+                <div class="q-phonetic" id="qPhonetic"></div>
+                <div class="q-context" id="qContext"></div>
+
+                <!-- ABCD Options -->
+                <div class="options-grid" id="optionsArea">
+                    <button class="option-btn" id="opt0" onclick="selectOption(0)"><span class="opt-key">1</span><span id="opt0text"></span></button>
+                    <button class="option-btn" id="opt1" onclick="selectOption(1)"><span class="opt-key">2</span><span id="opt1text"></span></button>
+                    <button class="option-btn" id="opt2" onclick="selectOption(2)"><span class="opt-key">3</span><span id="opt2text"></span></button>
+                    <button class="option-btn" id="opt3" onclick="selectOption(3)"><span class="opt-key">4</span><span id="opt3text"></span></button>
+                </div>
+
+                <!-- Typing area -->
+                <div class="typing-area" id="typingArea" style="display:none;">
+                    <input type="text" id="typingInput" class="typing-input"
+                        placeholder="Gõ từ vào đây..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                        onkeydown="onTypingKeydown(event)">
+                    <button class="typing-submit-btn" id="typingSubmitBtn" onclick="submitTyping()">
+                        <i class="fa-solid fa-paper-plane"></i> Xác nhận <kbd style="color:rgba(255,255,255,0.8); background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.3);">Enter</kbd>
+                    </button>
+                    <div class="typing-hint" id="typingHint"></div>
+                </div>
+
+                <!-- Scramble area -->
+                <div class="scramble-area" id="scrambleArea" style="display:none;">
+                    <p style="font-size:13px; color:var(--study-text-muted); margin-bottom:8px; font-weight:700;">Bấm vào các ô chữ để ghép thành từ đúng:</p>
+                    <div class="scramble-answer-box" id="scrambleAnswer"></div>
+                    <div class="scramble-tiles" id="scrambleTiles"></div>
+                    <div style="display:flex; gap:8px;">
+                        <button onclick="clearScramble()" style="flex:1; padding:11px; border-radius:12px; border:1.5px solid var(--study-border); background:var(--study-surface); color:var(--study-text); font-weight:800; font-size:13px; font-family:'Nunito',sans-serif; cursor:pointer;">↩️ Xóa lại</button>
+                        <button onclick="submitScramble()" style="flex:2; padding:11px; border-radius:12px; border:none; background:linear-gradient(135deg,var(--quiz-accent),#a855f7); color:#fff; font-weight:900; font-size:13px; font-family:'Nunito',sans-serif; cursor:pointer;"><i class="fa-solid fa-check"></i> Xác nhận <kbd style="color:rgba(255,255,255,0.8); background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.3); font-size:10px;">Enter</kbd></button>
+                    </div>
+                </div>
+
+                <!-- Keyboard hint -->
+                <div class="kbd-hint" id="kbdHint">
+                    <span><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> chọn đáp án</span>
+                    <span><kbd>Space</kbd> tiếp tục</span>
+                    <span><kbd>L</kbd> phát âm</span>
+                    <span><kbd>H</kbd> gợi ý</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULT SCREEN -->
+        <div class="result-screen" id="resultScreen">
+            <div style="font-size: 52px; margin-bottom: 12px;" id="resultEmoji">🎉</div>
+            <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 6px;" id="resultTitle">Hoàn thành!</h2>
+            <p style="color: var(--study-text-muted); margin-bottom: 24px;" id="resultDesc">Cậu đã luyện tập rất tốt!</p>
+
+            <div class="result-score-ring">
+                <svg viewBox="0 0 140 140" width="140" height="140">
+                    <circle cx="70" cy="70" r="60" fill="none" stroke="var(--study-border)" stroke-width="10"/>
+                    <circle id="resultRingFill" cx="70" cy="70" r="60" fill="none"
+                        stroke="#ec4899" stroke-width="10" stroke-linecap="round"
+                        stroke-dasharray="377" stroke-dashoffset="377"
+                        style="transition: stroke-dashoffset 1s ease, stroke 0.5s;"/>
+                </svg>
+                <div class="result-score-text">
+                    <div class="result-pct" id="resultPct">0%</div>
+                    <div class="result-label">ĐỘ CHÍNH XÁC</div>
+                </div>
+            </div>
+
+            <div class="result-stats">
+                <div class="result-stat-box">
+                    <div class="result-stat-val" id="resCorrect" style="color:var(--quiz-correct)">0</div>
+                    <div class="result-stat-lbl">✅ Đúng</div>
+                </div>
+                <div class="result-stat-box">
+                    <div class="result-stat-val" id="resWrong" style="color:var(--quiz-wrong)">0</div>
+                    <div class="result-stat-lbl">❌ Sai</div>
+                </div>
+                <div class="result-stat-box">
+                    <div class="result-stat-val" id="resScore" style="color:#f59e0b">0</div>
+                    <div class="result-stat-lbl">⭐ Điểm</div>
+                </div>
+                <div class="result-stat-box">
+                    <div class="result-stat-val" id="resMaxCombo">0</div>
+                    <div class="result-stat-lbl">🔥 Combo Max</div>
+                </div>
+            </div>
+
+            <div class="result-actions">
+                <button class="btn-result btn-result-primary" onclick="startQuiz()">
+                    <i class="fa-solid fa-rotate-right"></i> Làm lại
+                </button>
+                <a class="btn-result btn-result-secondary" href="/ja/practice/index.html">
+                    <i class="fa-solid fa-arrow-left"></i> Về luyện tập
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Feedback bar -->
+    <div class="feedback-bar" id="feedbackBar">
+        <div class="feedback-icon" id="feedbackIcon">✅</div>
+        <div class="feedback-main">
+            <div class="feedback-label" id="feedbackLabel">Chính xác!</div>
+            <div class="feedback-answer" id="feedbackAnswer"></div>
+        </div>
+        <button class="feedback-next-btn" onclick="nextQuestion()">
+            Tiếp theo <i class="fa-solid fa-arrow-right"></i> <kbd style="color:rgba(255,255,255,0.8); background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.3);">Space</kbd>
+        </button>
+    </div>
+
+    <!-- Bonus x2 pop -->
+    <div class="bonus-pop" id="bonusPop">⚡ x2 BONUS!</div>
+
+    <!-- FOOTER -->
+    <footer class="study-mega-footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div class="footer-brand-col">
+                    <a onclick="window.location.href='/'" class="footer-brand-title" style="cursor: pointer;">
+                        <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="footer-brand-logo">
+                        <span class="footer-brand-name">MHEnt. Study</span>
+                    </a>
+                    <p class="footer-brand-slogan">Không Gian Học Ngoại Ngữ Đa Vũ Trụ.</p>
+                    <div class="footer-corp-meta">
+                        Một phân khu học thuật trực thuộc <strong>Project MHEnt. Universe</strong>.<br>
+                        Vận hành bởi Miyazaki Haruto Entertainment Co., Ltd.
+                    </div>
+                    <div class="footer-status-pill">
+                        <span class="pulse-dot"></span>
+                        <span>MHEnt Study Node: Hoạt động bình thường</span>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h3 class="footer-col-heading">📚 Không Gian Học Tập</h3>
+                    <ul class="footer-links-list">
+                        <li><a onclick="window.location.href='/ja/index.html'" class="footer-nav-link">🇯🇵 Tiếng Nhật</a></li>
+                        <li><a onclick="window.location.href='/ko/index.html'" class="footer-nav-link">🇯🇵 Tiếng Nhật</a></li>
+                        <li><a onclick="window.location.href='/zh/index.html'" class="footer-nav-link">🇨🇳 Tiếng Trung</a></li>
+                        <li><a onclick="window.location.href='/en/index.html'" class="footer-nav-link">🇬🇧 Tiếng Anh</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h3 class="footer-col-heading">🎬 Đại Sảnh & Giải Trí</h3>
+                    <ul class="footer-links-list">
+                        <li><a onclick="window.open('https://www.mhentuniverse.com', '_blank')" class="footer-nav-link">Đại Sảnh MHEnt Universe</a></li>
+                        <li><a onclick="window.open('https://www.mhentuniverse.com/cinema', '_blank')" class="footer-nav-link">MHEnt Cinema</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h3 class="footer-col-heading">⚖️ Pháp Lý & Hỗ Trợ</h3>
+                    <ul class="footer-links-list">
+                        <li><a onclick="window.open('https://docs.mhentuniverse.com/terms', '_blank')" class="footer-nav-link">Điều khoản dịch vụ</a></li>
+                        <li><a onclick="window.open('https://docs.mhentuniverse.com/privacy', '_blank')" class="footer-nav-link">Chính sách bảo mật</a></li>
+                        <li><a onclick="window.open('https://www.mhentuniverse.com/about', '_blank')" class="footer-nav-link">Về chúng tớ</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-divider"></div>
+            <div class="footer-bottom-row">
+                <div>© 2026 <strong>Miyazaki Haruto Entertainment Co., Ltd.</strong> All rights reserved.</div>
+                <div class="footer-social-strip">
+                    <a onclick="window.open('https://www.facebook.com/mharuto.entertainment/', '_blank')"><i class="fa-brands fa-facebook"></i> Fanpage</a>
+                    <span>•</span>
+                    <span style="opacity: 0.65;">Study v2.0</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/ui-kit.js"></script>
+    <script src="/js/speech.js"></script>
+    <script src="/js/storage.js"></script>
+    <script src="/data/sample-ja.js"></script>
+    <script>
+    /* =====================================================
+       MHENT QUIZ ENGINE v1.0
+       Lang: ko | Accent: #ec4899
+       ===================================================== */
+
+    const LANG = 'ja';
+
+    // ─── State ────────────────────────────────────────────
+    let allWords = [];
+    let questions = [];
+    let currentIdx = 0;
+    let score = 0;
+    let combo = 0;
+    let maxCombo = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
+    let answered = false;
+    let timerRemaining = 15;
+    let timerMaxSec = 15;
+    let timerInterval = null;
+    let timerEnabled = true;
+
+    // Perks
+    let perks = { skip: 3, hint: 3, listen: 5 };
+
+    // Scramble state
+    let scrambleAnswer = [];
+    let scrambleTileMap = [];
+
+    /* ─── Init ──────────────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', () => {
+        loadDecks();
+        setupKeyboard();
+    });
+
+    function loadDecks() {
+        const decks = window.studyStorage.getDecks(LANG);
+        const sel = document.getElementById('deckSelector');
+        sel.innerHTML = '';
+        decks.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.id;
+            opt.textContent = `${d.title} (${d.words.length} từ)`;
+            sel.appendChild(opt);
+        });
+    }
+
+    /* ─── Start ─────────────────────────────────────────── */
+    function startQuiz() {
+        const deckId = document.getElementById('deckSelector').value;
+        const deck = window.studyStorage.getDeckById(LANG, deckId) ||
+                     window.studyStorage.getDecks(LANG)[0];
+        if (!deck || !deck.words.length) {
+            window.studyUI.showToast('Bộ từ vựng trống! Vui lòng thêm từ trước.', 'error');
+            return;
+        }
+
+        allWords = deck.words.filter(w => w.word && w.meaning);
+        if (allWords.length < 4) {
+            window.studyUI.showToast('Cần ít nhất 4 từ để tạo quiz!', 'error');
+            return;
+        }
+
+        const countSel = document.getElementById('questionCount').value;
+        let totalQ = countSel === 'all' ? allWords.length : Math.min(parseInt(countSel), allWords.length);
+        timerMaxSec = parseInt(document.getElementById('timerSetting').value);
+        timerEnabled = timerMaxSec > 0;
+
+        questions = buildQuestions(allWords, totalQ);
+        currentIdx = 0;
+        score = 0; combo = 0; maxCombo = 0;
+        correctCount = 0; wrongCount = 0;
+        perks = { skip: 3, hint: 3, listen: 5 };
+        updatePerksUI();
+
+        document.getElementById('startScreen').style.display = 'none';
+        document.getElementById('resultScreen').classList.remove('show');
+        document.getElementById('questionArea').style.display = 'block';
+        document.getElementById('quizHud').style.display = 'flex';
+        document.getElementById('feedbackBar').classList.remove('show');
+        updateHUD();
+        loadQuestion();
+    }
+
+    /* ─── Question Builder ───────────────────────────────── */
+    function buildQuestions(words, total) {
+        const shuffled = shuffle([...words]).slice(0, total);
+        return shuffled.map(word => {
+            const r = Math.random();
+            let type;
+            if      (r < 0.14) type = 'type_meaning';
+            else if (r < 0.28) type = 'type_listening';
+            else if (r < 0.40) type = 'scramble';
+            else if (r < 0.54) type = 'mcq_fill';
+            else if (r < 0.67) type = 'mcq_listening';
+            else if (r < 0.80) type = 'mcq_meaning_word';
+            else               type = 'mcq_word_meaning';
+
+            // Fallbacks
+            if (type === 'scramble' && word.word.length < 2) type = 'mcq_meaning_word';
+            if (type === 'mcq_fill' && !word.example) type = 'mcq_word_meaning';
+
+            const distractors = shuffle(words.filter(w => w.id !== word.id)).slice(0, 3);
+            return { word, type, distractors };
+        });
+    }
+
+    /* ─── Load Question ─────────────────────────────────── */
+    function loadQuestion() {
+        if (currentIdx >= questions.length) { showResult(); return; }
+        answered = false;
+        hideFeedback();
+        const q = questions[currentIdx];
+        renderQuestion(q);
+        updateHUD();
+        startTimer();
+        if (q.type === 'mcq_listening' || q.type === 'type_listening') {
+            setTimeout(() => speak(q.word.word), 400);
+        }
+    }
+
+    /* ─── Render Question ───────────────────────────────── */
+    function renderQuestion(q) {
+        const { word, type, distractors } = q;
+
+        // Reset panels
+        document.getElementById('optionsArea').style.display = 'grid';
+        document.getElementById('typingArea').style.display = 'none';
+        document.getElementById('scrambleArea').style.display = 'none';
+        document.getElementById('qPhonetic').textContent = '';
+        document.getElementById('qContext').textContent = '';
+
+        // Re-animate card
+        const card = document.getElementById('questionCard');
+        card.style.animation = 'none';
+        void card.offsetHeight;
+        card.style.animation = '';
+
+        const badge = document.getElementById('qTypeBadge');
+        const display = document.getElementById('qWordDisplay');
+
+        switch (type) {
+            case 'mcq_meaning_word': {
+                badge.innerHTML = '🎯 Nghĩa → Từ (ABCD)';
+                display.style.fontSize = '1.7rem';
+                display.textContent = word.meaning;
+                renderOptions(shuffle([word.word, ...distractors.map(d => d.word)]), word.word);
+                document.getElementById('kbdHint').style.display = 'flex';
+                break;
+            }
+            case 'mcq_word_meaning': {
+                badge.innerHTML = '🎯 Từ → Nghĩa (ABCD)';
+                display.style.fontSize = '2.8rem';
+                display.innerHTML = `${esc(word.word)} <button class="btn-listen" onclick="speakAndPulse(this,'${escAttr(word.word)}')" title="Nghe phát âm">🔊</button>`;
+                document.getElementById('qPhonetic').textContent = word.phonetic || '';
+                renderOptions(shuffle([word.meaning, ...distractors.map(d => d.meaning)]), word.meaning);
+                document.getElementById('kbdHint').style.display = 'flex';
+                break;
+            }
+            case 'mcq_listening': {
+                badge.innerHTML = '🔊 Nghe → Chọn Từ (ABCD)';
+                display.style.fontSize = '1rem';
+                display.innerHTML = `<button class="btn-listen" id="listenBigBtn" onclick="speakAndPulse(this,'${escAttr(word.word)}')" style="font-size:1rem; padding:14px 28px;">🔊 Nhấn để nghe lại</button>`;
+                renderOptions(shuffle([word.word, ...distractors.map(d => d.word)]), word.word);
+                document.getElementById('kbdHint').style.display = 'flex';
+                break;
+            }
+            case 'mcq_fill': {
+                badge.innerHTML = '📝 Điền Từ Vào Câu (ABCD)';
+                const blank = (word.example || '').replace(word.word, '___________');
+                display.style.fontSize = '1rem';
+                display.textContent = '';
+                document.getElementById('qContext').innerHTML = `<strong>${esc(blank)}</strong><br><span style="font-size:12px; opacity:0.7;">${esc(word.exampleTrans || '')}</span>`;
+                renderOptions(shuffle([word.word, ...distractors.map(d => d.word)]), word.word);
+                document.getElementById('kbdHint').style.display = 'flex';
+                break;
+            }
+            case 'type_meaning': {
+                badge.innerHTML = '✍️ Nghĩa → Gõ Từ';
+                display.style.fontSize = '1.8rem';
+                display.textContent = word.meaning;
+                document.getElementById('optionsArea').style.display = 'none';
+                showTypingArea();
+                document.getElementById('kbdHint').style.display = 'none';
+                break;
+            }
+            case 'type_listening': {
+                badge.innerHTML = '🔊 Nghe → Gõ Từ';
+                display.style.fontSize = '1rem';
+                display.innerHTML = `<button class="btn-listen" onclick="speakAndPulse(this,'${escAttr(word.word)}')" style="font-size:1rem; padding:14px 28px;">🔊 Nhấn để nghe lại</button>`;
+                document.getElementById('optionsArea').style.display = 'none';
+                showTypingArea();
+                document.getElementById('kbdHint').style.display = 'none';
+                break;
+            }
+            case 'scramble': {
+                badge.innerHTML = '🔀 Sắp Xếp Chữ Cái';
+                display.style.fontSize = '1.7rem';
+                display.textContent = word.meaning;
+                document.getElementById('optionsArea').style.display = 'none';
+                document.getElementById('scrambleArea').style.display = 'block';
+                document.getElementById('kbdHint').style.display = 'none';
+                buildScramble(word.word);
+                break;
+            }
+        }
+    }
+
+    function showTypingArea() {
+        const area = document.getElementById('typingArea');
+        const input = document.getElementById('typingInput');
+        area.style.display = 'block';
+        input.value = '';
+        input.className = 'typing-input';
+        input.disabled = false;
+        document.getElementById('typingHint').textContent = '';
+        setTimeout(() => input.focus(), 100);
+    }
+
+    /* ─── Options (ABCD) ────────────────────────────────── */
+    function renderOptions(options, correctAnswer) {
+        for (let i = 0; i < 4; i++) {
+            const btn = document.getElementById(`opt${i}`);
+            btn.className = 'option-btn';
+            btn.disabled = false;
+            btn.dataset.answer = options[i] || '';
+            btn.dataset.correct = options[i] === correctAnswer ? '1' : '0';
+            document.getElementById(`opt${i}text`).textContent = options[i] || '';
+        }
+    }
+
+    function selectOption(idx) {
+        if (answered) return;
+        answered = true;
+        stopTimer();
+
+        const btn = document.getElementById(`opt${idx}`);
+        const isCorrect = btn.dataset.correct === '1';
+
+        for (let i = 0; i < 4; i++) {
+            const b = document.getElementById(`opt${i}`);
+            b.disabled = true;
+            if (b.dataset.correct === '1') b.classList.add('correct');
+            else if (i === idx && !isCorrect) b.classList.add('wrong');
+        }
+        handleResult(isCorrect, questions[currentIdx].word);
+    }
+
+    /* ─── Typing ─────────────────────────────────────────── */
+    function onTypingKeydown(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (!answered) submitTyping();
+            else nextQuestion();
+        }
+    }
+
+    function submitTyping() {
+        if (answered) return;
+        const input = document.getElementById('typingInput');
+        const userVal = input.value.trim();
+        if (!userVal) return;
+
+        answered = true;
+        stopTimer();
+
+        const word = questions[currentIdx].word;
+        const isCorrect = normalize(userVal) === normalize(word.word);
+        input.disabled = true;
+        input.className = 'typing-input ' + (isCorrect ? 'correct' : 'wrong');
+        handleResult(isCorrect, word, isCorrect ? '' : `Đáp án đúng: ${word.word}`);
+    }
+
+    /* ─── Scramble ──────────────────────────────────────── */
+    function buildScramble(wordStr) {
+        const chars = wordStr.split('');
+        scrambleTileMap = shuffle(chars).map((ch, i) => ({ char: ch, idx: i, used: false }));
+        scrambleAnswer = [];
+
+        const tilesEl = document.getElementById('scrambleTiles');
+        const answerEl = document.getElementById('scrambleAnswer');
+        tilesEl.innerHTML = '';
+        answerEl.innerHTML = '';
+        answerEl.className = 'scramble-answer-box';
+
+        scrambleTileMap.forEach((tile, i) => {
+            const el = document.createElement('div');
+            el.className = 'tile';
+            el.textContent = tile.char;
+            el.dataset.tileIdx = i;
+            el.addEventListener('click', () => addTileToAnswer(i, el));
+            tilesEl.appendChild(el);
+        });
+    }
+
+    function addTileToAnswer(tileIdx, el) {
+        if (answered || scrambleTileMap[tileIdx].used) return;
+        scrambleTileMap[tileIdx].used = true;
+        el.classList.add('used');
+        scrambleAnswer.push({ char: scrambleTileMap[tileIdx].char, tileIdx });
+
+        const answerEl = document.getElementById('scrambleAnswer');
+        const tile = document.createElement('div');
+        tile.className = 'tile answer-tile';
+        tile.textContent = scrambleTileMap[tileIdx].char;
+        const pos = scrambleAnswer.length - 1;
+        tile.addEventListener('click', () => {
+            if (answered) return;
+            scrambleTileMap[tileIdx].used = false;
+            document.querySelector(`[data-tile-idx="${tileIdx}"]`).classList.remove('used');
+            scrambleAnswer.splice(scrambleAnswer.findIndex(a => a.tileIdx === tileIdx), 1);
+            tile.remove();
+        });
+        answerEl.appendChild(tile);
+    }
+
+    function clearScramble() {
+        if (answered) return;
+        scrambleAnswer = [];
+        scrambleTileMap.forEach(t => t.used = false);
+        document.querySelectorAll('#scrambleTiles .tile').forEach(t => t.classList.remove('used'));
+        document.getElementById('scrambleAnswer').innerHTML = '';
+    }
+
+    function submitScramble() {
+        if (answered) return;
+        if (scrambleAnswer.length === 0) { window.studyUI.showToast('Hãy chọn ít nhất một ô chữ!', 'error'); return; }
+        answered = true;
+        stopTimer();
+        const userWord = scrambleAnswer.map(t => t.char).join('');
+        const word = questions[currentIdx].word;
+        const isCorrect = normalize(userWord) === normalize(word.word);
+        const answerBox = document.getElementById('scrambleAnswer');
+        answerBox.className = 'scramble-answer-box ' + (isCorrect ? 'correct' : 'wrong');
+        handleResult(isCorrect, word, isCorrect ? '' : `Đáp án đúng: ${word.word}`);
+    }
+
+    /* ─── Result Handler ─────────────────────────────────── */
+    function handleResult(isCorrect, word, extraMsg = '') {
+        if (isCorrect) {
+            correctCount++;
+            combo++;
+            if (combo > maxCombo) maxCombo = combo;
+            // Time bonus: nếu còn > 50% thời gian → x2
+            let pts = 10;
+            if (timerEnabled && timerRemaining > timerMaxSec * 0.5) {
+                pts = 20;
+                showBonusPop();
+            }
+            score += pts;
+            window.studyUI?.playDing();
+            showFeedback(true, word, extraMsg || `${word.word} — ${word.meaning}`);
+        } else {
+            wrongCount++;
+            combo = 0;
+            window.studyUI?.playWrong();
+            showFeedback(false, word, extraMsg || `Đáp án đúng: ${word.word}`);
+        }
+        updateCombo();
+        updateHUD();
+    }
+
+    /* ─── Feedback bar ───────────────────────────────────── */
+    function showFeedback(isCorrect, word, msg) {
+        const bar = document.getElementById('feedbackBar');
+        bar.className = 'feedback-bar show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
+        document.getElementById('feedbackIcon').textContent = isCorrect ? '✅' : '❌';
+        document.getElementById('feedbackLabel').textContent = isCorrect ? '🎉 Chính xác!' : '😢 Chưa đúng rồi';
+        document.getElementById('feedbackAnswer').textContent = msg;
+    }
+
+    function hideFeedback() {
+        document.getElementById('feedbackBar').className = 'feedback-bar';
+    }
+
+    function nextQuestion() {
+        if (!answered) return;
+        currentIdx++;
+        loadQuestion();
+    }
+
+    /* ─── Timer ─────────────────────────────────────────── */
+    function startTimer() {
+        stopTimer();
+        if (!timerEnabled) {
+            document.getElementById('timerWrap').style.display = 'none';
+            return;
+        }
+        document.getElementById('timerWrap').style.display = 'block';
+        timerRemaining = timerMaxSec;
+        const arc = document.getElementById('timerArc');
+        const circumference = 113;
+
+        const tick = () => {
+            document.getElementById('timerText').textContent = timerRemaining;
+            const offset = circumference - (timerRemaining / timerMaxSec) * circumference;
+            arc.style.strokeDashoffset = offset;
+            arc.className = 'timer-arc' + (timerRemaining <= 5 ? ' danger' : timerRemaining <= timerMaxSec * 0.4 ? ' warn' : '');
+
+            if (timerRemaining <= 0) {
+                stopTimer();
+                if (!answered) {
+                    answered = true;
+                    wrongCount++;
+                    combo = 0;
+                    updateCombo();
+                    window.studyUI?.playWrong();
+                    const word = questions[currentIdx].word;
+                    // Reveal correct ABCD
+                    for (let i = 0; i < 4; i++) {
+                        const b = document.getElementById(`opt${i}`);
+                        if (b) { b.disabled = true; if (b.dataset.correct === '1') b.classList.add('correct'); }
+                    }
+                    const ti = document.getElementById('typingInput');
+                    if (ti) ti.disabled = true;
+                    showFeedback(false, word, `⏰ Hết giờ! Đáp án: ${word.word}`);
+                    updateHUD();
+                }
+                return;
+            }
+            timerRemaining--;
+        };
+        tick();
+        timerInterval = setInterval(tick, 1000);
+    }
+
+    function stopTimer() {
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    }
+
+    /* ─── HUD ───────────────────────────────────────────── */
+    function updateHUD() {
+        const total = questions.length;
+        document.getElementById('hudQNum').textContent = `${currentIdx + 1}/${total}`;
+        document.getElementById('hudProgressFill').style.width = `${(currentIdx / total) * 100}%`;
+        document.getElementById('hudScore').textContent = score;
+    }
+
+    function updateCombo() {
+        document.getElementById('comboCount').textContent = combo;
+        document.getElementById('comboBadge').className = 'combo-badge' + (combo >= 3 ? ' x2' : '');
+    }
+
+    function showBonusPop() {
+        const pop = document.getElementById('bonusPop');
+        pop.classList.add('show');
+        setTimeout(() => pop.classList.remove('show'), 1500);
+    }
+
+    /* ─── Perks ─────────────────────────────────────────── */
+    function updatePerksUI() {
+        document.getElementById('perkSkipCount').textContent = `×${perks.skip}`;
+        document.getElementById('perkHintCount').textContent = `×${perks.hint}`;
+        document.getElementById('perkListenCount').textContent = `×${perks.listen}`;
+        document.getElementById('perkSkip').disabled = perks.skip <= 0 || answered;
+        document.getElementById('perkHint').disabled = perks.hint <= 0 || answered;
+        document.getElementById('perkListen').disabled = perks.listen <= 0;
+    }
+
+    function usePerk(type) {
+        const q = questions[currentIdx];
+        if (!q) return;
+        if (type === 'skip' && perks.skip > 0 && !answered) {
+            perks.skip--;
+            answered = true;
+            stopTimer();
+            combo = 0; updateCombo();
+            wrongCount++;
+            showFeedback(false, q.word, `Đã bỏ qua — Đáp án: ${q.word.word}`);
+            updateHUD();
+        } else if (type === 'hint' && perks.hint > 0 && !answered) {
+            perks.hint--;
+            const hint = q.word.word.slice(0, Math.ceil(q.word.word.length / 2)) + '...';
+            document.getElementById('typingHint').textContent = `💡 Gợi ý: "${hint}"`;
+            window.studyUI?.showToast(`💡 Gợi ý: ${hint}`, 'info', 2500);
+        } else if (type === 'listen' && perks.listen > 0) {
+            perks.listen--;
+            speak(q.word.word);
+        }
+        updatePerksUI();
+    }
+
+    /* ─── Result ─────────────────────────────────────────── */
+    function showResult() {
+        stopTimer();
+        document.getElementById('questionArea').style.display = 'none';
+        document.getElementById('quizHud').style.display = 'none';
+        hideFeedback();
+
+        const total = correctCount + wrongCount;
+        const pct = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+        document.getElementById('resultPct').textContent = `${pct}%`;
+        document.getElementById('resCorrect').textContent = correctCount;
+        document.getElementById('resWrong').textContent = wrongCount;
+        document.getElementById('resScore').textContent = score;
+        document.getElementById('resMaxCombo').textContent = maxCombo;
+
+        const ring = document.getElementById('resultRingFill');
+        setTimeout(() => {
+            ring.style.strokeDashoffset = 377 - (pct / 100) * 377;
+            ring.style.stroke = pct >= 80 ? '#10b981' : pct >= 50 ? '#f59e0b' : '#ef4444';
+        }, 100);
+
+        let emoji, title, desc;
+        if (pct >= 90) { emoji='🏆'; title='Xuất sắc!'; desc='Cậu thực sự làm chủ những từ này!'; }
+        else if (pct >= 70) { emoji='🌟'; title='Tốt lắm!'; desc='Tiếp tục ôn luyện để đạt hoàn hảo!'; }
+        else if (pct >= 50) { emoji='💪'; title='Cố lên!'; desc='Luyện thêm một chút nữa nhé!'; }
+        else { emoji='📚'; title='Cần ôn thêm'; desc='Đừng nản lòng, luyện đều đặn sẽ tốt hơn!'; }
+
+        document.getElementById('resultEmoji').textContent = emoji;
+        document.getElementById('resultTitle').textContent = title;
+        document.getElementById('resultDesc').textContent = desc;
+        document.getElementById('resultScreen').classList.add('show');
+        window.studyUI?.showToast(`🎯 Kết quả: ${pct}% — ${score} điểm!`, 'success', 4000);
+    }
+
+    /* ─── Keyboard Shortcuts ────────────────────────────── */
+    function setupKeyboard() {
+        document.addEventListener('keydown', (e) => {
+            const tag = document.activeElement.tagName;
+            const inInput = (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT');
+
+            if (e.code === 'Space' && !inInput) {
+                e.preventDefault();
+                if (answered) nextQuestion();
+            } else if (['Digit1','Digit2','Digit3','Digit4'].includes(e.code) && !inInput) {
+                if (!answered && document.getElementById('optionsArea').style.display !== 'none') {
+                    selectOption(parseInt(e.code.replace('Digit','')) - 1);
+                }
+            } else if (e.code === 'Enter' && !inInput) {
+                if (!answered) {
+                    if (document.getElementById('scrambleArea').style.display !== 'none') submitScramble();
+                } else {
+                    nextQuestion();
+                }
+            } else if (e.code === 'KeyL' && !inInput) {
+                usePerk('listen');
+            } else if (e.code === 'KeyH' && !inInput) {
+                if (!answered) usePerk('hint');
+            } else if (e.code === 'KeyS' && !inInput) {
+                if (!answered) usePerk('skip');
+            }
+        });
+    }
+
+    /* ─── Utilities ─────────────────────────────────────── */
+    function speak(text) { window.studySpeech?.speak(text, LANG); }
+    function speakAndPulse(btn, text) {
+        speak(text);
+        btn.classList.add('pulsing');
+        setTimeout(() => btn.classList.remove('pulsing'), 600);
+    }
+    function shuffle(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+    function normalize(str) { return str.trim().toLowerCase().replace(/\s+/g, ''); }
+    function esc(str) { return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function escAttr(str) { return (str||'').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+    /* ─── Dark Mode ─────────────────────────────────────── */
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        document.documentElement.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('mhent_dark_mode', isDark ? 'on' : 'off');
+        document.cookie = `mhent_dark_mode=${isDark ? 'on' : 'off'}; domain=.mhentuniverse.com; path=/; max-age=31536000; SameSite=Lax`;
+    }
+    if (document.documentElement.classList.contains('dark-mode') || localStorage.getItem('mhent_dark_mode') === 'on') document.body.classList.add('dark-mode');
+    </script>
+    <script src="/js/aisa-widget.js" defer></script>
+</body>
+</html>
+
