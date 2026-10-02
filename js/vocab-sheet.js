@@ -823,8 +823,22 @@ class VocabSheetApp {
         const inputMeaning = document.getElementById('newMeaning');
         const inputPhonetic = document.getElementById('newPhonetic');
 
+        let isComposing = false;
+
         if (inputWord) {
+            inputWord.addEventListener('compositionstart', () => { isComposing = true; });
+            inputWord.addEventListener('compositionend', (e) => {
+                isComposing = false;
+                const val = e.target.value.trim();
+                if (val.length >= 1) {
+                    clearTimeout(this.autoFillDebounceTimer);
+                    this.autoFillDebounceTimer = setTimeout(() => {
+                        this.autoFillWordDetails('word', val);
+                    }, 650);
+                }
+            });
             inputWord.addEventListener('input', (e) => {
+                if (isComposing) return;
                 const val = e.target.value.trim();
                 clearTimeout(this.autoFillDebounceTimer);
                 if (val.length >= 1) {
@@ -845,7 +859,20 @@ class VocabSheetApp {
         }
 
         if (inputMeaning) {
+            inputMeaning.addEventListener('compositionstart', () => { isComposing = true; });
+            inputMeaning.addEventListener('compositionend', (e) => {
+                isComposing = false;
+                const val = e.target.value.trim();
+                const currentWord = document.getElementById('newWord')?.value.trim();
+                if (val.length >= 2 && !currentWord) {
+                    clearTimeout(this.autoFillDebounceTimer);
+                    this.autoFillDebounceTimer = setTimeout(() => {
+                        this.autoFillWordDetails('meaning', val);
+                    }, 750);
+                }
+            });
             inputMeaning.addEventListener('input', (e) => {
+                if (isComposing) return;
                 const val = e.target.value.trim();
                 const currentWord = document.getElementById('newWord')?.value.trim();
                 clearTimeout(this.autoFillDebounceTimer);
@@ -866,7 +893,20 @@ class VocabSheetApp {
         }
 
         if (inputPhonetic) {
+            inputPhonetic.addEventListener('compositionstart', () => { isComposing = true; });
+            inputPhonetic.addEventListener('compositionend', (e) => {
+                isComposing = false;
+                const val = e.target.value.trim();
+                const currentWord = document.getElementById('newWord')?.value.trim();
+                if (val.length >= 2 && !currentWord) {
+                    clearTimeout(this.autoFillDebounceTimer);
+                    this.autoFillDebounceTimer = setTimeout(() => {
+                        this.autoFillWordDetails('phonetic', val);
+                    }, 800);
+                }
+            });
             inputPhonetic.addEventListener('input', (e) => {
+                if (isComposing) return;
                 const val = e.target.value.trim();
                 const currentWord = document.getElementById('newWord')?.value.trim();
                 clearTimeout(this.autoFillDebounceTimer);
@@ -946,10 +986,12 @@ class VocabSheetApp {
             const resultData = await this.lookupWordDetails(query, field, this.lang);
 
             if (resultData) {
-                // Điền từ gốc nếu trống hoặc force
-                if (inputWord && (field !== 'word' || force) && (!inputWord.value.trim() || force) && resultData.word) {
-                    inputWord.value = resultData.word;
-                    this.highlightField(inputWord);
+                // Điền từ gốc nếu trống hoặc khi tra cứu từ nghĩa sang từ
+                if (inputWord && resultData.word) {
+                    if (!inputWord.value.trim() || (field !== 'word' && force)) {
+                        inputWord.value = resultData.word;
+                        this.highlightField(inputWord);
+                    }
                 }
 
                 // Điền phiên âm / Romaji
@@ -985,7 +1027,13 @@ class VocabSheetApp {
 
                 if (statusEl) {
                     statusEl.className = 'ai-assist-status is-success';
-                    statusEl.textContent = '✨ Đã tự động điền xong mọi ô! Cậu kiểm tra lại rồi bấm Lưu từ nhé. 🌸';
+                    if (resultData.meaning && resultData.example) {
+                        statusEl.textContent = '✨ Đã tự động điền xong mọi ô! Cậu kiểm tra lại rồi bấm Lưu từ nhé. 🌸';
+                    } else if (resultData.phonetic) {
+                        statusEl.textContent = '✨ Đã gợi ý phiên âm! Cậu bổ sung thêm nghĩa tiếng Việt nhé. 🌸';
+                    } else {
+                        statusEl.textContent = '✨ Đã hoàn tất gợi ý thông tin từ vựng! 🌸';
+                    }
                 }
 
                 this.triggerMascotSpeak('autofill');
@@ -1040,16 +1088,20 @@ class VocabSheetApp {
         try {
             const endpoint = window.aisaEndpoint || 'https://api.mhentuniverse.com';
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 6500);
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+            const currentWord = document.getElementById('newWord')?.value?.trim() || '';
+            const currentMeaning = document.getElementById('newMeaning')?.value?.trim() || '';
+            const currentPhonetic = document.getElementById('newPhonetic')?.value?.trim() || '';
 
             const res = await fetch(`${endpoint}/api/generate-example`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 signal: controller.signal,
                 body: JSON.stringify({
-                    word: field === 'word' ? query : '',
-                    meaning: field === 'meaning' ? query : '',
-                    phonetic: field === 'phonetic' ? query : '',
+                    word: field === 'word' ? query : currentWord,
+                    meaning: field === 'meaning' ? query : currentMeaning,
+                    phonetic: field === 'phonetic' ? query : currentPhonetic,
                     field,
                     lang,
                     model: window.aisaModel || 'aisa-scholar-v1'
@@ -1192,63 +1244,8 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
     }
 
     smartLocalWordDetails(query, field, lang) {
-        let word = query;
-        let pos = 'noun';
-        let posLabel = 'Danh từ';
-        let phonetic = `[${query}]`;
-        let meaning = field === 'meaning' ? query : `Nghĩa của ${query}`;
-        let example = '';
-        let exampleTrans = '';
-
-        if (lang === 'ja') {
-            if (field === 'meaning') {
-                word = query;
-                example = `私は${query}が好きです。`;
-                exampleTrans = `Tôi rất thích ${query}.`;
-            } else if (/[うくぐすつぬぶむる]$/.test(query)) {
-                pos = 'verb';
-                posLabel = 'Động từ';
-                example = `毎日${query}ことがあります。`;
-                exampleTrans = `Tôi có thói quen ${query} mỗi ngày.`;
-            } else if (/い$/.test(query)) {
-                pos = 'adj';
-                posLabel = 'Tính từ';
-                example = `これはとても${query}ですね。`;
-                exampleTrans = `Cái này thực sự rất ${query}.`;
-            } else {
-                example = `これはとても大切な${query}です。`;
-                exampleTrans = `Đây là ${query} rất quan trọng.`;
-            }
-            phonetic = `[${word}]`;
-        } else if (lang === 'ko') {
-            if (/하다$|다$/.test(query)) {
-                pos = 'verb';
-                posLabel = 'Động từ';
-                example = `저는 매일 친구와 ${query}.`;
-                exampleTrans = `Tôi ${query} cùng bạn bè mỗi ngày.`;
-            } else {
-                example = `이것은 우리가 좋아하는 ${query}입니다.`;
-                exampleTrans = `Đây là ${query} mà chúng tôi yêu thích.`;
-            }
-            phonetic = `[${word}]`;
-        } else if (lang === 'zh') {
-            example = `我们应该认真学习${query}。`;
-            exampleTrans = `Chúng ta nên nghiêm túc học tập ${query}.`;
-            phonetic = `[${word}]`;
-        } else {
-            if (/ly$/.test(query)) {
-                pos = 'adj';
-                posLabel = 'Tính từ';
-                example = `He spoke ${query} to everyone.`;
-                exampleTrans = `Anh ấy đã nói chuyện một cách ${query} với mọi người.`;
-            } else {
-                example = `It is important to understand "${query}" in daily practice.`;
-                exampleTrans = `Việc thấu hiểu "${query}" trong luyện tập hàng ngày là rất quan trọng.`;
-            }
-            phonetic = `[/${query.toLowerCase()}/]`;
-        }
-
-        return { word, phonetic, pos, posLabel, meaning, example, exampleTrans };
+        // Nếu offline và không tìm thấy trong từ điển có sẵn, không sinh nghĩa hay ví dụ giả mạo
+        return null;
     }
 
     openAddWordModal() {
