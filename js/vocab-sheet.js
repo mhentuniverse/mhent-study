@@ -833,7 +833,7 @@ class VocabSheetApp {
                 if (val.length >= 1) {
                     clearTimeout(this.autoFillDebounceTimer);
                     this.autoFillDebounceTimer = setTimeout(() => {
-                        this.autoFillWordDetails('word', val);
+                        this.autoFillWordDetails('word', val, true);
                     }, 650);
                 }
             });
@@ -843,17 +843,15 @@ class VocabSheetApp {
                 clearTimeout(this.autoFillDebounceTimer);
                 if (val.length >= 1) {
                     this.autoFillDebounceTimer = setTimeout(() => {
-                        this.autoFillWordDetails('word', val);
+                        this.autoFillWordDetails('word', val, true);
                     }, 650);
                 }
             });
             inputWord.addEventListener('blur', (e) => {
                 const val = e.target.value.trim();
-                const meaningVal = document.getElementById('newMeaning')?.value.trim();
-                const exampleVal = document.getElementById('newExample')?.value.trim();
-                if (val.length >= 1 && (!meaningVal || !exampleVal)) {
+                if (val.length >= 1) {
                     clearTimeout(this.autoFillDebounceTimer);
-                    this.autoFillWordDetails('word', val);
+                    this.autoFillWordDetails('word', val, true);
                 }
             });
         }
@@ -863,31 +861,28 @@ class VocabSheetApp {
             inputMeaning.addEventListener('compositionend', (e) => {
                 isComposing = false;
                 const val = e.target.value.trim();
-                const currentWord = document.getElementById('newWord')?.value.trim();
-                if (val.length >= 2 && !currentWord) {
+                if (val.length >= 2) {
                     clearTimeout(this.autoFillDebounceTimer);
                     this.autoFillDebounceTimer = setTimeout(() => {
-                        this.autoFillWordDetails('meaning', val);
+                        this.autoFillWordDetails('meaning', val, true);
                     }, 750);
                 }
             });
             inputMeaning.addEventListener('input', (e) => {
                 if (isComposing) return;
                 const val = e.target.value.trim();
-                const currentWord = document.getElementById('newWord')?.value.trim();
                 clearTimeout(this.autoFillDebounceTimer);
-                if (val.length >= 2 && !currentWord) {
+                if (val.length >= 2) {
                     this.autoFillDebounceTimer = setTimeout(() => {
-                        this.autoFillWordDetails('meaning', val);
+                        this.autoFillWordDetails('meaning', val, true);
                     }, 750);
                 }
             });
             inputMeaning.addEventListener('blur', (e) => {
                 const val = e.target.value.trim();
-                const currentWord = document.getElementById('newWord')?.value.trim();
-                if (val.length >= 2 && !currentWord) {
+                if (val.length >= 2) {
                     clearTimeout(this.autoFillDebounceTimer);
-                    this.autoFillWordDetails('meaning', val);
+                    this.autoFillWordDetails('meaning', val, true);
                 }
             });
         }
@@ -897,23 +892,28 @@ class VocabSheetApp {
             inputPhonetic.addEventListener('compositionend', (e) => {
                 isComposing = false;
                 const val = e.target.value.trim();
-                const currentWord = document.getElementById('newWord')?.value.trim();
-                if (val.length >= 2 && !currentWord) {
+                if (val.length >= 2) {
                     clearTimeout(this.autoFillDebounceTimer);
                     this.autoFillDebounceTimer = setTimeout(() => {
-                        this.autoFillWordDetails('phonetic', val);
+                        this.autoFillWordDetails('phonetic', val, true);
                     }, 800);
                 }
             });
             inputPhonetic.addEventListener('input', (e) => {
                 if (isComposing) return;
                 const val = e.target.value.trim();
-                const currentWord = document.getElementById('newWord')?.value.trim();
                 clearTimeout(this.autoFillDebounceTimer);
-                if (val.length >= 2 && !currentWord) {
+                if (val.length >= 2) {
                     this.autoFillDebounceTimer = setTimeout(() => {
-                        this.autoFillWordDetails('phonetic', val);
+                        this.autoFillWordDetails('phonetic', val, true);
                     }, 800);
+                }
+            });
+            inputPhonetic.addEventListener('blur', (e) => {
+                const val = e.target.value.trim();
+                if (val.length >= 2) {
+                    clearTimeout(this.autoFillDebounceTimer);
+                    this.autoFillWordDetails('phonetic', val, true);
                 }
             });
         }
@@ -977,7 +977,8 @@ class VocabSheetApp {
         ];
 
         targets.forEach(t => {
-            if (t.el && (field !== t.key || force) && (!t.el.value.trim() || force)) {
+            // Khi gõ vào 1 ô, các ô khác đều sẽ được làm mới nên thêm hiệu ứng đang tạo
+            if (t.el && field !== t.key) {
                 t.el.classList.add('ai-generating');
             }
         });
@@ -986,41 +987,39 @@ class VocabSheetApp {
             const resultData = await this.lookupWordDetails(query, field, this.lang);
 
             if (resultData) {
-                // Điền từ gốc nếu trống hoặc khi tra cứu từ nghĩa sang từ
-                if (inputWord && resultData.word) {
-                    if (!inputWord.value.trim() || (field !== 'word' && force)) {
-                        inputWord.value = resultData.word;
-                        this.highlightField(inputWord);
-                    }
+                // 1. Điền từ gốc nếu không phải ô người dùng đang gõ
+                if (inputWord && field !== 'word' && resultData.word) {
+                    inputWord.value = resultData.word;
+                    this.highlightField(inputWord);
                 }
 
-                // Điền phiên âm / Romaji
-                if (inputPhonetic && (!inputPhonetic.value.trim() || force) && resultData.phonetic) {
+                // 2. Điền phiên âm / Romaji nếu không phải ô đang gõ (luôn thay dù đã có dữ liệu cũ)
+                if (inputPhonetic && field !== 'phonetic' && resultData.phonetic) {
                     const cleanPhonetic = String(resultData.phonetic).replace(/^\[|\]$/g, '').trim();
                     inputPhonetic.value = cleanPhonetic;
                     this.highlightField(inputPhonetic);
                 }
 
-                // Điền loại từ
+                // 3. Điền loại từ
                 if (selectPos && resultData.pos) {
                     selectPos.value = resultData.pos;
                     this.highlightField(selectPos);
                 }
 
-                // Điền nghĩa tiếng Việt
-                if (inputMeaning && (field !== 'meaning' || force) && (!inputMeaning.value.trim() || force) && resultData.meaning) {
+                // 4. Điền nghĩa tiếng Việt nếu không phải ô đang gõ (luôn thay dù đã có dữ liệu cũ)
+                if (inputMeaning && field !== 'meaning' && resultData.meaning) {
                     inputMeaning.value = resultData.meaning;
                     this.highlightField(inputMeaning);
                 }
 
-                // Điền câu ví dụ mẫu
-                if (inputExample && (!inputExample.value.trim() || force) && resultData.example) {
+                // 5. Điền câu ví dụ mẫu (luôn cập nhật theo từ mới)
+                if (inputExample && resultData.example) {
                     inputExample.value = resultData.example;
                     this.highlightField(inputExample);
                 }
 
-                // Điền dịch câu ví dụ
-                if (inputExampleTrans && (!inputExampleTrans.value.trim() || force) && resultData.exampleTrans) {
+                // 6. Điền dịch câu ví dụ (luôn cập nhật theo từ mới)
+                if (inputExampleTrans && resultData.exampleTrans) {
                     inputExampleTrans.value = resultData.exampleTrans;
                     this.highlightField(inputExampleTrans);
                 }
@@ -1090,18 +1089,14 @@ class VocabSheetApp {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-            const currentWord = document.getElementById('newWord')?.value?.trim() || '';
-            const currentMeaning = document.getElementById('newMeaning')?.value?.trim() || '';
-            const currentPhonetic = document.getElementById('newPhonetic')?.value?.trim() || '';
-
             const res = await fetch(`${endpoint}/api/generate-example`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 signal: controller.signal,
                 body: JSON.stringify({
-                    word: field === 'word' ? query : currentWord,
-                    meaning: field === 'meaning' ? query : currentMeaning,
-                    phonetic: field === 'phonetic' ? query : currentPhonetic,
+                    word: field === 'word' ? query : '',
+                    meaning: field === 'meaning' ? query : '',
+                    phonetic: field === 'phonetic' ? query : '',
                     field,
                     lang,
                     model: window.aisaModel || 'aisa-scholar-v1'
