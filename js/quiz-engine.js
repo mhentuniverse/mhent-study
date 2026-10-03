@@ -49,7 +49,8 @@ let allWords = [], questions = [], sessionLog = [];
 let currentIdx = 0, score = 0, combo = 0, maxCombo = 0;
 let correctCount = 0, wrongCount = 0, answered = false;
 let timerRemaining = 15, timerMaxSec = 15, timerInterval = null, timerEnabled = true;
-let perks = { skip: 3, hint: 3, listen: 5 };
+let hintTier = 0; // 0: chưa dùng, 1: câu ví dụ ẩn từ, 2: gạch dưới độ dài, 3: mở 1/3 ký tự
+let currentHintMask = null;
 let scrambleAnswer = [], scrambleTileMap = [];
 let activeFilter = 'all';
 
@@ -98,13 +99,22 @@ function injectCSS() {
     .qe-btn-start { width:100%; padding:18px; border-radius:16px; border:none; background:linear-gradient(135deg,var(--qa),#a855f7); color:#fff; font-size:17px; font-weight:900; font-family:'Nunito',sans-serif; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; transition:0.2s; }
     .qe-btn-start:hover { opacity:0.9; transform:translateY(-1px); }
 
-    /* Perks */
-    .qe-perks { display:flex; gap:8px; justify-content:center; margin-bottom:16px; }
-    .qe-perk { display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 14px; border-radius:12px; border:1.5px solid var(--study-border); background:var(--study-surface); color:var(--study-text); font-size:12px; font-weight:800; font-family:'Nunito',sans-serif; cursor:pointer; transition:0.2s; }
-    .qe-perk:hover:not(:disabled) { border-color:var(--qa); background:rgba(var(--qa-rgb),0.06); }
-    .qe-perk:disabled { opacity:0.35; cursor:not-allowed; }
-    .qe-perk-icon { font-size:18px; }
-    .qe-perk-cnt { font-size:10px; background:var(--study-subtle); border-radius:9999px; padding:0 6px; color:var(--study-text-muted); }
+    /* Action Tools Bar */
+    .qe-tools-bar { display:flex; gap:10px; justify-content:center; margin-bottom:18px; flex-wrap:wrap; }
+    .qe-tool-btn { display:inline-flex; align-items:center; gap:8px; padding:9px 18px; border-radius:9999px; border:1.5px solid var(--study-border); background:var(--study-surface); color:var(--study-text); font-size:13px; font-weight:800; font-family:'Nunito',sans-serif; cursor:pointer; transition:all 0.2s cubic-bezier(0.2,0.8,0.2,1); box-shadow:0 2px 8px rgba(0,0,0,0.04); user-select:none; }
+    .qe-tool-btn:hover:not(:disabled) { border-color:var(--qa); color:var(--qa); background:rgba(var(--qa-rgb),0.08); transform:translateY(-2px); box-shadow:0 6px 16px rgba(var(--qa-rgb),0.15); }
+    .qe-tool-btn:active:not(:disabled) { transform:scale(0.96); }
+    .qe-tool-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none !important; }
+    .qe-tool-icon { font-size:16px; line-height:1; }
+    .qe-tool-badge { display:inline-flex; align-items:center; justify-content:center; padding:1px 8px; border-radius:9999px; background:rgba(var(--qa-rgb),0.15); color:var(--qa); font-size:11px; font-weight:900; }
+    .qe-tool-kbd { display:inline-block; padding:1px 6px; border-radius:5px; background:var(--study-subtle); border:1px solid var(--study-border); font-size:10.5px; font-weight:800; color:var(--study-text-muted); }
+
+    /* Hint Display Box */
+    .qe-hint-box { margin:16px 0 20px; padding:14px 18px; border-radius:14px; background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(var(--qa-rgb),0.06)); border:1.5px dashed rgba(245,158,11,0.5); text-align:center; animation:qeHintIn 0.3s cubic-bezier(0.2,0.8,0.2,1); }
+    @keyframes qeHintIn { 0%{opacity:0;transform:translateY(-8px) scale(0.98)} 100%{opacity:1;transform:translateY(0) scale(1)} }
+    .qe-hint-badge-hdr { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; color:#f59e0b; margin-bottom:6px; }
+    .qe-hint-content { font-size:15px; font-weight:800; color:var(--study-text); line-height:1.6; }
+    .qe-hint-dashes { font-size:24px; font-weight:900; letter-spacing:8px; color:var(--qa); font-family:'Consolas','Courier New',monospace; margin:8px 0; word-break:break-all; }
 
     /* Question Card */
     .qe-card { background:var(--study-surface); border:1px solid var(--study-border); border-radius:var(--radius-card); padding:28px; box-shadow:var(--study-shadow); margin-bottom:20px; position:relative; overflow:hidden; animation:qeSlideIn 0.35s cubic-bezier(0.16,1,0.3,1); }
@@ -307,16 +317,33 @@ function renderApp() {
 
     <!-- Question Area -->
     <div id="qeQuestion" style="display:none;">
-      <div class="qe-perks">
-        <button class="qe-perk" id="qePerkSkip" onclick="QE.usePerk('skip')" title="Bỏ qua (S)"><span class="qe-perk-icon">⏭️</span><span>Bỏ qua</span><span class="qe-perk-cnt" id="qePerkSkipN">×3</span></button>
-        <button class="qe-perk" id="qePerkHint" onclick="QE.usePerk('hint')" title="Gợi ý (H)"><span class="qe-perk-icon">💡</span><span>Gợi ý</span><span class="qe-perk-cnt" id="qePerkHintN">×3</span></button>
-        <button class="qe-perk" id="qePerkListen" onclick="QE.usePerk('listen')" title="Nghe (L)"><span class="qe-perk-icon">🔊</span><span>Nghe</span><span class="qe-perk-cnt" id="qePerkListenN">×5</span></button>
+      <div class="qe-tools-bar">
+        <button class="qe-tool-btn" id="qeBtnSkip" onclick="QE.useSkip()" title="Bỏ qua câu này (Phím S)">
+          <span class="qe-tool-icon">⏭️</span>
+          <span>Bỏ qua</span>
+          <kbd class="qe-tool-kbd">S</kbd>
+        </button>
+        <button class="qe-tool-btn" id="qeBtnHint" onclick="QE.useHint()" title="Gợi ý 3 cấp độ (Phím H)">
+          <span class="qe-tool-icon">💡</span>
+          <span>Gợi ý</span>
+          <span class="qe-tool-badge" id="qeHintBadge">0/3</span>
+          <kbd class="qe-tool-kbd">H</kbd>
+        </button>
+        <button class="qe-tool-btn" id="qeBtnListen" onclick="QE.useListen()" title="Nghe phát âm (Phím L)">
+          <span class="qe-tool-icon">🔊</span>
+          <span>Nghe</span>
+          <kbd class="qe-tool-kbd">L</kbd>
+        </button>
       </div>
       <div class="qe-card" id="qeCard">
         <div class="qe-type-badge" id="qeBadge">🎯 Trắc Nghiệm</div>
         <div class="qe-word-display" id="qeDisplay"></div>
         <div class="qe-phonetic" id="qePhonetic"></div>
         <div class="qe-context" id="qeContext"></div>
+
+        <!-- Vùng hiển thị Gợi Ý 3 cấp (Hint Display Box) -->
+        <div class="qe-hint-box" id="qeHintBox" style="display:none;"></div>
+
         <!-- ABCD -->
         <div class="qe-options" id="qeOptions">
           <button class="qe-opt" id="qeOpt0" onclick="QE.selectOpt(0)"><span class="qe-opt-key">1</span><span id="qeOpt0T"></span></button>
@@ -343,9 +370,11 @@ function renderApp() {
         </div>
         <!-- Keyboard hint -->
         <div class="qe-kbd-hint" id="qeKbdHint">
-          <span><kbd class="qe-kbd">1</kbd><kbd class="qe-kbd">2</kbd><kbd class="qe-kbd">3</kbd><kbd class="qe-kbd">4</kbd> chọn đáp án</span>
+          <span><kbd class="qe-kbd">1</kbd><kbd class="qe-kbd">2</kbd><kbd class="qe-kbd">3</kbd><kbd class="qe-kbd">4</kbd> chọn</span>
           <span><kbd class="qe-kbd">Space</kbd> tiếp tục</span>
-          <span><kbd class="qe-kbd">L</kbd> nghe • <kbd class="qe-kbd">H</kbd> gợi ý</span>
+          <span><kbd class="qe-kbd">S</kbd> bỏ qua</span>
+          <span><kbd class="qe-kbd">H</kbd> gợi ý (3 lần)</span>
+          <span><kbd class="qe-kbd">L</kbd> nghe</span>
         </div>
       </div>
     </div>
@@ -434,6 +463,20 @@ function loadDecks() {
     o.textContent = `${d.title} (${d.words.length} từ)`;
     sel.appendChild(o);
   });
+
+  // Tự động khôi phục cài đặt thời gian trước đó người dùng đã chọn
+  try {
+    const savedTimer = localStorage.getItem('mhent_quiz_timer');
+    const timerSel = document.getElementById('qeTimerSel');
+    if (timerSel && savedTimer !== null && timerSel.querySelector(`option[value="${savedTimer}"]`)) {
+      timerSel.value = savedTimer;
+    }
+    if (timerSel) {
+      timerSel.onchange = function() {
+        try { localStorage.setItem('mhent_quiz_timer', this.value); } catch(e) {}
+      };
+    }
+  } catch(e) {}
 }
 
 /* ── Start Quiz ──────────────────────────────────────────────────── */
@@ -454,15 +497,19 @@ function startQuiz(wordsOverride) {
   allWords = src;
   const countSel = document.getElementById('qeCountSel')?.value || '20';
   const total = countSel === 'all' ? allWords.length : Math.min(parseInt(countSel), allWords.length);
-  timerMaxSec = parseInt(document.getElementById('qeTimerSel')?.value || '0');
+  
+  const timerSel = document.getElementById('qeTimerSel');
+  timerMaxSec = parseInt(timerSel?.value ?? (localStorage.getItem('mhent_quiz_timer') || '15'));
   timerEnabled = timerMaxSec > 0;
+  try { localStorage.setItem('mhent_quiz_timer', String(timerMaxSec)); } catch(e) {}
 
   questions = buildQuestions(allWords, total);
   sessionLog = [];
   currentIdx = 0; score = 0; combo = 0; maxCombo = 0;
   correctCount = 0; wrongCount = 0; answered = false;
-  perks = { skip: 3, hint: 3, listen: 5 };
-  updatePerksUI();
+  hintTier = 0;
+  currentHintMask = null;
+  updateToolsUI();
 
   $('qeStart').style.display = 'none';
   $('qeResult').style.display = 'none';
@@ -496,6 +543,11 @@ function buildQuestions(words, total) {
 function loadQuestion() {
   if (currentIdx >= questions.length) { showResult(); return; }
   answered = false;
+  hintTier = 0;
+  currentHintMask = null;
+  const hintBox = $('qeHintBox');
+  if (hintBox) { hintBox.style.display = 'none'; hintBox.innerHTML = ''; }
+  updateToolsUI();
   hideFeedback();
   const q = questions[currentIdx];
   renderQuestion(q);
@@ -743,15 +795,37 @@ function next() {
 /* ── Timer ───────────────────────────────────────────────────────── */
 function startTimer() {
   stopTimer();
-  if (!timerEnabled) { $('qeTimer').style.display = 'none'; return; }
-  $('qeTimer').style.display = 'block';
+  const timerBox = $('qeTimer');
+  if (!timerEnabled || timerMaxSec <= 0) {
+    if (timerBox) timerBox.style.display = 'none';
+    return;
+  }
+  if (timerBox) timerBox.style.display = 'block';
+
   timerRemaining = timerMaxSec;
+  const num = $('qeTimerNum');
   const arc = $('qeTimerArc');
   const circ = 113;
-  const tick = () => {
-    $('qeTimerNum').textContent = timerRemaining;
-    arc.style.strokeDashoffset = circ - (timerRemaining / timerMaxSec) * circ;
-    arc.className = 'qe-timer-arc' + (timerRemaining <= 5 ? ' danger' : timerRemaining <= timerMaxSec * 0.4 ? ' warn' : '');
+
+  const updateDisplay = () => {
+    if (num) num.textContent = Math.max(0, timerRemaining);
+    if (arc) {
+      const offset = circ - (Math.max(0, timerRemaining) / timerMaxSec) * circ;
+      arc.style.strokeDashoffset = offset;
+      arc.className = 'qe-timer-arc' + (timerRemaining <= 5 ? ' danger' : timerRemaining <= timerMaxSec * 0.4 ? ' warn' : '');
+    }
+  };
+
+  updateDisplay();
+
+  timerInterval = setInterval(() => {
+    if (answered) {
+      stopTimer();
+      return;
+    }
+    timerRemaining--;
+    updateDisplay();
+
     if (timerRemaining <= 0) {
       stopTimer();
       if (!answered) {
@@ -759,19 +833,29 @@ function startTimer() {
         wrongCount++; combo = 0; updateCombo();
         window.studyUI?.playWrong();
         const word = questions[currentIdx].word;
-        for (let i = 0; i < 4; i++) { const b = $(`qeOpt${i}`); if (b) { b.disabled = true; if (b.dataset.correct === '1') b.classList.add('correct'); } }
+        for (let i = 0; i < 4; i++) {
+          const b = $(`qeOpt${i}`);
+          if (b) {
+            b.disabled = true;
+            if (b.dataset.correct === '1') b.classList.add('correct');
+          }
+        }
         const inp = $('qeTypeInput'); if (inp) inp.disabled = true;
-        showFeedback(false, word, `⏰ Hết giờ! Đáp án: ${word.word}`);
+        showFeedback(false, word, `⏰ Hết giờ! Đáp án đúng: ${word.word}`);
         sessionLog.push({ word, type: questions[currentIdx].type, result: 'timeout', pts: 0 });
+        updateToolsUI();
         updateHUD();
       }
-      return;
     }
-    timerRemaining--;
-  };
-  tick(); timerInterval = setInterval(tick, 1000);
+  }, 1000);
 }
-function stopTimer() { if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } }
+
+function stopTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
 
 /* ── HUD ─────────────────────────────────────────────────────────── */
 function updateHUD() {
@@ -789,34 +873,132 @@ function showBonus() {
   setTimeout(() => pop.classList.remove('show'), 1500);
 }
 
-/* ── Perks ───────────────────────────────────────────────────────── */
-function updatePerksUI() {
-  $('qePerkSkipN').textContent = `×${perks.skip}`;
-  $('qePerkHintN').textContent = `×${perks.hint}`;
-  $('qePerkListenN').textContent = `×${perks.listen}`;
-  $('qePerkSkip').disabled = perks.skip <= 0 || answered;
-  $('qePerkHint').disabled = perks.hint <= 0 || answered;
-  $('qePerkListen').disabled = perks.listen <= 0;
+/* ── Tools (Skip, Hint 3-tier, Listen) ────────────────────────────── */
+function updateToolsUI() {
+  const skipBtn = $('qeBtnSkip');
+  const hintBtn = $('qeBtnHint');
+  const listenBtn = $('qeBtnListen');
+  const hintBadge = $('qeHintBadge');
+
+  if (skipBtn) skipBtn.disabled = answered;
+  if (listenBtn) listenBtn.disabled = false;
+  if (hintBadge) hintBadge.textContent = `${hintTier}/3`;
+  if (hintBtn) {
+    hintBtn.disabled = answered || hintTier >= 3;
+    hintBtn.title = hintTier >= 3 ? 'Đã dùng tối đa 3 gợi ý' : `Gợi ý cấp ${hintTier + 1}/3 (Phím H)`;
+  }
 }
 
-function usePerk(type) {
-  const q = questions[currentIdx]; if (!q) return;
-  if (type === 'skip' && perks.skip > 0 && !answered) {
-    perks.skip--; answered = true; stopTimer();
-    wrongCount++; combo = 0; updateCombo();
-    showFeedback(false, q.word, `Đã bỏ qua — Đáp án: ${q.word.word}`);
-    sessionLog.push({ word: q.word, type: q.type, result: 'skip', pts: 0 });
-    updateHUD();
-  } else if (type === 'hint' && perks.hint > 0 && !answered) {
-    perks.hint--;
-    const hint = q.word.word.slice(0, Math.ceil(q.word.word.length / 2)) + '...';
-    $('qeTypeHint').textContent = `💡 Gợi ý: "${hint}"`;
-    window.studyUI?.showToast(`💡 Gợi ý: ${hint}`, 'info', 2500);
-  } else if (type === 'listen' && perks.listen > 0) {
-    perks.listen--;
-    speak(q.word.word);
+function useSkip() {
+  const q = questions[currentIdx];
+  if (!q || answered) return;
+  answered = true;
+  stopTimer();
+  wrongCount++; combo = 0; updateCombo();
+  window.studyUI?.playWrong();
+
+  // Highlight correct answer
+  for (let i = 0; i < 4; i++) {
+    const b = $(`qeOpt${i}`);
+    if (b) {
+      b.disabled = true;
+      if (b.dataset.correct === '1') b.classList.add('correct');
+    }
   }
-  updatePerksUI();
+  const inp = $('qeTypeInput'); if (inp) inp.disabled = true;
+
+  showFeedback(false, q.word, `⏭️ Đã bỏ qua — Đáp án đúng: ${q.word.word}`);
+  sessionLog.push({ word: q.word, type: q.type, result: 'skip', pts: 0 });
+  updateToolsUI();
+  updateHUD();
+}
+
+function useListen() {
+  const q = questions[currentIdx];
+  if (!q) return;
+  const btn = $('qeBtnListen');
+  if (btn) {
+    btn.classList.add('pulsing');
+    setTimeout(() => btn.classList.remove('pulsing'), 600);
+  }
+  speak(q.word.word);
+}
+
+function useHint() {
+  const q = questions[currentIdx];
+  if (!q || answered) return;
+  if (hintTier >= 3) {
+    window.studyUI?.showToast('Đã mở tối đa 3 gợi ý cho câu này!', 'info', 2000);
+    return;
+  }
+
+  hintTier++;
+  window.studyUI?.playDing();
+  updateToolsUI();
+
+  const hintBox = $('qeHintBox');
+  if (!hintBox) return;
+  hintBox.style.display = 'block';
+
+  const rawWord = q.word.word || '';
+  let hintHdr = '';
+  let hintBody = '';
+
+  if (hintTier === 1) {
+    // Lần 1: Câu ví dụ với từ cần chọn bị che thành chỗ trống (blank)
+    hintHdr = '💡 Gợi Ý 1/3: Ngữ Cảnh & Ví Dụ (Điền Chỗ Trống)';
+    if (q.word.example) {
+      const blankObj = makeFillBlank(q.word.example, q.word);
+      hintBody = `
+        <div class="qe-hint-content">${blankObj.html}</div>
+        ${q.word.exampleTrans ? `<div style="font-size:13px;color:var(--study-text-muted);margin-top:4px;">${esc(q.word.exampleTrans)}</div>` : ''}
+      `;
+    } else {
+      hintBody = `
+        <div class="qe-hint-content">Từ này mang ý nghĩa: <strong>"${esc(q.word.meaning)}"</strong></div>
+        <div style="font-size:12.5px;color:var(--study-text-muted);margin-top:4px;">Độ dài từ: <strong>${rawWord.length}</strong> ký tự</div>
+      `;
+    }
+  } else if (hintTier === 2) {
+    // Lần 2: Blank word mà mỗi ký tự là một dấu gạch dưới _
+    hintHdr = '💡 Gợi Ý 2/3: Cấu Trúc Ký Tự (Mỗi _ Là Một Chữ Cái)';
+    const blankWord = rawWord.split('').map(c => {
+      if (c.trim() === '') return '&nbsp;&nbsp;';
+      return '_';
+    }).join(' ');
+
+    hintBody = `
+      <div class="qe-hint-dashes">${blankWord}</div>
+      <div style="font-size:12.5px;color:var(--study-text-muted);">Từ có <strong>${rawWord.trim().length}</strong> ký tự</div>
+    `;
+  } else if (hintTier === 3) {
+    // Lần 3: Mở ngẫu nhiên 1/3 ký tự tại vị trí bất kỳ
+    hintHdr = '💡 Gợi Ý 3/3: Mở Ngẫu Nhiên Ký Tự Gợi Ý';
+    const chars = rawWord.split('');
+    const nonSpaceIndices = [];
+    chars.forEach((c, idx) => { if (c.trim() !== '') nonSpaceIndices.push(idx); });
+
+    if (!currentHintMask) {
+      const revealCount = Math.max(1, Math.ceil(nonSpaceIndices.length / 3));
+      const shuffled = shuffle([...nonSpaceIndices]);
+      currentHintMask = new Set(shuffled.slice(0, revealCount));
+    }
+
+    const revealedWord = chars.map((c, idx) => {
+      if (c.trim() === '') return '&nbsp;&nbsp;';
+      return currentHintMask.has(idx) ? `<span style="color:var(--qa);text-decoration:underline;">${esc(c)}</span>` : '_';
+    }).join(' ');
+
+    hintBody = `
+      <div class="qe-hint-dashes">${revealedWord}</div>
+      <div style="font-size:12.5px;color:var(--study-text-muted);">Đã mở sẵn ${currentHintMask.size} chữ cái vị trí ngẫu nhiên!</div>
+    `;
+  }
+
+  hintBox.innerHTML = `
+    <div class="qe-hint-badge-hdr">${hintHdr}</div>
+    ${hintBody}
+  `;
 }
 
 /* ── Show Results ────────────────────────────────────────────────── */
@@ -869,6 +1051,11 @@ function showResult() {
 
   $('qeResult').style.display = 'block';
   window.studyUI?.showToast(`🎯 Kết quả: ${pct}% — ${score} điểm!`, 'success', 4000);
+
+  // Ghi nhận phiên học thực tế để duy trì/tăng chuỗi Streak
+  if (window.studyStorage && typeof window.studyStorage.recordStudy === 'function') {
+    window.studyStorage.recordStudy();
+  }
 }
 
 function buildResultTable() {
@@ -946,9 +1133,9 @@ function setupKeyboard() {
         if ($('qeScramble').style.display !== 'none') submitScramble();
       } else { next(); }
     }
-    else if (e.code === 'KeyL') usePerk('listen');
-    else if (e.code === 'KeyH' && !answered) usePerk('hint');
-    else if (e.code === 'KeyS' && !answered) usePerk('skip');
+    else if (e.code === 'KeyL') useListen();
+    else if (e.code === 'KeyH' && !answered) useHint();
+    else if (e.code === 'KeyS' && !answered) useSkip();
     else if (e.code === 'Backspace') {
       if (!answered && $('qeScramble').style.display !== 'none') {
         e.preventDefault();
@@ -1082,7 +1269,7 @@ document.addEventListener('DOMContentLoaded', () => {
 window.QE = {
   startQuiz, selectOpt, submitTyping, typeKeydown,
   clearScramble, removeLastTile, submitScramble, addTile,
-  next, usePerk, filterResult, retryWrong,
+  next, useSkip, useListen, useHint, filterResult, retryWrong,
   speak, speakPulse
 };
 

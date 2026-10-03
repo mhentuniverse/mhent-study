@@ -9,26 +9,63 @@ class StudyStorage {
         this.initStreak();
     }
 
-    // Lấy chuỗi học tập (Streak)
-    initStreak() {
-        const today = new Date().toISOString().slice(0, 10);
-        let streakData = this.get('streak_info', { current: 1, lastDate: today });
+    // Lấy chuỗi ngày YYYY-MM-DD theo giờ địa phương (tránh lỗi múi giờ UTC)
+    getLocalDateStr(offsetDays = 0) {
+        const d = new Date();
+        if (offsetDays !== 0) d.setDate(d.getDate() + offsetDays);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
 
-        if (streakData.lastDate !== today) {
-            const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-            if (streakData.lastDate === yesterday) {
-                streakData.current += 1;
-            } else {
-                streakData.current = 1;
-            }
-            streakData.lastDate = today;
+    // Khởi tạo hoặc kiểm tra chuỗi học tập (Streak)
+    initStreak() {
+        const today = this.getLocalDateStr();
+        const yesterday = this.getLocalDateStr(-1);
+        let streakData = this.get('streak_info', { current: 1, lastDate: today, lastStudiedDate: today });
+
+        // Nếu ngày học gần nhất trước ngày hôm qua (đã đứt chuỗi hơn 1 ngày) -> reset về 1
+        if (streakData.lastStudiedDate && streakData.lastStudiedDate !== today && streakData.lastStudiedDate !== yesterday) {
+            streakData.current = 1;
             this.set('streak_info', streakData);
         }
         return streakData;
     }
 
     getStreak() {
-        return this.get('streak_info', { current: 1 }).current;
+        return this.initStreak().current;
+    }
+
+    // Ghi nhận phiên học thực tế (hoàn thành quiz, luyện từ vựng, flashcard)
+    recordStudy() {
+        const today = this.getLocalDateStr();
+        const yesterday = this.getLocalDateStr(-1);
+        let streakData = this.get('streak_info', { current: 1, lastDate: today, lastStudiedDate: null });
+
+        if (streakData.lastStudiedDate === yesterday) {
+            // Học liên tục ngày hôm qua sang hôm nay -> Tăng chuỗi!
+            streakData.current += 1;
+            streakData.lastStudiedDate = today;
+            streakData.lastDate = today;
+        } else if (streakData.lastStudiedDate !== today) {
+            // Lần đầu hoặc bắt đầu chuỗi mới
+            streakData.lastStudiedDate = today;
+            streakData.lastDate = today;
+        }
+        this.set('streak_info', streakData);
+
+        // Tự động cập nhật số ngày streak trên toàn bộ DOM nếu có
+        document.querySelectorAll('#streakNum').forEach(el => el.textContent = streakData.current);
+        document.querySelectorAll('.drawer-streak-badge').forEach(el => el.innerHTML = `🔥 Chuỗi học: ${streakData.current} Ngày`);
+        document.querySelectorAll('.streak-pill-btn').forEach(el => el.classList.add('lit'));
+
+        // Đồng bộ lên Firebase Firestore nếu đang đăng nhập
+        if (typeof window.syncStudyStreakToCloud === 'function') {
+            window.syncStudyStreakToCloud(streakData.current);
+        }
+
+        return streakData.current;
     }
 
     // Generic get/set

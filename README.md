@@ -38,11 +38,11 @@ mhent-study/
 ├── ko/                         # 🇰🇷 VŨ TRỤ TIẾNG HÀN
 │   ├── index.html              # Hub tiếng Hàn & Studio quản lý Decks
 │   ├── alphabet.html           # Bảng chữ cái Hangeul tương tác (Nghe phát âm từng chữ)
-│   ├── exam.html               # Phòng thi thử nghiệm AI
 │   └── practice/               # Thư mục phòng luyện tập
 │       ├── index.html          # Menu chọn chế độ luyện tập
 │       ├── vocab.html          # Sổ tay từ vựng tương tác thông minh
-│       └── flashcards.html     # Flashcards 3D lật thẻ không gian
+│       ├── flashcards.html     # Flashcards 3D lật thẻ không gian
+│       └── quiz.html           # Đấu trường Quiz Tổng Hợp 7 chế độ & Minigame
 │
 ├── ja/                         # 🇯🇵 VŨ TRỤ TIẾNG NHẬT
 │   ├── index.html              # Hub tiếng Nhật

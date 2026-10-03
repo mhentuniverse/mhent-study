@@ -704,8 +704,16 @@ window.renderBottomNav = function() {
 // ==========================================
 // 6. MENU TRƯỢT TIỆN ÍCH DÀNH CHO STUDY (SIDE DRAWER)
 // ==========================================
+window.closeSideDrawer = function() {
+    let overlay = document.getElementById('mhent-study-drawer-overlay') || document.getElementById('mhent-side-drawer-overlay');
+    if (overlay) {
+        overlay.classList.remove('show');
+        setTimeout(() => { if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 350);
+    }
+};
+
 window.openSideDrawer = function() {
-    let oldOverlay = document.getElementById('mhent-study-drawer-overlay');
+    let oldOverlay = document.getElementById('mhent-study-drawer-overlay') || document.getElementById('mhent-side-drawer-overlay');
     if (oldOverlay) oldOverlay.remove();
 
     let cachedProfile = {};
@@ -724,22 +732,42 @@ window.openSideDrawer = function() {
     overlay.className = 'mhent-drawer-overlay';
     overlay.onclick = function(e) {
         if (e.target === overlay) {
-            overlay.classList.remove('show');
-            setTimeout(() => overlay.remove(), 350);
+            window.closeSideDrawer();
         }
     };
 
     overlay.innerHTML = `
         <div class="mhent-side-drawer">
             <div class="drawer-header">
-                <button class="drawer-close-btn" onclick="document.getElementById('mhent-study-drawer-overlay').classList.remove('show'); setTimeout(()=>document.getElementById('mhent-study-drawer-overlay').remove(), 350);">&times;</button>
-                <img src="${userAvt}" class="drawer-avt" alt="Avatar">
+                <button class="drawer-close-btn" onclick="window.closeSideDrawer();" aria-label="Đóng menu">&times;</button>
+                <img src="${userAvt}" class="drawer-avt" alt="Avatar" onerror="this.src='/assets/avt-web.jpg'">
                 <h4 class="drawer-name">${userName}</h4>
                 <div class="drawer-streak-badge">🔥 Chuỗi học: ${streak} Ngày</div>
             </div>
 
             <div class="drawer-menu-list">
                 <div class="drawer-group-title">Khám Phá Ngôn Ngữ</div>
+                <a href="/ko/index.html" class="drawer-item">
+                    <div class="drawer-item-left">
+                        <span style="font-size: 18px;">🇰🇷</span>
+                        <span>Tiếng Hàn (Korean)</span>
+                    </div>
+                    <span style="font-size: 12px; color: var(--study-text-muted);">Mở ➔</span>
+                </a>
+                <a href="/ja/index.html" class="drawer-item">
+                    <div class="drawer-item-left">
+                        <span style="font-size: 18px;">🇯🇵</span>
+                        <span>Tiếng Nhật (Japanese)</span>
+                    </div>
+                    <span style="font-size: 12px; color: var(--study-text-muted);">Mở ➔</span>
+                </a>
+                <a href="/zh/index.html" class="drawer-item">
+                    <div class="drawer-item-left">
+                        <span style="font-size: 18px;">🇨🇳</span>
+                        <span>Tiếng Trung (Chinese)</span>
+                    </div>
+                    <span style="font-size: 12px; color: var(--study-text-muted);">Mở ➔</span>
+                </a>
                 <a href="/en/index.html" class="drawer-item">
                     <div class="drawer-item-left">
                         <span style="font-size: 18px;">🇬🇧</span>
@@ -752,6 +780,7 @@ window.openSideDrawer = function() {
                         <i class="fa-solid fa-share-nodes"></i>
                         <span>Kho Bài Học Chia Sẻ</span>
                     </div>
+                    <span style="font-size: 12px; color: var(--study-text-muted);">↗</span>
                 </a>
 
                 <div class="drawer-group-title">Công Cụ Học Thông Minh</div>
@@ -806,12 +835,19 @@ window.openSideDrawer = function() {
 document.addEventListener("DOMContentLoaded", () => {
     window.renderBottomNav();
 
-    // Nhấp vào avatar người dùng trên Navbar để mở Drawer
+    // Nhấp vào avatar người dùng trên Navbar để mở Drawer (hỗ trợ cả PC lẫn Mobile)
     let avt = document.getElementById('user-avatar');
     if (avt) {
         avt.style.cursor = 'pointer';
         avt.onclick = function() {
-            if (window.innerWidth <= 768) window.openSideDrawer();
+            window.openSideDrawer();
         };
     }
+
+    // Đóng drawer khi nhấn phím Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' || e.code === 'Escape') {
+            window.closeSideDrawer();
+        }
+    });
 });

@@ -242,6 +242,18 @@ body {
     color: #f97316;
     font-weight: 800;
     font-size: 13.5px;
+    transition: all 0.3s ease;
+}
+
+.streak-pill-btn.lit {
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.22), rgba(239, 68, 68, 0.2));
+    border-color: rgba(249, 115, 22, 0.6);
+    box-shadow: 0 0 14px rgba(249, 115, 22, 0.35);
+    animation: streakGlow 2.5s infinite alternate ease-in-out;
+}
+@keyframes streakGlow {
+    0% { box-shadow: 0 0 8px rgba(249, 115, 22, 0.2); }
+    100% { box-shadow: 0 0 16px rgba(249, 115, 22, 0.55); }
 }
 
 .theme-toggle-btn {
