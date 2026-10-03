@@ -957,10 +957,12 @@ Trả về DUY NHẤT một mảng JSON thuần tuý:
                 const langConfig = this.getLangConfig(this.currentLang);
                 const prompt = sourceField === 'meaning'
                     ? `Nghĩa tiếng Việt: "${query}". Nhiệm vụ: Tìm từ vựng ${langConfig.name} (${this.currentLang}) tương ứng, phiên âm theo ${langConfig.phonetic}, từ loại, nghĩa chuẩn, câu ví dụ và dịch câu ví dụ.
-Trả về DUY NHẤT JSON: {"word":"...","phonetic":"...","pos":"noun","posLabel":"Danh từ","meaning":"...","example":"...","exampleTrans":"..."}`
+LƯU Ý PHÂN BIỆT LOẠI TỪ: Nếu từ mang ý nghĩa hành động, tâm lý, nhận thức hoặc hành vi (như thích, yêu, ghét, nhớ, học, làm, chạy, ăn...) thì "pos": "verb" và "posLabel": "Động từ", TUYỆT ĐỐI KHÔNG gán nhầm thành "adj" (Tính từ).
+Trực tiếp trả về DUY NHẤT JSON: {"word":"...","phonetic":"...","pos":"noun","posLabel":"Danh từ","meaning":"...","example":"...","exampleTrans":"..."}`
                     : `Từ vựng: "${query}" (${langConfig.name} - ${this.currentLang}).
 Nhiệm vụ: Tạo phiên âm ${langConfig.phonetic}, từ loại, nghĩa tiếng Việt, câu ví dụ và dịch ví dụ.
-Trả về DUY NHẤT JSON: {"word":"${query}","phonetic":"...","pos":"noun","posLabel":"Danh từ","meaning":"...","example":"...","exampleTrans":"..."}`;
+LƯU Ý PHÂN BIỆT LOẠI TỪ: Nếu từ là động từ hành động/trạng thái thì "pos": "verb" và "posLabel": "Động từ".
+Trực tiếp trả về DUY NHẤT JSON: {"word":"${query}","phonetic":"...","pos":"noun","posLabel":"Danh từ","meaning":"...","example":"...","exampleTrans":"..."}`;
 
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`, {
                     method: 'POST',
@@ -1054,12 +1056,12 @@ Trả về DUY NHẤT JSON: {"word":"${query}","phonetic":"...","pos":"noun","po
         let exampleTrans = '';
 
         if (lang === 'ja') {
-            if (/[うくぐすつぬぶむる]$/.test(word)) {
+            if (/[うくぐすつぬぶむる]$/.test(word) || /する$|します$/.test(word)) {
                 pos = 'verb';
                 posLabel = 'Động từ';
                 example = `私は毎日${word}ことがあります。`;
                 exampleTrans = `Tôi có thói quen ${word} mỗi ngày.`;
-            } else if (/い$/.test(word)) {
+            } else if (/い$/.test(word) && !/[め手気目]$/.test(word)) {
                 pos = 'adj';
                 posLabel = 'Tính từ';
                 example = `この景色はとても${word}ですね。`;
@@ -1081,13 +1083,23 @@ Trả về DUY NHẤT JSON: {"word":"${query}","phonetic":"...","pos":"noun","po
             }
             phonetic = `[${word}]`;
         } else if (lang === 'zh') {
+            if (/^(学习|喜欢|喝水|吃|看|听|去|来|说|写|读|做|买|卖)$/.test(word)) {
+                pos = 'verb';
+                posLabel = 'Động từ';
+            }
             example = `我们应该认真学习${word}。`;
             exampleTrans = `Chúng ta nên nghiêm túc học tập ${word}.`;
             phonetic = `[${word}]`;
         } else {
-            if (/ly$/.test(word)) {
+            const lw = word.toLowerCase();
+            if (/^(go|run|eat|drink|study|learn|speak|listen|read|write|walk|play|sleep|watch|see|look|help|work|make|take|give|get|buy|send|open|close|start|finish|love|like|hate|remember|forget)$/.test(lw) || /(ize|ise|ate|ify|en)$/.test(lw)) {
+                pos = 'verb';
+                posLabel = 'Động từ';
+                example = `You should ${word} carefully every day.`;
+                exampleTrans = `Bạn nên ${word} cẩn thận mỗi ngày.`;
+            } else if (/(able|ible|al|ful|ic|ish|ive|less|ous)$/.test(lw) || (/ly$/.test(lw) && !/^(apply|reply|rely|supply|imply|comply|multiply)$/.test(lw))) {
                 pos = 'adj';
-                posLabel = 'Tính từ / Trạng từ';
+                posLabel = 'Tính từ';
                 example = `He spoke ${word} to everyone in the room.`;
                 exampleTrans = `Anh ấy đã nói chuyện một cách ${word} với mọi người trong phòng.`;
             } else if (/tion$|ment$|ness$/.test(word)) {

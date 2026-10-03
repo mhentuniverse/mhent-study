@@ -822,8 +822,16 @@ class VocabSheetApp {
         const inputWord = document.getElementById('newWord');
         const inputMeaning = document.getElementById('newMeaning');
         const inputPhonetic = document.getElementById('newPhonetic');
+        const selectPos = document.getElementById('newPos');
 
         let isComposing = false;
+
+        // Theo dõi người dùng tự tay chọn/đổi loại từ
+        if (selectPos) {
+            selectPos.addEventListener('change', () => {
+                selectPos.dataset.userModified = 'true';
+            });
+        }
 
         if (inputWord) {
             inputWord.addEventListener('compositionstart', () => { isComposing = true; });
@@ -849,7 +857,7 @@ class VocabSheetApp {
             });
             inputWord.addEventListener('blur', (e) => {
                 const val = e.target.value.trim();
-                if (val.length >= 1) {
+                if (val.length >= 1 && (val !== this.lastAutoFilledQuery || this.lastAutoFilledField !== 'word')) {
                     clearTimeout(this.autoFillDebounceTimer);
                     this.autoFillWordDetails('word', val, true);
                 }
@@ -880,7 +888,7 @@ class VocabSheetApp {
             });
             inputMeaning.addEventListener('blur', (e) => {
                 const val = e.target.value.trim();
-                if (val.length >= 2) {
+                if (val.length >= 2 && (val !== this.lastAutoFilledQuery || this.lastAutoFilledField !== 'meaning')) {
                     clearTimeout(this.autoFillDebounceTimer);
                     this.autoFillWordDetails('meaning', val, true);
                 }
@@ -911,7 +919,7 @@ class VocabSheetApp {
             });
             inputPhonetic.addEventListener('blur', (e) => {
                 const val = e.target.value.trim();
-                if (val.length >= 2) {
+                if (val.length >= 2 && (val !== this.lastAutoFilledQuery || this.lastAutoFilledField !== 'phonetic')) {
                     clearTimeout(this.autoFillDebounceTimer);
                     this.autoFillWordDetails('phonetic', val, true);
                 }
@@ -923,6 +931,12 @@ class VocabSheetApp {
         const wordVal = document.getElementById('newWord')?.value.trim();
         const meaningVal = document.getElementById('newMeaning')?.value.trim();
         const phoneticVal = document.getElementById('newPhonetic')?.value.trim();
+
+        // Khi người dùng chủ động bấm "AISA Điền Hộ Tớ", cho phép AISA gợi ý lại loại từ
+        const selectPos = document.getElementById('newPos');
+        if (selectPos) {
+            selectPos.dataset.userModified = 'false';
+        }
 
         if (wordVal) {
             this.autoFillWordDetails('word', wordVal, true);
@@ -977,7 +991,6 @@ class VocabSheetApp {
         ];
 
         targets.forEach(t => {
-            // Khi gõ vào 1 ô, các ô khác đều sẽ được làm mới nên thêm hiệu ứng đang tạo
             if (t.el && field !== t.key) {
                 t.el.classList.add('ai-generating');
             }
@@ -987,38 +1000,48 @@ class VocabSheetApp {
             const resultData = await this.lookupWordDetails(query, field, this.lang);
 
             if (resultData) {
+                this.lastAutoFilledQuery = query;
+                this.lastAutoFilledField = field;
+
                 // 1. Điền từ gốc nếu không phải ô người dùng đang gõ
                 if (inputWord && field !== 'word' && resultData.word) {
                     inputWord.value = resultData.word;
                     this.highlightField(inputWord);
                 }
 
-                // 2. Điền phiên âm / Romaji nếu không phải ô đang gõ (luôn thay dù đã có dữ liệu cũ)
+                // 2. Điền phiên âm / Romaji nếu không phải ô đang gõ
                 if (inputPhonetic && field !== 'phonetic' && resultData.phonetic) {
                     const cleanPhonetic = String(resultData.phonetic).replace(/^\[|\]$/g, '').trim();
                     inputPhonetic.value = cleanPhonetic;
                     this.highlightField(inputPhonetic);
                 }
 
-                // 3. Điền loại từ
-                if (selectPos && resultData.pos) {
+                // Phát hiện và chuẩn hóa loại từ chính xác
+                const currentMeaning = (inputMeaning && field === 'meaning') ? query : (resultData.meaning || inputMeaning?.value || '');
+                const currentWord = (inputWord && field === 'word') ? query : (resultData.word || inputWord?.value || '');
+                const detected = this.detectPos(currentWord, currentMeaning, resultData.pos, this.lang);
+                resultData.pos = detected.pos;
+                resultData.posLabel = detected.posLabel;
+
+                // 3. Điền loại từ: CHỈ CẬP NHẬT NẾU NGƯỜI DÙNG CHƯA TỰ TAY THAY ĐỔI
+                if (selectPos && selectPos.dataset.userModified !== 'true') {
                     selectPos.value = resultData.pos;
                     this.highlightField(selectPos);
                 }
 
-                // 4. Điền nghĩa tiếng Việt nếu không phải ô đang gõ (luôn thay dù đã có dữ liệu cũ)
+                // 4. Điền nghĩa tiếng Việt nếu không phải ô đang gõ
                 if (inputMeaning && field !== 'meaning' && resultData.meaning) {
                     inputMeaning.value = resultData.meaning;
                     this.highlightField(inputMeaning);
                 }
 
-                // 5. Điền câu ví dụ mẫu (luôn cập nhật theo từ mới)
+                // 5. Điền câu ví dụ mẫu
                 if (inputExample && resultData.example) {
                     inputExample.value = resultData.example;
                     this.highlightField(inputExample);
                 }
 
-                // 6. Điền dịch câu ví dụ (luôn cập nhật theo từ mới)
+                // 6. Điền dịch câu ví dụ
                 if (inputExampleTrans && resultData.exampleTrans) {
                     inputExampleTrans.value = resultData.exampleTrans;
                     this.highlightField(inputExampleTrans);
@@ -1072,6 +1095,124 @@ class VocabSheetApp {
         }, 1800);
     }
 
+    normalizePos(rawPos) {
+        if (!rawPos) return 'noun';
+        const p = String(rawPos).toLowerCase().trim();
+        if (['verb', 'v', 'v.', 'động từ', 'dong tu', 'đt', 'action'].includes(p)) return 'verb';
+        if (['adj', 'a', 'a.', 'adj.', 'adjective', 'tính từ', 'tinh tu', 'tt'].includes(p)) return 'adj';
+        if (['noun', 'n', 'n.', 'danh từ', 'danh tu', 'dt'].includes(p)) return 'noun';
+        return 'other';
+    }
+
+    getPosLabel(pos) {
+        const labels = {
+            noun: 'Danh từ',
+            verb: 'Động từ',
+            adj: 'Tính từ',
+            other: 'Khác'
+        };
+        return labels[pos] || 'Danh từ';
+    }
+
+    isVerbMeaning(meaning) {
+        if (!meaning) return false;
+        const m = meaning.toLowerCase().trim();
+        const verbKeywords = [
+            'thích', 'yêu', 'ghét', 'nhớ', 'quên', 'chạy', 'đi', 'đến', 'về', 'ăn', 'uống',
+            'nói', 'kể', 'bảo', 'nghe', 'xem', 'nhìn', 'thấy', 'học', 'làm', 'chơi', 'nghỉ',
+            'ngủ', 'thức', 'mua', 'bán', 'giúp', 'giúp đỡ', 'hỗ trợ', 'bắt đầu', 'kết thúc',
+            'tìm', 'tìm kiếm', 'mở', 'đóng', 'tặng', 'cho', 'nhận', 'gửi', 'viết', 'vẽ',
+            'hát', 'nhảy', 'bay', 'bơi', 'gặp', 'nấu', 'rửa', 'dọn', 'cười', 'khóc', 'lo',
+            'lo lắng', 'sợ', 'hiểu', 'biết', 'suy nghĩ', 'nghĩ', 'tập', 'luyện tập', 'sửa',
+            'sửa chữa', 'mang', 'đem', 'cầm', 'nắm', 'đặt', 'để', 'dùng', 'sử dụng', 'chờ',
+            'đợi', 'dừng', 'đứng', 'ngồi', 'nằm', 'thay đổi', 'chuẩn bị', 'cảm thấy',
+            'ứng tuyển', 'nộp', 'nộp đơn', 'áp dụng', 'liên lạc', 'trao đổi', 'giao tiếp',
+            'tham gia', 'hoàn thành', 'phát triển', 'tạo', 'chia sẻ', 'lắng nghe', 'chú ý',
+            'tập trung', 'thực hành', 'ôn tập', 'kiểm tra', 'thắng', 'thua', 'cố gắng', 'nỗ lực'
+        ];
+        const clauses = m.split(/[,;/+]+/).map(c => c.trim()).filter(Boolean);
+        for (const clause of clauses) {
+            const words = clause.split(/\s+/).filter(Boolean);
+            if (words.length > 0) {
+                if (verbKeywords.includes(words[0])) return true;
+                if (words.length >= 2 && verbKeywords.includes(`${words[0]} ${words[1]}`)) return true;
+            }
+        }
+        return false;
+    }
+
+    isAdjMeaning(meaning) {
+        if (!meaning) return false;
+        const m = meaning.toLowerCase().trim();
+        const adjKeywords = [
+            'đẹp', 'xấu', 'cao', 'thấp', 'to', 'nhỏ', 'lớn', 'bé', 'dài', 'ngắn',
+            'nhanh', 'chậm', 'nóng', 'lạnh', 'ấm', 'mát', 'mới', 'cũ', 'sạch', 'bẩn',
+            'tốt', 'ngoan', 'hư', 'vui', 'buồn', 'hạnh phúc', 'thông minh', 'chăm chỉ',
+            'lười', 'kiên cường', 'tuyệt vời', 'khó', 'dễ', 'đắt', 'rẻ', 'ngon', 'dở',
+            'ngọt', 'đắng', 'chua', 'cay', 'mặn', 'nhạt', 'sáng', 'tối', 'mệt', 'khỏe'
+        ];
+        const clauses = m.split(/[,;/+]+/).map(c => c.trim()).filter(Boolean);
+        for (const clause of clauses) {
+            const words = clause.split(/\s+/).filter(Boolean);
+            if (words.length > 0) {
+                if (adjKeywords.includes(words[0])) return true;
+                if (words.length >= 2 && adjKeywords.includes(`${words[0]} ${words[1]}`)) return true;
+            }
+        }
+        return false;
+    }
+
+    detectPos(word, meaning, rawPos, lang = 'ja') {
+        const cleanWord = (word || '').trim();
+        const cleanMeaning = (meaning || '').trim();
+
+        // 1. Kiểm tra nghĩa tiếng Việt: Nếu là hành động / cảm xúc / nhận thức -> Động từ
+        if (this.isVerbMeaning(cleanMeaning)) {
+            return { pos: 'verb', posLabel: 'Động từ' };
+        }
+
+        // 2. Nếu nghĩa tiếng Việt là tính từ miêu tả
+        if (this.isAdjMeaning(cleanMeaning)) {
+            return { pos: 'adj', posLabel: 'Tính từ' };
+        }
+
+        // 3. Nếu rawPos đã có từ AI/API hoặc Deck và hợp lệ
+        let normalized = this.normalizePos(rawPos);
+        if (rawPos && normalized !== 'other') {
+            return { pos: normalized, posLabel: this.getPosLabel(normalized) };
+        }
+
+        // 4. Heuristic hình thái từ vựng theo ngôn ngữ
+        if (lang === 'ja') {
+            if (/[うくぐすつぬぶむる]$/.test(cleanWord) || /する$|します$/.test(cleanWord)) {
+                return { pos: 'verb', posLabel: 'Động từ' };
+            }
+            if (/い$/.test(cleanWord) && !/[め手気目]$/.test(cleanWord)) {
+                return { pos: 'adj', posLabel: 'Tính từ' };
+            }
+        } else if (lang === 'ko') {
+            if (/하다$|다$/.test(cleanWord)) {
+                return { pos: 'verb', posLabel: 'Động từ' };
+            }
+        } else if (lang === 'en') {
+            const lw = cleanWord.toLowerCase();
+            if (/^(go|run|eat|drink|study|learn|speak|listen|read|write|walk|play|sleep|watch|see|look|help|work|make|take|give|get|buy|sell|send|open|close|start|finish|love|like|hate|remember|forget|apply|reply|rely|supply|imply|try|use|need|want|feel|live|stay|meet|think|know|understand)$/.test(lw)) {
+                return { pos: 'verb', posLabel: 'Động từ' };
+            }
+            if (/(ize|ise|ate|ify|en)$/.test(lw)) {
+                return { pos: 'verb', posLabel: 'Động từ' };
+            }
+            if (/(able|ible|al|ful|ic|ish|ive|less|ous)$/.test(lw) || (/ly$/.test(lw) && !/^(apply|reply|rely|supply|imply|comply|multiply)$/.test(lw))) {
+                return { pos: 'adj', posLabel: 'Tính từ' };
+            }
+            if (/(tion|sion|ment|ness|ity|ance|ence|ship|er|or)$/.test(lw)) {
+                return { pos: 'noun', posLabel: 'Danh từ' };
+            }
+        }
+
+        return { pos: normalized || 'noun', posLabel: this.getPosLabel(normalized || 'noun') };
+    }
+
     async lookupWordDetails(query, field, lang) {
         const cleanQuery = query.toLowerCase().trim();
 
@@ -1107,6 +1248,9 @@ class VocabSheetApp {
             if (res.ok) {
                 const json = await res.json();
                 if (json.data && (json.data.meaning || json.data.word || json.data.example)) {
+                    const detected = this.detectPos(json.data.word, json.data.meaning, json.data.pos, lang);
+                    json.data.pos = detected.pos;
+                    json.data.posLabel = detected.posLabel;
                     return json.data;
                 }
             }
@@ -1124,7 +1268,7 @@ class VocabSheetApp {
 Nhiệm vụ: Tìm thông tin học tập đầy đủ:
 - "word": Từ gốc chính xác bằng ${langName}.
 - "phonetic": Phiên âm chuẩn (Furigana/Romaji cho Nhật, Romaja cho Hàn, Pinyin cho Trung, IPA cho Anh).
-- "pos": "noun"|"verb"|"adj"|"other".
+- "pos": "noun"|"verb"|"adj"|"other". LƯU Ý ĐẶC BIỆT: Phân biệt chính xác giữa Động từ (verb), Tính từ (adj) và Danh từ (noun). Bất kỳ từ nào mang ý nghĩa hành động, trạng thái hành vi, tâm lý, cảm xúc (như thích, yêu, ghét, nhớ, học, làm việc, chạy, đi, ăn, uống, giúp đỡ, bắt đầu...) BẮT BUỘC gán "pos": "verb" và "posLabel": "Động từ", TUYỆT ĐỐI KHÔNG gán nhầm thành "adj" (Tính từ).
 - "posLabel": "Danh từ"|"Động từ"|"Tính từ"|"Khác".
 - "meaning": Nghĩa tiếng Việt chuẩn xác.
 - "example": 1 câu ví dụ ngắn gọn tự nhiên bằng ${langName}.
@@ -1146,6 +1290,9 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
                     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
                     const parsed = typeof text === 'string' ? JSON.parse(text) : null;
                     if (parsed && (parsed.meaning || parsed.word)) {
+                        const detected = this.detectPos(parsed.word, parsed.meaning, parsed.pos, lang);
+                        parsed.pos = detected.pos;
+                        parsed.posLabel = detected.posLabel;
                         return parsed;
                     }
                 }
@@ -1159,6 +1306,7 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
     }
 
     checkLocalDictionary(cleanQuery, field, lang) {
+        if (!cleanQuery) return null;
         const dict = {
             ja: [
                 { word: '桜', phonetic: '[さくら - Sakura]', pos: 'noun', posLabel: 'Danh từ', meaning: 'Hoa anh đào', example: '春になると、桜がとても綺麗に咲きます。', exampleTrans: 'Khi mùa xuân đến, hoa anh đào nở rất là đẹp.' },
@@ -1198,36 +1346,53 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
         };
 
         const list = dict[lang] || dict.ja;
-        return list.find(item => {
+        const item = list.find(item => {
             if (field === 'meaning') {
-                return item.meaning.toLowerCase().includes(cleanQuery) || cleanQuery.includes(item.meaning.toLowerCase());
+                if (cleanQuery.length < 2) return false;
+                const tokens = item.meaning.toLowerCase().split(/[,;/+]+/).map(t => t.trim());
+                return tokens.includes(cleanQuery) || item.meaning.toLowerCase() === cleanQuery;
             }
             if (field === 'phonetic') {
+                if (cleanQuery.length < 2) return false;
                 return item.phonetic.toLowerCase().includes(cleanQuery);
             }
-            return item.word.toLowerCase() === cleanQuery || item.word.toLowerCase().includes(cleanQuery);
-        }) || null;
+            return item.word.toLowerCase() === cleanQuery;
+        });
+
+        if (item) {
+            const detected = this.detectPos(item.word, item.meaning, item.pos, lang);
+            return {
+                ...item,
+                pos: detected.pos,
+                posLabel: detected.posLabel
+            };
+        }
+        return null;
     }
 
     checkExistingDecks(cleanQuery, field, lang) {
+        if (!cleanQuery || cleanQuery.length < 2) return null;
         const decks = window.studyStorage ? window.studyStorage.getDecks(lang) : [];
         for (const deck of decks) {
             if (Array.isArray(deck.words)) {
                 const match = deck.words.find(w => {
                     if (field === 'meaning') {
-                        return w.meaning && (w.meaning.toLowerCase().includes(cleanQuery) || cleanQuery.includes(w.meaning.toLowerCase()));
+                        if (!w.meaning) return false;
+                        const tokens = w.meaning.toLowerCase().split(/[,;/+]+/).map(t => t.trim());
+                        return tokens.includes(cleanQuery) || w.meaning.toLowerCase() === cleanQuery;
                     }
                     if (field === 'phonetic') {
                         return w.phonetic && w.phonetic.toLowerCase().includes(cleanQuery);
                     }
-                    return w.word && (w.word.toLowerCase() === cleanQuery || w.word.toLowerCase().includes(cleanQuery));
+                    return w.word && w.word.toLowerCase() === cleanQuery;
                 });
                 if (match) {
+                    const detected = this.detectPos(match.word, match.meaning, match.pos, lang);
                     return {
                         word: match.word,
                         phonetic: match.phonetic,
-                        pos: match.pos || 'noun',
-                        posLabel: match.posLabel || 'Danh từ',
+                        pos: detected.pos,
+                        posLabel: detected.posLabel,
                         meaning: match.meaning,
                         example: match.example,
                         exampleTrans: match.exampleTrans
@@ -1239,8 +1404,16 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
     }
 
     smartLocalWordDetails(query, field, lang) {
-        // Nếu offline và không tìm thấy trong từ điển có sẵn, không sinh nghĩa hay ví dụ giả mạo
-        return null;
+        const detected = this.detectPos(field === 'word' ? query : '', field === 'meaning' ? query : '', null, lang);
+        return {
+            word: field === 'word' ? query : '',
+            phonetic: '',
+            pos: detected.pos,
+            posLabel: detected.posLabel,
+            meaning: field === 'meaning' ? query : '',
+            example: '',
+            exampleTrans: ''
+        };
     }
 
     openAddWordModal() {
@@ -1249,6 +1422,7 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
         const titleEl = document.getElementById('addWordModalTitle');
         const submitBtn = document.getElementById('btnSubmitWord');
         const statusEl = document.getElementById('aiModalStatusText');
+        const selectPos = document.getElementById('newPos');
 
         if (titleEl) {
             const langNames = { ja: 'tiếng Nhật', ko: 'tiếng Hàn', zh: 'tiếng Trung', en: 'tiếng Anh' };
@@ -1268,6 +1442,13 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
         document.getElementById('newExample').value = '';
         document.getElementById('newExampleTrans').value = '';
 
+        if (selectPos) {
+            selectPos.value = 'noun';
+            selectPos.dataset.userModified = 'false';
+        }
+        this.lastAutoFilledQuery = '';
+        this.lastAutoFilledField = '';
+
         if (modal) modal.classList.add('active');
         setTimeout(() => {
             const inputWord = document.getElementById('newWord');
@@ -1285,6 +1466,7 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
         const titleEl = document.getElementById('addWordModalTitle');
         const submitBtn = document.getElementById('btnSubmitWord');
         const statusEl = document.getElementById('aiModalStatusText');
+        const selectPos = document.getElementById('newPos');
 
         if (titleEl) {
             titleEl.textContent = `✏️ Chỉnh sửa từ vựng: ${wordObj.word}`;
@@ -1299,10 +1481,16 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
 
         document.getElementById('newWord').value = wordObj.word || '';
         document.getElementById('newPhonetic').value = (wordObj.phonetic || '').replace(/^\[|\]$/g, '');
-        document.getElementById('newPos').value = wordObj.pos || 'noun';
+        if (selectPos) {
+            selectPos.value = this.normalizePos(wordObj.pos || 'noun');
+            selectPos.dataset.userModified = 'true';
+        }
         document.getElementById('newMeaning').value = wordObj.meaning || '';
         document.getElementById('newExample').value = wordObj.example || '';
         document.getElementById('newExampleTrans').value = wordObj.exampleTrans || '';
+
+        this.lastAutoFilledQuery = '';
+        this.lastAutoFilledField = '';
 
         if (modal) modal.classList.add('active');
     }
@@ -1329,7 +1517,8 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
     submitNewWord() {
         const word = document.getElementById('newWord').value.trim();
         const phonetic = document.getElementById('newPhonetic').value.trim();
-        const pos = document.getElementById('newPos').value;
+        const rawPos = document.getElementById('newPos').value;
+        const pos = this.normalizePos(rawPos);
         const meaning = document.getElementById('newMeaning').value.trim();
         const example = document.getElementById('newExample').value.trim();
         const exampleTrans = document.getElementById('newExampleTrans').value.trim();
@@ -1340,6 +1529,7 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
         }
 
         const posLabels = { noun: 'Danh từ', verb: 'Động từ', adj: 'Tính từ', other: 'Khác' };
+        const posLabel = posLabels[pos] || 'Danh từ';
 
         if (this.editingWordId) {
             const wordObj = this.currentDeck.words.find(w => w.id === this.editingWordId);
@@ -1347,7 +1537,7 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
                 wordObj.word = word;
                 wordObj.phonetic = phonetic ? `[${phonetic}]` : '';
                 wordObj.pos = pos;
-                wordObj.posLabel = posLabels[pos] || 'Khác';
+                wordObj.posLabel = posLabel;
                 wordObj.meaning = meaning;
                 wordObj.example = example;
                 wordObj.exampleTrans = exampleTrans;
@@ -1366,7 +1556,7 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
                 word,
                 phonetic: phonetic ? `[${phonetic}]` : '',
                 pos,
-                posLabel: posLabels[pos] || 'Khác',
+                posLabel,
                 meaning,
                 example,
                 exampleTrans,
