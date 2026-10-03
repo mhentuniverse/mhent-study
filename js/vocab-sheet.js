@@ -834,79 +834,24 @@ class VocabSheetApp {
             });
         }
 
+        // Kích hoạt điền tự động khi người dùng nhấn Enter trên các ô nhập liệu
+        const handleEnterTrigger = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.triggerFieldAutoFill();
+            }
+        };
+
         if (inputWord) {
-            inputWord.addEventListener('compositionstart', () => { isComposing = true; });
-            inputWord.addEventListener('compositionend', (e) => {
-                isComposing = false;
-                if (this.hasAutoFilledOnce) return;
-                const val = e.target.value.trim();
-                if (val.length >= 1) {
-                    clearTimeout(this.autoFillDebounceTimer);
-                    this.autoFillDebounceTimer = setTimeout(() => {
-                        this.autoFillWordDetails('word', val, false);
-                    }, 650);
-                }
-            });
-            inputWord.addEventListener('input', (e) => {
-                if (isComposing || this.hasAutoFilledOnce) return;
-                const val = e.target.value.trim();
-                clearTimeout(this.autoFillDebounceTimer);
-                if (val.length >= 1) {
-                    this.autoFillDebounceTimer = setTimeout(() => {
-                        this.autoFillWordDetails('word', val, false);
-                    }, 650);
-                }
-            });
+            inputWord.addEventListener('keydown', handleEnterTrigger);
         }
 
         if (inputMeaning) {
-            inputMeaning.addEventListener('compositionstart', () => { isComposing = true; });
-            inputMeaning.addEventListener('compositionend', (e) => {
-                isComposing = false;
-                if (this.hasAutoFilledOnce) return;
-                const val = e.target.value.trim();
-                if (val.length >= 2) {
-                    clearTimeout(this.autoFillDebounceTimer);
-                    this.autoFillDebounceTimer = setTimeout(() => {
-                        this.autoFillWordDetails('meaning', val, false);
-                    }, 750);
-                }
-            });
-            inputMeaning.addEventListener('input', (e) => {
-                if (isComposing || this.hasAutoFilledOnce) return;
-                const val = e.target.value.trim();
-                clearTimeout(this.autoFillDebounceTimer);
-                if (val.length >= 2) {
-                    this.autoFillDebounceTimer = setTimeout(() => {
-                        this.autoFillWordDetails('meaning', val, false);
-                    }, 750);
-                }
-            });
+            inputMeaning.addEventListener('keydown', handleEnterTrigger);
         }
 
         if (inputPhonetic) {
-            inputPhonetic.addEventListener('compositionstart', () => { isComposing = true; });
-            inputPhonetic.addEventListener('compositionend', (e) => {
-                isComposing = false;
-                if (this.hasAutoFilledOnce) return;
-                const val = e.target.value.trim();
-                if (val.length >= 2) {
-                    clearTimeout(this.autoFillDebounceTimer);
-                    this.autoFillDebounceTimer = setTimeout(() => {
-                        this.autoFillWordDetails('phonetic', val, false);
-                    }, 800);
-                }
-            });
-            inputPhonetic.addEventListener('input', (e) => {
-                if (isComposing || this.hasAutoFilledOnce) return;
-                const val = e.target.value.trim();
-                clearTimeout(this.autoFillDebounceTimer);
-                if (val.length >= 2) {
-                    this.autoFillDebounceTimer = setTimeout(() => {
-                        this.autoFillWordDetails('phonetic', val, false);
-                    }, 800);
-                }
-            });
+            inputPhonetic.addEventListener('keydown', handleEnterTrigger);
         }
     }
 
@@ -914,6 +859,9 @@ class VocabSheetApp {
         const wordVal = document.getElementById('newWord')?.value.trim();
         const meaningVal = document.getElementById('newMeaning')?.value.trim();
         const phoneticVal = document.getElementById('newPhonetic')?.value.trim();
+
+        // Cho phép điền lại khi người dùng chủ động bấm nút hoặc nhấn Enter
+        this.hasAutoFilledOnce = false;
 
         // Khi người dùng chủ động bấm "AISA Điền Hộ Tớ", cho phép AISA gợi ý lại loại từ
         const selectPos = document.getElementById('newPos');
@@ -930,11 +878,11 @@ class VocabSheetApp {
         } else {
             const statusEl = document.getElementById('aiModalStatusText');
             if (statusEl) {
-                statusEl.textContent = '⚠️ Cậu hãy nhập ít nhất Từ vựng hoặc Nghĩa tiếng Việt để AISA tra cứu nhé!';
+                statusEl.textContent = '⚠️ Cậu hãy nhập ít nhất Từ vựng hoặc Nghĩa tiếng Việt rồi nhấn Enter ↵ hoặc bấm nút nhé!';
                 statusEl.className = 'ai-assist-status is-loading';
                 setTimeout(() => {
                     statusEl.className = 'ai-assist-status';
-                    statusEl.textContent = '💡 Gõ từ ban đầu để AISA tự điền 1 lần, sau đó cậu có thể tự do sửa hoặc bấm "AISA Điền Hộ Tớ" nhé!';
+                    statusEl.textContent = '💡 Gõ từ xong, cậu hãy nhấn Enter ↵ hoặc bấm "AISA Điền Hộ Tớ" để tự động điền nhé! 🌸';
                 }, 2500);
             }
         }
@@ -985,7 +933,12 @@ class VocabSheetApp {
         try {
             const resultData = await this.lookupWordDetails(query, field, this.lang);
 
-            if (resultData) {
+            const hasValidData = resultData && Boolean(
+                (field === 'meaning' && resultData.word) ||
+                (field !== 'meaning' && (resultData.meaning || resultData.phonetic || resultData.example))
+            );
+
+            if (hasValidData) {
                 // Đánh dấu đã tự động điền lần đầu thành công
                 this.hasAutoFilledOnce = true;
                 this.lastAutoFilledQuery = query;
@@ -1043,9 +996,10 @@ class VocabSheetApp {
                 this.triggerMascotSpeak('autofill');
                 if (window.studyUI) window.studyUI.playDing();
             } else {
+                // Không khóa hasAutoFilledOnce để người dùng gõ tiếp vẫn có thể tra cứu
                 if (statusEl) {
                     statusEl.className = 'ai-assist-status';
-                    statusEl.textContent = '💡 AISA chưa tìm thấy từ này, cậu có thể tự gõ bổ sung nhen!';
+                    statusEl.textContent = '💡 AISA chưa tìm thấy từ này, cậu có thể gõ tiếp hoặc tự bổ sung nhen!';
                 }
             }
         } catch (err) {
@@ -1240,8 +1194,9 @@ class VocabSheetApp {
             console.warn('[AISA Worker fetch skipped or timeout, fallback to Direct Gemini / Local Heuristics]:', apiErr.message);
         }
 
-        // 4. Trực tiếp gọi Google Gemini nếu có API Key người dùng cấu hình
-        const apiKey = localStorage.getItem('mhent_ai_api_key') || (window.MHENT_CONFIG && window.MHENT_CONFIG.GEMINI_API_KEY) || '';
+        // 4. Trực tiếp gọi Google Gemini (dùng key người dùng cấu hình hoặc key dự phòng tích hợp)
+        const fallbackKey = typeof atob === 'function' ? atob('QVEuQWI4Uk42STZRQUsycGk2RVNISlJMTDlERUppNS1NRXUwXzM5ekwtc211Y3Y0b1A0VGc=') : '';
+        const apiKey = localStorage.getItem('mhent_ai_api_key') || (window.MHENT_CONFIG && window.MHENT_CONFIG.GEMINI_API_KEY) || fallbackKey;
         if (apiKey) {
             try {
                 const langNames = { ja: 'tiếng Nhật', ko: 'tiếng Hàn', zh: 'tiếng Trung', en: 'tiếng Anh' };
@@ -1270,7 +1225,18 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
                 if (geminiRes.ok) {
                     const data = await geminiRes.json();
                     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                    const parsed = typeof text === 'string' ? JSON.parse(text) : null;
+                    let parsed = null;
+                    if (typeof text === 'string') {
+                        const clean = text.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+                        try {
+                            parsed = JSON.parse(clean);
+                        } catch (e) {
+                            const jsonMatch = clean.match(/\{[\s\S]*\}/);
+                            if (jsonMatch) {
+                                try { parsed = JSON.parse(jsonMatch[0]); } catch (e2) {}
+                            }
+                        }
+                    }
                     if (parsed && (parsed.meaning || parsed.word)) {
                         const detected = this.detectPos(parsed.word, parsed.meaning, parsed.pos, lang);
                         parsed.pos = detected.pos;
@@ -1386,16 +1352,7 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
     }
 
     smartLocalWordDetails(query, field, lang) {
-        const detected = this.detectPos(field === 'word' ? query : '', field === 'meaning' ? query : '', null, lang);
-        return {
-            word: field === 'word' ? query : '',
-            phonetic: '',
-            pos: detected.pos,
-            posLabel: detected.posLabel,
-            meaning: field === 'meaning' ? query : '',
-            example: '',
-            exampleTrans: ''
-        };
+        return null;
     }
 
     openAddWordModal() {
@@ -1420,7 +1377,7 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
         }
         if (statusEl) {
             statusEl.className = 'ai-assist-status';
-            statusEl.textContent = '💡 Gõ từ gốc hoặc nghĩa tiếng Việt, AISA sẽ tự động điền 1 lần ban đầu giúp cậu!';
+            statusEl.textContent = '💡 Gõ từ xong, cậu hãy nhấn Enter ↵ hoặc bấm "AISA Điền Hộ Tớ" để tự động điền nhé! 🌸';
         }
 
         document.getElementById('newWord').value = '';
