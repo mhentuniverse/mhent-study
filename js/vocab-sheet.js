@@ -580,6 +580,9 @@ class VocabSheetApp {
             if (item.pos === 'noun') posBadge = `<span class="tag-badge tag-noun">${item.posLabel || 'Danh từ'}</span>`;
             if (item.pos === 'verb') posBadge = `<span class="tag-badge tag-verb">${item.posLabel || 'Động từ'}</span>`;
             if (item.pos === 'adj') posBadge = `<span class="tag-badge tag-adj">${item.posLabel || 'Tính từ'}</span>`;
+            if (item.pos === 'adv') posBadge = `<span class="tag-badge tag-adv">${item.posLabel || 'Trạng từ'}</span>`;
+            if (item.pos === 'phrasal_verb') posBadge = `<span class="tag-badge tag-phrasal">${item.posLabel || 'Cụm động từ'}</span>`;
+            if (item.pos === 'collocation') posBadge = `<span class="tag-badge tag-collocation">${item.posLabel || 'Collocation'}</span>`;
 
             // HTML ô Từ vựng (hỗ trợ Mask / Unmask)
             let wordCellHtml = '';
@@ -639,7 +642,10 @@ class VocabSheetApp {
                 <td>${wordCellHtml}</td>
                 <td>${posBadge}</td>
                 <td style="color: var(--study-text-muted); font-size: 0.84rem;">${phoneticCellHtml}</td>
-                <td style="font-weight: 700; color: var(--study-text);">${meaningCellHtml}</td>
+                <td style="font-weight: 700; color: var(--study-text);">
+                    ${meaningCellHtml}
+                    ${this.formatWordFamilyBadge(item.wordFamily)}
+                </td>
                 <td style="font-size: 0.82rem; max-width: 280px;">
                     <div>${item.example || ''}</div>
                     <div style="color: var(--study-text-muted); font-size: 0.78rem;">${item.exampleTrans || ''}</div>
@@ -691,6 +697,20 @@ class VocabSheetApp {
 
             tbody.appendChild(tr);
         });
+    }
+
+    formatWordFamilyBadge(wf) {
+        if (!wf) return '';
+        if (typeof wf === 'string') {
+            return `<div class="word-family-badge" title="Gia đình từ (Word Formation)"><span class="wf-title">👨‍👩‍👧 Family:</span> ${wf}</div>`;
+        }
+        const parts = [];
+        if (wf.noun) parts.push(`<span class="wf-item"><b>N:</b> ${wf.noun}</span>`);
+        if (wf.verb) parts.push(`<span class="wf-item"><b>V:</b> ${wf.verb}</span>`);
+        if (wf.adj) parts.push(`<span class="wf-item"><b>Adj:</b> ${wf.adj}</span>`);
+        if (wf.adv) parts.push(`<span class="wf-item"><b>Adv:</b> ${wf.adv}</span>`);
+        if (!parts.length) return '';
+        return `<div class="word-family-badge" title="Gia đình từ (Word Formation)"><span class="wf-title">👨‍👩‍👧 Family:</span> ${parts.join(' ')}</div>`;
     }
 
     handleWordInput(inputEl, wordId) {
@@ -905,6 +925,10 @@ class VocabSheetApp {
         const inputMeaning = document.getElementById('newMeaning');
         const inputExample = document.getElementById('newExample');
         const inputExampleTrans = document.getElementById('newExampleTrans');
+        const inputWfNoun = document.getElementById('newWfNoun');
+        const inputWfVerb = document.getElementById('newWfVerb');
+        const inputWfAdj = document.getElementById('newWfAdj');
+        const inputWfAdv = document.getElementById('newWfAdv');
 
         if (assistBox) assistBox.classList.add('is-loading');
         if (statusEl) {
@@ -921,7 +945,11 @@ class VocabSheetApp {
             { el: inputPhonetic, key: 'phonetic' },
             { el: inputMeaning, key: 'meaning' },
             { el: inputExample, key: 'example' },
-            { el: inputExampleTrans, key: 'exampleTrans' }
+            { el: inputExampleTrans, key: 'exampleTrans' },
+            { el: inputWfNoun, key: 'wfNoun' },
+            { el: inputWfVerb, key: 'wfVerb' },
+            { el: inputWfAdj, key: 'wfAdj' },
+            { el: inputWfAdv, key: 'wfAdv' }
         ];
 
         targets.forEach(t => {
@@ -988,6 +1016,26 @@ class VocabSheetApp {
                     this.highlightField(inputExampleTrans);
                 }
 
+                // 7. Điền Gia đình từ (Word Family) nếu có
+                if (resultData.wordFamily && typeof resultData.wordFamily === 'object') {
+                    if (inputWfNoun) {
+                        inputWfNoun.value = resultData.wordFamily.noun || '';
+                        if (resultData.wordFamily.noun) this.highlightField(inputWfNoun);
+                    }
+                    if (inputWfVerb) {
+                        inputWfVerb.value = resultData.wordFamily.verb || '';
+                        if (resultData.wordFamily.verb) this.highlightField(inputWfVerb);
+                    }
+                    if (inputWfAdj) {
+                        inputWfAdj.value = resultData.wordFamily.adj || '';
+                        if (resultData.wordFamily.adj) this.highlightField(inputWfAdj);
+                    }
+                    if (inputWfAdv) {
+                        inputWfAdv.value = resultData.wordFamily.adv || '';
+                        if (resultData.wordFamily.adv) this.highlightField(inputWfAdv);
+                    }
+                }
+
                 if (statusEl) {
                     statusEl.className = 'ai-assist-status is-success';
                     statusEl.textContent = '✨ Đã tự động điền xong! Cậu có thể tự do sửa, hoặc bấm "AISA Điền Hộ Tớ" nếu muốn tạo lại nhé. 🌸';
@@ -1034,6 +1082,9 @@ class VocabSheetApp {
     normalizePos(rawPos) {
         if (!rawPos) return 'noun';
         const p = String(rawPos).toLowerCase().trim();
+        if (['phrasal_verb', 'phrasal verb', 'phrasal', 'cụm động từ', 'cum dong tu', 'pv'].includes(p)) return 'phrasal_verb';
+        if (['collocation', 'idiom', 'phrase', 'cụm từ', 'cum tu', 'thành ngữ'].includes(p)) return 'collocation';
+        if (['adv', 'adverb', 'trạng từ', 'phó từ', 'trang tu', 'pho tu'].includes(p)) return 'adv';
         if (['verb', 'v', 'v.', 'động từ', 'dong tu', 'đt', 'action'].includes(p)) return 'verb';
         if (['adj', 'a', 'a.', 'adj.', 'adjective', 'tính từ', 'tinh tu', 'tt'].includes(p)) return 'adj';
         if (['noun', 'n', 'n.', 'danh từ', 'danh tu', 'dt'].includes(p)) return 'noun';
@@ -1045,6 +1096,9 @@ class VocabSheetApp {
             noun: 'Danh từ',
             verb: 'Động từ',
             adj: 'Tính từ',
+            adv: 'Trạng từ',
+            phrasal_verb: 'Cụm động từ',
+            collocation: 'Collocation',
             other: 'Khác'
         };
         return labels[pos] || 'Danh từ';
@@ -1102,23 +1156,34 @@ class VocabSheetApp {
         const cleanWord = (word || '').trim();
         const cleanMeaning = (meaning || '').trim();
 
-        // 1. Kiểm tra nghĩa tiếng Việt: Nếu là hành động / cảm xúc / nhận thức -> Động từ
-        if (this.isVerbMeaning(cleanMeaning)) {
-            return { pos: 'verb', posLabel: 'Động từ' };
-        }
-
-        // 2. Nếu nghĩa tiếng Việt là tính từ miêu tả
-        if (this.isAdjMeaning(cleanMeaning)) {
-            return { pos: 'adj', posLabel: 'Tính từ' };
-        }
-
-        // 3. Nếu rawPos đã có từ AI/API hoặc Deck và hợp lệ
+        // 1. Nếu rawPos đã có từ AI/API hoặc Deck và hợp lệ (ưu tiên phrasal_verb, collocation, adv)
         let normalized = this.normalizePos(rawPos);
         if (rawPos && normalized !== 'other') {
             return { pos: normalized, posLabel: this.getPosLabel(normalized) };
         }
 
-        // 4. Heuristic hình thái từ vựng theo ngôn ngữ
+        // 2. Nhận diện cụm từ tiếng Anh: Phrasal Verb hoặc Collocation
+        if (lang === 'en' && cleanWord.includes(' ')) {
+            const lw = cleanWord.toLowerCase();
+            const pvParticles = ['up', 'down', 'in', 'out', 'on', 'off', 'at', 'by', 'for', 'from', 'about', 'after', 'with', 'through', 'into', 'over', 'across', 'away', 'back', 'forward', 'round', 'around', 'along', 'together', 'apart'];
+            const tokens = lw.split(/\s+/);
+            if (tokens.length >= 2 && pvParticles.includes(tokens[tokens.length - 1])) {
+                return { pos: 'phrasal_verb', posLabel: 'Cụm động từ' };
+            }
+            return { pos: 'collocation', posLabel: 'Collocation' };
+        }
+
+        // 3. Kiểm tra nghĩa tiếng Việt: Nếu là hành động / cảm xúc / nhận thức -> Động từ
+        if (this.isVerbMeaning(cleanMeaning)) {
+            return { pos: 'verb', posLabel: 'Động từ' };
+        }
+
+        // 4. Nếu nghĩa tiếng Việt là tính từ miêu tả
+        if (this.isAdjMeaning(cleanMeaning)) {
+            return { pos: 'adj', posLabel: 'Tính từ' };
+        }
+
+        // 5. Heuristic hình thái từ vựng theo ngôn ngữ
         if (lang === 'ja') {
             if (/[うくぐすつぬぶむる]$/.test(cleanWord) || /する$|します$/.test(cleanWord)) {
                 return { pos: 'verb', posLabel: 'Động từ' };
@@ -1138,7 +1203,10 @@ class VocabSheetApp {
             if (/(ize|ise|ate|ify|en)$/.test(lw)) {
                 return { pos: 'verb', posLabel: 'Động từ' };
             }
-            if (/(able|ible|al|ful|ic|ish|ive|less|ous)$/.test(lw) || (/ly$/.test(lw) && !/^(apply|reply|rely|supply|imply|comply|multiply)$/.test(lw))) {
+            if (/ly$/.test(lw) && !/^(apply|reply|rely|supply|imply|comply|multiply|lonely|lovely|friendly|ugly|silly|early)$/.test(lw)) {
+                return { pos: 'adv', posLabel: 'Trạng từ' };
+            }
+            if (/(able|ible|al|ful|ic|ish|ive|less|ous)$/.test(lw) || (/ly$/.test(lw) && /^(lonely|lovely|friendly|ugly|silly|early)$/.test(lw))) {
                 return { pos: 'adj', posLabel: 'Tính từ' };
             }
             if (/(tion|sion|ment|ness|ity|ance|ence|ship|er|or)$/.test(lw)) {
@@ -1205,13 +1273,21 @@ class VocabSheetApp {
 Nhiệm vụ: Tìm thông tin học tập đầy đủ:
 - "word": Từ gốc chính xác bằng ${langName}.
 - "phonetic": Phiên âm chuẩn (Furigana/Romaji cho Nhật, Romaja cho Hàn, Pinyin cho Trung, IPA cho Anh).
-- "pos": "noun"|"verb"|"adj"|"other". LƯU Ý ĐẶC BIỆT: Phân biệt chính xác giữa Động từ (verb), Tính từ (adj) và Danh từ (noun). Bất kỳ từ nào mang ý nghĩa hành động, trạng thái hành vi, tâm lý, cảm xúc (như thích, yêu, ghét, nhớ, học, làm việc, chạy, đi, ăn, uống, giúp đỡ, bắt đầu...) BẮT BUỘC gán "pos": "verb" và "posLabel": "Động từ", TUYỆT ĐỐI KHÔNG gán nhầm thành "adj" (Tính từ).
-- "posLabel": "Danh từ"|"Động từ"|"Tính từ"|"Khác".
+- "pos": "noun"|"verb"|"adj"|"adv"|"phrasal_verb"|"collocation"|"other".
+  QUY TẮC PHÂN LOẠI TỪ:
+  + Nếu là cụm động từ gồm động từ + giới từ/trạng từ (ví dụ: look forward to, give up, take over, run out of...), BẮT BUỘC gán "pos": "phrasal_verb" và "posLabel": "Cụm động từ".
+  + Nếu là cụm từ ghép, thành ngữ hoặc cụm từ cố định hay đi liền nhau (ví dụ: make a decision, heavy rain, take advantage of...), BẮT BUỘC gán "pos": "collocation" và "posLabel": "Collocation".
+  + Nếu là trạng từ (ví dụ: successfully, quickly...), gán "pos": "adv" và "posLabel": "Trạng từ".
+  + Nếu là từ hành động đơn lẻ: gán "pos": "verb" và "posLabel": "Động từ".
+- "posLabel": "Danh từ"|"Động từ"|"Tính từ"|"Trạng từ"|"Cụm động từ"|"Collocation"|"Khác".
 - "meaning": Nghĩa tiếng Việt chuẩn xác.
 - "example": 1 câu ví dụ ngắn gọn tự nhiên bằng ${langName}.
 - "exampleTrans": Dịch câu ví dụ sang tiếng Việt.
+- "wordFamily": Đối tượng chứa các dạng gia đình từ (Word Formation) tương ứng nếu có:
+  {"noun": "...", "verb": "...", "adj": "...", "adv": "..."}
+
 Trả về DUY NHẤT một chuỗi JSON hợp lệ:
-{"word":"...","phonetic":"...","pos":"noun","posLabel":"Danh từ","meaning":"...","example":"...","exampleTrans":"..."}`;
+{"word":"...","phonetic":"...","pos":"noun","posLabel":"Danh từ","meaning":"...","example":"...","exampleTrans":"...","wordFamily":{"noun":"...","verb":"...","adj":"...","adv":"..."}}`;
 
                 const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`, {
                     method: 'POST',
@@ -1386,6 +1462,11 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
         document.getElementById('newExample').value = '';
         document.getElementById('newExampleTrans').value = '';
 
+        if (document.getElementById('newWfNoun')) document.getElementById('newWfNoun').value = '';
+        if (document.getElementById('newWfVerb')) document.getElementById('newWfVerb').value = '';
+        if (document.getElementById('newWfAdj')) document.getElementById('newWfAdj').value = '';
+        if (document.getElementById('newWfAdv')) document.getElementById('newWfAdv').value = '';
+
         if (selectPos) {
             selectPos.value = 'noun';
             selectPos.dataset.userModified = 'false';
@@ -1436,6 +1517,12 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
         document.getElementById('newExample').value = wordObj.example || '';
         document.getElementById('newExampleTrans').value = wordObj.exampleTrans || '';
 
+        const wf = wordObj.wordFamily || {};
+        if (document.getElementById('newWfNoun')) document.getElementById('newWfNoun').value = wf.noun || '';
+        if (document.getElementById('newWfVerb')) document.getElementById('newWfVerb').value = wf.verb || '';
+        if (document.getElementById('newWfAdj')) document.getElementById('newWfAdj').value = wf.adj || '';
+        if (document.getElementById('newWfAdv')) document.getElementById('newWfAdv').value = wf.adv || '';
+
         this.lastAutoFilledQuery = '';
         this.lastAutoFilledField = '';
 
@@ -1475,8 +1562,16 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
             return;
         }
 
-        const posLabels = { noun: 'Danh từ', verb: 'Động từ', adj: 'Tính từ', other: 'Khác' };
-        const posLabel = posLabels[pos] || 'Danh từ';
+        const posLabel = this.getPosLabel(pos);
+
+        const wfNoun = document.getElementById('newWfNoun')?.value.trim() || '';
+        const wfVerb = document.getElementById('newWfVerb')?.value.trim() || '';
+        const wfAdj = document.getElementById('newWfAdj')?.value.trim() || '';
+        const wfAdv = document.getElementById('newWfAdv')?.value.trim() || '';
+        let wordFamily = null;
+        if (wfNoun || wfVerb || wfAdj || wfAdv) {
+            wordFamily = { noun: wfNoun, verb: wfVerb, adj: wfAdj, adv: wfAdv };
+        }
 
         if (this.editingWordId) {
             const wordObj = this.currentDeck.words.find(w => w.id === this.editingWordId);
@@ -1488,6 +1583,7 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
                 wordObj.meaning = meaning;
                 wordObj.example = example;
                 wordObj.exampleTrans = exampleTrans;
+                wordObj.wordFamily = wordFamily;
             }
             this.saveCurrentDeck();
             this.renderAll();
@@ -1507,6 +1603,7 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
                 meaning,
                 example,
                 exampleTrans,
+                wordFamily,
                 typedWord: '',
                 reviews: [false, false, false, false],
                 isCompleted: false

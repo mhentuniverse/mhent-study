@@ -165,6 +165,10 @@
                     <option value="noun">Danh từ</option>
                     <option value="verb">Động từ</option>
                     <option value="adj">Tính từ</option>
+                    <option value="adv">Trạng từ</option>
+                    <option value="phrasal_verb">Cụm động từ (Phrasal Verb)</option>
+                    <option value="collocation">Collocation / Cụm từ</option>
+                    <option value="other">Khác</option>
                 </select>
             </div>
 
@@ -330,9 +334,12 @@
                     <div>
                         <label class="modal-label">Loại từ</label>
                         <select id="newPos" class="modal-select">
-                            <option value="noun">Danh từ</option>
-                            <option value="verb">Động từ</option>
-                            <option value="adj">Tính từ</option>
+                            <option value="noun">Danh từ (Noun)</option>
+                            <option value="verb">Động từ (Verb)</option>
+                            <option value="adj">Tính từ (Adjective)</option>
+                            <option value="adv">Trạng từ (Adverb)</option>
+                            <option value="phrasal_verb">Cụm động từ (Phrasal Verb)</option>
+                            <option value="collocation">Cụm từ cố định (Collocation)</option>
                             <option value="other">Khác</option>
                         </select>
                     </div>
@@ -340,6 +347,34 @@
                 <div>
                     <label class="modal-label">Nghĩa tiếng Việt * <span style="font-size: 0.78rem; color: #a5b4fc; font-weight: normal; margin-left: 6px;">(Hoặc gõ nghĩa rồi nhấn Enter ↵)</span></label>
                     <input type="text" id="newMeaning" class="modal-input" placeholder="Ví dụ: Cơ hội, thời cơ">
+                </div>
+
+                <!-- Gia đình từ (Word Family / Word Formation) -->
+                <div class="modal-word-family-wrap" id="wrapWordFamily">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label class="modal-label" style="margin-bottom: 0;">
+                            👨‍👩‍👧 Gia đình từ (Word Family / Word Formation)
+                            <span style="font-size: 0.74rem; color: #a5b4fc; font-weight: normal; margin-left: 4px;">(AISA tự điền hoặc cậu sửa tự do)</span>
+                        </label>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div>
+                            <div style="font-size: 0.74rem; color: var(--study-text-muted); margin-bottom: 3px;">Danh từ (Noun)</div>
+                            <input type="text" id="newWfNoun" class="modal-input" placeholder="Ví dụ: success, decision" style="font-size: 0.84rem; padding: 7px 10px;">
+                        </div>
+                        <div>
+                            <div style="font-size: 0.74rem; color: var(--study-text-muted); margin-bottom: 3px;">Động từ (Verb)</div>
+                            <input type="text" id="newWfVerb" class="modal-input" placeholder="Ví dụ: succeed, decide" style="font-size: 0.84rem; padding: 7px 10px;">
+                        </div>
+                        <div>
+                            <div style="font-size: 0.74rem; color: var(--study-text-muted); margin-bottom: 3px;">Tính từ (Adj)</div>
+                            <input type="text" id="newWfAdj" class="modal-input" placeholder="Ví dụ: successful, decisive" style="font-size: 0.84rem; padding: 7px 10px;">
+                        </div>
+                        <div>
+                            <div style="font-size: 0.74rem; color: var(--study-text-muted); margin-bottom: 3px;">Trạng từ (Adv)</div>
+                            <input type="text" id="newWfAdv" class="modal-input" placeholder="Ví dụ: successfully, decisively" style="font-size: 0.84rem; padding: 7px 10px;">
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="modal-label">Câu ví dụ mẫu</label>
