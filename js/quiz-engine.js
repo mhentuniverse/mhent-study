@@ -30,6 +30,7 @@ const MODE_ICON  = C.modeIcon   || '🎯';
 const ALL_TYPES = [
   'mcq_meaning_word', 'mcq_word_meaning',
   'mcq_listening', 'mcq_fill',
+  'mcq_word_form',
   'type_meaning', 'type_listening', 'scramble'
 ];
 const USE_TYPES = (C.types && C.types.length) ? C.types : ALL_TYPES;
@@ -39,10 +40,89 @@ const TYPE_LABELS = {
   mcq_word_meaning: '🎯 Từ→Nghĩa',
   mcq_listening:    '🔊 Nghe→Chọn',
   mcq_fill:         '📝 Điền từ',
+  mcq_word_form:    '👨‍👩‍👧 Dạng từ (Word Form)',
   type_meaning:     '✍️ Nghĩa→Gõ',
   type_listening:   '🔊 Nghe→Gõ',
   scramble:         '🔀 Scramble',
 };
+
+/* ── POS & Word Family Helpers ───────────────────────────────────── */
+function getPosLabel(pos) {
+  const map = {
+    noun: 'Danh từ (Noun)',
+    verb: 'Động từ (Verb)',
+    adj: 'Tính từ (Adjective)',
+    adv: 'Trạng từ (Adverb)',
+    phrase: 'Cụm từ',
+    phrasal_verb: 'Cụm động từ (Phrasal Verb)',
+    collocation: 'Cụm từ cố định (Collocation)',
+    idiom: 'Thành ngữ (Idiom)',
+    other: 'Khác'
+  };
+  return map[pos] || pos || '';
+}
+
+function getPosBadgeLabel(word) {
+  if (!word) return '';
+  if (word.posLabel && word.posLabel.trim()) return word.posLabel.trim();
+  if (word.pos) return getPosLabel(word.pos);
+  return '';
+}
+
+function getShortPos(pos) {
+  if (!pos) return '';
+  const map = {
+    noun: 'Noun',
+    verb: 'Verb',
+    adj: 'Adj',
+    adv: 'Adv',
+    phrase: 'Phrase',
+    phrasal_verb: 'Phrasal Verb',
+    collocation: 'Collocation',
+    idiom: 'Idiom'
+  };
+  return map[pos] || pos;
+}
+
+function getCatName(cat) {
+  const map = {
+    noun: 'Danh từ (Noun)',
+    verb: 'Động từ (Verb)',
+    adj: 'Tính từ (Adjective)',
+    adv: 'Trạng từ (Adverb)'
+  };
+  return map[cat] || cat;
+}
+
+function getCatShort(cat) {
+  const map = {
+    noun: 'N',
+    verb: 'V',
+    adj: 'Adj',
+    adv: 'Adv'
+  };
+  return map[cat] || cat;
+}
+
+function getValidWordFamily(word) {
+  if (!word || !word.wordFamily || typeof word.wordFamily !== 'object') return null;
+  const wf = word.wordFamily;
+  const cats = ['noun', 'verb', 'adj', 'adv'];
+  const entries = [];
+  cats.forEach(cat => {
+    if (wf[cat] && typeof wf[cat] === 'string' && wf[cat].trim()) {
+      const tokens = wf[cat].split(/[,/]/).map(s => s.trim()).filter(Boolean);
+      tokens.forEach(token => {
+        entries.push({ cat, val: token, full: wf[cat].trim() });
+      });
+    }
+  });
+  if (entries.length >= 2 || (entries.length === 1 && norm(entries[0].val) !== norm(word.word))) {
+    return entries;
+  }
+  return null;
+}
+
 
 /* ── State ──────────────────────────────────────────────────────── */
 let allWords = [], questions = [], sessionLog = [];
@@ -125,6 +205,10 @@ function injectCSS() {
     .qe-word-display.is-sentence { font-size:1.5rem; line-height:1.7; word-break:normal; word-wrap:break-word; font-weight:800; max-width:680px; margin:14px auto 10px; display:block; text-align:center; }
     .qe-blank-fill { display:inline-block; min-width:96px; padding:2px 14px; margin:0 4px; border-bottom:3.5px solid var(--qa); color:var(--qa); font-weight:900; text-align:center; background:rgba(var(--qa-rgb),0.12); border-radius:6px 6px 0 0; animation:qeBlankPulse 2s infinite ease-in-out; letter-spacing:2px; vertical-align:middle; }
     @keyframes qeBlankPulse { 0%,100%{border-color:var(--qa);box-shadow:0 2px 8px rgba(var(--qa-rgb),0.25)} 50%{border-color:#a855f7;box-shadow:0 2px 14px rgba(168,85,247,0.45)} }
+    .qe-blank-pos { display:inline-flex; align-items:center; font-size:12px; font-weight:800; padding:2px 8px; border-radius:6px; background:rgba(var(--qa-rgb),0.12); color:var(--qa); border:1px dashed var(--qa); margin-left:6px; vertical-align:middle; letter-spacing:normal; }
+    .qe-pos-pill { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:800; padding:3px 10px; border-radius:9999px; background:rgba(var(--qa-rgb),0.12); color:var(--qa); border:1px solid rgba(var(--qa-rgb),0.25); }
+    .qe-table-pos-pill { display:inline-block; font-size:10.5px; font-weight:800; padding:1px 7px; border-radius:9999px; background:rgba(var(--qa-rgb),0.1); color:var(--qa); margin-top:3px; }
+    .qe-table-wf { font-size:11px; color:var(--study-text-muted); font-weight:600; margin-top:2px; display:flex; flex-wrap:wrap; gap:4px; }
     .qe-phonetic { font-size:1rem; color:var(--qa); font-weight:700; text-align:center; margin-bottom:8px; }
     .qe-context { font-size:14px; color:var(--study-text-muted); text-align:center; margin-bottom:20px; line-height:1.6; }
     .qe-context strong { color:var(--qa); font-weight:900; }
@@ -536,16 +620,66 @@ function startQuiz(wordsOverride) {
 function buildQuestions(words, total) {
   const shuffled = shuffle([...words]).slice(0, total);
   return shuffled.map(word => {
-    // Weighted random from USE_TYPES
+    const wfEntries = getValidWordFamily(word);
     const pool = USE_TYPES.slice();
     // Filter out invalid types for this word
     const valid = pool.filter(t => {
       if (t === 'scramble' && word.word.length < 2) return false;
       if (t === 'mcq_fill' && !word.example && USE_TYPES.length > 1) return false;
+      if (t === 'mcq_word_form' && !wfEntries) return false;
       return true;
     });
-    if (!valid.length) valid.push(USE_TYPES[0] || 'mcq_meaning_word');
-    const type = valid[Math.floor(Math.random() * valid.length)];
+    if (!valid.length) {
+      const fallback = (USE_TYPES[0] && USE_TYPES[0] !== 'mcq_word_form') ? USE_TYPES[0] : 'mcq_meaning_word';
+      valid.push(fallback);
+    }
+    let type = valid[Math.floor(Math.random() * valid.length)];
+    if (type === 'mcq_word_form' && !wfEntries) {
+      type = 'mcq_meaning_word';
+    }
+
+    if (type === 'mcq_word_form' && wfEntries) {
+      // Pick a target entry whose value preferably differs from word.word
+      const diffEntries = wfEntries.filter(e => norm(e.val) !== norm(word.word));
+      const target = diffEntries.length
+        ? diffEntries[Math.floor(Math.random() * diffEntries.length)]
+        : wfEntries[Math.floor(Math.random() * wfEntries.length)];
+      
+      const correctAns = target.val;
+      const seenNorm = new Set([norm(correctAns)]);
+      const distractorArr = [];
+      const addDistractor = (str) => {
+        if (!str || typeof str !== 'string') return;
+        const n = norm(str);
+        if (!n || seenNorm.has(n)) return;
+        seenNorm.add(n);
+        distractorArr.push(str.trim());
+      };
+
+      // 1. Add other forms from word family
+      wfEntries.forEach(e => addDistractor(e.val));
+      // 2. Add root word if different
+      addDistractor(word.word);
+      // 3. If still less than 3, add other words from deck
+      const otherWords = shuffle(words.filter(w => w.id !== word.id));
+      for (const ow of otherWords) {
+        if (distractorArr.length >= 3) break;
+        addDistractor(ow.word);
+      }
+      const finalDistractors = distractorArr.slice(0, 3);
+      const options = shuffle([correctAns, ...finalDistractors]);
+
+      return {
+        word,
+        type: 'mcq_word_form',
+        targetCat: target.cat,
+        targetCatLabel: getCatName(target.cat),
+        correctAns,
+        options,
+        distractors: finalDistractors.map(d => ({ word: d }))
+      };
+    }
+
     const distractors = shuffle(words.filter(w => w.id !== word.id)).slice(0, 3);
     return { word, type, distractors };
   });
@@ -588,19 +722,35 @@ function renderQuestion(q) {
   display.className = 'qe-word-display';
 
   switch (type) {
-    case 'mcq_meaning_word':
-      badge.textContent = '🎯 Nghĩa → Từ (ABCD)';
+    case 'mcq_meaning_word': {
+      if (word.pos === 'phrasal_verb') badge.textContent = '🔗 Nghĩa → Cụm Động Từ (ABCD)';
+      else if (word.pos === 'collocation') badge.textContent = '🤝 Nghĩa → Collocation (ABCD)';
+      else badge.textContent = '🎯 Nghĩa → Từ (ABCD)';
       display.style.fontSize = '1.7rem'; display.textContent = word.meaning;
+      const posBadge = getPosBadgeLabel(word);
+      if (posBadge) {
+        $('qeContext').innerHTML = `<span class="qe-pos-pill">🏷️ Loại từ: <strong>${esc(posBadge)}</strong></span>`;
+      }
       renderOpts(shuffle([word.word, ...distractors.map(d => d.word)]), word.word);
-      $('qeKbdHint').style.display = 'flex'; break;
+      $('qeKbdHint').style.display = 'flex';
+      break;
+    }
 
-    case 'mcq_word_meaning':
-      badge.textContent = '🎯 Từ → Nghĩa (ABCD)';
+    case 'mcq_word_meaning': {
+      if (word.pos === 'phrasal_verb') badge.textContent = '🔗 Cụm Động Từ → Nghĩa (ABCD)';
+      else if (word.pos === 'collocation') badge.textContent = '🤝 Collocation → Nghĩa (ABCD)';
+      else badge.textContent = '🎯 Từ → Nghĩa (ABCD)';
       display.style.fontSize = '2.8rem';
       display.innerHTML = `${esc(word.word)} <button class="qe-listen-btn" onclick="QE.speakPulse(this,'${ea(word.word)}')" title="Nghe">🔊</button>`;
       $('qePhonetic').textContent = word.phonetic || '';
+      const posBadge = getPosBadgeLabel(word);
+      if (posBadge) {
+        $('qeContext').innerHTML = `<span class="qe-pos-pill">🏷️ Loại từ: <strong>${esc(posBadge)}</strong></span>`;
+      }
       renderOpts(shuffle([word.meaning, ...distractors.map(d => d.meaning)]), word.meaning);
-      $('qeKbdHint').style.display = 'flex'; break;
+      $('qeKbdHint').style.display = 'flex';
+      break;
+    }
 
     case 'mcq_listening':
       badge.textContent = '🔊 Nghe → Chọn Từ (ABCD)';
@@ -610,21 +760,64 @@ function renderQuestion(q) {
       $('qeKbdHint').style.display = 'flex'; break;
 
     case 'mcq_fill': {
-      badge.textContent = '📝 Điền Từ Vào Câu (ABCD)';
+      const posBadge = getPosBadgeLabel(word);
+      if (word.pos === 'phrasal_verb') {
+        badge.textContent = '🔗 Điền Cụm Động Từ (Phrasal Verb)';
+      } else if (word.pos === 'collocation') {
+        badge.textContent = '🤝 Điền Collocation (Cụm Cố Định)';
+      } else {
+        badge.textContent = '📝 Điền Từ Vào Câu (ABCD)';
+      }
       display.classList.add('is-sentence');
       const blankObj = makeFillBlank(word.example, word);
       display.innerHTML = blankObj.html;
-      if (word.exampleTrans) {
-        $('qeContext').innerHTML = `<span style="font-size:14px;color:var(--study-text-muted);font-weight:600;">${esc(word.exampleTrans)}</span>`;
+
+      let ctx = '';
+      if (posBadge) {
+        ctx += `<div style="margin-bottom:6px;"><span class="qe-pos-pill">🏷️ Loại từ cần điền: <strong>${esc(posBadge)}</strong></span></div>`;
       }
+      if (word.exampleTrans) {
+        ctx += `<div style="font-size:14px;color:var(--study-text-muted);font-weight:600;">${esc(word.exampleTrans)}</div>`;
+      }
+      $('qeContext').innerHTML = ctx;
       renderOpts(shuffle([word.word, ...distractors.map(d => d.word)]), word.word);
       $('qeKbdHint').style.display = 'flex'; break;
     }
 
-    case 'type_meaning':
-      badge.textContent = '✍️ Nghĩa → Gõ Từ';
+    case 'mcq_word_form': {
+      badge.textContent = '👨‍👩‍👧 Biến Đổi Dạng Từ (Word Form)';
+      display.style.fontSize = '2.4rem';
+      display.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span>${esc(word.word)}</span>
+            <button class="qe-listen-btn" onclick="QE.speakPulse(this,'${ea(word.word)}')" title="Nghe từ gốc">🔊</button>
+          </div>
+          <div style="font-size:14px;color:var(--study-text-muted);font-weight:700;">Từ gốc nghĩa là: <em>"${esc(word.meaning)}"</em></div>
+        </div>
+      `;
+      if (word.phonetic) $('qePhonetic').textContent = word.phonetic;
+      $('qeContext').innerHTML = `
+        <div style="font-size:15px;font-weight:800;color:var(--study-text);margin-bottom:6px;">
+          Hãy chọn dạng <span class="qe-pos-pill" style="font-size:13px;">${esc(q.targetCatLabel)}</span> của từ trên:
+        </div>
+      `;
+      renderOpts(q.options, q.correctAns);
+      $('qeKbdHint').style.display = 'flex';
+      break;
+    }
+
+    case 'type_meaning': {
+      if (word.pos === 'phrasal_verb') badge.textContent = '🔗 Nghĩa → Gõ Cụm Động Từ';
+      else if (word.pos === 'collocation') badge.textContent = '🤝 Nghĩa → Gõ Collocation';
+      else badge.textContent = '✍️ Nghĩa → Gõ Từ';
       display.style.fontSize = '1.8rem'; display.textContent = word.meaning;
+      const posBadge = getPosBadgeLabel(word);
+      if (posBadge) {
+        $('qeContext').innerHTML = `<span class="qe-pos-pill">🏷️ Loại từ: <strong>${esc(posBadge)}</strong></span>`;
+      }
       showTyping(); $('qeKbdHint').style.display = 'none'; break;
+    }
 
     case 'type_listening':
       badge.textContent = '🔊 Nghe → Gõ Từ';
@@ -671,7 +864,18 @@ function selectOpt(idx) {
     if (b.dataset.correct === '1') b.classList.add('correct');
     else if (i === idx && !ok) b.classList.add('wrong');
   }
-  handleResult(ok, questions[currentIdx].word);
+  const q = questions[currentIdx];
+  if (q.type === 'mcq_word_form') {
+    handleResult(
+      ok,
+      q.word,
+      ok
+        ? `Chính xác! Dạng ${q.targetCatLabel} của "${q.word.word}" là "${q.correctAns}"`
+        : `Đáp án đúng: ${q.correctAns} (${q.targetCatLabel})`
+    );
+  } else {
+    handleResult(ok, q.word);
+  }
 }
 
 /* ── Typing ──────────────────────────────────────────────────────── */
@@ -922,8 +1126,12 @@ function startTimer() {
           }
         }
         const inp = $('qeTypeInput'); if (inp) inp.disabled = true;
-        showFeedback(false, word, `⏰ Hết giờ! Đáp án đúng: ${word.word}`);
-        sessionLog.push({ word, type: questions[currentIdx].type, result: 'timeout', pts: 0 });
+        const q = questions[currentIdx];
+        const correctMsg = q.type === 'mcq_word_form'
+          ? `⏰ Hết giờ! Đáp án đúng: ${q.correctAns} (${q.targetCatLabel})`
+          : `⏰ Hết giờ! Đáp án đúng: ${word.word}`;
+        showFeedback(false, word, correctMsg);
+        sessionLog.push({ word, type: q.type, result: 'timeout', pts: 0 });
         updateToolsUI();
         updateHUD();
       }
@@ -988,7 +1196,10 @@ function useSkip() {
   }
   const inp = $('qeTypeInput'); if (inp) inp.disabled = true;
 
-  showFeedback(false, q.word, `⏭️ Đã bỏ qua — Đáp án đúng: ${q.word.word}`);
+  const correctMsg = q.type === 'mcq_word_form'
+    ? `⏭️ Đã bỏ qua — Đáp án đúng: ${q.correctAns} (${q.targetCatLabel})`
+    : `⏭️ Đã bỏ qua — Đáp án đúng: ${q.word.word}`;
+  showFeedback(false, q.word, correctMsg);
   sessionLog.push({ word: q.word, type: q.type, result: 'skip', pts: 0 });
   updateToolsUI();
   updateHUD();
@@ -1021,24 +1232,44 @@ function useHint() {
   if (!hintBox) return;
   hintBox.style.display = 'block';
 
-  const rawWord = q.word.word || '';
+  const rawWord = (q.type === 'mcq_word_form' ? q.correctAns : q.word.word) || '';
   let hintHdr = '';
   let hintBody = '';
 
   if (hintTier === 1) {
-    // Lần 1: Câu ví dụ với từ cần chọn bị che thành chỗ trống (blank)
-    hintHdr = '💡 Gợi Ý 1/3: Ngữ Cảnh & Ví Dụ (Điền Chỗ Trống)';
-    if (q.word.example) {
-      const blankObj = makeFillBlank(q.word.example, q.word);
+    if (q.type === 'mcq_word_form') {
+      hintHdr = '💡 Gợi Ý 1/3: Dạng Từ & Ngữ Cảnh';
       hintBody = `
-        <div class="qe-hint-content">${blankObj.html}</div>
-        ${q.word.exampleTrans ? `<div style="font-size:13px;color:var(--study-text-muted);margin-top:4px;">${esc(q.word.exampleTrans)}</div>` : ''}
+        <div class="qe-hint-content">Cần tìm dạng: <span class="qe-pos-pill">${esc(q.targetCatLabel)}</span> của từ <strong>"${esc(q.word.word)}"</strong></div>
+        <div style="font-size:13px;color:var(--study-text-muted);margin-top:6px;">Từ gốc nghĩa là: "${esc(q.word.meaning)}"</div>
       `;
     } else {
-      hintBody = `
-        <div class="qe-hint-content">Từ này mang ý nghĩa: <strong>"${esc(q.word.meaning)}"</strong></div>
-        <div style="font-size:12.5px;color:var(--study-text-muted);margin-top:4px;">Độ dài từ: <strong>${rawWord.length}</strong> ký tự</div>
-      `;
+      hintHdr = '💡 Gợi Ý 1/3: Ngữ Cảnh & Loại Từ (Part of Speech)';
+      const posLabel = getPosBadgeLabel(q.word);
+      const wfEntries = getValidWordFamily(q.word);
+      let extraHint = '';
+      if (posLabel) {
+        extraHint += `<div style="margin-top:6px;"><span class="qe-pos-pill">🏷️ Loại từ: <strong>${esc(posLabel)}</strong></span></div>`;
+      }
+      if (wfEntries && wfEntries.length) {
+        const familyStr = wfEntries.map(e => `${getCatShort(e.cat)}: <strong>${esc(e.val)}</strong>`).join(' · ');
+        extraHint += `<div style="margin-top:5px;font-size:12px;color:var(--study-text-muted);">👨‍👩‍👧 Gia đình từ: ${familyStr}</div>`;
+      }
+
+      if (q.word.example) {
+        const blankObj = makeFillBlank(q.word.example, q.word);
+        hintBody = `
+          <div class="qe-hint-content">${blankObj.html}</div>
+          ${q.word.exampleTrans ? `<div style="font-size:13px;color:var(--study-text-muted);margin-top:4px;">${esc(q.word.exampleTrans)}</div>` : ''}
+          ${extraHint}
+        `;
+      } else {
+        hintBody = `
+          <div class="qe-hint-content">Từ này mang ý nghĩa: <strong>"${esc(q.word.meaning)}"</strong></div>
+          <div style="font-size:12.5px;color:var(--study-text-muted);margin-top:4px;">Độ dài từ: <strong>${rawWord.length}</strong> ký tự</div>
+          ${extraHint}
+        `;
+      }
     }
   } else if (hintTier === 2) {
     // Lần 2: Blank word mà mỗi ký tự là một dấu gạch dưới _
@@ -1150,12 +1381,23 @@ function buildResultTable() {
       result === 'timeout'  ? '<span class="qe-badge tm">⏰ Hết giờ</span>' :
       result === 'skip'     ? '<span class="qe-badge sk">⏭️ Bỏ qua</span>' :
                               '<span class="qe-badge ng">❌ Chưa thuộc</span>';
+    const posLabel = getPosBadgeLabel(word);
+    const wfEntries = getValidWordFamily(word);
+    let wfSummary = '';
+    if (wfEntries && wfEntries.length) {
+      wfSummary = `<div class="qe-table-wf">👨‍👩‍👧 ${wfEntries.map(e => `${getCatShort(e.cat)}: ${esc(e.val)}`).join(' · ')}</div>`;
+    }
     const tr = document.createElement('tr');
     tr.className = isOk ? 'row-correct' : 'row-wrong';
     tr.dataset.result = result;
     tr.innerHTML = `
       <td style="color:var(--study-text-muted);font-weight:700;">${i + 1}</td>
-      <td><div class="qe-word-cell">${esc(word.word)}<button class="qe-mini-listen" onclick="QE.speak('${ea(word.word)}')" title="Nghe">🔊</button></div>${word.phonetic ? `<div style="font-size:11px;color:var(--qa);margin-top:2px;">${esc(word.phonetic)}</div>` : ''}</td>
+      <td>
+        <div class="qe-word-cell">${esc(word.word)}<button class="qe-mini-listen" onclick="QE.speak('${ea(word.word)}')" title="Nghe">🔊</button></div>
+        ${posLabel ? `<div><span class="qe-table-pos-pill">${esc(posLabel)}</span></div>` : ''}
+        ${word.phonetic ? `<div style="font-size:11px;color:var(--qa);margin-top:2px;">${esc(word.phonetic)}</div>` : ''}
+        ${wfSummary}
+      </td>
       <td style="color:var(--study-text-muted);font-size:13px;">${esc(word.meaning)}</td>
       <td style="font-size:12px;color:var(--study-text-muted);white-space:nowrap;">${TYPE_LABELS[type] || type}</td>
       <td>${badge}</td>
@@ -1268,7 +1510,9 @@ function setupKeyboard() {
 
 /* ── Smart Blank Generator for mcq_fill ──────────────────────────── */
 function makeFillBlank(example, wordObj) {
-  const blankHtml = '<span class="qe-blank-fill">___________</span>';
+  const shortPos = getShortPos(wordObj.pos);
+  const posBadgeHtml = shortPos ? ` <span class="qe-blank-pos" title="Loại từ cần điền">[${esc(shortPos)}]</span>` : '';
+  const blankHtml = `<span class="qe-blank-fill">___________</span>${posBadgeHtml}`;
   if (!example) return { html: `${blankHtml} <span style="font-size:0.9em;opacity:0.85;">(${esc(wordObj.meaning || '')})</span>`, raw: `___________ (${wordObj.meaning || ''})` };
 
   const rawWord = (wordObj.word || '').trim();

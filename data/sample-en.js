@@ -18,6 +18,12 @@ window.DEFAULT_EN_DECK = {
             meaning: "Giải trí, sự tiêu khiển",
             example: "Music is an essential part of entertainment.",
             exampleTrans: "Âm nhạc là một phần thiết yếu của ngành giải trí.",
+            wordFamily: {
+                noun: "entertainment",
+                verb: "entertain",
+                adj: "entertaining",
+                adv: "entertainingly"
+            },
             typedWord: "",
             reviews: [false, false, false, false],
             isCompleted: false
@@ -31,6 +37,12 @@ window.DEFAULT_EN_DECK = {
             meaning: "Vũ trụ, thế giới",
             example: "Welcome to the MHEnt Universe.",
             exampleTrans: "Chào mừng bạn đến với Vũ trụ MHEnt.",
+            wordFamily: {
+                noun: "universe",
+                verb: "",
+                adj: "universal",
+                adv: "universally"
+            },
             typedWord: "",
             reviews: [false, false, false, false],
             isCompleted: false
@@ -44,6 +56,12 @@ window.DEFAULT_EN_DECK = {
             meaning: "Sự kiên trì, lòng bền bỉ",
             example: "Language learning requires great perseverance.",
             exampleTrans: "Học ngoại ngữ đòi hỏi sự kiên trì rất lớn.",
+            wordFamily: {
+                noun: "perseverance",
+                verb: "persevere",
+                adj: "perseverant",
+                adv: ""
+            },
             typedWord: "",
             reviews: [false, false, false, false],
             isCompleted: false
@@ -57,6 +75,12 @@ window.DEFAULT_EN_DECK = {
             meaning: "Tuyệt vời, đáng kinh ngạc",
             example: "You did an incredible job today.",
             exampleTrans: "Bạn đã làm một công việc thật đáng kinh ngạc hôm nay.",
+            wordFamily: {
+                noun: "incredibility",
+                verb: "",
+                adj: "incredible",
+                adv: "incredibly"
+            },
             typedWord: "",
             reviews: [false, false, false, false],
             isCompleted: false
@@ -200,6 +224,38 @@ window.DEFAULT_EN_DECK = {
             meaning: "Tráng lệ, lộng lẫy",
             example: "The sunset over the ocean was magnificent.",
             exampleTrans: "Hoàng hôn trên đại dương đẹp lộng lẫy tuyệt trần.",
+            wordFamily: {
+                noun: "magnificence",
+                verb: "",
+                adj: "magnificent",
+                adv: "magnificently"
+            },
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "en_16",
+            word: "look forward to",
+            phonetic: "[lʊk ˈfɔː.wəd tuː]",
+            pos: "phrasal_verb",
+            posLabel: "Cụm động từ",
+            meaning: "Trông chờ, háo hức mong đợi",
+            example: "I look forward to hearing from you soon.",
+            exampleTrans: "Tôi rất mong chờ sớm nhận được phản hồi từ bạn.",
+            typedWord: "",
+            reviews: [false, false, false, false],
+            isCompleted: false
+        },
+        {
+            id: "en_17",
+            word: "make a decision",
+            phonetic: "[meɪk ə dɪˈsɪʒ.ən]",
+            pos: "collocation",
+            posLabel: "Cụm từ cố định",
+            meaning: "Đưa ra quyết định",
+            example: "It is important to make a decision quickly in business.",
+            exampleTrans: "Trong kinh doanh, việc đưa ra quyết định nhanh chóng là rất quan trọng.",
             typedWord: "",
             reviews: [false, false, false, false],
             isCompleted: false
