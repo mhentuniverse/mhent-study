@@ -159,15 +159,18 @@ function injectCSS() {
     .qe-type-hint { font-size:12px; color:var(--study-text-muted); text-align:center; margin-top:8px; }
 
     /* Scramble */
-    .qe-scr-answer { min-height:58px; background:var(--study-subtle); border:2px dashed var(--study-border); border-radius:14px; padding:12px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px; transition:border-color 0.2s; }
+    .qe-scr-answer { min-height:58px; background:var(--study-subtle); border:2px dashed var(--study-border); border-radius:14px; padding:12px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px; transition:border-color 0.2s, background-color 0.2s; position:relative; }
     .qe-scr-answer.correct { border-color:var(--qc); background:rgba(16,185,129,0.07); }
     .qe-scr-answer.wrong { border-color:var(--qw); animation:qeShake 0.35s ease; }
+    .qe-scr-answer.shake { animation:qeShake 0.35s ease; border-color:var(--qw); }
+    .qe-scr-placeholder { font-size:13.5px; color:var(--study-text-muted); font-style:italic; pointer-events:none; }
     .qe-scr-tiles { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
     .qe-tile { padding:10px 16px; background:var(--study-surface); border:2px solid var(--study-border); border-radius:10px; font-size:1.1rem; font-weight:800; cursor:pointer; transition:all 0.18s; user-select:none; }
     .qe-tile:hover { border-color:var(--qa); background:rgba(var(--qa-rgb),0.06); transform:translateY(-2px); }
     .qe-tile.used { opacity:0.25; pointer-events:none; }
-    .qe-tile.ans { background:rgba(var(--qa-rgb),0.08); border-color:rgba(var(--qa-rgb),0.4); color:var(--qa); }
+    .qe-tile.ans { background:rgba(var(--qa-rgb),0.08); border-color:rgba(var(--qa-rgb),0.4); color:var(--qa); animation:qeTilePop 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     .qe-tile.ans:hover { background:rgba(239,68,68,0.1); border-color:var(--qw); }
+    @keyframes qeTilePop { 0%{transform:scale(0.85);opacity:0.6} 100%{transform:scale(1);opacity:1} }
     .qe-scr-btns { display:flex; gap:8px; }
     .qe-scr-clear { flex:1; padding:11px; border-radius:12px; border:1.5px solid var(--study-border); background:var(--study-surface); color:var(--study-text); font-weight:800; font-size:13px; font-family:'Nunito',sans-serif; cursor:pointer; }
     .qe-scr-submit { flex:2; padding:11px; border-radius:12px; border:none; background:linear-gradient(135deg,var(--qa),#a855f7); color:#fff; font-weight:900; font-size:13px; font-family:'Nunito',sans-serif; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
@@ -302,7 +305,8 @@ function renderApp() {
           <label class="qe-setting-lbl">⏱️ THỜI GIAN MỖI CÂU</label>
           <select id="qeTimerSel" class="qe-select">
             <option value="0">Không giới hạn</option>
-            <option value="15" selected>15 giây</option>
+            <option value="10">10 giây (Thử thách)</option>
+            <option value="15" selected>15 giây (Tiêu chuẩn)</option>
             <option value="20">20 giây</option>
             <option value="30">30 giây</option>
           </select>
@@ -318,18 +322,18 @@ function renderApp() {
     <!-- Question Area -->
     <div id="qeQuestion" style="display:none;">
       <div class="qe-tools-bar">
-        <button class="qe-tool-btn" id="qeBtnSkip" onclick="QE.useSkip()" title="Bỏ qua câu này (Phím S)">
+        <button class="qe-tool-btn" id="qeBtnSkip" onclick="QE.useSkip()" title="Bỏ qua câu này (Phím S hoặc Alt+S)">
           <span class="qe-tool-icon">⏭️</span>
           <span>Bỏ qua</span>
           <kbd class="qe-tool-kbd">S</kbd>
         </button>
-        <button class="qe-tool-btn" id="qeBtnHint" onclick="QE.useHint()" title="Gợi ý 3 cấp độ (Phím H)">
+        <button class="qe-tool-btn" id="qeBtnHint" onclick="QE.useHint()" title="Gợi ý 3 cấp độ (Phím H hoặc Alt+H)">
           <span class="qe-tool-icon">💡</span>
           <span>Gợi ý</span>
           <span class="qe-tool-badge" id="qeHintBadge">0/3</span>
           <kbd class="qe-tool-kbd">H</kbd>
         </button>
-        <button class="qe-tool-btn" id="qeBtnListen" onclick="QE.useListen()" title="Nghe phát âm (Phím L)">
+        <button class="qe-tool-btn" id="qeBtnListen" onclick="QE.useListen()" title="Nghe phát âm (Phím L hoặc Alt+L)">
           <span class="qe-tool-icon">🔊</span>
           <span>Nghe</span>
           <kbd class="qe-tool-kbd">L</kbd>
@@ -359,13 +363,19 @@ function renderApp() {
         </div>
         <!-- Scramble -->
         <div id="qeScramble" style="display:none;">
-          <p style="font-size:13px;color:var(--study-text-muted);margin-bottom:8px;font-weight:700;">Bấm vào các ô chữ để ghép thành từ đúng:</p>
+          <p style="font-size:13px;color:var(--study-text-muted);margin-bottom:8px;font-weight:700;">Gõ trực tiếp từ bàn phím hoặc bấm các ô chữ bên dưới:</p>
           <div class="qe-scr-answer" id="qeScrAnswer"></div>
           <div class="qe-scr-tiles" id="qeScrTiles"></div>
           <div class="qe-scr-btns">
-            <button class="qe-scr-clear" onclick="QE.clearScramble()">↩️ Xóa hết</button>
-            <button class="qe-scr-clear" onclick="QE.removeLastTile()" style="max-width:115px;">⌫ Xóa chữ</button>
+            <button class="qe-scr-clear" onclick="QE.clearScramble()" title="Phím Esc">↩️ Xóa hết <kbd class="qe-kbd" style="font-size:10px;margin-left:3px;">Esc</kbd></button>
+            <button class="qe-scr-clear" onclick="QE.removeLastTile()" style="max-width:130px;" title="Phím Backspace">⌫ Xóa chữ <kbd class="qe-kbd" style="font-size:10px;margin-left:3px;">⌫</kbd></button>
             <button class="qe-scr-submit" onclick="QE.submitScramble()"><i class="fa-solid fa-check"></i> Xác nhận <kbd class="qe-kbd" style="color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.3);font-size:10px;">Enter</kbd></button>
+          </div>
+          <div class="qe-kbd-hint" id="qeScrKbdHint" style="margin-top:10px;justify-content:center;">
+            <span><kbd class="qe-kbd">A-Z</kbd> gõ trực tiếp</span>
+            <span><kbd class="qe-kbd">⌫</kbd> xóa ký tự</span>
+            <span><kbd class="qe-kbd">Esc</kbd> xóa hết</span>
+            <span><kbd class="qe-kbd">Enter</kbd> xác nhận</span>
           </div>
         </div>
         <!-- Keyboard hint -->
@@ -499,7 +509,9 @@ function startQuiz(wordsOverride) {
   const total = countSel === 'all' ? allWords.length : Math.min(parseInt(countSel), allWords.length);
   
   const timerSel = document.getElementById('qeTimerSel');
-  timerMaxSec = parseInt(timerSel?.value ?? (localStorage.getItem('mhent_quiz_timer') || '15'));
+  const rawTimer = timerSel ? timerSel.value : (localStorage.getItem('mhent_quiz_timer') || '15');
+  const parsedTimer = parseInt(rawTimer, 10);
+  timerMaxSec = isNaN(parsedTimer) ? 15 : parsedTimer;
   timerEnabled = timerMaxSec > 0;
   try { localStorage.setItem('mhent_quiz_timer', String(timerMaxSec)); } catch(e) {}
 
@@ -693,48 +705,84 @@ function submitTyping() {
 }
 
 /* ── Scramble ────────────────────────────────────────────────────── */
+function renderScramblePlaceholder() {
+  const ansEl = $('qeScrAnswer');
+  if (!ansEl) return;
+  if (!scrambleAnswer.length) {
+    if (!ansEl.querySelector('.qe-scr-placeholder')) {
+      ansEl.innerHTML = '<span class="qe-scr-placeholder">Gõ từ bàn phím hoặc bấm các ô chữ bên dưới...</span>';
+    }
+  } else {
+    const ph = ansEl.querySelector('.qe-scr-placeholder');
+    if (ph) ph.remove();
+  }
+}
+
 function buildScramble(wordStr) {
   const cleanChars = (wordStr || '').split('').filter(ch => ch.trim() !== '' && !/[.,!?;:\/\\()\[\]]/.test(ch));
   scrambleTileMap = shuffle(cleanChars).map((ch, i) => ({ ch, idx: i, used: false }));
   scrambleAnswer = [];
-  $('qeScrAnswer').innerHTML = '';
-  $('qeScrAnswer').className = 'qe-scr-answer';
-  $('qeScrTiles').innerHTML = '';
-  scrambleTileMap.forEach((t, i) => {
-    const el = document.createElement('div');
-    el.className = 'qe-tile'; el.textContent = t.ch;
-    el.dataset.ti = i;
-    el.addEventListener('click', () => addTile(i, el));
-    $('qeScrTiles').appendChild(el);
-  });
+  const ansEl = $('qeScrAnswer');
+  if (ansEl) {
+    ansEl.innerHTML = '';
+    ansEl.className = 'qe-scr-answer';
+  }
+  renderScramblePlaceholder();
+  const tilesEl = $('qeScrTiles');
+  if (tilesEl) {
+    tilesEl.innerHTML = '';
+    scrambleTileMap.forEach((t, i) => {
+      const el = document.createElement('div');
+      el.className = 'qe-tile'; el.textContent = t.ch;
+      el.dataset.ti = i;
+      el.addEventListener('click', () => addTile(i, el));
+      tilesEl.appendChild(el);
+    });
+  }
 }
 
 function removeLastTile() {
   if (answered || !scrambleAnswer.length) return;
   const last = scrambleAnswer.pop();
   scrambleTileMap[last.ti].used = false;
-  document.querySelector(`[data-ti="${last.ti}"]`)?.classList.remove('used');
+  document.querySelector(`#qeScrTiles [data-ti="${last.ti}"]`)?.classList.remove('used');
   const ansEl = $('qeScrAnswer');
-  if (ansEl && ansEl.lastElementChild) {
-    ansEl.lastElementChild.remove();
+  if (ansEl) {
+    const lastTileEl = ansEl.querySelector(`.qe-tile.ans[data-ti="${last.ti}"]`) || ansEl.lastElementChild;
+    if (lastTileEl && !lastTileEl.classList.contains('qe-scr-placeholder')) {
+      lastTileEl.remove();
+    }
   }
+  renderScramblePlaceholder();
 }
 
 function addTile(ti, el) {
   if (answered || scrambleTileMap[ti].used) return;
-  scrambleTileMap[ti].used = true; el.classList.add('used');
-  scrambleAnswer.push({ ch: scrambleTileMap[ti].ch, ti });
   const ansEl = $('qeScrAnswer');
+  if (ansEl) {
+    const ph = ansEl.querySelector('.qe-scr-placeholder');
+    if (ph) ph.remove();
+  }
+
+  scrambleTileMap[ti].used = true;
+  const tileDom = el || document.querySelector(`#qeScrTiles [data-ti="${ti}"]`);
+  if (tileDom) tileDom.classList.add('used');
+  scrambleAnswer.push({ ch: scrambleTileMap[ti].ch, ti });
+
   const tile = document.createElement('div');
-  tile.className = 'qe-tile ans'; tile.textContent = scrambleTileMap[ti].ch;
+  tile.className = 'qe-tile ans';
+  tile.textContent = scrambleTileMap[ti].ch;
+  tile.dataset.ti = ti;
   tile.addEventListener('click', () => {
     if (answered) return;
     scrambleTileMap[ti].used = false;
-    document.querySelector(`[data-ti="${ti}"]`)?.classList.remove('used');
-    scrambleAnswer.splice(scrambleAnswer.findIndex(a => a.ti === ti), 1);
+    document.querySelector(`#qeScrTiles [data-ti="${ti}"]`)?.classList.remove('used');
+    const idx = scrambleAnswer.findIndex(a => a.ti === ti);
+    if (idx !== -1) scrambleAnswer.splice(idx, 1);
     tile.remove();
+    renderScramblePlaceholder();
   });
-  ansEl.appendChild(tile);
+  if (ansEl) ansEl.appendChild(tile);
 }
 
 function clearScramble() {
@@ -742,7 +790,33 @@ function clearScramble() {
   scrambleAnswer = [];
   scrambleTileMap.forEach(t => t.used = false);
   document.querySelectorAll('#qeScrTiles .qe-tile').forEach(t => t.classList.remove('used'));
-  $('qeScrAnswer').innerHTML = '';
+  const ansEl = $('qeScrAnswer');
+  if (ansEl) ansEl.innerHTML = '';
+  renderScramblePlaceholder();
+}
+
+function handleScrambleKey(keyChar) {
+  if (answered) return false;
+  if (!keyChar || typeof keyChar !== 'string') return false;
+  const target = keyChar.toLowerCase();
+  
+  // Find first unused tile with matching character (case-insensitive)
+  const matchIdx = scrambleTileMap.findIndex(t => !t.used && t.ch.toLowerCase() === target);
+  if (matchIdx !== -1) {
+    const el = document.querySelector(`#qeScrTiles [data-ti="${matchIdx}"]`);
+    addTile(matchIdx, el);
+    return true;
+  } else {
+    // Shake answer box as feedback that letter doesn't match available unused tiles
+    const ansEl = $('qeScrAnswer');
+    if (ansEl) {
+      ansEl.classList.remove('shake');
+      void ansEl.offsetWidth; // force reflow
+      ansEl.classList.add('shake');
+      setTimeout(() => ansEl.classList.remove('shake'), 350);
+    }
+    return false;
+  }
 }
 
 function submitScramble() {
@@ -805,14 +879,21 @@ function startTimer() {
   timerRemaining = timerMaxSec;
   const num = $('qeTimerNum');
   const arc = $('qeTimerArc');
-  const circ = 113;
+  const circ = 113.1;
 
   const updateDisplay = () => {
-    if (num) num.textContent = Math.max(0, timerRemaining);
-    if (arc) {
-      const offset = circ - (Math.max(0, timerRemaining) / timerMaxSec) * circ;
-      arc.style.strokeDashoffset = offset;
-      arc.className = 'qe-timer-arc' + (timerRemaining <= 5 ? ' danger' : timerRemaining <= timerMaxSec * 0.4 ? ' warn' : '');
+    try {
+      const rem = Math.max(0, timerRemaining);
+      if (num) num.textContent = rem;
+      if (arc) {
+        const offset = circ - (rem / timerMaxSec) * circ;
+        arc.style.strokeDashoffset = `${offset}px`;
+        arc.setAttribute('stroke-dashoffset', String(offset));
+        const cls = 'qe-timer-arc' + (rem <= 5 ? ' danger' : rem <= timerMaxSec * 0.4 ? ' warn' : '');
+        arc.setAttribute('class', cls);
+      }
+    } catch (err) {
+      console.warn('Timer display update error:', err);
     }
   };
 
@@ -1121,35 +1202,67 @@ function retryWrong() {
 /* ── Keyboard ────────────────────────────────────────────────────── */
 function setupKeyboard() {
   document.addEventListener('keydown', e => {
-    const tag = document.activeElement.tagName;
+    const tag = document.activeElement ? document.activeElement.tagName : '';
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-    if (e.code === 'Space') { e.preventDefault(); if (answered) next(); }
+
+    const isScrambleActive = $('qeScramble') && $('qeScramble').style.display !== 'none';
+    const isOptionsActive = $('qeOptions') && $('qeOptions').style.display !== 'none';
+
+    // When question is answered, Space or Enter goes to next question
+    if (answered) {
+      if (e.code === 'Space' || e.code === 'Enter') {
+        e.preventDefault();
+        next();
+      }
+      return;
+    }
+
+    // ── SCRAMBLE MODE KEYBOARD ──────────────────────────────────────
+    if (isScrambleActive) {
+      if (e.code === 'Enter') {
+        e.preventDefault();
+        submitScramble();
+        return;
+      }
+      if (e.code === 'Backspace') {
+        e.preventDefault();
+        removeLastTile();
+        return;
+      }
+      if (e.code === 'Escape') {
+        e.preventDefault();
+        clearScramble();
+        return;
+      }
+      // Alt shortcuts for tools during scramble (so S/H/L can be typed as letters)
+      if (e.altKey) {
+        if (e.code === 'KeyS') { e.preventDefault(); useSkip(); return; }
+        if (e.code === 'KeyH') { e.preventDefault(); useHint(); return; }
+        if (e.code === 'KeyL') { e.preventDefault(); useListen(); return; }
+      }
+      // Single character key pressed (A-Z, numbers, accents, etc.)
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key && e.key.length === 1 && e.key !== ' ') {
+        e.preventDefault();
+        handleScrambleKey(e.key);
+        return;
+      }
+      return;
+    }
+
+    // ── OTHER MODES KEYBOARD ────────────────────────────────────────
+    if (e.code === 'Space') {
+      e.preventDefault();
+    }
     else if (['Digit1','Digit2','Digit3','Digit4'].includes(e.code)) {
       const idx = +e.code.slice(-1) - 1;
-      if (!answered && $('qeOptions').style.display !== 'none') selectOpt(idx);
+      if (!answered && isOptionsActive) selectOpt(idx);
     }
     else if (e.code === 'Enter') {
-      if (!answered) {
-        if ($('qeScramble').style.display !== 'none') submitScramble();
-      } else { next(); }
+      // Handled when answered or inside input
     }
     else if (e.code === 'KeyL') useListen();
     else if (e.code === 'KeyH' && !answered) useHint();
     else if (e.code === 'KeyS' && !answered) useSkip();
-    else if (e.code === 'Backspace') {
-      if (!answered && $('qeScramble').style.display !== 'none') {
-        e.preventDefault();
-        removeLastTile();
-      }
-    }
-    else if (!answered && $('qeScramble').style.display !== 'none' && e.key && e.key.length === 1) {
-      const targetChar = e.key.toLowerCase();
-      const match = scrambleTileMap.find(t => !t.used && t.ch.toLowerCase() === targetChar);
-      if (match) {
-        const el = document.querySelector(`[data-ti="${match.idx}"]`);
-        if (el) addTile(match.idx, el);
-      }
-    }
   });
 }
 
@@ -1268,7 +1381,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ── Global API ──────────────────────────────────────────────────── */
 window.QE = {
   startQuiz, selectOpt, submitTyping, typeKeydown,
-  clearScramble, removeLastTile, submitScramble, addTile,
+  clearScramble, removeLastTile, submitScramble, addTile, handleScrambleKey,
   next, useSkip, useListen, useHint, filterResult, retryWrong,
   speak, speakPulse
 };
