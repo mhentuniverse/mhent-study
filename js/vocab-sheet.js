@@ -166,6 +166,7 @@ class VocabSheetApp {
         this.bindAutoFillEvents();
         this.initMascotUI();
         this.renderAll();
+        this.initStickyTableUI();
     }
 
     loadDeck() {
@@ -466,6 +467,17 @@ class VocabSheetApp {
         this.renderTable();
     }
 
+    getStatusLabel(status) {
+        const map = {
+            en: { correct: 'Correct • Đúng ✨', wrong: 'Incorrect • Chưa đúng ❌' },
+            ja: { correct: '正解 • Đúng ✨', wrong: '不正解 • Chưa đúng ❌' },
+            ko: { correct: '맞음 • Đúng ✨', wrong: '틀림 • Chưa đúng ❌' },
+            zh: { correct: '正确 • Đúng ✨', wrong: '错误 • Chưa đúng ❌' }
+        };
+        const langMap = map[this.lang] || { correct: 'Đúng ✨', wrong: 'Chưa đúng ❌' };
+        return langMap[status] || (status === 'correct' ? 'Đúng ✨' : 'Chưa đúng ❌');
+    }
+
     updateHeaderToggleButtons() {
         const btnWord = document.getElementById('btnMaskWord');
         const btnPhonetic = document.getElementById('btnMaskPhonetic');
@@ -482,6 +494,23 @@ class VocabSheetApp {
         if (btnMeaning) {
             btnMeaning.classList.toggle('active', this.columnMasks.meaning);
             btnMeaning.innerHTML = this.columnMasks.meaning ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+        }
+
+        // Cập nhật cả các nút trên floating header nếu có
+        const fWord = document.getElementById('float_btnMaskWord');
+        const fPhonetic = document.getElementById('float_btnMaskPhonetic');
+        const fMeaning = document.getElementById('float_btnMaskMeaning');
+        if (fWord) {
+            fWord.classList.toggle('active', this.columnMasks.word);
+            fWord.innerHTML = this.columnMasks.word ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+        }
+        if (fPhonetic) {
+            fPhonetic.classList.toggle('active', this.columnMasks.phonetic);
+            fPhonetic.innerHTML = this.columnMasks.phonetic ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+        }
+        if (fMeaning) {
+            fMeaning.classList.toggle('active', this.columnMasks.meaning);
+            fMeaning.innerHTML = this.columnMasks.meaning ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
         }
     }
 
@@ -569,9 +598,9 @@ class VocabSheetApp {
 
             if (typed) {
                 if (typed === target) {
-                    statusHtml = '<span class="status-pill correct">맞음 • Đúng ✨</span>';
+                    statusHtml = `<span class="status-pill correct">${this.getStatusLabel('correct')}</span>`;
                 } else {
-                    statusHtml = '<span class="status-pill wrong">틀림 • Chưa đúng ❌</span>';
+                    statusHtml = `<span class="status-pill wrong">${this.getStatusLabel('wrong')}</span>`;
                 }
             }
 
@@ -597,7 +626,7 @@ class VocabSheetApp {
                     </div>
                 `;
             } else {
-                const unmaskedTag = (this.columnMasks.word && this.revealedWords.has(item.id)) 
+                const unmaskedTag = (isWordMasked && this.revealedWords.has(item.id)) 
                     ? `<span class="unmasked-badge"><i class="fa-solid fa-lock-open"></i> Đã mở</span>` 
                     : '';
                 const peekingClass = isPeekingWord ? 'peeking' : '';
@@ -697,6 +726,12 @@ class VocabSheetApp {
 
             tbody.appendChild(tr);
         });
+
+        // Cập nhật cấu trúc & vị trí của floating sticky header và floating scrollbar
+        if (typeof this.updateStickyHeaderStructure === 'function') {
+            this.updateStickyHeaderStructure();
+            this.updateStickyTablePositions();
+        }
     }
 
     formatWordFamilyBadge(wf) {
@@ -713,6 +748,172 @@ class VocabSheetApp {
         return `<div class="word-family-badge" title="Gia đình từ (Word Formation)"><span class="wf-title">👨‍👩‍👧 Family:</span> ${parts.join(' ')}</div>`;
     }
 
+    /* ==========================================================================
+       STICKY TABLE HEADER & FLOATING HORIZONTAL SCROLLBAR
+       ========================================================================== */
+    initStickyTableUI() {
+        const scrollWrap = document.querySelector('.sheet-scroll-wrap');
+        const realTable = document.querySelector('.smart-table');
+        if (!scrollWrap || !realTable) return;
+
+        // 1. Tạo floating header nếu chưa có
+        let floatHeader = document.getElementById('floatingSheetHeader');
+        if (!floatHeader) {
+            floatHeader = document.createElement('div');
+            floatHeader.id = 'floatingSheetHeader';
+            floatHeader.className = 'floating-sheet-header';
+            floatHeader.style.display = 'none';
+
+            const floatTable = document.createElement('table');
+            floatTable.className = 'smart-table floating-smart-table';
+            const floatThead = document.createElement('thead');
+            floatTable.appendChild(floatThead);
+            floatHeader.appendChild(floatTable);
+            document.body.appendChild(floatHeader);
+        }
+
+        // 2. Tạo floating scrollbar nếu chưa có
+        let floatScrollbar = document.getElementById('floatingSheetScrollbar');
+        if (!floatScrollbar) {
+            floatScrollbar = document.createElement('div');
+            floatScrollbar.id = 'floatingSheetScrollbar';
+            floatScrollbar.className = 'floating-sheet-scrollbar';
+            floatScrollbar.style.display = 'none';
+
+            const innerBar = document.createElement('div');
+            innerBar.className = 'floating-sheet-scrollbar-inner';
+            floatScrollbar.appendChild(innerBar);
+            document.body.appendChild(floatScrollbar);
+        }
+
+        // 3. Đồng bộ cuộn ngang hai chiều
+        let isSyncing = false;
+        scrollWrap.addEventListener('scroll', () => {
+            if (isSyncing) return;
+            isSyncing = true;
+            if (floatHeader) floatHeader.scrollLeft = scrollWrap.scrollLeft;
+            if (floatScrollbar) floatScrollbar.scrollLeft = scrollWrap.scrollLeft;
+            isSyncing = false;
+        }, { passive: true });
+
+        floatScrollbar.addEventListener('scroll', () => {
+            if (isSyncing) return;
+            isSyncing = true;
+            scrollWrap.scrollLeft = floatScrollbar.scrollLeft;
+            if (floatHeader) floatHeader.scrollLeft = floatScrollbar.scrollLeft;
+            isSyncing = false;
+        }, { passive: true });
+
+        // Cho phép dùng Shift + Cuộn chuột trên floating header để cuộn ngang
+        floatHeader.addEventListener('wheel', (e) => {
+            if (e.deltaX) {
+                scrollWrap.scrollLeft += e.deltaX;
+            } else if (e.shiftKey && e.deltaY) {
+                scrollWrap.scrollLeft += e.deltaY;
+            }
+        }, { passive: true });
+
+        // 4. Lắng nghe sự kiện scroll và resize của window
+        const onScrollOrResize = () => {
+            this.updateStickyTablePositions();
+        };
+        window.addEventListener('scroll', onScrollOrResize, { passive: true });
+        window.addEventListener('resize', onScrollOrResize, { passive: true });
+
+        // Khởi tạo vị trí và cấu trúc lần đầu
+        setTimeout(() => {
+            this.updateStickyHeaderStructure();
+            this.updateStickyTablePositions();
+        }, 150);
+    }
+
+    updateStickyHeaderStructure() {
+        const realThead = document.querySelector('.smart-table thead');
+        const floatThead = document.querySelector('#floatingSheetHeader thead');
+        if (!realThead || !floatThead) return;
+
+        // Clone nội dung thead, đổi ID của các nút để tránh trùng ID
+        floatThead.innerHTML = realThead.innerHTML.replace(/id="(btnMask\w+)"/g, 'id="float_$1"');
+        this.syncStickyHeaderWidths();
+        this.updateHeaderToggleButtons();
+    }
+
+    syncStickyHeaderWidths() {
+        const realTable = document.querySelector('.smart-table');
+        const realThs = document.querySelectorAll('.smart-table thead th');
+        const floatHeader = document.getElementById('floatingSheetHeader');
+        const floatTable = document.querySelector('.floating-smart-table');
+        const floatThs = document.querySelectorAll('#floatingSheetHeader thead th');
+        if (!realTable || !realThs.length || !floatThs.length || !floatTable) return;
+
+        const realTableWidth = realTable.scrollWidth || realTable.getBoundingClientRect().width;
+        floatTable.style.width = `${realTableWidth}px`;
+
+        realThs.forEach((th, idx) => {
+            if (floatThs[idx]) {
+                const w = th.getBoundingClientRect().width;
+                floatThs[idx].style.width = `${w}px`;
+                floatThs[idx].style.minWidth = `${w}px`;
+                floatThs[idx].style.maxWidth = `${w}px`;
+                floatThs[idx].style.boxSizing = 'border-box';
+            }
+        });
+
+        const scrollWrap = document.querySelector('.sheet-scroll-wrap');
+        if (scrollWrap && floatHeader) {
+            floatHeader.scrollLeft = scrollWrap.scrollLeft;
+        }
+    }
+
+    updateStickyTablePositions() {
+        const scrollWrap = document.querySelector('.sheet-scroll-wrap');
+        const realThead = document.querySelector('.smart-table thead');
+        const floatHeader = document.getElementById('floatingSheetHeader');
+        const floatScrollbar = document.getElementById('floatingSheetScrollbar');
+        const innerBar = document.querySelector('.floating-sheet-scrollbar-inner');
+        if (!scrollWrap || !realThead || !floatHeader || !floatScrollbar) return;
+
+        const wrapRect = scrollWrap.getBoundingClientRect();
+        const theadRect = realThead.getBoundingClientRect();
+        const navEl = document.querySelector('.study-nav');
+        const navBottom = navEl ? navEl.getBoundingClientRect().bottom : 56;
+        const windowHeight = window.innerHeight;
+
+        // ── STICKY HEADER ────────────────────────────────────────────────
+        // Hiện khi: thead thật đã cuộn lên khỏi mép dưới của nav (theadRect.bottom < navBottom)
+        // VÀ đáy của table vẫn còn trên màn hình (wrapRect.bottom > navBottom + 70)
+        const isHeaderInZone = theadRect.bottom < navBottom && wrapRect.bottom > (navBottom + 70);
+        if (isHeaderInZone) {
+            floatHeader.style.display = 'block';
+            floatHeader.style.top = `${Math.max(0, navBottom)}px`;
+            floatHeader.style.left = `${wrapRect.left}px`;
+            floatHeader.style.width = `${wrapRect.width}px`;
+            this.syncStickyHeaderWidths();
+        } else {
+            floatHeader.style.display = 'none';
+        }
+
+        // ── FLOATING HORIZONTAL SCROLLBAR ────────────────────────────────
+        // Hiện khi: Bảng có thanh cuộn ngang (scrollWidth > clientWidth)
+        // VÀ đầu bảng đã vào tầm mắt (wrapRect.top < windowHeight - 40)
+        // VÀ đáy bảng (nơi có thanh cuộn ngang thật) đang nằm dưới mép dưới màn hình (wrapRect.bottom > windowHeight)
+        const hasHorizontalOverflow = scrollWrap.scrollWidth > (scrollWrap.clientWidth + 4);
+        const isScrollbarInZone = hasHorizontalOverflow && (wrapRect.top < (windowHeight - 40)) && (wrapRect.bottom > windowHeight);
+
+        if (isScrollbarInZone) {
+            floatScrollbar.style.display = 'block';
+            floatScrollbar.style.bottom = '0px';
+            floatScrollbar.style.left = `${wrapRect.left}px`;
+            floatScrollbar.style.width = `${wrapRect.width}px`;
+            if (innerBar) {
+                innerBar.style.width = `${scrollWrap.scrollWidth}px`;
+            }
+            floatScrollbar.scrollLeft = scrollWrap.scrollLeft;
+        } else {
+            floatScrollbar.style.display = 'none';
+        }
+    }
+
     handleWordInput(inputEl, wordId) {
         const wordObj = this.currentDeck.words.find(w => w.id === wordId);
         if (!wordObj) return;
@@ -726,11 +927,11 @@ class VocabSheetApp {
         if (!typed) {
             statusCell.innerHTML = '<span class="status-pill idle">Chờ gõ...</span>';
         } else if (typed === wordObj.word.trim()) {
-            statusCell.innerHTML = '<span class="status-pill correct">맞음 • Đúng ✨</span>';
+            statusCell.innerHTML = `<span class="status-pill correct">${this.getStatusLabel('correct')}</span>`;
 
-            // Đánh dấu từ đã được mở khóa
+            // Đánh dấu từ đã được mở khóa CHỈ KHI nó thực sự đang bị che bởi Active Recall hoặc Tự tăng độ khó
             const wasMasked = this.columnMasks.word || (this.autoLevelUp && (wordObj.reviews || []).filter(Boolean).length >= 3);
-            if (!this.revealedWords.has(wordId)) {
+            if (wasMasked && !this.revealedWords.has(wordId)) {
                 this.revealedWords.add(wordId);
                 
                 // Hiệu ứng mở khóa cell
@@ -750,7 +951,7 @@ class VocabSheetApp {
             if (window.studyUI) window.studyUI.playDing();
             this.triggerMascotSpeak('correct');
         } else {
-            statusCell.innerHTML = '<span class="status-pill wrong">틀림 • Chưa đúng ❌</span>';
+            statusCell.innerHTML = `<span class="status-pill wrong">${this.getStatusLabel('wrong')}</span>`;
         }
 
         this.saveCurrentDeck();

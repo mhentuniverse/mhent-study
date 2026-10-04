@@ -640,6 +640,99 @@
     background-color: rgba(14, 165, 233, 0.04);
 }
 
+/* ==========================================================================
+   FLOATING STICKY HEADER & FLOATING HORIZONTAL SCROLLBAR
+   ========================================================================== */
+.floating-sheet-header {
+    position: fixed;
+    z-index: 950;
+    overflow: hidden;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-color);
+    border-bottom: 2px solid var(--border-color);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    pointer-events: auto;
+    border-radius: 8px 8px 0 0;
+    box-sizing: border-box;
+}
+
+.floating-sheet-header table.floating-smart-table {
+    margin: 0 !important;
+    min-width: 980px;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.88rem;
+    text-align: left;
+    table-layout: fixed;
+}
+
+.floating-sheet-header th {
+    background: var(--bg-subtle) !important;
+    padding: 0.85rem 1rem !important;
+    font-weight: 700 !important;
+    color: var(--text-secondary) !important;
+    white-space: nowrap !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    box-sizing: border-box !important;
+}
+
+/* Floating Sticky Horizontal Scrollbar */
+.floating-sheet-scrollbar {
+    position: fixed;
+    bottom: 0;
+    z-index: 950;
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 14px;
+    background: rgba(15, 23, 42, 0.88);
+    border-top: 1px solid rgba(99, 102, 241, 0.35);
+    box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 8px 8px 0 0;
+    box-sizing: border-box;
+}
+
+.floating-sheet-scrollbar::-webkit-scrollbar {
+    height: 10px;
+}
+.floating-sheet-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 9999px;
+}
+.floating-sheet-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--accent-edu, #6366f1);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+.floating-sheet-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #818cf8;
+}
+
+.floating-sheet-scrollbar-inner {
+    height: 1px;
+    pointer-events: none;
+}
+
+/* Custom scrollbar on the main table scroll wrapper */
+.sheet-scroll-wrap::-webkit-scrollbar {
+    height: 10px;
+}
+.sheet-scroll-wrap::-webkit-scrollbar-track {
+    background: var(--bg-subtle);
+    border-radius: 9999px;
+}
+.sheet-scroll-wrap::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 9999px;
+}
+.sheet-scroll-wrap::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-edu, #6366f1);
+}
+
 /* Specific Columns */
 .col-word {
     font-weight: 700;
