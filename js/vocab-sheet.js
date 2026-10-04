@@ -753,8 +753,9 @@ class VocabSheetApp {
        ========================================================================== */
     initStickyTableUI() {
         const scrollWrap = document.querySelector('.sheet-scroll-wrap');
-        const realTable = document.querySelector('.smart-table');
-        if (!scrollWrap || !realTable) return;
+        const realTable = document.querySelector('.sheet-scroll-wrap table');
+        const realThead = document.querySelector('.sheet-scroll-wrap thead');
+        if (!scrollWrap || !realTable || !realThead) return;
 
         // 1. Tạo floating header nếu chưa có
         let floatHeader = document.getElementById('floatingSheetHeader');
@@ -765,7 +766,7 @@ class VocabSheetApp {
             floatHeader.style.display = 'none';
 
             const floatTable = document.createElement('table');
-            floatTable.className = 'smart-table floating-smart-table';
+            floatTable.className = 'floating-smart-table';
             const floatThead = document.createElement('thead');
             floatTable.appendChild(floatThead);
             floatHeader.appendChild(floatTable);
@@ -804,6 +805,14 @@ class VocabSheetApp {
             isSyncing = false;
         }, { passive: true });
 
+        floatHeader.addEventListener('scroll', () => {
+            if (isSyncing) return;
+            isSyncing = true;
+            scrollWrap.scrollLeft = floatHeader.scrollLeft;
+            if (floatScrollbar) floatScrollbar.scrollLeft = floatHeader.scrollLeft;
+            isSyncing = false;
+        }, { passive: true });
+
         // Cho phép dùng Shift + Cuộn chuột trên floating header để cuộn ngang
         floatHeader.addEventListener('wheel', (e) => {
             if (e.deltaX) {
@@ -813,22 +822,38 @@ class VocabSheetApp {
             }
         }, { passive: true });
 
-        // 4. Lắng nghe sự kiện scroll và resize của window
+        // 4. Lắng nghe sự kiện scroll và resize
         const onScrollOrResize = () => {
             this.updateStickyTablePositions();
         };
         window.addEventListener('scroll', onScrollOrResize, { passive: true });
+        document.addEventListener('scroll', onScrollOrResize, { passive: true });
         window.addEventListener('resize', onScrollOrResize, { passive: true });
 
+        if (window.ResizeObserver) {
+            const ro = new ResizeObserver(() => {
+                this.syncStickyHeaderWidths();
+                this.updateStickyTablePositions();
+            });
+            ro.observe(scrollWrap);
+            ro.observe(realTable);
+        }
+
         // Khởi tạo vị trí và cấu trúc lần đầu
+        this.updateStickyHeaderStructure();
+        this.updateStickyTablePositions();
         setTimeout(() => {
             this.updateStickyHeaderStructure();
             this.updateStickyTablePositions();
         }, 150);
+        setTimeout(() => {
+            this.syncStickyHeaderWidths();
+            this.updateStickyTablePositions();
+        }, 500);
     }
 
     updateStickyHeaderStructure() {
-        const realThead = document.querySelector('.smart-table thead');
+        const realThead = document.querySelector('.sheet-scroll-wrap thead');
         const floatThead = document.querySelector('#floatingSheetHeader thead');
         if (!realThead || !floatThead) return;
 
@@ -839,15 +864,16 @@ class VocabSheetApp {
     }
 
     syncStickyHeaderWidths() {
-        const realTable = document.querySelector('.smart-table');
-        const realThs = document.querySelectorAll('.smart-table thead th');
+        const realTable = document.querySelector('.sheet-scroll-wrap table');
+        const realThs = document.querySelectorAll('.sheet-scroll-wrap thead th');
         const floatHeader = document.getElementById('floatingSheetHeader');
-        const floatTable = document.querySelector('.floating-smart-table');
+        const floatTable = document.querySelector('#floatingSheetHeader table');
         const floatThs = document.querySelectorAll('#floatingSheetHeader thead th');
-        if (!realTable || !realThs.length || !floatThs.length || !floatTable) return;
+        if (!realTable || !realThs.length || !floatThs.length || !floatTable || !floatHeader) return;
 
         const realTableWidth = realTable.scrollWidth || realTable.getBoundingClientRect().width;
         floatTable.style.width = `${realTableWidth}px`;
+        floatTable.style.minWidth = `${realTableWidth}px`;
 
         realThs.forEach((th, idx) => {
             if (floatThs[idx]) {
@@ -860,51 +886,67 @@ class VocabSheetApp {
         });
 
         const scrollWrap = document.querySelector('.sheet-scroll-wrap');
-        if (scrollWrap && floatHeader) {
+        if (scrollWrap) {
             floatHeader.scrollLeft = scrollWrap.scrollLeft;
         }
     }
 
     updateStickyTablePositions() {
         const scrollWrap = document.querySelector('.sheet-scroll-wrap');
-        const realThead = document.querySelector('.smart-table thead');
+        const realTable = document.querySelector('.sheet-scroll-wrap table');
+        const realThead = document.querySelector('.sheet-scroll-wrap thead');
         const floatHeader = document.getElementById('floatingSheetHeader');
         const floatScrollbar = document.getElementById('floatingSheetScrollbar');
         const innerBar = document.querySelector('.floating-sheet-scrollbar-inner');
-        if (!scrollWrap || !realThead || !floatHeader || !floatScrollbar) return;
+        if (!scrollWrap || !realThead || !realTable || !floatHeader || !floatScrollbar) return;
 
         const wrapRect = scrollWrap.getBoundingClientRect();
         const theadRect = realThead.getBoundingClientRect();
-        const navEl = document.querySelector('.study-nav');
-        const navBottom = navEl ? navEl.getBoundingClientRect().bottom : 56;
         const windowHeight = window.innerHeight;
 
+        // Tính vị trí stickyTop (nơi header sẽ ghim lại ở trên cùng màn hình)
+        // Nếu có navbar và navbar đang bám/hiển thị ở đỉnh màn hình:
+        let stickyTop = 0;
+        const navEl = document.querySelector('.study-nav');
+        if (navEl) {
+            const navRect = navEl.getBoundingClientRect();
+            // Navbar chỉ chiếm chỗ mép trên khi mép dưới của nó còn nằm trên màn hình (navRect.bottom > 0)
+            // và mép trên của nó áp sát hoặc trên đỉnh (navRect.top <= 0)
+            if (navRect.top <= 0 && navRect.bottom > 0) {
+                stickyTop = Math.max(0, Math.round(navRect.bottom));
+            }
+        }
+
         // ── STICKY HEADER ────────────────────────────────────────────────
-        // Hiện khi: thead thật đã cuộn lên khỏi mép dưới của nav (theadRect.bottom < navBottom)
-        // VÀ đáy của table vẫn còn trên màn hình (wrapRect.bottom > navBottom + 70)
-        const isHeaderInZone = theadRect.bottom < navBottom && wrapRect.bottom > (navBottom + 70);
+        // Điều kiện hiển thị:
+        // 1. thead thật đã bị cuộn lên khuất mép stickyTop (theadRect.bottom <= stickyTop + 2)
+        // 2. Và đáy bảng từ vựng vẫn chưa bị cuộn qua khỏi tầm mắt (wrapRect.bottom > stickyTop + 60)
+        // 3. Và bảng đang hiển thị trên màn hình (wrapRect.width > 0)
+        const isHeaderInZone = (theadRect.bottom <= (stickyTop + 2)) && (wrapRect.bottom > (stickyTop + 60)) && (wrapRect.width > 0);
+
         if (isHeaderInZone) {
             floatHeader.style.display = 'block';
-            floatHeader.style.top = `${Math.max(0, navBottom)}px`;
-            floatHeader.style.left = `${wrapRect.left}px`;
-            floatHeader.style.width = `${wrapRect.width}px`;
+            floatHeader.style.top = `${stickyTop}px`;
+            floatHeader.style.left = `${Math.round(wrapRect.left)}px`;
+            floatHeader.style.width = `${Math.round(wrapRect.width)}px`;
             this.syncStickyHeaderWidths();
         } else {
             floatHeader.style.display = 'none';
         }
 
         // ── FLOATING HORIZONTAL SCROLLBAR ────────────────────────────────
-        // Hiện khi: Bảng có thanh cuộn ngang (scrollWidth > clientWidth)
-        // VÀ đầu bảng đã vào tầm mắt (wrapRect.top < windowHeight - 40)
-        // VÀ đáy bảng (nơi có thanh cuộn ngang thật) đang nằm dưới mép dưới màn hình (wrapRect.bottom > windowHeight)
+        // Hiện khi:
+        // 1. Bảng có thanh cuộn ngang (scrollWidth > clientWidth + 4)
+        // 2. Và đỉnh của bảng đã đi vào màn hình (wrapRect.top < windowHeight - 40)
+        // 3. Và đáy của bảng (nơi chứa thanh cuộn gốc) đang nằm tuốt phía dưới ngoài màn hình (wrapRect.bottom > windowHeight)
         const hasHorizontalOverflow = scrollWrap.scrollWidth > (scrollWrap.clientWidth + 4);
         const isScrollbarInZone = hasHorizontalOverflow && (wrapRect.top < (windowHeight - 40)) && (wrapRect.bottom > windowHeight);
 
         if (isScrollbarInZone) {
             floatScrollbar.style.display = 'block';
             floatScrollbar.style.bottom = '0px';
-            floatScrollbar.style.left = `${wrapRect.left}px`;
-            floatScrollbar.style.width = `${wrapRect.width}px`;
+            floatScrollbar.style.left = `${Math.round(wrapRect.left)}px`;
+            floatScrollbar.style.width = `${Math.round(wrapRect.width)}px`;
             if (innerBar) {
                 innerBar.style.width = `${scrollWrap.scrollWidth}px`;
             }
