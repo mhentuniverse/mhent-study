@@ -37,11 +37,19 @@ class StudyCloudClient {
     }
 
     getUserId() {
-        // Ưu tiên Firebase Auth UID nếu đã đăng nhập
+        // 1. Ưu tiên Firebase Auth instance nếu có
         if (window.studyAuth && window.studyAuth.currentUser) {
             return window.studyAuth.currentUser.uid;
         }
-        // Hoặc guest ID duy nhất trên trình duyệt
+        // 2. Profile đã đăng nhập lưu trong localStorage (đồng bộ qua toàn hệ thống MHEnt Universe)
+        try {
+            const cached = JSON.parse(localStorage.getItem('mhent_user_profile') || '{}');
+            if (cached && (cached.uid || cached.id)) {
+                return cached.uid || cached.id;
+            }
+        } catch (e) {}
+
+        // 3. Hoặc guest ID duy nhất trên trình duyệt
         let guestId = localStorage.getItem('mhent_study_guest_id');
         if (!guestId) {
             guestId = 'guest_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
@@ -54,7 +62,13 @@ class StudyCloudClient {
         if (window.studyAuth && window.studyAuth.currentUser) {
             return window.studyAuth.currentUser.displayName || window.studyAuth.currentUser.email || 'Thành viên MHEnt';
         }
-        return 'Học viên Ẩn danh';
+        try {
+            const cached = JSON.parse(localStorage.getItem('mhent_user_profile') || '{}');
+            if (cached && (cached.displayName || cached.email)) {
+                return cached.displayName || cached.email;
+            }
+        } catch (e) {}
+        return 'Học viên MHEnt';
     }
 
     /**

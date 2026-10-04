@@ -116,6 +116,63 @@ class StudyStorage {
     }
 
     /**
+     * Tự động đồng bộ các bộ từ vựng từ Cloud Supabase xuống máy (hỗ trợ nhập từ ĐT sang PC)
+     */
+    async syncDecksFromCloud(lang) {
+        if (!window.studyCloud || typeof window.studyCloud.listSharedDecks !== 'function') {
+            return this.getDecks(lang);
+        }
+        try {
+            // Lấy toàn bộ deck thuộc ngôn ngữ này từ Supabase Cloud
+            const cloudDecks = await window.studyCloud.listSharedDecks(lang);
+            if (!Array.isArray(cloudDecks) || cloudDecks.length === 0) {
+                return this.getDecks(lang);
+            }
+
+            let localDecks = this.getDecks(lang);
+            let changed = false;
+
+            cloudDecks.forEach(cDeck => {
+                if (!cDeck || !cDeck.id) return;
+                const idx = localDecks.findIndex(d => d.id === cDeck.id);
+                if (idx >= 0) {
+                    const local = localDecks[idx];
+                    const cloudWordsLen = (cDeck.words || []).length;
+                    const localWordsLen = (local.words || []).length;
+                    const cloudTime = new Date(cDeck.updatedAt || 0).getTime();
+                    const localTime = new Date(local.updatedAt || 0).getTime();
+
+                    // Ưu tiên cập nhật nếu Cloud có nhiều từ hơn hoặc mới hơn
+                    if (cloudWordsLen > localWordsLen || cloudTime > localTime) {
+                        localDecks[idx] = cDeck;
+                        changed = true;
+                    }
+                } else {
+                    // Chưa có trên máy này (ví dụ tạo trên điện thoại) -> Đưa vào danh sách trên máy tính!
+                    localDecks.push(cDeck);
+                    changed = true;
+                }
+            });
+
+            // Sắp xếp các bộ bài: bài có cập nhật mới nhất lên trước
+            localDecks.sort((a, b) => {
+                const tA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+                const tB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+                return tB - tA;
+            });
+
+            if (changed) {
+                this.saveDecks(lang, localDecks);
+                console.log(`[StudyStorage] ☁️ Đã đồng bộ ${localDecks.length} bộ bài (${lang.toUpperCase()}) từ Supabase Cloud!`);
+            }
+            return localDecks;
+        } catch (e) {
+            console.warn('[StudyStorage] Không thể đồng bộ từ cloud:', e);
+            return this.getDecks(lang);
+        }
+    }
+
+    /**
      * Lấy 1 bộ từ vựng cụ thể theo ID
      */
     getDeckById(lang, deckId) {

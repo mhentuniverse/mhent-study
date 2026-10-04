@@ -167,6 +167,45 @@ class VocabSheetApp {
         this.initMascotUI();
         this.renderAll();
         this.initStickyTableUI();
+        this.syncCloudDecks();
+    }
+
+    async syncCloudDecks() {
+        if (!window.studyStorage || typeof window.studyStorage.syncDecksFromCloud !== 'function') return;
+        try {
+            const currentDeckIdBefore = this.currentDeck?.id;
+            const updatedDecks = await window.studyStorage.syncDecksFromCloud(this.lang);
+            
+            if (Array.isArray(updatedDecks) && updatedDecks.length > 0) {
+                // Làm mới danh sách chọn bài học ở thanh menu
+                this.populateDeckSwitcher();
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const hasExplicitDeckParam = !!urlParams.get('deck');
+
+                // 1. Nếu bài học hiện tại có phiên bản mới hơn / nhiều từ hơn trên Cloud
+                const freshCurrent = updatedDecks.find(d => d.id === currentDeckIdBefore);
+                const currentWordsLen = (this.currentDeck?.words || []).length;
+
+                if (freshCurrent && (freshCurrent.words || []).length > currentWordsLen) {
+                    this.currentDeck = freshCurrent;
+                    this.renderAll();
+                    if (window.studyUI) {
+                        window.studyUI.showToast(`☁️ Đã đồng bộ thêm ${freshCurrent.words.length - currentWordsLen} từ từ Cloud!`, 'success');
+                    }
+                } 
+                // 2. Nếu người dùng không chỉ định deck trên URL và bài hiện tại là bài test/nháp (<= 2 từ)
+                // trong khi Cloud có bài học chính thức nhiều từ hơn (ví dụ bài vừa tạo từ điện thoại)
+                else if (!hasExplicitDeckParam && currentWordsLen <= 2 && updatedDecks[0] && updatedDecks[0].id !== currentDeckIdBefore && (updatedDecks[0].words || []).length > 2) {
+                    this.switchDeck(updatedDecks[0].id);
+                    if (window.studyUI) {
+                        window.studyUI.showToast(`☁️ Đã tự động tải bài học "${updatedDecks[0].title}" từ điện thoại!`, 'success');
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('[VocabSheetApp] Lỗi đồng bộ cloud decks:', e);
+        }
     }
 
     loadDeck() {
