@@ -660,7 +660,7 @@ class LyricsHubApp {
             `;
         });
 
-        container.innerHTML = html;
+        container.innerHTML = html + this.getVocabSummaryHtml();
     }
 
     toggleAutoScroll() {
@@ -720,7 +720,7 @@ class LyricsHubApp {
                 ${l.phonetic ? `<div style="font-size: 0.88rem; color: #38bdf8; font-family: monospace;">${this.escapeHtml(l.phonetic)}</div>` : ''}
                 ${l.translation ? `<div class="lyrics-plain-trans">${this.escapeHtml(l.translation)}</div>` : ''}
             </div>
-        `).join('');
+        `).join('') + this.getVocabSummaryHtml();
     }
 
     highlightVocabInSentence(sentence, words, sentenceIdx) {
@@ -1008,6 +1008,42 @@ class LyricsHubApp {
             return;
         }
 
+        // Fallback lưu vào LocalStorage qua studyStorage
+        if (window.studyStorage && typeof window.studyStorage.getDecks === 'function') {
+            let decks = window.studyStorage.getDecks(lang);
+            let targetDeck = decks.find(d => d.title && d.title.includes('Sổ tay từ vựng qua bài hát')) || decks[0];
+            if (!targetDeck) {
+                targetDeck = {
+                    id: `deck_lyrics_${lang}`,
+                    title: `Sổ tay từ vựng qua bài hát (${lang.toUpperCase()})`,
+                    description: 'Từ vựng hay được bóc tách từ các bài hát',
+                    lang: lang,
+                    words: []
+                };
+                decks.push(targetDeck);
+            }
+            if (!targetDeck.words) targetDeck.words = [];
+            const exists = targetDeck.words.some(w => w.word.toLowerCase() === word.toLowerCase());
+            if (!exists) {
+                targetDeck.words.unshift({
+                    id: 'lyrics_' + Date.now(),
+                    word: word,
+                    meaning: meaning,
+                    phonetic: phonetic,
+                    pos: pos,
+                    example: contextSentence,
+                    exampleTrans: '',
+                    note: `Trích từ bài hát: "${this.currentSong ? this.currentSong.title : 'Lyrics'}"`,
+                    status: 'new',
+                    createdAt: new Date().toISOString()
+                });
+                window.studyStorage.saveDecks(decks, lang);
+            }
+            this.hideAllPopovers();
+            this.showToast(`Đã lưu từ vựng "${word}" vào sổ của bạn!`, 'success');
+            return;
+        }
+
         this.showToast(`Đã ghi nhớ từ vựng "${word}"`, 'success');
     }
 
@@ -1101,21 +1137,32 @@ BƯỚC 1: XÁC ĐỊNH CỐT TRUYỆN, THỂ LOẠI & SẮC THÁI BÀI HÁT:
 - Dựa trên tên bài hát "${song.title}", nghệ sĩ "${song.artist}" và lời bài hát để xác định đúng phong cách:
   + NẾU LÀ BÀI NỔI LOẠN / CHÂM BIẾM / GAI GÓC / CHỬI ĐỜI / ROCK DISS (như Usseewa, Otonablue, rock, rap diss, v.v.):
     * Ngôi xưng: "TAO" - "CHÚNG MÀY / LŨ BAY / CÁC NGƯỜI". Sắc thái đanh thép, gai góc, bất cần, dùng từ ngữ mạnh mẽ (ví dụ: "Câm mồm đi!", "Biến đi!", "Đóng dấu X lên bản mặt béo tròn đầy mỡ", "Cái mồm thối tha ngậm lại"). Tuyệt đối KHÔNG dịch kiểu hiền lành, thơ mộng!
-  + NẾU LÀ BÀI TÌNH YÊU / CHIA LY / DA DIẾT / HOÀI NIỆM (như Lemon, unlasting, Until I Found You, Spring Day, ballad, RnB):
-    * Ngôi xưng: "ANH - EM" (hoặc "EM - ANH"), da diết, tình cảm, sâu lắng, thi vị.
+  + NẾU LÀ BÀI TÌNH YÊU / THỨC TỈNH TRƯỚC SỰ THAO TÚNG / CHIA LY / DA DIẾT (như Puppet, Lemon, unlasting, Until I Found You, Spring Day, ballad, RnB, Pop):
+    * Ngôi xưng: "ANH - EM" (hoặc "EM - ANH"), da diết hoặc dứt khoát, cay đắng, thức tỉnh trước sự dối trá nhưng giàu cảm xúc.
   + NẾU LÀ BÀI TỰ SỰ / TRIẾT LÝ / TỰ VẤN CUỘC SỐNG:
     * Ngôi xưng: "TÔI", chiêm nghiệm, chân thành.
-- QUY TẮC BẮT BUỘC: TOÀN BỘ CÁC CÂU TRONG BÀI PHẢI DÙNG CHUNG MỘT HỆ THỐNG NGÔI XƯNG NHẤT QUÁN. CẤM NHẢY LỘN XỘN (câu này xưng tôi, câu kia xưng anh, câu nọ xưng tao).
+- QUY TẮC BẮT BUỘC VỀ NGÔI XƯNG: TOÀN BỘ CÁC CÂU TRONG BÀI PHẢI DÙNG CHUNG MỘT HỆ THỐNG NGÔI XƯNG NHẤT QUÁN. CẤM NHẢY LỘN XỘN (câu này xưng tôi, câu kia xưng anh, câu nọ xưng tao).
 
-BƯỚC 2: QUY TẮC PHIÊN ÂM CHUẨN 100% (STRICT ROMANIZATION):
+BƯỚC 2: MẠCH NGHĨA LIÊN TỤC GIỮA CÁC DÒNG (ENJAMBMENT & NARRATIVE CONTINUITY):
+- Trong lời bài hát, một câu ngữ pháp trọn vẹn thường bị ngắt thành 2-3 dòng theo nhịp nhạc (ví dụ: dòng 1 "Darling, I'm done", dòng 2 "Playing along", dòng 3 "It's time to cut me loose").
+- BẮT BUỘC: Bạn PHẢI nhìn tổng thể các dòng liền kề để dịch nối mạch ý nghĩa của câu chuyện! Dòng sau phải tiếp nối dòng trước một cách mượt mà và làm người nghe hiểu rõ hành động của nhân vật (ví dụ: dòng 1: "Em à, anh đã quá mệt mỏi rồi..." -> dòng 2: "...khi cứ phải hùa theo trò chơi dối trá của em" -> dòng 3: "Đã đến lúc em phải buông tha và cắt đứt sợi dây của anh rồi").
+- TUYỆT ĐỐI CẤM dịch từng dòng rời rạc như cỗ máy không hiểu liên kết (như "anh chịu đủ rồi" rồi dòng dưới "hùa theo trò này nữa" cụt ngủn tối nghĩa). Dùng dấu ba chấm "..." ở cuối câu ngắt hoặc đầu câu tiếp nối khi một ý chưa hoàn chỉnh.
+
+BƯỚC 3: TÍNH ĐỒNG NHẤT TUYỆT ĐỐI CỦA ĐIỆP KHÚC (CHORUS CONSISTENCY):
+- Mọi câu hát hoặc đoạn điệp khúc lặp lại (ở Chorus 1, Chorus 2, Chorus 3, Outro) BẮT BUỘC PHẢI DỊCH NGHĨA HOÀN TOÀN GIỐNG NHAU về mặt từ ngữ và BẮT BUỘC PHẢI CHỌN ĐÚNG TỪ VỰNG ĐỒNG NHẤT ĐỂ BÓC TÁCH.
+- TUYỆT ĐỐI CẤM: Ở Chorus 1 dịch một kiểu, xuống Chorus 2 dịch kiểu khác, hoặc ở trên highlight từ này ở dưới highlight từ khác!
+
+BƯỚC 4: QUY TẮC PHIÊN ÂM CHUẨN 100% (STRICT ROMANIZATION):
 - Tiếng Nhật: 100% Chữ cái Latinh chuẩn Hepburn. TUYỆT ĐỐI CẤM để sót bất kỳ chữ Hiragana hay Katakana nào trong "phonetic" (đặc biệt là ぇ, ぁ, ぃ, ぅ, ぉ, っ, ゃ, ゅ, ょ). Chữ "うっせぇわ" BẮT BUỘC PHẢI LÀ "Ussee wa" hoặc "Usseewa" (CẤM "Usseぇ wa").
 - Tiếng Hàn: 100% Latinh Romaja chuẩn.
 - Tiếng Trung: 100% Pinyin có dấu thanh điệu chuẩn.
 - Tiếng Anh: để trống "".
 
-BƯỚC 3: TRÍCH XUẤT TỪ VỰNG HAY:
-- "word": CHÍNH XÁC từ hoặc cụm từ xuất hiện nguyên văn trong câu để highlight không bị lệch.
-- "phonetic": Phiên âm 100% Latinh.
+BƯỚC 5: TRÍCH XUẤT TỪ VỰNG CHỌN LỌC (STRICT QUALITY VOCABULARY SELECTION):
+- "word": CHỈ bóc tách từ đơn đắt giá (như "puppet", "loose", "darling") hoặc 1 thành ngữ / cụm động từ cố định đắt giá (collocation/idiom như "play along", "cut loose", "wrapped around your finger").
+- TUYỆT ĐỐI CẤM bôi đen nguyên cả câu hoặc nửa câu dài vô nghĩa.
+- CẤM bóc tách các từ chức năng ngữ pháp quá đơn giản (như "I", "you", "me", "to", "a", "the", "is", "in"). Mỗi câu chỉ bóc tách tối đa 1-2 từ hoặc cụm từ thực sự có giá trị học tập và gắn liền với chủ đề bài hát.
+- "phonetic": Phiên âm 100% Latinh hoặc IPA.
 - "pos": "noun"|"verb"|"adj"|"adv"|"phrase".
 - "meaning": Nghĩa tiếng Việt sắc sảo, tự nhiên, đúng ngữ cảnh bài hát.
 
@@ -1520,60 +1567,190 @@ QUY TẮC ĐẦU RA:
         }
     }
 
-    saveVocabFromLyrics(word, meaning, phonetic, pos) {
-        if (window.deckSelector) {
-            window.deckSelector.open({
-                word: word,
-                meaning: meaning,
-                phonetic: phonetic || '',
-                pos: pos || 'noun',
-                example: `Trích từ bài hát: "${this.currentSong ? this.currentSong.title : 'Lyrics'}"`,
-                lang: this.currentSong ? this.currentSong.lang : 'en',
+    getAllSongVocab() {
+        if (!this.currentSong) return [];
+        const lines = this.getActiveLyrics();
+        if (!Array.isArray(lines) || lines.length === 0) return [];
+        const map = new Map();
+        lines.forEach((line, lineIdx) => {
+            if (Array.isArray(line.words)) {
+                line.words.forEach(w => {
+                    if (!w || !w.word) return;
+                    const cleanWord = w.word.trim();
+                    if (!cleanWord) return;
+                    const key = cleanWord.toLowerCase();
+                    if (!map.has(key)) {
+                        map.set(key, {
+                            word: cleanWord,
+                            phonetic: w.phonetic || '',
+                            pos: w.pos || 'noun',
+                            meaning: w.meaning || '',
+                            contextSentence: line.text || '',
+                            sentenceIndex: lineIdx
+                        });
+                    }
+                });
+            }
+        });
+        return Array.from(map.values());
+    }
+
+    getVocabSummaryHtml() {
+        const vocabList = this.getAllSongVocab();
+        const navLabel = document.getElementById('vocab-summary-nav-label');
+        if (navLabel) {
+            navLabel.textContent = `Sổ từ vựng (${vocabList.length})`;
+        }
+
+        if (vocabList.length === 0) {
+            return `
+                <div class="song-vocab-summary-card" id="song-vocab-summary-card">
+                    <div class="vocab-summary-header">
+                        <div>
+                            <div class="vocab-summary-title">
+                                <i class="fa-solid fa-graduation-cap"></i> Sổ tay từ vựng & thành ngữ bài hát
+                            </div>
+                            <div class="vocab-summary-sub">Chưa có từ vựng nào được bóc tách cho bài hát này</div>
+                        </div>
+                        <button type="button" class="btn-tool-action btn-ai-gradient" onclick="window.lyricsApp.triggerAiAnalysis(true)">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Phân tích AI để trích xuất từ
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        const songTitle = this.currentSong ? this.currentSong.title : 'Bài hát';
+
+        return `
+            <div class="song-vocab-summary-card" id="song-vocab-summary-card">
+                <div class="vocab-summary-header">
+                    <div>
+                        <div class="vocab-summary-title">
+                            <i class="fa-solid fa-graduation-cap"></i> Sổ tay từ vựng & thành ngữ (${vocabList.length} mục)
+                        </div>
+                        <div class="vocab-summary-sub">Tổng hợp các từ khóa, cụm từ & thành ngữ quan trọng xuất hiện trong "${this.escapeHtml(songTitle)}"</div>
+                    </div>
+                    <button type="button" class="btn-save-all-deck" onclick="window.lyricsApp.saveAllVocabToDeck()">
+                        <i class="fa-solid fa-folder-plus"></i> Lưu tất cả (${vocabList.length}) vào Sổ từ vựng
+                    </button>
+                </div>
+
+                <div class="vocab-summary-grid">
+                    ${vocabList.map(item => `
+                        <div class="vocab-summary-chip-card" onclick="window.lyricsApp.seekToSentence(${item.sentenceIndex})">
+                            <div class="vocab-chip-top">
+                                <span class="vocab-chip-word">${this.escapeHtml(item.word)}</span>
+                                <span class="vocab-chip-pos">${this.escapeHtml(item.pos)}</span>
+                            </div>
+                            ${item.phonetic ? `<div class="vocab-chip-phonetic">${this.escapeHtml(item.phonetic)}</div>` : ''}
+                            <div class="vocab-chip-meaning">${this.escapeHtml(item.meaning)}</div>
+                            <div class="vocab-chip-actions">
+                                <button type="button" class="btn-save-single-vocab" onclick="event.stopPropagation(); window.lyricsApp.saveVocabFromLyrics('${this.escapeHtml(item.word).replace(/'/g, "\\'")}', '${this.escapeHtml(item.meaning).replace(/'/g, "\\'")}', '${this.escapeHtml(item.phonetic).replace(/'/g, "\\'")}', '${this.escapeHtml(item.pos)}')">
+                                    <i class="fa-solid fa-bookmark"></i> Lưu từ
+                                </button>
+                                <button type="button" class="btn-goto-sentence" onclick="event.stopPropagation(); window.lyricsApp.seekToSentence(${item.sentenceIndex})">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem câu
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    scrollToVocabSummary() {
+        const card = document.getElementById('song-vocab-summary-card');
+        if (card) {
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            this.showToast('Chưa có sổ từ vựng cho bài hát này. Hãy bấm "Phân tích AI"!', 'info');
+        }
+    }
+
+    saveAllVocabToDeck() {
+        const vocabList = this.getAllSongVocab();
+        if (vocabList.length === 0) {
+            this.showToast('Không có từ vựng nào để lưu.', 'warning');
+            return;
+        }
+
+        const songTitle = this.currentSong ? this.currentSong.title : 'Bài hát';
+        const lang = this.currentSong ? this.currentSong.lang : 'en';
+
+        // 1. Nếu có deckSelector dạng mở nhiều từ (batch):
+        if (window.deckSelector && typeof window.deckSelector.openBatch === 'function') {
+            window.deckSelector.openBatch({
+                cards: vocabList.map(v => ({
+                    word: v.word,
+                    meaning: v.meaning,
+                    phonetic: v.phonetic,
+                    pos: v.pos,
+                    example: `Trích từ bài hát: "${songTitle}" - Câu: "${v.contextSentence}"`,
+                    lang: lang
+                })),
                 onSave: (deck) => {
-                    this.hideAllPopovers();
-                    this.showToast(`Đã lưu "${word}" vào ${deck.title}!`, 'success');
+                    this.showToast(`Đã lưu ${vocabList.length} từ vào bộ "${deck ? deck.title : 'Từ vựng'}"!`, 'success');
                 }
             });
             return;
         }
 
-        const entry = {
-            id: 'lyrics_' + Date.now(),
-            word: word,
-            meaning: meaning,
-            phonetic: phonetic,
-            pos: pos,
-            example: `Trích từ lời bài hát: "${this.currentSong ? this.currentSong.title : 'Lyrics'}"`,
-            exampleTrans: '',
-            note: 'Học qua bài hát MHEnt Study',
-            status: 'new',
-            createdAt: new Date().toISOString()
-        };
-
-        const app = window.sheetApp || window.vocabApp;
-        if (app && typeof app.addWordDirectly === 'function') {
-            app.addWordDirectly(entry);
-        } else if (window.studyStorage) {
-            const lang = this.currentSong ? this.currentSong.lang : 'en';
+        // 2. Lưu trực tiếp vào LocalStorage qua studyStorage
+        let savedCount = 0;
+        if (window.studyStorage && typeof window.studyStorage.getDecks === 'function') {
             let decks = window.studyStorage.getDecks(lang);
-            let targetDeck = decks.find(d => d.title && d.title.includes('Sổ tay từ vựng qua bài hát')) || decks[0];
+            let targetDeck = decks.find(d => d.title && d.title.includes(songTitle)) ||
+                             decks.find(d => d.title && d.title.includes('Sổ tay từ vựng qua bài hát'));
             if (!targetDeck) {
                 targetDeck = {
-                    id: `deck_lyrics_${lang}`,
-                    title: `Sổ tay từ vựng qua bài hát (${lang.toUpperCase()})`,
-                    description: 'Từ vựng hay được bóc tách từ các bài hát',
+                    id: `deck_song_${Date.now()}`,
+                    title: `Bài hát: ${songTitle} (${lang.toUpperCase()})`,
+                    description: `Sổ từ vựng học qua bài hát "${songTitle}"`,
                     lang: lang,
                     words: []
                 };
                 decks.push(targetDeck);
             }
             if (!targetDeck.words) targetDeck.words = [];
-            targetDeck.words.unshift(entry);
+
+            vocabList.forEach(v => {
+                const exists = targetDeck.words.some(w => w.word.toLowerCase() === v.word.toLowerCase());
+                if (!exists) {
+                    targetDeck.words.unshift({
+                        id: 'lyrics_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                        word: v.word,
+                        meaning: v.meaning,
+                        phonetic: v.phonetic,
+                        pos: v.pos,
+                        example: v.contextSentence,
+                        exampleTrans: '',
+                        note: `Từ bài hát: ${songTitle}`,
+                        status: 'new',
+                        createdAt: new Date().toISOString()
+                    });
+                    savedCount++;
+                }
+            });
             window.studyStorage.saveDecks(decks, lang);
         }
 
-        this.hideAllPopovers();
-        this.showToast(`Đã lưu từ vựng "${word}" vào sổ của bạn!`, 'success');
+        // 3. Cũng đồng bộ thêm vào studyCloud nếu có
+        if (window.studyCloud && typeof window.studyCloud.addVocabCard === 'function') {
+            vocabList.forEach(v => {
+                window.studyCloud.addVocabCard({
+                    word: v.word,
+                    meaning: v.meaning,
+                    phonetic: v.phonetic,
+                    pos: v.pos,
+                    lang: lang,
+                    example: v.contextSentence
+                }).catch(() => {});
+            });
+        }
+
+        this.showToast(`✨ Đã lưu thành công ${vocabList.length} từ vựng bài hát vào Sổ từ vựng của bạn!`, 'success');
     }
 
     // =========================================================================
@@ -1589,6 +1766,7 @@ QUY TẮC ĐẦU RA:
         try {
             const candidates = [];
             const qLower = query.toLowerCase();
+            const qClean = query.replace(/[-–—|/]/g, ' ').replace(/\s+/g, ' ').trim();
 
             // 1. Kiểm tra trong danh sách Featured Songs cục bộ trước
             this.featuredSongs.forEach(s => {
@@ -1601,6 +1779,7 @@ QUY TẮC ĐẦU RA:
                         albumName: 'Tuyển chọn MHEnt',
                         duration: s.duration,
                         hasSynced: true,
+                        thumbnail: s.thumbnail || '',
                         lang: s.lang
                     });
                 }
@@ -1625,6 +1804,7 @@ QUY TẮC ĐẦU RA:
                                             albumName: 'Bản dịch đầy đủ (MHEnt Cloud)',
                                             duration: fullSong.duration || 180,
                                             hasSynced: Array.isArray(fullSong.synced_lyrics) && fullSong.synced_lyrics.length > 0,
+                                            thumbnail: fullSong.thumbnail || '',
                                             lang: fullSong.lang
                                         });
                                     }
@@ -1637,67 +1817,108 @@ QUY TẮC ĐẦU RA:
                 }
             }
 
-            // 2. Tìm kiếm trên LRCLIB API với chiến lược đa tầng (Multi-Strategy Queries)
-            const cleanQuery = query.replace(/[-–—|/]/g, ' ').replace(/\s+/g, ' ').trim();
-            const queriesToTry = [
-                `https://lrclib.net/api/search?q=${encodeURIComponent(cleanQuery)}`
-            ];
+            // 2. Tìm kiếm song song trên Apple Music/iTunes API & LRCLIB API
+            const itunesPromise = fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(qClean)}&entity=song&limit=10`)
+                .then(r => r.json())
+                .catch(() => ({ results: [] }));
 
+            const lrclibQueries = [
+                `https://lrclib.net/api/search?q=${encodeURIComponent(qClean)}`
+            ];
             if (/[-–—|/]|\s+by\s+/i.test(query)) {
                 const parts = query.split(/[-–—|/]|\s+by\s+/i).map(s => s.trim()).filter(Boolean);
                 if (parts.length >= 2) {
                     const track = parts[0];
                     const artist = parts[1];
-                    const joinedTrack = track.replace(/\s+/g, '');
-                    queriesToTry.push(`https://lrclib.net/api/search?track_name=${encodeURIComponent(joinedTrack)}&artist_name=${encodeURIComponent(artist)}`);
-                    queriesToTry.push(`https://lrclib.net/api/search?q=${encodeURIComponent(joinedTrack + ' ' + artist)}`);
-                    queriesToTry.push(`https://lrclib.net/api/search?track_name=${encodeURIComponent(track)}&artist_name=${encodeURIComponent(artist)}`);
-                    queriesToTry.push(`https://lrclib.net/api/search?q=${encodeURIComponent(joinedTrack)}`);
-                }
-            } else {
-                const joinedAll = cleanQuery.replace(/\s+/g, '');
-                if (joinedAll !== cleanQuery) {
-                    queriesToTry.push(`https://lrclib.net/api/search?q=${encodeURIComponent(joinedAll)}`);
+                    lrclibQueries.push(`https://lrclib.net/api/search?track_name=${encodeURIComponent(track)}&artist_name=${encodeURIComponent(artist)}`);
+                    lrclibQueries.push(`https://lrclib.net/api/search?q=${encodeURIComponent(track + ' ' + artist)}`);
                 }
             }
+            const lrclibPromise = Promise.allSettled(lrclibQueries.map(u => fetch(u).then(r => r.json()).catch(() => [])));
 
-            let lrclibResults = [];
-            for (const url of queriesToTry) {
-                try {
-                    const res = await fetch(url);
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (Array.isArray(data) && data.length > 0) {
-                            lrclibResults = data;
-                            break; // Tìm thấy kết quả phù hợp nhất!
-                        }
-                    }
-                } catch (e) {
-                    console.warn('[LRCLIB Query Try Warning]:', e);
+            const [itunesRes, lrclibSettled] = await Promise.all([itunesPromise, lrclibPromise]);
+            const itunesList = Array.isArray(itunesRes?.results) ? itunesRes.results : [];
+
+            let lrclibRaw = [];
+            lrclibSettled.forEach(s => {
+                if (s.status === 'fulfilled' && Array.isArray(s.value)) {
+                    lrclibRaw.push(...s.value);
                 }
-            }
+            });
 
-            // Gộp kết quả LRCLIB vào danh sách ứng viên
-            if (Array.isArray(lrclibResults)) {
-                lrclibResults.forEach(r => {
-                    const isDup = candidates.some(c => 
-                        c.trackName.toLowerCase() === r.trackName.toLowerCase() && 
-                        c.artistName.toLowerCase() === r.artistName.toLowerCase()
-                    );
-                    if (!isDup) {
-                        candidates.push({
-                            type: 'lrclib',
-                            lrclibData: r,
-                            trackName: r.trackName,
-                            artistName: r.artistName,
-                            albumName: r.albumName || 'Single / Album',
-                            duration: r.duration || 180,
-                            hasSynced: !!r.syncedLyrics,
-                            lang: this.detectLanguage(r.trackName + ' ' + (r.syncedLyrics || r.plainLyrics || ''))
-                        });
+            // Nếu iTunes tìm thấy bài hát chính xác, thực hiện truy vấn targeted sang LRCLIB cho 3 bài đầu
+            const lrclibTargeted = [];
+            if (itunesList.length > 0) {
+                const targetedTasks = itunesList.slice(0, 3).map(it => 
+                    fetch(`https://lrclib.net/api/search?track_name=${encodeURIComponent(it.trackName)}&artist_name=${encodeURIComponent(it.artistName)}`)
+                        .then(r => r.json())
+                        .catch(() => [])
+                );
+                const targetedRes = await Promise.allSettled(targetedTasks);
+                targetedRes.forEach(tr => {
+                    if (tr.status === 'fulfilled' && Array.isArray(tr.value)) {
+                        lrclibTargeted.push(...tr.value);
                     }
                 });
             }
+
+            const allLrc = [...lrclibTargeted, ...lrclibRaw];
+            const seenKeys = new Set(candidates.map(c => `${c.trackName.toLowerCase()}_${c.artistName.toLowerCase()}`));
+
+            allLrc.forEach(r => {
+                if (!r || !r.trackName || !r.artistName) return;
+                const key = `${r.trackName.toLowerCase()}_${r.artistName.toLowerCase()}`;
+                if (!seenKeys.has(key)) {
+                    seenKeys.add(key);
+                    const itMatch = itunesList.find(it => 
+                        it.trackName.toLowerCase() === r.trackName.toLowerCase() ||
+                        r.trackName.toLowerCase().includes(it.trackName.toLowerCase()) ||
+                        it.trackName.toLowerCase().includes(r.trackName.toLowerCase())
+                    );
+                    const art = itMatch?.artworkUrl100 ? itMatch.artworkUrl100.replace('100x100bb', '600x600bb') : '';
+                    candidates.push({
+                        type: 'lrclib',
+                        lrclibData: r,
+                        trackName: r.trackName,
+                        artistName: r.artistName,
+                        albumName: r.albumName || itMatch?.collectionName || 'Single / Album',
+                        duration: r.duration || 180,
+                        hasSynced: !!r.syncedLyrics,
+                        thumbnail: art,
+                        previewUrl: itMatch?.previewUrl || '',
+                        lang: this.detectLanguage(r.trackName + ' ' + (r.syncedLyrics || r.plainLyrics || ''))
+                    });
+                }
+            });
+
+            // Gộp thêm các bài từ iTunes chưa có trên LRCLIB (người dùng vẫn có thể học qua MV/Audio & AISA AI)
+            itunesList.forEach(it => {
+                const key = `${it.trackName.toLowerCase()}_${it.artistName.toLowerCase()}`;
+                if (!seenKeys.has(key)) {
+                    seenKeys.add(key);
+                    candidates.push({
+                        type: 'itunes',
+                        itunesData: it,
+                        trackName: it.trackName,
+                        artistName: it.artistName,
+                        albumName: it.collectionName || 'Single / Album',
+                        duration: Math.round((it.trackTimeMillis || 180000) / 1000),
+                        hasSynced: false,
+                        thumbnail: it.artworkUrl100 ? it.artworkUrl100.replace('100x100bb', '600x600bb') : '',
+                        previewUrl: it.previewUrl || '',
+                        lang: this.detectLanguage(it.trackName + ' ' + it.artistName)
+                    });
+                }
+            });
+
+            // Sắp xếp ưu tiên: Tuyển chọn -> Có Synced Lyrics -> Bài khác
+            candidates.sort((a, b) => {
+                if (a.type === 'featured' && b.type !== 'featured') return -1;
+                if (b.type === 'featured' && a.type !== 'featured') return 1;
+                if (a.hasSynced && !b.hasSynced) return -1;
+                if (!a.hasSynced && b.hasSynced) return 1;
+                return 0;
+            });
 
             if (candidates.length === 0) {
                 this.showToast(`Không tìm thấy bài hát nào cho từ khóa "${query}". Hãy thử gõ tên chuẩn tiếng Anh/Hàn/Nhật!`, 'warning');
@@ -1832,7 +2053,11 @@ QUY TẮC ĐẦU RA:
             return `
                 <div class="song-select-item" onclick="window.lyricsApp.selectCandidateByIndex(${idx})">
                     <div class="song-item-cover-wrap">
-                        <i class="fa-solid fa-music song-item-cover-icon"></i>
+                        ${item.thumbnail ? 
+                            `<img src="${this.escapeHtml(item.thumbnail)}" class="song-item-cover-img" alt="Cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                             <i class="fa-solid fa-music song-item-cover-icon" style="display: none;"></i>` :
+                            `<i class="fa-solid fa-music song-item-cover-icon"></i>`
+                        }
                         <span class="song-item-lang-pill">${langMap[item.lang] || '🌐 ALL'}</span>
                     </div>
 
@@ -1894,7 +2119,27 @@ QUY TẮC ĐẦU RA:
             return;
         }
 
-        const item = candidate.lrclibData;
+        let item = candidate.lrclibData;
+        if (!item && candidate.type === 'itunes') {
+            const it = candidate.itunesData;
+            // Thử tra cứu nhanh LRCLIB một lần nữa với tên chuẩn iTunes
+            try {
+                const getRes = await fetch(`https://lrclib.net/api/get?track_name=${encodeURIComponent(it.trackName)}&artist_name=${encodeURIComponent(it.artistName)}`);
+                if (getRes.ok) {
+                    item = await getRes.json();
+                }
+            } catch (e) {}
+
+            if (!item) {
+                item = {
+                    trackName: it.trackName,
+                    artistName: it.artistName,
+                    duration: Math.round((it.trackTimeMillis || 180000) / 1000),
+                    plainLyrics: '',
+                    syncedLyrics: ''
+                };
+            }
+        }
         if (!item) return;
 
         this.showToast(`Đang bóc tách lời bài hát & tìm video MV: ${item.trackName}...`, 'info', 3000);
@@ -1924,7 +2169,8 @@ QUY TẮC ĐẦU RA:
                 artist: item.artistName,
                 lang: detectedLang,
                 youtube_id: foundYtId || '',
-                thumbnail: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=60',
+                audio_url: candidate.previewUrl || '',
+                thumbnail: candidate.thumbnail || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=60',
                 duration: item.duration || 180,
                 synced_lyrics: parsedLyrics,
                 plain_lyrics: item.plainLyrics || '',
@@ -2061,6 +2307,708 @@ QUY TẮC ĐẦU RA:
     // =========================================================================
     initFeaturedSongs() {
         return [
+            {
+                      "id": "puppet-john-michael-howell",
+                      "title": "Puppet",
+                      "artist": "John Michael Howell",
+                      "lang": "en",
+                      "thumbnail": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/bf/25/74/bf2574e4-b77a-ec94-279c-7f55b9e4a8ea/artwork.jpg/600x600bb.jpg",
+                      "youtube_id": "Ie6n-Nq_5rA",
+                      "audio_url": "",
+                      "duration": 135,
+                      "synced_lyrics": [
+                                {
+                                          "id": 1,
+                                          "text": "Baby, did you pull my strings so you could play me?",
+                                          "words": [
+                                                    {
+                                                              "pos": "phrase",
+                                                              "word": "pull my strings",
+                                                              "meaning": "giật dây (thao túng, sai khiến người khác)",
+                                                              "phonetic": "pʊl maɪ strɪŋz"
+                                                    },
+                                                    {
+                                                              "pos": "verb",
+                                                              "word": "play",
+                                                              "meaning": "đùa giỡn, thao túng tình cảm",
+                                                              "phonetic": "pleɪ"
+                                                    }
+                                          ],
+                                          "endTime": 8.79,
+                                          "phonetic": "",
+                                          "startTime": 3.79,
+                                          "translation": "Cưng ơi, em giật dây anh cốt chỉ để đùa giỡn anh sao?"
+                                },
+                                {
+                                          "id": 2,
+                                          "text": "Strummin' on my heart just to betray me",
+                                          "words": [
+                                                    {
+                                                              "pos": "verb",
+                                                              "word": "strummin'",
+                                                              "meaning": "khảy đàn, gảy (ở đây chỉ việc làm rung động trái tim)",
+                                                              "phonetic": "ˈstrʌmɪn"
+                                                    },
+                                                    {
+                                                              "pos": "verb",
+                                                              "word": "betray",
+                                                              "meaning": "phản bội",
+                                                              "phonetic": "bɪˈtreɪ"
+                                                    }
+                                          ],
+                                          "endTime": 12.04,
+                                          "phonetic": "",
+                                          "startTime": 8.94,
+                                          "translation": "Em khảy những phím đàn trong tim anh chỉ để phản bội anh"
+                                },
+                                {
+                                          "id": 3,
+                                          "text": "Had me crazy over you",
+                                          "words": [
+                                                    {
+                                                              "pos": "adj",
+                                                              "word": "crazy",
+                                                              "meaning": "phát cuồng, mê muội",
+                                                              "phonetic": "ˈkreɪzi"
+                                                    }
+                                          ],
+                                          "endTime": 16.99,
+                                          "phonetic": "",
+                                          "startTime": 12.04,
+                                          "translation": "Khiến anh say đắm đến phát cuồng vì em"
+                                },
+                                {
+                                          "id": 4,
+                                          "text": "Feels like I'm stuck inside your show",
+                                          "words": [
+                                                    {
+                                                              "pos": "adj",
+                                                              "word": "stuck",
+                                                              "meaning": "mắc kẹt",
+                                                              "phonetic": "stʌk"
+                                                    },
+                                                    {
+                                                              "pos": "noun",
+                                                              "word": "show",
+                                                              "meaning": "vở kịch, trò diễn",
+                                                              "phonetic": "ʃoʊ"
+                                                    }
+                                          ],
+                                          "endTime": 20.29,
+                                          "phonetic": "",
+                                          "startTime": 16.99,
+                                          "translation": "Tựa như anh đang mắc kẹt trong vở kịch của em"
+                                },
+                                {
+                                          "id": 5,
+                                          "text": "It's true",
+                                          "words": [
+                                                    {
+                                                              "pos": "adj",
+                                                              "word": "true",
+                                                              "meaning": "đúng sự thật",
+                                                              "phonetic": "truː"
+                                                    }
+                                          ],
+                                          "endTime": 22.26,
+                                          "phonetic": "",
+                                          "startTime": 20.29,
+                                          "translation": "Sự thật là vậy"
+                                },
+                                {
+                                          "id": 6,
+                                          "text": "You got me wrapped around your finger",
+                                          "words": [
+                                                    {
+                                                              "pos": "phrase",
+                                                              "word": "wrapped around your finger",
+                                                              "meaning": "quấn quanh ngón tay (dễ dàng thao túng, sai khiến)",
+                                                              "phonetic": "ræpt əˈraʊnd jʊər ˈfɪŋɡər"
+                                                    }
+                                          ],
+                                          "endTime": 26.34,
+                                          "phonetic": "",
+                                          "startTime": 22.26,
+                                          "translation": "Em đã thuần hóa và sai khiến anh trong lòng bàn tay"
+                                },
+                                {
+                                          "id": 7,
+                                          "text": "Acting like a fool",
+                                          "words": [
+                                                    {
+                                                              "pos": "verb",
+                                                              "word": "acting",
+                                                              "meaning": "cư xử, hành động",
+                                                              "phonetic": "ˈæktɪŋ"
+                                                    },
+                                                    {
+                                                              "pos": "noun",
+                                                              "word": "fool",
+                                                              "meaning": "kẻ khờ, kẻ ngốc",
+                                                              "phonetic": "fuːl"
+                                                    }
+                                          ],
+                                          "endTime": 27.92,
+                                          "phonetic": "",
+                                          "startTime": 26.34,
+                                          "translation": "Để rồi cư xử như một kẻ khờ"
+                                },
+                                {
+                                          "id": 8,
+                                          "text": "Must've been the strings you pulled",
+                                          "words": [
+                                                    {
+                                                              "pos": "noun",
+                                                              "word": "strings",
+                                                              "meaning": "sây dây con rối",
+                                                              "phonetic": "strɪŋz"
+                                                    }
+                                          ],
+                                          "endTime": 31.23,
+                                          "phonetic": "",
+                                          "startTime": 27.92,
+                                          "translation": "Tất cả là do những sợi dây mà em đã giật"
+                                },
+                                {
+                                          "id": 9,
+                                          "text": "Now it's clear, that I can see the truth",
+                                          "words": [
+                                                    {
+                                                              "pos": "adj",
+                                                              "word": "clear",
+                                                              "meaning": "rõ ràng",
+                                                              "phonetic": "klɪr"
+                                                    },
+                                                    {
+                                                              "pos": "noun",
+                                                              "word": "truth",
+                                                              "meaning": "sự thật",
+                                                              "phonetic": "truːθ"
+                                                    }
+                                          ],
+                                          "endTime": 34.86,
+                                          "phonetic": "",
+                                          "startTime": 31.23,
+                                          "translation": "Giờ đây mọi thứ đã rõ ràng, và anh đã nhìn thấy sự thật"
+                                },
+                                {
+                                          "id": 10,
+                                          "text": "I was just a puppet to you",
+                                          "words": [
+                                                    {
+                                                              "pos": "noun",
+                                                              "word": "puppet",
+                                                              "meaning": "con rối",
+                                                              "phonetic": "ˈpʌpɪt"
+                                                    }
+                                          ],
+                                          "endTime": 39.05,
+                                          "phonetic": "",
+                                          "startTime": 34.86,
+                                          "translation": "Rằng anh mãi chỉ là một con rối trong mắt em"
+                                },
+                                {
+                                          "id": 11,
+                                          "text": "Darling, I'm done",
+                                          "words": [
+                                                    {
+                                                              "pos": "noun",
+                                                              "word": "darling",
+                                                              "meaning": "em yêu, người ơi",
+                                                              "phonetic": "ˈdɑːrlɪŋ"
+                                                    },
+                                                    {
+                                                              "pos": "adj",
+                                                              "word": "done",
+                                                              "meaning": "chịu đựng đủ rồi, chấm dứt",
+                                                              "phonetic": "dʌn"
+                                                    }
+                                          ],
+                                          "endTime": 40.86,
+                                          "phonetic": "",
+                                          "startTime": 39.05,
+                                          "translation": "Em à, anh đã quá mệt mỏi rồi..."
+                                },
+                                {
+                                          "id": 12,
+                                          "text": "Playing along",
+                                          "words": [
+                                                    {
+                                                              "pos": "phrase",
+                                                              "word": "playing along",
+                                                              "meaning": "hùa theo, giả vờ đồng tình",
+                                                              "phonetic": "ˈpleɪɪŋ əˈlɔːŋ"
+                                                    }
+                                          ],
+                                          "endTime": 42.61,
+                                          "phonetic": "",
+                                          "startTime": 40.86,
+                                          "translation": "...khi cứ phải hùa theo trò chơi dối trá của em"
+                                },
+                                {
+                                          "id": 13,
+                                          "text": "It's time to cut me loose",
+                                          "words": [
+                                                    {
+                                                              "pos": "phrase",
+                                                              "word": "cut loose",
+                                                              "meaning": "buông bỏ, cắt đứt ràng buộc",
+                                                              "phonetic": "kʌt luːs"
+                                                    }
+                                          ],
+                                          "endTime": 44.47,
+                                          "phonetic": "",
+                                          "startTime": 42.61,
+                                          "translation": "Đã đến lúc em phải buông tha và cắt đứt sợi dây của anh rồi"
+                                },
+                                {
+                                          "id": 14,
+                                          "text": "Got me wrapped around your finger",
+                                          "words": [
+                                                    {
+                                                              "pos": "verb",
+                                                              "word": "wrapped",
+                                                              "meaning": "quấn quanh, bị kiểm soát",
+                                                              "phonetic": "ræpt"
+                                                    }
+                                          ],
+                                          "endTime": 47,
+                                          "phonetic": "",
+                                          "startTime": 44.47,
+                                          "translation": "Em từng nắm bắt anh hoàn toàn trong lòng bàn tay"
+                                },
+                                {
+                                          "id": 15,
+                                          "text": "Acting like a fool",
+                                          "words": [
+                                                    {
+                                                              "pos": "noun",
+                                                              "word": "fool",
+                                                              "meaning": "kẻ khờ khạo",
+                                                              "phonetic": "fuːl"
+                                                    }
+                                          ],
+                                          "endTime": 48.79,
+                                          "phonetic": "",
+                                          "startTime": 47,
+                                          "translation": "Và biến anh thành kẻ ngốc"
+                                },
+                                {
+                                          "id": 16,
+                                          "text": "But girl, I ain't no puppet, no puppet, no puppet for you",
+                                          "words": [
+                                                    {
+                                                              "pos": "phrase",
+                                                              "word": "ain't no",
+                                                              "meaning": "không phải là (phủ định nhấn mạnh)",
+                                                              "phonetic": "eɪnˈt noʊ"
+                                                    },
+                                                    {
+                                                              "pos": "noun",
+                                                              "word": "puppet",
+                                                              "meaning": "con rối",
+                                                              "phonetic": "ˈpʌpɪt"
+                                                    }
+                                          ],
+                                          "endTime": 53.79,
+                                          "phonetic": "",
+                                          "startTime": 48.79,
+                                          "translation": "Nhưng cô gái à, anh không phải là con rối, không phải con rối, không bao giờ là con rối của em nữa đâu!"
+                                },
+                                {
+                                          "id": 17,
+                                          "text": "Can you blame me?",
+                                          "words": [
+                                                    {
+                                                              "pos": "verb",
+                                                              "word": "blame",
+                                                              "meaning": "đổ lỗi, trách cứ",
+                                                              "phonetic": "bleɪm"
+                                                    }
+                                          ],
+                                          "endTime": 57.39,
+                                          "phonetic": "",
+                                          "startTime": 55.27,
+                                          "translation": "Em có thể trách anh được sao?"
+                                },
+                                {
+                                          "id": 18,
+                                          "text": "The way you had me tricked was so amazing",
+                                          "words": [
+                                                    {
+                                                              "pos": "verb",
+                                                              "word": "tricked",
+                                                              "meaning": "bị lừa gạt",
+                                                              "phonetic": "trɪkt"
+                                                    },
+                                                    {
+                                                              "pos": "adj",
+                                                              "word": "amazing",
+                                                              "meaning": "tuyệt vời, kinh ngạc",
+                                                              "phonetic": "əˈmeɪzɪŋ"
+                                                    }
+                                          ],
+                                          "endTime": 60.97,
+                                          "phonetic": "",
+                                          "startTime": 57.39,
+                                          "translation": "Cách mà em lừa gạt anh thật quá ư tinh vi"
+                                },
+                                {
+                                          "id": 19,
+                                          "text": "But fire in your eyes was awfully blazing",
+                                          "words": [
+                                                    {
+                                                              "pos": "noun",
+                                                              "word": "fire",
+                                                              "meaning": "ngọn lửa (sự nguy hiểm/cuốn hút)",
+                                                              "phonetic": "ˈfaɪər"
+                                                    },
+                                                    {
+                                                              "pos": "adj",
+                                                              "word": "blazing",
+                                                              "meaning": "bùng cháy dữ dội",
+                                                              "phonetic": "ˈbleɪzɪŋ"
+                                                    }
+                                          ],
+                                          "endTime": 64.02,
+                                          "phonetic": "",
+                                          "startTime": 60.97,
+                                          "translation": "Nhưng ngọn lửa trong đôi mắt em lại bùng cháy dữ dội"
+                                },
+                                {
+                                          "id": 20,
+                                          "text": "Had me gazing, lost in you",
+                                          "words": [
+                                                    {
+                                                              "pos": "verb",
+                                                              "word": "gazing",
+                                                              "meaning": "nhìn chăm chú, ngẩn ngơ",
+                                                              "phonetic": "ˈɡeɪzɪŋ"
+                                                    },
+                                                    {
+                                                              "pos": "adj",
+                                                              "word": "lost",
+                                                              "meaning": "lạc lối",
+                                                              "phonetic": "lɒst"
+                                                    }
+                                          ],
+                                          "endTime": 69.02,
+                                          "phonetic": "",
+                                          "startTime": 64.02,
+                                          "translation": "Khiến anh ngẩn ngơ nhìn ngắm và lạc lối vào em"
+                                },
+                                {
+                                          "id": 21,
+                                          "text": "Feels like I'm stuck inside your show",
+                                          "words": [
+                                                    {
+                                                              "pos": "adj",
+                                                              "word": "stuck",
+                                                              "meaning": "mắc kẹt",
+                                                              "phonetic": "stʌk"
+                                                    }
+                                          ],
+                                          "endTime": 72.38,
+                                          "phonetic": "",
+                                          "startTime": 69.12,
+                                          "translation": "Tựa như anh đang mắc kẹt trong vở kịch của em"
+                                },
+                                {
+                                          "id": 22,
+                                          "text": "It's true",
+                                          "words": [
+                                                    {
+                                                              "pos": "adj",
+                                                              "word": "true",
+                                                              "meaning": "sự thật",
+                                                              "phonetic": "truː"
+                                                    }
+                                          ],
+                                          "endTime": 74.66,
+                                          "phonetic": "",
+                                          "startTime": 72.38,
+                                          "translation": "Đó là sự thật"
+                                },
+                                {
+                                          "id": 23,
+                                          "text": "You got me wrapped around your finger",
+                                          "words": [
+                                                    {
+                                                              "pos": "phrase",
+                                                              "word": "wrapped around your finger",
+                                                              "meaning": "quấn quanh ngón tay",
+                                                              "phonetic": "ræpt əˈraʊnd jʊər ˈfɪŋɡər"
+                                                    }
+                                          ],
+                                          "endTime": 78.25,
+                                          "phonetic": "",
+                                          "startTime": 74.66,
+                                          "translation": "Em đã thuần hóa và sai khiến anh trong lòng bàn tay"
+                                },
+                                {
+                                          "id": 24,
+                                          "text": "Acting like a fool",
+                                          "words": [
+                                                    {
+                                                              "pos": "noun",
+                                                              "word": "fool",
+                                                              "meaning": "kẻ khờ",
+                                                              "phonetic": "fuːl"
+                                                    }
+                                          ],
+                                          "endTime": 80.06,
+                                          "phonetic": "",
+                                          "startTime": 78.25,
+                                          "translation": "Để rồi cư xử như một kẻ khờ"
+                                },
+                                {
+                                          "id": 25,
+                                          "text": "Must've been the strings you pulled",
+                                          "words": [
+                                                    {
+                                                              "pos": "noun",
+                                                              "word": "strings",
+                                                              "meaning": "dây con rối",
+                                                              "phonetic": "strɪŋz"
+                                                    }
+                                          ],
+                                          "endTime": 83.52,
+                                          "phonetic": "",
+                                          "startTime": 80.06,
+                                          "translation": "Tất cả là do những sợi dây mà em đã giật"
+                                },
+                                {
+                                          "id": 26,
+                                          "text": "Now it's clear, that I can see the truth",
+                                          "words": [
+                                                    {
+                                                              "pos": "adj",
+                                                              "word": "clear",
+                                                              "meaning": "rõ ràng",
+                                                              "phonetic": "klɪr"
+                                                    }
+                                          ],
+                                          "endTime": 86.97,
+                                          "phonetic": "",
+                                          "startTime": 83.52,
+                                          "translation": "Giờ đây mọi thứ đã rõ ràng, và anh đã nhìn thấy sự thật"
+                                },
+                                {
+                                          "id": 27,
+                                          "text": "I was just a puppet to you",
+                                          "words": [
+                                                    {
+                                                              "pos": "noun",
+                                                              "word": "puppet",
+                                                              "meaning": "con rối",
+                                                              "phonetic": "ˈpʌpɪt"
+                                                    }
+                                          ],
+                                          "endTime": 91.29,
+                                          "phonetic": "",
+                                          "startTime": 86.97,
+                                          "translation": "Rằng anh mãi chỉ là một con rối trong mắt em"
+                                },
+                                {
+                                          "id": 28,
+                                          "text": "Darling I'm done",
+                                          "words": [
+                                                    {
+                                                              "pos": "adj",
+                                                              "word": "done",
+                                                              "meaning": "chấm dứt",
+                                                              "phonetic": "dʌn"
+                                                    }
+                                          ],
+                                          "endTime": 93.07,
+                                          "phonetic": "",
+                                          "startTime": 91.29,
+                                          "translation": "Em à, anh đã quá mệt mỏi rồi..."
+                                },
+                                {
+                                          "id": 29,
+                                          "text": "Playing along",
+                                          "words": [
+                                                    {
+                                                              "pos": "phrase",
+                                                              "word": "playing along",
+                                                              "meaning": "hùa theo",
+                                                              "phonetic": "ˈpleɪɪŋ əˈlɔːŋ"
+                                                    }
+                                          ],
+                                          "endTime": 94.85,
+                                          "phonetic": "",
+                                          "startTime": 93.07,
+                                          "translation": "...khi cứ phải hùa theo trò chơi dối trá của em"
+                                },
+                                {
+                                          "id": 30,
+                                          "text": "It's time to cut me loose",
+                                          "words": [
+                                                    {
+                                                              "pos": "phrase",
+                                                              "word": "cut loose",
+                                                              "meaning": "cắt đứt ràng buộc",
+                                                              "phonetic": "kʌt luːs"
+                                                    }
+                                          ],
+                                          "endTime": 96.73,
+                                          "phonetic": "",
+                                          "startTime": 94.85,
+                                          "translation": "Đã đến lúc em phải buông tha và cắt đứt sợi dây của anh rồi"
+                                },
+                                {
+                                          "id": 31,
+                                          "text": "Got me wrapped around your finger",
+                                          "words": [
+                                                    {
+                                                              "pos": "verb",
+                                                              "word": "wrapped",
+                                                              "meaning": "bị kiểm soát",
+                                                              "phonetic": "ræpt"
+                                                    }
+                                          ],
+                                          "endTime": 99.25,
+                                          "phonetic": "",
+                                          "startTime": 96.73,
+                                          "translation": "Em từng nắm bắt anh hoàn toàn trong lòng bàn tay"
+                                },
+                                {
+                                          "id": 32,
+                                          "text": "Acting like a fool",
+                                          "words": [
+                                                    {
+                                                              "pos": "noun",
+                                                              "word": "fool",
+                                                              "meaning": "kẻ ngốc",
+                                                              "phonetic": "fuːl"
+                                                    }
+                                          ],
+                                          "endTime": 100.91,
+                                          "phonetic": "",
+                                          "startTime": 99.25,
+                                          "translation": "Và biến anh thành kẻ ngốc"
+                                },
+                                {
+                                          "id": 33,
+                                          "text": "But girl, I ain't no puppet, no puppet, no puppet for you",
+                                          "words": [
+                                                    {
+                                                              "pos": "noun",
+                                                              "word": "puppet",
+                                                              "meaning": "con rối",
+                                                              "phonetic": "ˈpʌpɪt"
+                                                    }
+                                          ],
+                                          "endTime": 105.91,
+                                          "phonetic": "",
+                                          "startTime": 100.91,
+                                          "translation": "Nhưng cô gái à, anh không phải là con rối, không phải con rối, không bao giờ là con rối của em nữa đâu!"
+                                },
+                                {
+                                          "id": 34,
+                                          "text": "Darling I'm done",
+                                          "words": [
+                                                    {
+                                                              "pos": "noun",
+                                                              "word": "darling",
+                                                              "meaning": "em yêu",
+                                                              "phonetic": "ˈdɑːrlɪŋ"
+                                                    }
+                                          ],
+                                          "endTime": 120.84,
+                                          "phonetic": "",
+                                          "startTime": 119.18,
+                                          "translation": "Em à, anh đã quá mệt mỏi rồi..."
+                                },
+                                {
+                                          "id": 35,
+                                          "text": "Playing along",
+                                          "words": [
+                                                    {
+                                                              "pos": "phrase",
+                                                              "word": "playing along",
+                                                              "meaning": "hùa theo",
+                                                              "phonetic": "ˈpleɪɪŋ əˈlɔːŋ"
+                                                    }
+                                          ],
+                                          "endTime": 122.7,
+                                          "phonetic": "",
+                                          "startTime": 120.84,
+                                          "translation": "...khi cứ phải hùa theo trò chơi dối trá của em"
+                                },
+                                {
+                                          "id": 36,
+                                          "text": "It's time to cut me loose",
+                                          "words": [
+                                                    {
+                                                              "pos": "phrase",
+                                                              "word": "cut loose",
+                                                              "meaning": "buông bỏ",
+                                                              "phonetic": "kʌt luːs"
+                                                    }
+                                          ],
+                                          "endTime": 124.43,
+                                          "phonetic": "",
+                                          "startTime": 122.7,
+                                          "translation": "Đã đến lúc em phải buông tha và cắt đứt sợi dây của anh rồi"
+                                },
+                                {
+                                          "id": 37,
+                                          "text": "Got me wrapped around your finger",
+                                          "words": [
+                                                    {
+                                                              "pos": "phrase",
+                                                              "word": "wrapped around your finger",
+                                                              "meaning": "thao túng hoàn toàn",
+                                                              "phonetic": "ræpt əˈraʊnd jʊər ˈfɪŋɡər"
+                                                    }
+                                          ],
+                                          "endTime": 127.09,
+                                          "phonetic": "",
+                                          "startTime": 124.43,
+                                          "translation": "Em từng nắm bắt anh hoàn toàn trong lòng bàn tay"
+                                },
+                                {
+                                          "id": 38,
+                                          "text": "Acting like a fool",
+                                          "words": [
+                                                    {
+                                                              "pos": "noun",
+                                                              "word": "fool",
+                                                              "meaning": "kẻ khờ",
+                                                              "phonetic": "fuːl"
+                                                    }
+                                          ],
+                                          "endTime": 128.71,
+                                          "phonetic": "",
+                                          "startTime": 127.09,
+                                          "translation": "Và biến anh thành kẻ ngốc"
+                                },
+                                {
+                                          "id": 39,
+                                          "text": "But girl, I ain't no puppet, no puppet, no puppet for you",
+                                          "words": [
+                                                    {
+                                                              "pos": "noun",
+                                                              "word": "puppet",
+                                                              "meaning": "con rối",
+                                                              "phonetic": "ˈpʌpɪt"
+                                                    }
+                                          ],
+                                          "endTime": 132.71,
+                                          "phonetic": "",
+                                          "startTime": 128.71,
+                                          "translation": "Nhưng cô gái à, anh không phải là con rối, không phải con rối, không bao giờ là con rối của em nữa đâu!"
+                                }
+                      ],
+                      "plain_lyrics": "Baby, did you pull my strings so you could play me?\nStrummin' on my heart just to betray me\nHad me crazy over you\n\nFeels like I'm stuck inside your show\nIt's true\n\nYou got me wrapped around your finger\nActing like a fool\nMust've been the strings you pulled\nNow it's clear, that I can see the truth\nI was just a puppet to you\n\nDarling, I'm done\nPlaying along\nIt's time to cut me loose\nGot me wrapped around your finger\nActing like a fool\nBut girl, I ain't no puppet, no puppet, no puppet for you\n\nCan you blame me?\nThe way you had me tricked was so amazing\nBut fire in your eyes was awfully blazing\nHad me gazing, lost in you\n\nFeels like I'm stuck inside your show\nIt's true\n\nYou got me wrapped around your finger\nActing like a fool\nMust've been the strings you pulled\nNow it's clear, that I can see the truth\nI was just a puppet to you\n\nDarling I'm done\nPlaying along\nIt's time to cut me loose\nGot me wrapped around your finger\nActing like a fool\nBut girl, I ain't no puppet, no puppet, no puppet for you\n\nDarling I'm done\nPlaying along\nIt's time to cut me loose\nGot me wrapped around your finger\nActing like a fool\nBut girl, I ain't no puppet, no puppet, no puppet for you",
+                      "views": 1,
+                      "likes": 0,
+                      "official_version": {},
+                      "community_versions": [],
+                      "created_by": "AISA AI Verified"
+            },
             {
                 id: 'nightglow-tanya-chua',
                 title: 'Nightglow - 崩坏3印象曲',

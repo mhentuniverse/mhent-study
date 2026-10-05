@@ -1746,3 +1746,219 @@ body.lyrics-theme .footer-brand-title {
     to { opacity: 1; transform: scale(1); }
 }
 
+/* =========================================================================
+   SONG VOCABULARY & IDIOMS NOTEBOOK SUMMARY CARD
+   ========================================================================= */
+.song-vocab-summary-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.85));
+    border: 1px solid rgba(14, 165, 233, 0.25);
+    border-radius: 20px;
+    padding: 24px;
+    margin-top: 36px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(12px);
+    transition: all 0.3s ease;
+}
+
+.song-vocab-summary-card.highlight-pulse {
+    border-color: #38bdf8;
+    box-shadow: 0 0 30px rgba(14, 165, 233, 0.45);
+}
+
+.vocab-summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 20px;
+}
+
+.vocab-summary-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.vocab-summary-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0284c7, #0ea5e9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+}
+
+.vocab-summary-heading {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin: 0 0 4px 0;
+}
+
+.vocab-summary-sub {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+.btn-save-all-deck {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    color: white;
+    font-size: 0.88rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
+    transition: all 0.25s ease;
+}
+
+.btn-save-all-deck:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.45);
+}
+
+.vocab-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.vocab-summary-chip-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.25s ease;
+}
+
+.vocab-summary-chip-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(14, 165, 233, 0.4);
+    transform: translateY(-2px);
+}
+
+.chip-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.chip-word-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chip-card-word {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.chip-card-speak-btn {
+    background: transparent;
+    border: none;
+    color: #38bdf8;
+    cursor: pointer;
+    font-size: 0.95rem;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.chip-card-speak-btn:hover {
+    background: rgba(14, 165, 233, 0.15);
+    transform: scale(1.1);
+}
+
+.chip-card-pos {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.chip-card-phonetic {
+    font-size: 0.85rem;
+    color: #38bdf8;
+    font-family: monospace;
+}
+
+.chip-card-meaning {
+    font-size: 0.92rem;
+    color: #e2e8f0;
+    line-height: 1.4;
+}
+
+.chip-card-example {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-style: italic;
+    background: rgba(0, 0, 0, 0.25);
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 2px solid #0ea5e9;
+}
+
+.chip-card-example:hover {
+    color: #38bdf8;
+    background: rgba(14, 165, 233, 0.1);
+}
+
+.chip-card-bottom {
+    margin-top: auto;
+    padding-top: 8px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.chip-card-save-btn {
+    background: rgba(14, 165, 233, 0.12);
+    border: 1px solid rgba(14, 165, 233, 0.3);
+    color: #38bdf8;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.chip-card-save-btn:hover {
+    background: #0ea5e9;
+    color: white;
+}
+
+.song-item-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+
