@@ -292,8 +292,10 @@ class LyricsHubApp {
         // Reset nút Loop
         this.updateLoopBtnUi();
 
-        // Tự động kiểm tra và phân tích lời bài hát & bóc tách từ vựng nếu bài hát chưa được phân tích
-        if (this.needsAiAnalysis(song)) {
+        // Nếu bài hát chỉ có dưới 15 câu (bản demo/teaser), tự động tìm và nạp bản full từ LRCLIB
+        if (song.synced_lyrics && song.synced_lyrics.length > 0 && song.synced_lyrics.length < 15 && song.title) {
+            this.enrichTeaserSong(song);
+        } else if (this.needsAiAnalysis(song)) {
             setTimeout(() => {
                 this.triggerAiAnalysis(false);
             }, 600);
@@ -1035,6 +1037,71 @@ QUY TẮC BẮT BUỘC:
         }
     }
 
+    async enrichTeaserSong(song) {
+        if (!song || !song.title) return;
+        try {
+            const cleanTitle = song.title.replace(/\(.*\)/g, '').replace(/[-–—].*/g, '').trim();
+            const cleanArtist = (song.artist || '').replace(/\(.*\)/g, '').replace(/[-–—].*/g, '').trim();
+
+            const queries = [
+                `https://lrclib.net/api/search?track_name=${encodeURIComponent(cleanTitle)}&artist_name=${encodeURIComponent(cleanArtist)}`,
+                `https://lrclib.net/api/search?q=${encodeURIComponent(cleanTitle + ' ' + cleanArtist)}`,
+                `https://lrclib.net/api/search?q=${encodeURIComponent(cleanTitle)}`
+            ];
+
+            let bestItem = null;
+            for (const u of queries) {
+                const res = await fetch(u);
+                if (res.ok) {
+                    const items = await res.json();
+                    if (Array.isArray(items)) {
+                        bestItem = items.find(it => it.syncedLyrics && it.syncedLyrics.length > 500);
+                        if (bestItem) break;
+                    }
+                }
+            }
+
+            if (bestItem && bestItem.syncedLyrics) {
+                const fullParsed = this.parseLrc(bestItem.syncedLyrics);
+                if (fullParsed.length > (song.synced_lyrics ? song.synced_lyrics.length : 0)) {
+                    // Giữ lại bản dịch và từ vựng chất lượng cao đã có của các câu cũ
+                    const existingMap = new Map();
+                    if (Array.isArray(song.synced_lyrics)) {
+                        song.synced_lyrics.forEach(l => {
+                            if (l.text) existingMap.set(l.text.trim().toLowerCase(), l);
+                        });
+                    }
+
+                    fullParsed.forEach(l => {
+                        const existing = existingMap.get(l.text.trim().toLowerCase());
+                        if (existing) {
+                            if (existing.translation && existing.translation !== existing.text) l.translation = existing.translation;
+                            if (existing.phonetic) l.phonetic = existing.phonetic;
+                            if (Array.isArray(existing.words) && existing.words.length > 0) l.words = existing.words;
+                        }
+                    });
+
+                    song.synced_lyrics = fullParsed;
+                    if (bestItem.duration && bestItem.duration > (song.duration || 0)) {
+                        song.duration = bestItem.duration;
+                        this.duration = bestItem.duration;
+                    }
+
+                    this.renderLyrics();
+                    if (this.isPlainMode) this.renderPlainLyrics();
+                    this.showToast(`✨ Đã nạp toàn bộ ${fullParsed.length} câu lời bài hát đầy đủ!`, 'info', 2500);
+
+                    // Phân tích các câu còn lại chưa được dịch
+                    if (this.needsAiAnalysis(song)) {
+                        this.triggerAiAnalysis(false);
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('[enrichTeaserSong Warning]:', e);
+        }
+    }
+
     // =========================================================================
     // 6. ĐỒNG BỘ KARAOKE TỪNG CÂU & PLAYBACK ENGINE
     // =========================================================================
@@ -1343,6 +1410,37 @@ QUY TẮC BẮT BUỘC:
                     });
                 }
             });
+
+            // 1B. Kiểm tra trong Supabase Cloud (các bài hát đã được dịch & chuẩn hóa đầy đủ lời)
+            if (window.studyCloud && typeof window.studyCloud.listSongs === 'function') {
+                try {
+                    const cloudSongs = await window.studyCloud.listSongs();
+                    if (Array.isArray(cloudSongs)) {
+                        for (const cs of cloudSongs) {
+                            if (cs.title.toLowerCase().includes(qLower) || cs.artist.toLowerCase().includes(qLower) || qLower.includes(cs.id)) {
+                                const fullSong = await window.studyCloud.getSong(cs.id);
+                                if (fullSong) {
+                                    const isDup = candidates.some(c => c.rawSong && c.rawSong.id === fullSong.id);
+                                    if (!isDup) {
+                                        candidates.push({
+                                            type: 'featured',
+                                            rawSong: fullSong,
+                                            trackName: fullSong.title,
+                                            artistName: fullSong.artist,
+                                            albumName: 'Bản dịch đầy đủ (MHEnt Cloud)',
+                                            duration: fullSong.duration || 180,
+                                            hasSynced: Array.isArray(fullSong.synced_lyrics) && fullSong.synced_lyrics.length > 0,
+                                            lang: fullSong.lang
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (supaErr) {
+                    console.warn('[Supabase Song Search Error]:', supaErr);
+                }
+            }
 
             // 2. Tìm kiếm trên LRCLIB API với chiến lược đa tầng (Multi-Strategy Queries)
             const cleanQuery = query.replace(/[-–—|/]/g, ' ').replace(/\s+/g, ' ').trim();
