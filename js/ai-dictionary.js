@@ -490,6 +490,27 @@ class AisaDictionary {
         const saveBtn = document.getElementById('dict-btn-save');
         const saveLabel = document.getElementById('dict-save-label');
 
+        // 🌟 Bật Popup chọn Sổ từ vựng / Bộ bài học mục tiêu
+        if (window.deckSelector) {
+            window.deckSelector.open({
+                word: data.word,
+                meaning: data.meaning,
+                phonetic: data.phonetic || '',
+                pos: data.pos || 'noun',
+                example: data.example || '',
+                exampleTrans: data.example_trans || data.exampleTrans || '',
+                wordFamily: data.word_family || data.wordFamily || {},
+                lang: this.currentLang,
+                onSave: (targetDeck) => {
+                    if (saveBtn) {
+                        saveBtn.classList.add('saved');
+                        if (saveLabel) saveLabel.innerHTML = `<i class="fa-solid fa-check"></i> Đã lưu (${targetDeck.title})`;
+                    }
+                }
+            });
+            return;
+        }
+
         const wordObj = {
             id: 'dict_' + Date.now(),
             word: data.word,

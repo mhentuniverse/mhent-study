@@ -24,6 +24,7 @@
     
     <link rel="stylesheet" href="/css/study-core.css">
     <link rel="stylesheet" href="/css/vocab-sheet.css">
+    <link rel="stylesheet" href="/css/ai-dictionary.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="/js/config.js"></script>
@@ -46,6 +47,9 @@
             <a href="/ko/practice/quiz.html" class="study-link">⚡ Quiz</a>
         </div>
         <div class="nav-study-actions">
+            <button class="btn-open-aisa-dict" onclick="window.aisaDict && window.aisaDict.open()" title="Mở Từ điển AI (Ctrl+K)">
+                <i class="fa-solid fa-book-sparkles"></i> <span>Từ điển AI</span>
+            </button>
             <button class="theme-toggle-btn" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
             <a href="/ko/index.html" class="auth-btn-pill" style="background: #ec4899;"><i class="fa-solid fa-arrow-left"></i> Về Hub Hàn</a>
         </div>
@@ -379,6 +383,8 @@
     <script src="/js/speech.js"></script>
     <script src="/js/supabase-client.js"></script>
     <script src="/js/storage.js"></script>
+    <script src="/js/deck-selector.js"></script>
+    <script src="/js/ai-dictionary.js" defer></script>
     <script src="/data/sample-ko.js"></script>
     <script src="/js/ai-deck-creator.js"></script>
     <script src="/js/vocab-sheet.js"></script>

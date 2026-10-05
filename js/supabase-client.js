@@ -5,15 +5,28 @@
 class StudyCloudClient {
     constructor() {
         this.config = (window.MHENT_CONFIG && window.MHENT_CONFIG.SUPABASE) || {
-            URL: "https://hwklqefdwskmwwyofthb.supabase.co",
-            KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3a2xxZWZkd3NrbXd3eW9mdGhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyMTUzODYsImV4cCI6MjEwNjc5MTM4Nn0.VV2By40CkQLEq9OVU8e4HooYt-XHihGItFvOaAV78SU"
+            URL: "https://ctzkgchjheirxwejctvl.supabase.co",
+            KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0emtnY2hqaGVpcnh3ZWpjdHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjA0MTgsImV4cCI6MjA5MTgzNjQxOH0.Wl-sBpH1VvcR6-Y4D4UAVm1f5_brGK3cVIHRJBEhOJ0",
+            DICT_URL: "https://hwklqefdwskmwwyofthb.supabase.co",
+            DICT_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3a2xxZWZkd3NrbXd3eW9mdGhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyMTUzODYsImV4cCI6MjEwNjc5MTM4Nn0.VV2By40CkQLEq9OVU8e4HooYt-XHihGItFvOaAV78SU"
         };
         this.url = this.config.URL;
         this.key = this.config.KEY;
+        this.dictUrl = this.config.DICT_URL || this.url;
+        this.dictKey = this.config.DICT_KEY || this.key;
         this.client = null;
         this.hasDedicatedTable = null; // Kiểm tra xem bảng study_decks đã tạo chưa
 
         this.init();
+    }
+
+    getDictHeaders() {
+        return {
+            'apikey': this.dictKey,
+            'Authorization': `Bearer ${this.dictKey}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+        };
     }
 
     init() {
@@ -303,16 +316,21 @@ class StudyCloudClient {
         if (!word) return null;
         const cleanWord = word.trim().toLowerCase();
         const id = `${lang}_${encodeURIComponent(cleanWord)}`;
-        try {
-            const res = await fetch(`${this.url}/rest/v1/study_dictionary?id=eq.${id}&select=*`, {
-                headers: this.getHeaders()
-            });
-            if (res.ok) {
-                const data = await res.json();
-                if (data && data.length > 0) return data[0];
-            }
-        } catch (e) {
-            console.warn('[StudyCloud] getDictWord error:', e);
+        const urlsToTry = [
+            { url: this.dictUrl, headers: this.getDictHeaders() },
+            { url: this.url, headers: this.getHeaders() }
+        ];
+
+        for (const item of urlsToTry) {
+            try {
+                const res = await fetch(`${item.url}/rest/v1/study_dictionary?id=eq.${id}&select=*`, {
+                    headers: item.headers
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.length > 0) return data[0];
+                }
+            } catch (e) {}
         }
         return null;
     }
@@ -337,20 +355,25 @@ class StudyCloudClient {
             updated_at: new Date().toISOString()
         };
 
-        try {
-            const res = await fetch(`${this.url}/rest/v1/study_dictionary?on_conflict=id`, {
-                method: 'POST',
-                headers: {
-                    ...this.getHeaders(),
-                    'Prefer': 'resolution=merge-duplicates,return=representation'
-                },
-                body: JSON.stringify(payload)
-            });
-            return res.ok;
-        } catch (e) {
-            console.warn('[StudyCloud] saveDictWord error:', e);
-            return false;
+        const urlsToTry = [
+            { url: this.dictUrl, headers: this.getDictHeaders() },
+            { url: this.url, headers: this.getHeaders() }
+        ];
+
+        for (const item of urlsToTry) {
+            try {
+                const res = await fetch(`${item.url}/rest/v1/study_dictionary?on_conflict=id`, {
+                    method: 'POST',
+                    headers: {
+                        ...item.headers,
+                        'Prefer': 'resolution=merge-duplicates,return=representation'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) return true;
+            } catch (e) {}
         }
+        return false;
     }
 
     // ==========================================================================
@@ -358,32 +381,43 @@ class StudyCloudClient {
     // ==========================================================================
     async getSong(songId) {
         if (!songId) return null;
-        try {
-            const res = await fetch(`${this.url}/rest/v1/study_songs?id=eq.${encodeURIComponent(songId)}&select=*`, {
-                headers: this.getHeaders()
-            });
-            if (res.ok) {
-                const data = await res.json();
-                if (data && data.length > 0) return data[0];
-            }
-        } catch (e) {
-            console.warn('[StudyCloud] getSong error:', e);
+        const urlsToTry = [
+            { url: this.dictUrl, headers: this.getDictHeaders() },
+            { url: this.url, headers: this.getHeaders() }
+        ];
+
+        for (const item of urlsToTry) {
+            try {
+                const res = await fetch(`${item.url}/rest/v1/study_songs?id=eq.${encodeURIComponent(songId)}&select=*`, {
+                    headers: item.headers
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.length > 0) return data[0];
+                }
+            } catch (e) {}
         }
         return null;
     }
 
     async listSongs(lang = 'all') {
-        try {
-            let url = `${this.url}/rest/v1/study_songs?select=id,title,artist,lang,thumbnail,youtube_id,duration,views,likes,created_at&order=views.desc&limit=50`;
-            if (lang !== 'all') {
-                url += `&lang=eq.${lang}`;
-            }
-            const res = await fetch(url, { headers: this.getHeaders() });
-            if (res.ok) {
-                return await res.json();
-            }
-        } catch (e) {
-            console.warn('[StudyCloud] listSongs error:', e);
+        const urlsToTry = [
+            { url: this.dictUrl, headers: this.getDictHeaders() },
+            { url: this.url, headers: this.getHeaders() }
+        ];
+
+        for (const item of urlsToTry) {
+            try {
+                let u = `${item.url}/rest/v1/study_songs?select=id,title,artist,lang,thumbnail,youtube_id,duration,views,likes,created_at&order=views.desc&limit=50`;
+                if (lang !== 'all') {
+                    u += `&lang=eq.${lang}`;
+                }
+                const res = await fetch(u, { headers: item.headers });
+                if (res.ok) {
+                    const list = await res.json();
+                    if (list && list.length > 0) return list;
+                }
+            } catch (e) {}
         }
         return [];
     }
@@ -391,20 +425,25 @@ class StudyCloudClient {
     async saveSong(song) {
         if (!song || !song.id) return false;
         song.updated_at = new Date().toISOString();
-        try {
-            const res = await fetch(`${this.url}/rest/v1/study_songs?on_conflict=id`, {
-                method: 'POST',
-                headers: {
-                    ...this.getHeaders(),
-                    'Prefer': 'resolution=merge-duplicates,return=representation'
-                },
-                body: JSON.stringify(song)
-            });
-            return res.ok;
-        } catch (e) {
-            console.warn('[StudyCloud] saveSong error:', e);
-            return false;
+        const urlsToTry = [
+            { url: this.dictUrl, headers: this.getDictHeaders() },
+            { url: this.url, headers: this.getHeaders() }
+        ];
+
+        for (const item of urlsToTry) {
+            try {
+                const res = await fetch(`${item.url}/rest/v1/study_songs?on_conflict=id`, {
+                    method: 'POST',
+                    headers: {
+                        ...item.headers,
+                        'Prefer': 'resolution=merge-duplicates,return=representation'
+                    },
+                    body: JSON.stringify(song)
+                });
+                if (res.ok) return true;
+            } catch (e) {}
         }
+        return false;
     }
 
     async addCommunityVersion(songId, versionData) {

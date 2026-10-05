@@ -433,6 +433,22 @@ class LyricsHubApp {
     }
 
     saveVocabFromLyrics(word, meaning, phonetic, pos) {
+        // 🌟 Bật Popup chọn Sổ từ vựng / Bộ bài học mục tiêu
+        if (window.deckSelector) {
+            window.deckSelector.open({
+                word: word,
+                meaning: meaning,
+                phonetic: phonetic || '',
+                pos: pos || 'noun',
+                example: `Trích từ bài hát: "${this.currentSong ? this.currentSong.title : 'Lyrics'}"`,
+                lang: this.currentSong ? this.currentSong.lang : 'en',
+                onSave: (deck) => {
+                    this.hideAllPopovers();
+                }
+            });
+            return;
+        }
+
         const entry = {
             id: 'lyrics_' + Date.now(),
             word: word,
