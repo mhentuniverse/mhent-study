@@ -251,6 +251,20 @@ class VocabSheetApp {
         }
     }
 
+    addWordDirectly(wordObj) {
+        if (!this.currentDeck) this.loadDeck();
+        if (!this.currentDeck) return;
+        if (!this.currentDeck.words) this.currentDeck.words = [];
+
+        // Kiểm tra xem từ đã có chưa
+        const exists = this.currentDeck.words.some(w => (w.word || '').toLowerCase() === (wordObj.word || '').toLowerCase());
+        if (!exists) {
+            this.currentDeck.words.unshift(wordObj);
+            this.saveCurrentDeck();
+            this.renderAll();
+        }
+    }
+
     bindEvents() {
         // Tìm kiếm
         const searchInput = document.getElementById('vocabSearch');

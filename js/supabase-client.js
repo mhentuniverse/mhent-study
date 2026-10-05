@@ -5,8 +5,8 @@
 class StudyCloudClient {
     constructor() {
         this.config = (window.MHENT_CONFIG && window.MHENT_CONFIG.SUPABASE) || {
-            URL: "https://ctzkgchjheirxwejctvl.supabase.co",
-            KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0emtnY2hqaGVpcnh3ZWpjdHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjA0MTgsImV4cCI6MjA5MTgzNjQxOH0.Wl-sBpH1VvcR6-Y4D4UAVm1f5_brGK3cVIHRJBEhOJ0"
+            URL: "https://hwklqefdwskmwwyofthb.supabase.co",
+            KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3a2xxZWZkd3NrbXd3eW9mdGhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyMTUzODYsImV4cCI6MjEwNjc5MTM4Nn0.VV2By40CkQLEq9OVU8e4HooYt-XHihGItFvOaAV78SU"
         };
         this.url = this.config.URL;
         this.key = this.config.KEY;
@@ -294,6 +294,128 @@ class StudyCloudClient {
         } catch (e) {}
 
         return decks;
+    }
+
+    // ==========================================================================
+    // 📖 AISA SMART DICTIONARY CLOUD STORAGE
+    // ==========================================================================
+    async getDictWord(lang, word) {
+        if (!word) return null;
+        const cleanWord = word.trim().toLowerCase();
+        const id = `${lang}_${encodeURIComponent(cleanWord)}`;
+        try {
+            const res = await fetch(`${this.url}/rest/v1/study_dictionary?id=eq.${id}&select=*`, {
+                headers: this.getHeaders()
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.length > 0) return data[0];
+            }
+        } catch (e) {
+            console.warn('[StudyCloud] getDictWord error:', e);
+        }
+        return null;
+    }
+
+    async saveDictWord(entry) {
+        if (!entry || !entry.word) return false;
+        const cleanWord = entry.word.trim();
+        const id = `${entry.lang || 'en'}_${encodeURIComponent(cleanWord.toLowerCase())}`;
+        const payload = {
+            id,
+            lang: entry.lang || 'en',
+            word: cleanWord,
+            phonetic: entry.phonetic || '',
+            pos: entry.pos || 'noun',
+            pos_label: entry.pos_label || entry.posLabel || 'Danh từ',
+            meaning: entry.meaning || '',
+            example: entry.example || '',
+            example_trans: entry.example_trans || entry.exampleTrans || '',
+            word_family: entry.word_family || entry.wordFamily || {},
+            collocations: entry.collocations || [],
+            synonyms: entry.synonyms || [],
+            updated_at: new Date().toISOString()
+        };
+
+        try {
+            const res = await fetch(`${this.url}/rest/v1/study_dictionary?on_conflict=id`, {
+                method: 'POST',
+                headers: {
+                    ...this.getHeaders(),
+                    'Prefer': 'resolution=merge-duplicates,return=representation'
+                },
+                body: JSON.stringify(payload)
+            });
+            return res.ok;
+        } catch (e) {
+            console.warn('[StudyCloud] saveDictWord error:', e);
+            return false;
+        }
+    }
+
+    // ==========================================================================
+    // 🎵 MUSIC LYRICS HUB CLOUD STORAGE (Sentence by Sentence & Versions)
+    // ==========================================================================
+    async getSong(songId) {
+        if (!songId) return null;
+        try {
+            const res = await fetch(`${this.url}/rest/v1/study_songs?id=eq.${encodeURIComponent(songId)}&select=*`, {
+                headers: this.getHeaders()
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.length > 0) return data[0];
+            }
+        } catch (e) {
+            console.warn('[StudyCloud] getSong error:', e);
+        }
+        return null;
+    }
+
+    async listSongs(lang = 'all') {
+        try {
+            let url = `${this.url}/rest/v1/study_songs?select=id,title,artist,lang,thumbnail,youtube_id,duration,views,likes,created_at&order=views.desc&limit=50`;
+            if (lang !== 'all') {
+                url += `&lang=eq.${lang}`;
+            }
+            const res = await fetch(url, { headers: this.getHeaders() });
+            if (res.ok) {
+                return await res.json();
+            }
+        } catch (e) {
+            console.warn('[StudyCloud] listSongs error:', e);
+        }
+        return [];
+    }
+
+    async saveSong(song) {
+        if (!song || !song.id) return false;
+        song.updated_at = new Date().toISOString();
+        try {
+            const res = await fetch(`${this.url}/rest/v1/study_songs?on_conflict=id`, {
+                method: 'POST',
+                headers: {
+                    ...this.getHeaders(),
+                    'Prefer': 'resolution=merge-duplicates,return=representation'
+                },
+                body: JSON.stringify(song)
+            });
+            return res.ok;
+        } catch (e) {
+            console.warn('[StudyCloud] saveSong error:', e);
+            return false;
+        }
+    }
+
+    async addCommunityVersion(songId, versionData) {
+        const song = await this.getSong(songId);
+        if (!song) return false;
+        const versions = Array.isArray(song.community_versions) ? song.community_versions : [];
+        versions.push(versionData);
+        return this.saveSong({
+            ...song,
+            community_versions: versions
+        });
     }
 }
 

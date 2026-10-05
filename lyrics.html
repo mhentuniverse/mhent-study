@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Học Ngoại Ngữ Qua Lời Bài Hát (Music Lyrics Hub) | MHEnt. Study</title>
+    <meta name="description" content="Luyện nghe và học từ vựng tiếng Anh, Hàn, Nhật, Trung qua lời bài hát đồng bộ từng câu (Sentence-by-Sentence Karaoke) với AI và Supabase Cloud.">
+    <link rel="icon" type="image/png" sizes="48x48" href="/assets/icon-web.png">
+
+    <!-- CSS Core & Modules -->
+    <link rel="stylesheet" href="/css/study-core.css">
+    <link rel="stylesheet" href="/css/mhent-ui.css">
+    <link rel="stylesheet" href="/css/mhent-mobile.css">
+    <link rel="stylesheet" href="/css/ai-dictionary.css">
+    <link rel="stylesheet" href="/css/lyrics-hub.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Anti-FOUC Dark Mode -->
+    <script>
+        (function() {
+            function getCookie(name) {
+                const match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+                return match ? decodeURIComponent(match[3]) : null;
+            }
+            const saved = localStorage.getItem('mhent_dark_mode') || getCookie('mhent_dark_mode');
+            const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (saved === 'on' || (!saved && systemDark)) {
+                document.documentElement.classList.add('dark-mode');
+            } else {
+                document.documentElement.classList.remove('dark-mode');
+            }
+        })();
+    </script>
+    <script src="/js/config.js"></script>
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body class="theme-edu">
+
+    <!-- NAVIGATION BAR -->
+    <nav class="study-nav">
+        <a href="/" class="nav-brand-box">
+            <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="brand-avatar">
+            <div class="brand-title-wrap">
+                <span class="brand-main-title">MHEnt. <span>Study</span></span>
+                <span class="brand-sub-badge">MUSIC & LYRICS HUB</span>
+            </div>
+        </a>
+
+        <div class="nav-study-links">
+            <a href="/" class="study-link"><i class="fa-solid fa-house"></i> Tổng quan</a>
+            <a href="/ko/index.html" class="study-link">🇰🇷 Tiếng Hàn</a>
+            <a href="/ja/index.html" class="study-link">🇯🇵 Tiếng Nhật</a>
+            <a href="/zh/index.html" class="study-link">🇨🇳 Tiếng Trung</a>
+            <a href="/en/index.html" class="study-link">🇬🇧 Tiếng Anh</a>
+            <a href="/lyrics.html" class="study-link active"><i class="fa-solid fa-music"></i> Học qua Bài hát</a>
+            <a href="/shared/index.html" class="study-link"><i class="fa-solid fa-share-nodes"></i> Kho chia sẻ</a>
+        </div>
+
+        <div class="nav-study-actions">
+            <!-- Nút mở Từ điển AI -->
+            <button class="btn-open-aisa-dict" onclick="window.aisaDict && window.aisaDict.open()" title="Mở Từ điển AI (Ctrl+K)">
+                <i class="fa-solid fa-book-sparkles"></i> <span>Từ điển AI</span>
+                <kbd style="font-size:0.68rem;opacity:0.7;padding:1px 4px;border:1px solid currentColor;border-radius:4px;margin-left:4px;">Ctrl K</kbd>
+            </button>
+
+            <button class="theme-toggle-btn" onclick="toggleDarkMode()" title="Đổi giao diện Sáng / Tối">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+
+            <button id="btn-login" class="auth-btn-pill" onclick="window.location.href='/login.html'">
+                <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập
+            </button>
+
+            <div id="user-profile" class="user-chip" style="display: none;">
+                <img id="user-avatar" src="/assets/avt-web.jpg" alt="User">
+                <span id="user-name">Đang tải...</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN PAGE CONTENT -->
+    <main class="lyrics-page-wrapper">
+
+        <!-- SEARCH HERO SECTION -->
+        <section class="lyrics-hero">
+            <div class="lyrics-hero-top">
+                <div class="lyrics-hero-title-box">
+                    <h1><i class="fa-solid fa-headphones-simple" style="color: #0ea5e9;"></i> Học Ngoại Ngữ Qua Lời Bài Hát</h1>
+                    <p>Nghe nhạc, theo dõi lời chạy từng câu chuẩn karaoke, bóc tách từ vựng hay và chuyển đổi linh hoạt giữa các bản dịch cộng đồng.</p>
+                </div>
+            </div>
+
+            <!-- Search Form -->
+            <form id="lyrics-search-form" class="lyrics-search-form">
+                <div class="lyrics-search-input-wrap">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="lyrics-search-input" class="lyrics-search-input" placeholder="Nhập tên bài hát hoặc nghệ sĩ (VD: Until I Found You, Spring Day BTS, Lemon, Jay Chou...)" autocomplete="off">
+                </div>
+                <button type="submit" id="lyrics-search-btn" class="lyrics-search-btn">
+                    <i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm
+                </button>
+            </form>
+
+            <!-- Language Filter Pills -->
+            <div class="lyrics-lang-pills">
+                <span style="font-size: 0.85rem; color: #94a3b8; font-weight: 700; margin-right: 4px;">Ngôn ngữ:</span>
+                <button type="button" class="lang-pill active" data-lang="all">Tất cả</button>
+                <button type="button" class="lang-pill" data-lang="en">🇬🇧 Tiếng Anh</button>
+                <button type="button" class="lang-pill" data-lang="ko">🇰🇷 Tiếng Hàn</button>
+                <button type="button" class="lang-pill" data-lang="ja">🇯🇵 Tiếng Nhật</button>
+                <button type="button" class="lang-pill" data-lang="zh">🇨🇳 Tiếng Trung</button>
+            </div>
+        </section>
+
+        <!-- MAIN 2-COLUMN WORKSPACE -->
+        <section class="lyrics-workspace">
+
+            <!-- LEFT: Track Art & Audio Player Controls -->
+            <div class="lyrics-player-card">
+                <div class="track-art-wrap">
+                    <img id="track-art-img" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=60" alt="Track Art" class="track-art-img">
+                </div>
+
+                <div class="track-info-box">
+                    <h2 id="track-title" class="track-title">Đang tải bài hát...</h2>
+                    <div id="track-artist" class="track-artist">Nghệ sĩ</div>
+                    <span id="track-lang-badge" class="track-lang-badge">Tiếng Anh</span>
+                </div>
+
+                <!-- Player Controls -->
+                <div class="player-controls-box">
+                    <div class="playback-slider-row">
+                        <input type="range" id="playback-progress" class="playback-progress-bar" min="0" max="100" value="0" step="0.1">
+                        <div class="playback-time-labels">
+                            <span id="playback-current-time">00:00</span>
+                            <span id="playback-duration">00:00</span>
+                        </div>
+                    </div>
+
+                    <div class="playback-buttons-row">
+                        <button type="button" id="btn-player-play" class="btn-player-play" title="Phát / Dừng">
+                            <i class="fa-solid fa-play"></i>
+                        </button>
+                    </div>
+
+                    <div class="player-tools-row">
+                        <span><i class="fa-solid fa-gauge-high"></i> Tốc độ:</span>
+                        <select id="playback-speed" class="speed-select" title="Tốc độ phát">
+                            <option value="0.75">0.75x (Chậm)</option>
+                            <option value="1.0" selected>1.0x (Chuẩn)</option>
+                            <option value="1.25">1.25x (Nhanh)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Fast Dictionary Shortcut helper -->
+                <div style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.2); border-radius: 12px; padding: 12px; font-size: 0.82rem; color: #94a3b8; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-lightbulb" style="color: #38bdf8; font-size: 1rem;"></i>
+                    <span>Mẹo: Rê chuột hoặc bấm vào <u>từ vựng có gạch chân</u> trong lời bài hát để xem phiên âm, nghĩa và lưu vào Sổ từ vựng!</span>
+                </div>
+            </div>
+
+            <!-- RIGHT: Synced Karaoke Viewport & Community Switcher -->
+            <div class="lyrics-viewport-card">
+                <!-- Header with Version Tabs -->
+                <div class="lyrics-viewport-header">
+                    <div class="version-tabs-wrap" id="version-tabs-wrap">
+                        <button class="version-tab active">
+                            <i class="fa-solid fa-globe"></i> Bản chuẩn Web/AI
+                        </button>
+                    </div>
+
+                    <button type="button" id="btn-open-contrib" class="btn-contribute-version">
+                        <i class="fa-solid fa-pen-nib"></i> Đóng góp bản dịch
+                    </button>
+                </div>
+
+                <!-- Lyrics Stream Container -->
+                <div class="lyrics-stream-container" id="lyrics-stream-container">
+                    <!-- Synced sentences injected dynamically -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- SHOWCASE SECTION: FEATURED SONGS GRID -->
+        <section class="lyrics-showcase-section">
+            <div class="showcase-header">
+                <h3><i class="fa-solid fa-fire" style="color: #f59e0b;"></i> Bài Hát Nổi Bật Dành Cho Bạn</h3>
+            </div>
+            <div class="songs-grid" id="songs-grid">
+                <!-- Dynamic song cards -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- COMMUNITY CONTRIBUTION MODAL -->
+    <div id="contrib-modal" class="contrib-modal-overlay">
+        <div class="contrib-modal-card">
+            <div class="contrib-modal-header">
+                <h3 style="color: #f8fafc; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-pen-nib" style="color: #10b981;"></i> Đóng Góp Phiên Bản Lời Dịch Mới
+                </h3>
+                <button type="button" id="contrib-close" style="background: transparent; border: none; color: #94a3b8; font-size: 1.2rem; cursor: pointer;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form id="contrib-form" class="contrib-modal-body">
+                <div class="contrib-field-group">
+                    <label class="contrib-label">Tên của bạn hoặc Nickname</label>
+                    <input type="text" id="contrib-author" class="contrib-input" placeholder="VD: Sakura, Minh Anh..." required>
+                </div>
+
+                <div class="contrib-field-group">
+                    <label class="contrib-label">Tiêu đề phiên bản</label>
+                    <input type="text" id="contrib-title" class="contrib-input" placeholder="VD: Bản dịch thơ mộng, Bản dịch giải nghĩa chi tiết..." required>
+                </div>
+
+                <div class="contrib-field-group">
+                    <label class="contrib-label">Ghi chú hoặc lời nhắn cho người học</label>
+                    <textarea id="contrib-note" class="contrib-textarea" placeholder="Chia sẻ cảm nhận, lưu ý ngữ pháp hoặc lý do dịch theo phong cách này..."></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                    <button type="submit" class="dict-btn-save" style="border-radius: 10px; padding: 10px 20px;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Lưu lên Supabase Cloud
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="study-footer">
+        <div class="footer-top-row">
+            <div class="footer-brand-side">
+                <div class="footer-brand-title">MHEnt. <span>Study</span></div>
+                <p>Không Gian Học Ngoại Ngữ Đa Vũ Trụ & Học Qua Bài Hát Tương Tác.</p>
+                <div class="footer-copy">© 2026 Miyazaki Haruto Entertainment Co., Ltd. - Project MHEnt. Universe.</div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="/js/config.js"></script>
+    <script src="/js/storage.js"></script>
+    <script src="/js/supabase-client.js"></script>
+    <script src="/js/ai-dictionary.js" defer></script>
+    <script src="/js/lyrics-hub.js"></script>
+    
+    <script>
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            document.documentElement.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('mhent_dark_mode', isDark ? 'on' : 'off');
+            document.cookie = `mhent_dark_mode=${isDark ? 'on' : 'off'}; domain=.mhentuniverse.com; path=/; max-age=31536000; SameSite=Lax`;
+        }
+
+        if (document.documentElement.classList.contains('dark-mode') || localStorage.getItem('mhent_dark_mode') === 'on') {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+</body>
+
+</html>
