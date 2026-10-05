@@ -1006,7 +1006,7 @@ class LyricsHubApp {
         const fallbackKey = atob('QVEuQWI4Uk42STZRQUsycGk2RVNISlJMTDlERUppNS1NRXUwXzM5ekwtc211Y3Y0b1A0VGc=');
         const apiKey = localStorage.getItem('mhent_ai_api_key') || (window.MHENT_CONFIG && window.MHENT_CONFIG.GEMINI_API_KEY) || fallbackKey;
 
-        const batchSize = 15;
+        const batchSize = 25;
         const allLines = [...song.synced_lyrics];
 
         try {
@@ -1016,24 +1016,37 @@ class LyricsHubApp {
                 const chunk = allLines.slice(i, i + batchSize);
                 const chunkFormatted = chunk.map((line, cIdx) => `${cIdx + 1}. ${line.text}`).join('\n');
 
-                const prompt = `Bạn là chuyên gia dịch thuật âm nhạc và ngôn ngữ học AISA (MHEnt Study).
-Nhiệm vụ: Phân tích các câu trong bài hát "${song.title}" của "${song.artist}" (${langName}).
-Với MỖI câu trong danh sách dưới đây:
-1. "translation": Dịch câu sang tiếng Việt tự nhiên, giàu cảm xúc âm nhạc và thi vị.
-2. "phonetic": Phiên âm Romaji/Furigana (nếu tiếng Nhật), Romaja (nếu tiếng Hàn), Pinyin có dấu (nếu tiếng Trung), hoặc để trống "" (nếu tiếng Anh).
-3. "words": Trích xuất 1-2 từ vựng hay xuất hiện trong câu để học viên trau dồi:
-   Mỗi từ gồm:
-   - "word": CHÍNH XÁC từ hoặc cụm từ xuất hiện nguyên văn trong câu (để hệ thống highlight chính xác).
-   - "phonetic": Phiên âm của từ vựng này.
-   - "pos": "noun"|"verb"|"adj"|"adv"|"phrase".
-   - "meaning": Nghĩa tiếng Việt ngắn gọn, chuẩn xác.
+                const prompt = `Bạn là chuyên gia dịch thuật âm nhạc và giám đốc sáng tạo ngôn ngữ AISA (MHEnt Universe).
+Nhiệm vụ: Phân tích và dịch thuật các câu trong bài hát "${song.title}" của "${song.artist}" (${langName}).
 
-Danh sách các câu:
+BƯỚC 1: XÁC ĐỊNH CỐT TRUYỆN, THỂ LOẠI & SẮC THÁI BÀI HÁT:
+- Dựa trên tên bài hát "${song.title}", nghệ sĩ "${song.artist}" và lời bài hát để xác định đúng phong cách:
+  + NẾU LÀ BÀI NỔI LOẠN / CHÂM BIẾM / GAI GÓC / CHỬI ĐỜI / ROCK DISS (như Usseewa, Otonablue, rock, rap diss, v.v.):
+    * Ngôi xưng: "TAO" - "CHÚNG MÀY / LŨ BAY / CÁC NGƯỜI". Sắc thái đanh thép, gai góc, bất cần, dùng từ ngữ mạnh mẽ (ví dụ: "Câm mồm đi!", "Biến đi!", "Đóng dấu X lên bản mặt béo tròn đầy mỡ", "Cái mồm thối tha ngậm lại"). Tuyệt đối KHÔNG dịch kiểu hiền lành, thơ mộng!
+  + NẾU LÀ BÀI TÌNH YÊU / CHIA LY / DA DIẾT / HOÀI NIỆM (như Lemon, unlasting, Until I Found You, Spring Day, ballad, RnB):
+    * Ngôi xưng: "ANH - EM" (hoặc "EM - ANH"), da diết, tình cảm, sâu lắng, thi vị.
+  + NẾU LÀ BÀI TỰ SỰ / TRIẾT LÝ / TỰ VẤN CUỘC SỐNG:
+    * Ngôi xưng: "TÔI", chiêm nghiệm, chân thành.
+- QUY TẮC BẮT BUỘC: TOÀN BỘ CÁC CÂU TRONG BÀI PHẢI DÙNG CHUNG MỘT HỆ THỐNG NGÔI XƯNG NHẤT QUÁN. CẤM NHẢY LỘN XỘN (câu này xưng tôi, câu kia xưng anh, câu nọ xưng tao).
+
+BƯỚC 2: QUY TẮC PHIÊN ÂM CHUẨN 100% (STRICT ROMANIZATION):
+- Tiếng Nhật: 100% Chữ cái Latinh chuẩn Hepburn. TUYỆT ĐỐI CẤM để sót bất kỳ chữ Hiragana hay Katakana nào trong "phonetic" (đặc biệt là ぇ, ぁ, ぃ, ぅ, ぉ, っ, ゃ, ゅ, ょ). Chữ "うっせぇわ" BẮT BUỘC PHẢI LÀ "Ussee wa" hoặc "Usseewa" (CẤM "Usseぇ wa").
+- Tiếng Hàn: 100% Latinh Romaja chuẩn.
+- Tiếng Trung: 100% Pinyin có dấu thanh điệu chuẩn.
+- Tiếng Anh: để trống "".
+
+BƯỚC 3: TRÍCH XUẤT TỪ VỰNG HAY:
+- "word": CHÍNH XÁC từ hoặc cụm từ xuất hiện nguyên văn trong câu để highlight không bị lệch.
+- "phonetic": Phiên âm 100% Latinh.
+- "pos": "noun"|"verb"|"adj"|"adv"|"phrase".
+- "meaning": Nghĩa tiếng Việt sắc sảo, tự nhiên, đúng ngữ cảnh bài hát.
+
+DANH SÁCH ${chunk.length} CÂU CẦN DỊCH:
 ${chunkFormatted}
 
-QUY TẮC BẮT BUỘC:
+QUY TẮC ĐẦU RA:
 - Trả về đúng số lượng câu tương ứng (${chunk.length} câu), theo đúng thứ tự index 1 đến ${chunk.length}.
-- Chỉ trả về DUY NHẤT một JSON array thuần túy (không bọc trong \`\`\`json):
+- Chỉ trả về DUY NHẤT một JSON array thuần túy:
 [
   {
     "index": 1,
@@ -1048,29 +1061,33 @@ QUY TẮC BẮT BUỘC:
                 let analyzedChunk = null;
 
                 if (apiKey) {
-                    try {
-                        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                contents: [{ parts: [{ text: prompt }] }],
-                                generationConfig: {
-                                    responseMimeType: 'application/json',
-                                    temperature: 0.2
-                                }
-                            })
-                        });
+                    const modelsToTry = ['gemini-3.5-flash-lite', 'gemini-3.8-flash'];
+                    for (const model of modelsToTry) {
+                        try {
+                            const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    contents: [{ parts: [{ text: prompt }] }],
+                                    generationConfig: {
+                                        responseMimeType: 'application/json',
+                                        temperature: 0.3
+                                    }
+                                })
+                            });
 
-                        if (geminiRes.ok) {
-                            const gemData = await geminiRes.json();
-                            const rawText = gemData.candidates?.[0]?.content?.parts?.[0]?.text;
-                            if (rawText) {
-                                const clean = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
-                                analyzedChunk = JSON.parse(clean);
+                            if (geminiRes.ok) {
+                                const gemData = await geminiRes.json();
+                                const rawText = gemData.candidates?.[0]?.content?.parts?.[0]?.text;
+                                if (rawText) {
+                                    const clean = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+                                    analyzedChunk = JSON.parse(clean);
+                                    if (Array.isArray(analyzedChunk) && analyzedChunk.length > 0) break;
+                                }
                             }
+                        } catch (gemErr) {
+                            console.warn(`[Gemini ${model} Lyrics Chunk Error]:`, gemErr);
                         }
-                    } catch (gemErr) {
-                        console.warn('[Gemini 3.5 Lyrics Chunk Error]:', gemErr);
                     }
                 }
 
@@ -1094,14 +1111,23 @@ QUY TẮC BẮT BUỘC:
                     }));
                 }
 
-                // Cập nhật dữ liệu phân tích vào các câu của bài hát
+                // Cập nhật dữ liệu phân tích vào các câu của bài hát và làm sạch phiên âm
                 analyzedChunk.forEach(aiItem => {
                     const localIdx = i + (aiItem.index - 1);
                     if (this.currentSong && this.currentSong.synced_lyrics[localIdx]) {
                         const target = this.currentSong.synced_lyrics[localIdx];
                         if (aiItem.translation) target.translation = aiItem.translation;
-                        if (aiItem.phonetic) target.phonetic = aiItem.phonetic;
-                        if (Array.isArray(aiItem.words) && aiItem.words.length > 0) target.words = aiItem.words;
+                        if (aiItem.phonetic) {
+                            // Khử triệt để ký tự Kana dở dang (ví dụ ぇ, ぁ, ぃ, ぅ, ぉ)
+                            target.phonetic = aiItem.phonetic
+                                .replace(/ぇ/g, 'e').replace(/ぁ/g, 'a').replace(/ぃ/g, 'i').replace(/ぅ/g, 'u').replace(/ぉ/g, 'o');
+                        }
+                        if (Array.isArray(aiItem.words) && aiItem.words.length > 0) {
+                            target.words = aiItem.words.map(w => ({
+                                ...w,
+                                phonetic: (w.phonetic || '').replace(/ぇ/g, 'e').replace(/ぁ/g, 'a').replace(/ぃ/g, 'i').replace(/ぅ/g, 'u').replace(/ぉ/g, 'o')
+                            }));
+                        }
                     }
                 });
 
