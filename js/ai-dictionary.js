@@ -325,38 +325,104 @@ class AisaDictionary {
 
             let entry = null;
 
-            // 2. Tra cứu AISA AI qua Worker API
-            try {
-                const endpoint = (window.MHENT_CONFIG && window.MHENT_CONFIG.AISA_API_ENDPOINT) || 'https://api.mhentuniverse.com';
-                const res = await fetch(`${endpoint}/api/generate-example`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        word: query,
-                        lang: lang,
-                        deckTitle: 'Từ điển AI'
-                    })
-                });
+            // 2. Tra cứu siêu tốc bằng Direct Gemini (giống Study Desk / Vocab Sheet - tốc độ ~1s)
+            const fallbackKey = typeof atob === 'function' ? atob('QVEuQWI4Uk42STZRQUsycGk2RVNISlJMTDlERUppNS1NRXUwXzM5ekwtc211Y3Y0b1A0VGc=') : '';
+            const apiKey = localStorage.getItem('mhent_ai_api_key') || (window.MHENT_CONFIG && window.MHENT_CONFIG.GEMINI_API_KEY) || fallbackKey;
+            if (apiKey) {
+                try {
+                    const langNames = { ja: 'tiếng Nhật', ko: 'tiếng Hàn', zh: 'tiếng Trung', en: 'tiếng Anh' };
+                    const langName = langNames[lang] || 'tiếng Anh';
+                    const prompt = `Từ khóa: "${query}" (Từ vựng ${langName}).
+Nhiệm vụ: Phân tích thông tin học tập đầy đủ, chuẩn xác và xuất sắc nhất:
+- "word": Từ gốc chính xác bằng ${langName}.
+- "phonetic": Phiên âm chuẩn (IPA cho tiếng Anh ví dụ /ˈklær.ə.ti/, Furigana/Romaji cho tiếng Nhật, Romaja cho tiếng Hàn, Pinyin có dấu cho tiếng Trung).
+- "pos": "noun"|"verb"|"adj"|"adv"|"phrasal_verb"|"collocation"|"other".
+- "posLabel": "Danh từ"|"Động từ"|"Tính từ"|"Trạng từ"|"Cụm động từ"|"Collocation"|"Khác".
+- "meaning": Nghĩa tiếng Việt chuẩn xác, súc tích, tự nhiên, dễ hiểu.
+- "example": 1 câu ví dụ ngắn gọn, sinh động, tự nhiên bằng ${langName} có chứa từ vựng này.
+- "exampleTrans": Dịch câu ví dụ sang tiếng Việt.
+- "wordFamily": Đối tượng chứa 4 dạng gia đình từ tương ứng (nếu có, không có ghi "-"):
+  {"noun": "...", "verb": "...", "adj": "...", "adv": "..."}
 
-                if (res.ok) {
-                    const resJson = await res.json();
-                    const data = (resJson && resJson.data) ? resJson.data : resJson;
-                    if (data && (data.meaning || data.example)) {
-                        entry = {
-                            lang: lang,
-                            word: data.word || query,
-                            phonetic: data.phonetic || '',
-                            pos: data.pos || 'noun',
-                            posLabel: data.posLabel || data.pos || 'Từ vựng',
-                            meaning: data.meaning || '',
-                            example: data.example || '',
-                            exampleTrans: data.exampleTrans || '',
-                            wordFamily: data.wordFamily || { noun: '', verb: '', adj: '', adv: '' }
-                        };
+Trả về DUY NHẤT một chuỗi JSON hợp lệ (không markdown):
+{"word":"...","phonetic":"...","pos":"noun","posLabel":"Danh từ","meaning":"...","example":"...","exampleTrans":"...","wordFamily":{"noun":"...","verb":"...","adj":"...","adv":"..."}}`;
+
+                    const geminiModels = ['gemini-3.5-flash-lite', 'gemini-2.5-flash', 'gemini-flash-lite-latest'];
+                    for (const m of geminiModels) {
+                        try {
+                            const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    contents: [{ parts: [{ text: prompt }] }],
+                                    generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
+                                })
+                            });
+                            if (geminiRes.ok) {
+                                const gemData = await geminiRes.json();
+                                const rawText = gemData.candidates?.[0]?.content?.parts?.[0]?.text;
+                                if (rawText) {
+                                    const clean = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+                                    const parsed = JSON.parse(clean);
+                                    if (parsed && (parsed.meaning || parsed.word)) {
+                                        entry = {
+                                            lang: lang,
+                                            word: parsed.word || query,
+                                            phonetic: parsed.phonetic || '',
+                                            pos: parsed.pos || 'noun',
+                                            posLabel: parsed.posLabel || 'Từ vựng',
+                                            meaning: parsed.meaning || '',
+                                            example: parsed.example || '',
+                                            exampleTrans: parsed.exampleTrans || '',
+                                            wordFamily: parsed.wordFamily || { noun: '', verb: '', adj: '', adv: '' }
+                                        };
+                                        break;
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            console.warn(`[Gemini ${m} error]:`, e.message);
+                        }
                     }
+                } catch (gemErr) {
+                    console.warn('[Direct Gemini Error, trying Worker API]:', gemErr);
                 }
-            } catch (apiErr) {
-                console.warn('[AISA Dict Worker API warning, trying fallback]:', apiErr.message);
+            }
+
+            // 3. Tra cứu AISA AI qua Worker API nếu Direct Gemini chưa có
+            if (!entry) {
+                try {
+                    const endpoint = (window.MHENT_CONFIG && window.MHENT_CONFIG.AISA_API_ENDPOINT) || 'https://api.mhentuniverse.com';
+                    const res = await fetch(`${endpoint}/api/generate-example`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            word: query,
+                            lang: lang,
+                            deckTitle: 'Từ điển AI'
+                        })
+                    });
+
+                    if (res.ok) {
+                        const resJson = await res.json();
+                        const data = (resJson && resJson.data) ? resJson.data : resJson;
+                        if (data && (data.meaning || data.example)) {
+                            entry = {
+                                lang: lang,
+                                word: data.word || query,
+                                phonetic: data.phonetic || '',
+                                pos: data.pos || 'noun',
+                                posLabel: data.posLabel || data.pos || 'Từ vựng',
+                                meaning: data.meaning || '',
+                                example: data.example || '',
+                                exampleTrans: data.exampleTrans || '',
+                                wordFamily: data.wordFamily || { noun: '', verb: '', adj: '', adv: '' }
+                            };
+                        }
+                    }
+                } catch (apiErr) {
+                    console.warn('[AISA Dict Worker API warning, trying fallback]:', apiErr.message);
+                }
             }
 
             // 3. Nếu Worker API chưa trả về kết quả, kích hoạt Fallback Từ điển Quốc tế

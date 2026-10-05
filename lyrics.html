@@ -227,7 +227,7 @@
 
             <!-- RIGHT: Synced Karaoke Viewport & Community Switcher -->
             <div class="lyrics-viewport-card">
-                <!-- Header with Version Tabs -->
+                <!-- Header with Version Tabs & Toggles -->
                 <div class="lyrics-viewport-header">
                     <div class="version-tabs-wrap" id="version-tabs-wrap">
                         <button class="version-tab active">
@@ -235,14 +235,27 @@
                         </button>
                     </div>
 
-                    <button type="button" id="btn-open-contrib" class="btn-contribute-version">
-                        <i class="fa-solid fa-pen-nib"></i> Đóng góp bản dịch
-                    </button>
+                    <div class="viewport-header-tools">
+                        <button type="button" id="btn-toggle-autoscroll" class="btn-tool-action active" title="Bật/Tắt chế độ tự cuộn câu theo bài hát" onclick="window.lyricsApp.toggleAutoScroll()">
+                            <i class="fa-solid fa-arrows-up-down"></i> <span id="autoscroll-label">Tự cuộn: BẬT</span>
+                        </button>
+                        <button type="button" id="btn-toggle-viewmode" class="btn-tool-action" title="Chuyển sang chế độ đọc toàn bài" onclick="window.lyricsApp.togglePlainMode()">
+                            <i class="fa-solid fa-book-open"></i> <span id="viewmode-label">Đọc lời</span>
+                        </button>
+                        <button type="button" id="btn-open-contrib" class="btn-contribute-version">
+                            <i class="fa-solid fa-pen-nib"></i> Đóng góp bản dịch
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Lyrics Stream Container -->
+                <!-- Lyrics Stream Container (Sentence-by-Sentence Karaoke) -->
                 <div class="lyrics-stream-container" id="lyrics-stream-container">
                     <!-- Synced sentences injected dynamically -->
+                </div>
+
+                <!-- Plain Reading Mode Container (Static Clean Typography) -->
+                <div class="lyrics-plain-container" id="lyrics-plain-container" style="display: none;">
+                    <!-- Plain lyrics injected dynamically -->
                 </div>
             </div>
 
@@ -338,13 +351,85 @@
     <!-- TOAST NOTIFICATION CONTAINER -->
     <div id="study-toast-container" class="study-toast-container"></div>
 
-    <!-- FOOTER -->
-    <footer class="study-footer">
-        <div class="footer-top-row">
-            <div class="footer-brand-side">
-                <div class="footer-brand-title">MHEnt. <span>Study</span></div>
-                <p>Không Gian Học Ngoại Ngữ Đa Vũ Trụ & Học Qua Bài Hát Tương Tác.</p>
-                <div class="footer-copy">© 2026 Miyazaki Haruto Entertainment Co., Ltd. - Project MHEnt. Universe.</div>
+    <!-- GLOBAL MEGA FOOTER -->
+    <footer class="study-mega-footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <!-- Cột 1: Thương hiệu MHEnt Study -->
+                <div class="footer-brand-col">
+                    <a onclick="window.location.href='/'" class="footer-brand-title" style="cursor: pointer;">
+                        <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="footer-brand-logo">
+                        <span class="footer-brand-name">MHEnt. Study</span>
+                    </a>
+                    <p class="footer-brand-slogan">
+                        Không Gian Học Ngoại Ngữ Đa Vũ Trụ & Học Qua Bài Hát Tương Tác. Đồng bộ lời Karaoke, bóc tách từ vựng học thuật bằng AISA AI.
+                    </p>
+                    <div class="footer-corp-meta">
+                        Một phân khu học thuật trực thuộc <strong>Project MHEnt. Universe</strong>.<br>
+                        Vận hành bởi Miyazaki Haruto Entertainment Co., Ltd.
+                    </div>
+                    <div class="footer-status-pill">
+                        <span class="pulse-dot"></span>
+                        <span>MHEnt Study Node: Hoạt động bình thường</span>
+                    </div>
+                </div>
+
+                <!-- Cột 2: Các Phòng Học Ngoại Ngữ -->
+                <div class="footer-col">
+                    <h3 class="footer-col-heading"><i class="fa-solid fa-book-open" style="margin-right: 6px;"></i> Không Gian Học Tập</h3>
+                    <ul class="footer-links-list">
+                        <li><a onclick="window.location.href='/lyrics.html'" class="footer-nav-link" style="color: #38bdf8; font-weight: 700;"><i class="fa-solid fa-headphones" style="margin-right: 4px;"></i> Học Qua Lời Bài Hát (Mới)</a></li>
+                        <li><a onclick="window.location.href='/ja/index.html'" class="footer-nav-link">🇯🇵 Tiếng Nhật (JLPT N5-N1)</a></li>
+                        <li><a onclick="window.location.href='/ko/index.html'" class="footer-nav-link">🇰🇷 Tiếng Hàn (Hangeul & TOPIK)</a></li>
+                        <li><a onclick="window.location.href='/zh/index.html'" class="footer-nav-link">🇨🇳 Tiếng Trung (HSK & Pinyin)</a></li>
+                        <li><a onclick="window.location.href='/en/index.html'" class="footer-nav-link">🇬🇧 Tiếng Anh (44 Âm IPA)</a></li>
+                        <li><a onclick="window.location.href='/shared/index.html'" class="footer-nav-link"><i class="fa-solid fa-folder-open" style="margin-right: 4px;"></i> Kho Bộ Thẻ Chia Sẻ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Cột 3: Đại Sảnh & Giải Trí -->
+                <div class="footer-col">
+                    <h3 class="footer-col-heading"><i class="fa-solid fa-film" style="margin-right: 6px;"></i> Đại Sảnh & Giải Trí</h3>
+                    <ul class="footer-links-list">
+                        <li><a onclick="window.open('https://www.mhentuniverse.com', '_blank')" class="footer-nav-link">Đại Sảnh MHEnt Universe</a></li>
+                        <li><a onclick="window.open('https://www.mhentuniverse.com/cinema', '_blank')" class="footer-nav-link">MHEnt Cinema (Anime & Movie)</a></li>
+                        <li><a onclick="window.open('https://www.mhentuniverse.com/arena', '_blank')" class="footer-nav-link">Arena (Đấu Trí Trực Tuyến)</a></li>
+                        <li><a onclick="window.open('https://www.mhentuniverse.com/game', '_blank')" class="footer-nav-link">Game Center (Cờ Tướng, Cờ Vua)</a></li>
+                        <li><a onclick="window.location.href='/login.html'" class="footer-nav-link">Cổng Định Danh Học Viên</a></li>
+                    </ul>
+                </div>
+
+                <!-- Cột 4: Hệ Thống & Pháp Lý -->
+                <div class="footer-col">
+                    <h3 class="footer-col-heading"><i class="fa-solid fa-scale-balanced" style="margin-right: 6px;"></i> Pháp Lý & Hỗ Trợ</h3>
+                    <ul class="footer-links-list">
+                        <li><a onclick="window.open('https://docs.mhentuniverse.com/terms', '_blank')" class="footer-nav-link">Điều khoản dịch vụ</a></li>
+                        <li><a onclick="window.open('https://docs.mhentuniverse.com/privacy', '_blank')" class="footer-nav-link">Chính sách bảo mật</a></li>
+                        <li><a onclick="window.open('https://www.mhentuniverse.com/about', '_blank')" class="footer-nav-link">Về chúng tớ & Đóng góp ý kiến</a></li>
+                        <li><a onclick="window.open('https://www.facebook.com/mhentuniverse', '_blank')" class="footer-nav-link">Cộng đồng MHEnt Universe</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-divider"></div>
+
+            <div class="footer-bottom-row">
+                <div>
+                    © 2026 <strong>Miyazaki Haruto Entertainment Co., Ltd.</strong> All rights reserved.
+                </div>
+                <div class="footer-social-strip">
+                    <a onclick="window.open('https://www.facebook.com/mharuto.entertainment/', '_blank')">
+                        <i class="fa-brands fa-facebook"></i> Fanpage
+                    </a>
+                    <span>•</span>
+                    <a onclick="window.open('https://www.facebook.com/mhentuniverse', '_blank')">
+                        <i class="fa-solid fa-users"></i> Community
+                    </a>
+                    <span>•</span>
+                    <a onclick="window.open('https://discord.gg/mhentuniverse', '_blank')">
+                        <i class="fa-brands fa-discord"></i> Discord
+                    </a>
+                </div>
             </div>
         </div>
     </footer>
