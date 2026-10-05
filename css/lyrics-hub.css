@@ -551,6 +551,30 @@ body.lyrics-theme .footer-brand-title {
     color: #38bdf8;
 }
 
+.btn-ai-gradient {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.25)) !important;
+    border-color: rgba(168, 85, 247, 0.4) !important;
+    color: #c084fc !important;
+    box-shadow: 0 2px 10px rgba(168, 85, 247, 0.15);
+}
+
+.btn-ai-gradient:hover {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.35), rgba(168, 85, 247, 0.45)) !important;
+    color: #f3e8ff !important;
+    transform: translateY(-1px);
+}
+
+.btn-ai-gradient.analyzing {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(168, 85, 247, 0.5)) !important;
+    color: #ffffff !important;
+    animation: pulseAIBorder 1.6s infinite ease-in-out;
+}
+
+@keyframes pulseAIBorder {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(168, 85, 247, 0); }
+}
+
 .btn-contribute-version {
     padding: 6px 12px;
     border-radius: 10px;

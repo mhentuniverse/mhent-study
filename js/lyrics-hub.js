@@ -35,6 +35,7 @@ class LyricsHubApp {
         // UX Feature Toggles
         this.isAutoScrollEnabled = true; // Bật/Tắt tính năng tự cuộn câu theo bài hát
         this.isPlainMode = false; // true: Chế độ đọc toàn văn, false: Chế độ Karaoke từng câu
+        this.isAnalyzingAi = false; // Trạng thái đang phân tích AI (Direct Gemini 3.5 Flash Lite)
 
         // Modal Search & Song Picker states
         this.modalCandidates = [];
@@ -290,6 +291,13 @@ class LyricsHubApp {
 
         // Reset nút Loop
         this.updateLoopBtnUi();
+
+        // Tự động kiểm tra và phân tích lời bài hát & bóc tách từ vựng nếu bài hát chưa được phân tích
+        if (this.needsAiAnalysis(song)) {
+            setTimeout(() => {
+                this.triggerAiAnalysis(false);
+            }, 600);
+        }
     }
 
     initYouTubePlayer(youtubeId) {
@@ -722,21 +730,26 @@ class LyricsHubApp {
             const regex = new RegExp(`(${this.escapeRegExp(w.word)})`, 'gi');
             const popoverId = `popover-${sentenceIdx}-${wIdx}`;
 
+            const safeWord = (w.word || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const safeMeaning = (w.meaning || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const safePhonetic = (w.phonetic || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const safePos = (w.pos || 'noun').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
             const wordSpan = `
                 <span class="vocab-word-chip" onclick="event.stopPropagation(); window.lyricsApp.togglePopover('${popoverId}')">
                     $1
                     <div class="vocab-popover-box" id="${popoverId}" onclick="event.stopPropagation()">
                         <div class="popover-header">
-                            <span class="popover-word">${w.word}</span>
-                            <span class="popover-pos">${w.pos || 'Từ vựng'}</span>
+                            <span class="popover-word">${this.escapeHtml(w.word)}</span>
+                            <span class="popover-pos">${this.escapeHtml(w.pos || 'Từ vựng')}</span>
                         </div>
-                        ${w.phonetic ? `<div class="popover-phonetic">${w.phonetic}</div>` : ''}
-                        <div class="popover-meaning">${w.meaning || ''}</div>
+                        ${w.phonetic ? `<div class="popover-phonetic">${this.escapeHtml(w.phonetic)}</div>` : ''}
+                        <div class="popover-meaning">${this.escapeHtml(w.meaning || '')}</div>
                         <div class="popover-actions">
-                            <button class="popover-btn-speak" onclick="window.lyricsApp.speak('${w.word}', '${this.currentSong ? this.currentSong.lang : 'en'}')" title="Phát âm">
+                            <button class="popover-btn-speak" onclick="window.lyricsApp.speak('${safeWord}', '${this.currentSong ? this.currentSong.lang : 'en'}')" title="Phát âm">
                                 <i class="fa-solid fa-volume-high"></i>
                             </button>
-                            <button class="popover-btn-save" onclick="window.lyricsApp.saveVocabFromLyrics('${w.word}', '${w.meaning}', '${w.phonetic || ''}', '${w.pos || 'noun'}')">
+                            <button class="popover-btn-save" onclick="window.lyricsApp.saveVocabFromLyrics('${safeWord}', '${safeMeaning}', '${safePhonetic}', '${safePos}')">
                                 <i class="fa-solid fa-bookmark"></i> Lưu vào Sổ
                             </button>
                         </div>
@@ -777,6 +790,249 @@ class LyricsHubApp {
 
     hideAllPopovers() {
         document.querySelectorAll('.vocab-popover-box').forEach(el => el.classList.remove('show'));
+    }
+
+    saveVocabFromLyrics(word, meaning, phonetic, pos) {
+        if (!word) return;
+        const lang = this.currentSong ? this.currentSong.lang : 'en';
+
+        // Lấy câu ngữ cảnh hiện tại
+        let contextSentence = '';
+        if (this.activeSentenceIndex >= 0 && this.currentSong && this.currentSong.synced_lyrics[this.activeSentenceIndex]) {
+            contextSentence = this.currentSong.synced_lyrics[this.activeSentenceIndex].text;
+        }
+
+        // Tích hợp hộp thoại chọn bộ bài học / profile Supabase (Deck Selector)
+        if (window.deckSelector && typeof window.deckSelector.open === 'function') {
+            window.deckSelector.open({
+                word: word,
+                meaning: meaning || '',
+                phonetic: phonetic || '',
+                pos: pos || 'noun',
+                lang: lang,
+                example: contextSentence,
+                exampleTrans: '',
+                onSave: (savedDeck) => {
+                    this.showToast(`Đã lưu "${word}" vào bộ "${savedDeck ? savedDeck.title : 'Từ vựng'}"!`, 'success');
+                }
+            });
+            return;
+        }
+
+        // Fallback lưu trực tiếp qua studyCloud
+        if (window.studyCloud && typeof window.studyCloud.addVocabCard === 'function') {
+            window.studyCloud.addVocabCard({
+                word: word,
+                meaning: meaning || '',
+                phonetic: phonetic || '',
+                pos: pos || 'noun',
+                lang: lang,
+                example: contextSentence
+            }).then(() => {
+                this.showToast(`Đã lưu "${word}" vào Sổ từ vựng!`, 'success');
+            }).catch(e => {
+                this.showToast(`Lỗi lưu từ vựng: ${e.message}`, 'error');
+            });
+            return;
+        }
+
+        this.showToast(`Đã ghi nhớ từ vựng "${word}"`, 'success');
+    }
+
+    speak(text, lang = 'en') {
+        if (!text || !window.speechSynthesis) return;
+        try {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            const langCodeMap = { ja: 'ja-JP', ko: 'ko-KR', zh: 'zh-CN', en: 'en-US' };
+            utterance.lang = langCodeMap[lang] || 'en-US';
+            utterance.rate = 0.85;
+            window.speechSynthesis.speak(utterance);
+        } catch (e) {
+            console.warn('Speech synthesis error:', e);
+        }
+    }
+
+    needsAiAnalysis(song) {
+        if (!song || !Array.isArray(song.synced_lyrics) || song.synced_lyrics.length === 0) return false;
+        if (song.lang === 'vi') return false;
+
+        const testLines = song.synced_lyrics.filter(l => l.text && l.text.trim().length > 0).slice(0, 10);
+        if (testLines.length === 0) return false;
+
+        let unanalyzed = 0;
+        testLines.forEach(l => {
+            const isSameText = !l.translation || l.translation.trim().toLowerCase() === l.text.trim().toLowerCase();
+            const noWords = !Array.isArray(l.words) || l.words.length === 0;
+            if (isSameText && noWords) {
+                unanalyzed++;
+            }
+        });
+
+        return unanalyzed >= Math.ceil(testLines.length * 0.4);
+    }
+
+    updateAiAnalysisBtnUi(isAnalyzing) {
+        const btn = document.getElementById('btn-reanalyze-ai');
+        const label = document.getElementById('reanalyze-label');
+        if (!btn) return;
+
+        if (isAnalyzing) {
+            btn.classList.add('analyzing');
+            if (label) label.textContent = 'Đang phân tích...';
+            btn.disabled = true;
+        } else {
+            btn.classList.remove('analyzing');
+            if (label) label.textContent = 'Phân tích AI';
+            btn.disabled = false;
+        }
+    }
+
+    async triggerAiAnalysis(isManual = true) {
+        if (!this.currentSong || !Array.isArray(this.currentSong.synced_lyrics) || this.currentSong.synced_lyrics.length === 0) {
+            if (isManual) this.showToast('Không có lời bài hát để phân tích.', 'warning');
+            return;
+        }
+
+        if (this.isAnalyzingAi) {
+            this.showToast('AISA AI đang phân tích lời bài hát, vui lòng đợi trong giây lát...', 'info');
+            return;
+        }
+
+        this.isAnalyzingAi = true;
+        this.updateAiAnalysisBtnUi(true);
+
+        const song = this.currentSong;
+        const lang = song.lang || this.detectLanguage(song.title + ' ' + (song.synced_lyrics[0] ? song.synced_lyrics[0].text : ''));
+        const langNames = { en: 'tiếng Anh', ko: 'tiếng Hàn', ja: 'tiếng Nhật', zh: 'tiếng Trung' };
+        const langName = langNames[lang] || 'tiếng Nhật';
+
+        this.showToast(`✨ AISA AI đang dịch nghĩa & bóc tách từ vựng ${langName}...`, 'info', 4000);
+
+        const fallbackKey = atob('QVEuQWI4Uk42STZRQUsycGk2RVNISlJMTDlERUppNS1NRXUwXzM5ekwtc211Y3Y0b1A0VGc=');
+        const apiKey = localStorage.getItem('mhent_ai_api_key') || (window.MHENT_CONFIG && window.MHENT_CONFIG.GEMINI_API_KEY) || fallbackKey;
+
+        const batchSize = 15;
+        const allLines = [...song.synced_lyrics];
+
+        try {
+            for (let i = 0; i < allLines.length; i += batchSize) {
+                if (this.currentSong !== song) break;
+
+                const chunk = allLines.slice(i, i + batchSize);
+                const chunkFormatted = chunk.map((line, cIdx) => `${cIdx + 1}. ${line.text}`).join('\n');
+
+                const prompt = `Bạn là chuyên gia dịch thuật âm nhạc và ngôn ngữ học AISA (MHEnt Study).
+Nhiệm vụ: Phân tích các câu trong bài hát "${song.title}" của "${song.artist}" (${langName}).
+Với MỖI câu trong danh sách dưới đây:
+1. "translation": Dịch câu sang tiếng Việt tự nhiên, giàu cảm xúc âm nhạc và thi vị.
+2. "phonetic": Phiên âm Romaji/Furigana (nếu tiếng Nhật), Romaja (nếu tiếng Hàn), Pinyin có dấu (nếu tiếng Trung), hoặc để trống "" (nếu tiếng Anh).
+3. "words": Trích xuất 1-2 từ vựng hay xuất hiện trong câu để học viên trau dồi:
+   Mỗi từ gồm:
+   - "word": CHÍNH XÁC từ hoặc cụm từ xuất hiện nguyên văn trong câu (để hệ thống highlight chính xác).
+   - "phonetic": Phiên âm của từ vựng này.
+   - "pos": "noun"|"verb"|"adj"|"adv"|"phrase".
+   - "meaning": Nghĩa tiếng Việt ngắn gọn, chuẩn xác.
+
+Danh sách các câu:
+${chunkFormatted}
+
+QUY TẮC BẮT BUỘC:
+- Trả về đúng số lượng câu tương ứng (${chunk.length} câu), theo đúng thứ tự index 1 đến ${chunk.length}.
+- Chỉ trả về DUY NHẤT một JSON array thuần túy (không bọc trong \`\`\`json):
+[
+  {
+    "index": 1,
+    "phonetic": "...",
+    "translation": "...",
+    "words": [
+      { "word": "...", "phonetic": "...", "pos": "noun", "meaning": "..." }
+    ]
+  }
+]`;
+
+                let analyzedChunk = null;
+
+                if (apiKey) {
+                    try {
+                        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                contents: [{ parts: [{ text: prompt }] }],
+                                generationConfig: {
+                                    responseMimeType: 'application/json',
+                                    temperature: 0.2
+                                }
+                            })
+                        });
+
+                        if (geminiRes.ok) {
+                            const gemData = await geminiRes.json();
+                            const rawText = gemData.candidates?.[0]?.content?.parts?.[0]?.text;
+                            if (rawText) {
+                                const clean = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+                                analyzedChunk = JSON.parse(clean);
+                            }
+                        }
+                    } catch (gemErr) {
+                        console.warn('[Gemini 3.5 Lyrics Chunk Error]:', gemErr);
+                    }
+                }
+
+                // Fallback: nếu Gemini lỗi, dịch nghĩa từng câu qua Google GTX Translate
+                if (!Array.isArray(analyzedChunk) || analyzedChunk.length === 0) {
+                    analyzedChunk = await Promise.all(chunk.map(async (l, cIdx) => {
+                        let trans = l.text;
+                        try {
+                            const gtxRes = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${lang}&tl=vi&dt=t&q=${encodeURIComponent(l.text)}`);
+                            if (gtxRes.ok) {
+                                const gtxData = await gtxRes.json();
+                                trans = gtxData?.[0]?.[0]?.[0] || l.text;
+                            }
+                        } catch (e) {}
+                        return {
+                            index: cIdx + 1,
+                            phonetic: '',
+                            translation: trans,
+                            words: []
+                        };
+                    }));
+                }
+
+                // Cập nhật dữ liệu phân tích vào các câu của bài hát
+                analyzedChunk.forEach(aiItem => {
+                    const localIdx = i + (aiItem.index - 1);
+                    if (this.currentSong && this.currentSong.synced_lyrics[localIdx]) {
+                        const target = this.currentSong.synced_lyrics[localIdx];
+                        if (aiItem.translation) target.translation = aiItem.translation;
+                        if (aiItem.phonetic) target.phonetic = aiItem.phonetic;
+                        if (Array.isArray(aiItem.words) && aiItem.words.length > 0) target.words = aiItem.words;
+                    }
+                });
+
+                // Cập nhật giao diện ngay lập tức
+                this.renderLyrics();
+                if (this.isPlainMode) this.renderPlainLyrics();
+                if (this.activeSentenceIndex >= 0) {
+                    this.syncActiveSentence(this.currentTime, false);
+                }
+            }
+
+            this.showToast('✨ AISA AI đã hoàn tất phân tích lời bài hát & từ vựng!', 'success');
+
+            // Đồng bộ bản hoàn thiện lên Supabase Cloud
+            if (window.studyCloud && typeof window.studyCloud.saveSong === 'function') {
+                window.studyCloud.saveSong(this.currentSong).catch(e => console.warn('Supabase save error:', e));
+            }
+
+        } catch (err) {
+            console.error('[triggerAiAnalysis Error]:', err);
+            this.showToast(`Phân tích AI gặp sự cố: ${err.message}`, 'error');
+        } finally {
+            this.isAnalyzingAi = false;
+            this.updateAiAnalysisBtnUi(false);
+        }
     }
 
     // =========================================================================
@@ -1369,32 +1625,6 @@ class LyricsHubApp {
                 console.warn('[YouTube Search Warning]:', ytErr);
             }
 
-            // Phân tích từ vựng nâng cao qua AISA AI
-            const endpoint = (window.MHENT_CONFIG && window.MHENT_CONFIG.AISA_API_ENDPOINT) || 'https://api.mhentuniverse.com';
-            let enrichedLyrics = parsedLyrics;
-
-            try {
-                const analyzeRes = await fetch(`${endpoint}/api/analyze-lyrics`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        lines: parsedLyrics.slice(0, 40),
-                        lang: detectedLang,
-                        title: item.trackName,
-                        artist: item.artistName
-                    })
-                });
-
-                if (analyzeRes.ok) {
-                    const analyzeData = await analyzeRes.json();
-                    if (analyzeData && Array.isArray(analyzeData.data)) {
-                        enrichedLyrics = analyzeData.data;
-                    }
-                }
-            } catch (aiErr) {
-                console.warn('[Lyrics Hub] AISA AI bóc tách từ vựng ngầm lỗi (dùng bản gốc):', aiErr);
-            }
-
             const newSong = {
                 id: (item.trackName + '-' + item.artistName).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
                 title: item.trackName,
@@ -1403,20 +1633,15 @@ class LyricsHubApp {
                 youtube_id: foundYtId || '',
                 thumbnail: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=60',
                 duration: item.duration || 180,
-                synced_lyrics: enrichedLyrics,
+                synced_lyrics: parsedLyrics,
                 plain_lyrics: item.plainLyrics || '',
                 views: 1,
                 created_by: 'AISA AI Autosearch',
                 community_versions: []
             };
 
-            // Lưu vào Supabase Cloud để đồng bộ cho toàn bộ học viên
-            if (window.studyCloud && typeof window.studyCloud.saveSong === 'function') {
-                window.studyCloud.saveSong(newSong).catch(e => console.warn('Lưu Supabase ngầm:', e));
-            }
-
             this.loadSong(newSong);
-            this.showToast(`Sẵn sàng học bài hát: ${newSong.title}!`, 'success');
+            this.showToast(`Sẵn sàng học bài hát: ${newSong.title}! AISA AI đang dịch & bóc tách từ vựng...`, 'success', 3000);
 
         } catch (err) {
             console.error('[Lyrics Hub] Lỗi nạp bài hát đã chọn:', err);
