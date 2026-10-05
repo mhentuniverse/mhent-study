@@ -106,6 +106,9 @@
                 <button type="submit" id="lyrics-search-btn" class="lyrics-search-btn">
                     <i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm
                 </button>
+                <button type="button" id="btn-browse-songs" class="btn-browse-library" title="Xem danh sách bài hát có sẵn">
+                    <i class="fa-solid fa-list-music"></i> <span>Kho bài hát</span>
+                </button>
             </form>
 
             <!-- Language Filter Pills -->
@@ -140,6 +143,23 @@
                     <span id="track-lang-badge" class="track-lang-badge">Tiếng Anh</span>
                 </div>
 
+                <!-- Lyric-Video Sync Calibrator (Bù trừ độ trễ intro video) -->
+                <div class="lyrics-calibrator-card">
+                    <div class="calibrator-top-row">
+                        <span class="calibrator-title"><i class="fa-solid fa-clock-rotate-left"></i> Lệch pha lời (Sync Offset):</span>
+                        <span class="calibrator-val-badge" id="calibrator-val-badge">0.0s</span>
+                    </div>
+                    <div class="calibrator-buttons-row">
+                        <button type="button" class="btn-offset-step" onclick="window.lyricsApp.adjustOffset(-1.0)" title="Chạy lời sớm hơn 1.0s">-1.0s</button>
+                        <button type="button" class="btn-offset-step" onclick="window.lyricsApp.adjustOffset(-0.5)" title="Chạy lời sớm hơn 0.5s">-0.5s</button>
+                        <button type="button" class="btn-offset-step" onclick="window.lyricsApp.adjustOffset(-0.2)" title="Chạy lời sớm hơn 0.2s">-0.2s</button>
+                        <button type="button" class="btn-offset-reset" onclick="window.lyricsApp.resetOffset()" title="Đặt lại độ trễ về 0s"><i class="fa-solid fa-rotate-left"></i></button>
+                        <button type="button" class="btn-offset-step" onclick="window.lyricsApp.adjustOffset(0.2)" title="Chạy lời trễ hơn 0.2s">+0.2s</button>
+                        <button type="button" class="btn-offset-step" onclick="window.lyricsApp.adjustOffset(0.5)" title="Chạy lời trễ hơn 0.5s">+0.5s</button>
+                        <button type="button" class="btn-offset-step" onclick="window.lyricsApp.adjustOffset(1.0)" title="Chạy lời trễ hơn 1.0s">+1.0s</button>
+                    </div>
+                </div>
+
                 <!-- Player Controls -->
                 <div class="player-controls-box">
                     <div class="playback-slider-row">
@@ -151,18 +171,50 @@
                     </div>
 
                     <div class="playback-buttons-row">
+                        <!-- Volume Popover Control -->
+                        <div class="custom-vol-wrap">
+                            <button type="button" id="btn-volume-mute" class="btn-player-mini" title="Âm lượng / Bật tắt tiếng">
+                                <i class="fa-solid fa-volume-high"></i>
+                            </button>
+                            <input type="range" id="volume-slider" class="volume-slider" min="0" max="1" step="0.05" value="1" title="Điều chỉnh âm lượng">
+                        </div>
+
+                        <!-- Main Play/Pause Button -->
                         <button type="button" id="btn-player-play" class="btn-player-play" title="Phát / Dừng">
                             <i class="fa-solid fa-play"></i>
+                        </button>
+
+                        <!-- Sentence Loop Toggle -->
+                        <button type="button" id="btn-loop-global" class="btn-player-mini" title="Lặp lại câu đang phát" onclick="window.lyricsApp.toggleCurrentSentenceLoop()">
+                            <i class="fa-solid fa-repeat"></i>
                         </button>
                     </div>
 
                     <div class="player-tools-row">
-                        <span><i class="fa-solid fa-gauge-high"></i> Tốc độ:</span>
-                        <select id="playback-speed" class="speed-select" title="Tốc độ phát">
-                            <option value="0.75">0.75x (Chậm)</option>
-                            <option value="1.0" selected>1.0x (Chuẩn)</option>
-                            <option value="1.25">1.25x (Nhanh)</option>
-                        </select>
+                        <!-- Custom Glassmorphic Speed Selector -->
+                        <div class="custom-speed-dropdown" id="custom-speed-dropdown">
+                            <button type="button" class="btn-speed-trigger" id="btn-speed-trigger" title="Chọn tốc độ phát nhạc">
+                                <i class="fa-solid fa-gauge-high"></i>
+                                <span id="speed-label-display">1.0x</span>
+                                <i class="fa-solid fa-chevron-down speed-arrow"></i>
+                            </button>
+                            <div class="custom-speed-menu" id="custom-speed-menu">
+                                <div class="speed-opt" data-speed="0.75"><i class="fa-solid fa-turtle"></i> 0.75x (Chậm)</div>
+                                <div class="speed-opt active" data-speed="1.0"><i class="fa-solid fa-music"></i> 1.0x (Chuẩn)</div>
+                                <div class="speed-opt" data-speed="1.25"><i class="fa-solid fa-bolt"></i> 1.25x (Nhanh)</div>
+                                <div class="speed-opt" data-speed="1.5"><i class="fa-solid fa-forward-fast"></i> 1.5x (Rất nhanh)</div>
+                            </div>
+                        </div>
+
+                        <!-- Audio Source Toggle: YouTube MV vs Studio/Spotify Audio -->
+                        <div class="audio-engine-toggle" id="audio-engine-toggle">
+                            <button type="button" class="btn-engine-pill active" id="btn-engine-yt" data-engine="yt" title="Phát kèm MV YouTube">
+                                <i class="fa-brands fa-youtube"></i> MV
+                            </button>
+                            <button type="button" class="btn-engine-pill" id="btn-engine-audio" data-engine="audio" title="Phát nhạc Studio/Spotify">
+                                <i class="fa-solid fa-headphones"></i> Studio
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -243,6 +295,48 @@
             </form>
         </div>
     </div>
+
+    <!-- SONG SELECTION & SEARCH RESULTS MODAL -->
+    <div id="song-select-modal" class="song-select-modal-overlay">
+        <div class="song-select-modal-card">
+            <div class="song-select-header">
+                <div class="song-select-header-left">
+                    <div class="song-select-icon"><i class="fa-solid fa-list-music"></i></div>
+                    <div>
+                        <h3 id="song-select-modal-title">Chọn Bài Hát Để Học</h3>
+                        <p id="song-select-modal-subtitle">Khám phá và chọn bài hát phù hợp có sẵn lời karaoke đồng bộ</p>
+                    </div>
+                </div>
+                <button type="button" id="song-select-close" class="modal-close-btn" title="Đóng (Esc)">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- In-modal search & filter pills -->
+            <div class="song-select-filters">
+                <div class="song-select-input-wrap">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="song-select-search-input" placeholder="Lọc nhanh theo tên bài hát, nghệ sĩ hoặc thể loại...">
+                </div>
+                <div class="song-select-pills" id="song-select-pills">
+                    <button type="button" class="song-modal-pill active" data-filter="all">Tất cả</button>
+                    <button type="button" class="song-modal-pill" data-filter="synced"><i class="fa-solid fa-microphone-lines"></i> Có Karaoke</button>
+                    <button type="button" class="song-modal-pill" data-filter="en">🇬🇧 Tiếng Anh</button>
+                    <button type="button" class="song-modal-pill" data-filter="ko">🇰🇷 Tiếng Hàn</button>
+                    <button type="button" class="song-modal-pill" data-filter="ja">🇯🇵 Tiếng Nhật</button>
+                    <button type="button" class="song-modal-pill" data-filter="zh">🇨🇳 Tiếng Trung</button>
+                </div>
+            </div>
+
+            <!-- Songs List Container -->
+            <div class="song-select-list" id="song-select-list">
+                <!-- Dynamic cards injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="study-toast-container" class="study-toast-container"></div>
 
     <!-- FOOTER -->
     <footer class="study-footer">

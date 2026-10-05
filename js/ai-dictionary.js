@@ -393,95 +393,173 @@ class AisaDictionary {
         }
     }
 
+    async translateToVi(text, fromLang = 'auto') {
+        if (!text) return '';
+        try {
+            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=vi&dt=t&q=${encodeURIComponent(text)}`;
+            const res = await fetch(url);
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data[0] && Array.isArray(data[0])) {
+                    return data[0].map(item => item[0]).filter(Boolean).join('');
+                }
+            }
+        } catch (e) {
+            console.warn('[translateToVi error]:', e);
+        }
+        return '';
+    }
+
+    deriveWordFamily(word, pos) {
+        const w = (word || '').toLowerCase().trim();
+        const knownFamilies = {
+            clarity: { noun: 'clarity / clearness', verb: 'clarify', adj: 'clear', adv: 'clearly' },
+            clear: { noun: 'clarity / clearness', verb: 'clarify', adj: 'clear', adv: 'clearly' },
+            dream: { noun: 'dream / dreamer', verb: 'dream', adj: 'dreamy', adv: 'dreamily' },
+            resilience: { noun: 'resilience / resiliency', verb: '-', adj: 'resilient', adv: 'resiliently' },
+            resilient: { noun: 'resilience', verb: '-', adj: 'resilient', adv: 'resiliently' },
+            beauty: { noun: 'beauty / beautician', verb: 'beautify', adj: 'beautiful', adv: 'beautifully' },
+            beautiful: { noun: 'beauty', verb: 'beautify', adj: 'beautiful', adv: 'beautifully' },
+            create: { noun: 'creation / creator', verb: 'create', adj: 'creative', adv: 'creatively' },
+            creation: { noun: 'creation / creator', verb: 'create', adj: 'creative', adv: 'creatively' },
+            creative: { noun: 'creativity / creation', verb: 'create', adj: 'creative', adv: 'creatively' },
+            success: { noun: 'success', verb: 'succeed', adj: 'successful', adv: 'successfully' },
+            succeed: { noun: 'success', verb: 'succeed', adj: 'successful', adv: 'successfully' },
+            successful: { noun: 'success', verb: 'succeed', adj: 'successful', adv: 'successfully' },
+            decide: { noun: 'decision', verb: 'decide', adj: 'decisive', adv: 'decisively' },
+            decision: { noun: 'decision', verb: 'decide', adj: 'decisive', adv: 'decisively' },
+            peace: { noun: 'peace', verb: 'pacify', adj: 'peaceful', adv: 'peacefully' },
+            peaceful: { noun: 'peace', verb: 'pacify', adj: 'peaceful', adv: 'peacefully' },
+            hope: { noun: 'hope', verb: 'hope', adj: 'hopeful', adv: 'hopefully' },
+            hopeful: { noun: 'hope', verb: 'hope', adj: 'hopeful', adv: 'hopefully' },
+            love: { noun: 'love / lover', verb: 'love', adj: 'lovely / loving', adv: 'lovingly' },
+            active: { noun: 'activity / action', verb: 'activate', adj: 'active', adv: 'actively' },
+            education: { noun: 'education / educator', verb: 'educate', adj: 'educational', adv: 'educationally' },
+            happy: { noun: 'happiness', verb: '-', adj: 'happy', adv: 'happily' },
+            happiness: { noun: 'happiness', verb: '-', adj: 'happy', adv: 'happily' },
+            strong: { noun: 'strength', verb: 'strengthen', adj: 'strong', adv: 'strongly' },
+            strength: { noun: 'strength', verb: 'strengthen', adj: 'strong', adv: 'strongly' }
+        };
+
+        if (knownFamilies[w]) return knownFamilies[w];
+
+        let noun = pos === 'noun' ? w : '';
+        let verb = pos === 'verb' ? w : '';
+        let adj = (pos === 'adj' || pos === 'adjective') ? w : '';
+        let adv = (pos === 'adv' || pos === 'adverb') ? w : '';
+
+        if (w.endsWith('tion') || w.endsWith('ment') || w.endsWith('ness') || w.endsWith('ity')) {
+            noun = w;
+            if (!adv) adv = w.replace(/(tion|ment|ness|ity)$/, '') + 'ly';
+        } else if (w.endsWith('ly')) {
+            adv = w;
+            adj = w.replace(/ly$/, '');
+        } else if (w.endsWith('ful')) {
+            adj = w;
+            adv = w + 'ly';
+            noun = w.replace(/ful$/, '');
+        } else if (w.endsWith('able') || w.endsWith('ible')) {
+            adj = w;
+            adv = w.replace(/e$/, 'y');
+            noun = w.replace(/ble$/, 'bility');
+        }
+
+        return {
+            noun: noun || (pos === 'noun' ? w : '-'),
+            verb: verb || (pos === 'verb' ? w : '-'),
+            adj: adj || (pos === 'adj' || pos === 'adjective' ? w : '-'),
+            adv: adv || (pos === 'adv' || pos === 'adverb' ? w : '-')
+        };
+    }
+
     async fetchFallbackWord(query, lang) {
         let entry = null;
 
-        // Fallback 1: Cho tiếng Anh qua Free Dictionary API + MyMemory
+        // Fallback 1: Cho tiếng Anh qua Free Dictionary API + Google Translate GTX
         if (lang === 'en') {
             try {
-                const dictRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(query)}`);
-                if (dictRes.ok) {
-                    const dictData = await dictRes.json();
-                    if (Array.isArray(dictData) && dictData.length > 0) {
-                        const item = dictData[0];
-                        const phonetic = item.phonetic || (item.phonetics && item.phonetics.find(p => p.text)?.text) || '';
-                        const firstMeaning = item.meanings && item.meanings[0];
-                        const pos = firstMeaning ? firstMeaning.partOfSpeech : 'noun';
-                        const def = firstMeaning && firstMeaning.definitions[0] ? firstMeaning.definitions[0].definition : '';
-                        const example = (firstMeaning && firstMeaning.definitions[0] && firstMeaning.definitions[0].example) || `I love the concept of ${query}.`;
-
-                        let viMeaning = '';
-                        try {
-                            const trRes = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(query)}&langpair=en|vi`);
-                            if (trRes.ok) {
-                                const trJson = await trRes.json();
-                                viMeaning = trJson.responseData?.translatedText || '';
-                            }
-                        } catch (e) {}
-
-                        if (!viMeaning) viMeaning = def;
-
-                        let viExample = '';
-                        try {
-                            const trEx = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(example)}&langpair=en|vi`);
-                            if (trEx.ok) {
-                                const trJson = await trEx.json();
-                                viExample = trJson.responseData?.translatedText || '';
-                            }
-                        } catch (e) {}
-
-                        const posLabels = {
-                            noun: 'Danh từ',
-                            verb: 'Động từ',
-                            adjective: 'Tính từ',
-                            adj: 'Tính từ',
-                            adverb: 'Trạng từ',
-                            adv: 'Trạng từ'
-                        };
-
-                        entry = {
-                            lang: 'en',
-                            word: item.word || query,
-                            phonetic: phonetic,
-                            pos: pos,
-                            posLabel: posLabels[pos] || pos,
-                            meaning: viMeaning,
-                            example: example,
-                            exampleTrans: viExample || 'Ví dụ minh họa cho từ vựng này.',
-                            wordFamily: {
-                                noun: pos === 'noun' ? query : '',
-                                verb: pos === 'verb' ? query : '',
-                                adj: (pos === 'adjective' || pos === 'adj') ? query : '',
-                                adv: (pos === 'adverb' || pos === 'adv') ? query : ''
-                            }
-                        };
+                let dictItem = null;
+                try {
+                    const dictRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(query)}`);
+                    if (dictRes.ok) {
+                        const dictData = await dictRes.json();
+                        if (Array.isArray(dictData) && dictData.length > 0) {
+                            dictItem = dictData[0];
+                        }
                     }
+                } catch (e) {
+                    console.warn('[DictionaryAPI fetch warning]:', e);
                 }
+
+                const phonetic = dictItem?.phonetic || (dictItem?.phonetics && dictItem.phonetics.find(p => p.text)?.text) || `/${query}/`;
+                const firstMeaning = dictItem?.meanings && dictItem.meanings[0];
+                const pos = firstMeaning ? firstMeaning.partOfSpeech : 'noun';
+                const rawDef = firstMeaning && firstMeaning.definitions[0] ? firstMeaning.definitions[0].definition : '';
+                const rawExample = (firstMeaning && firstMeaning.definitions[0] && firstMeaning.definitions[0].example) || `He spoke with remarkable ${query}.`;
+
+                // Dịch nghĩa từ vựng và câu ví dụ chuẩn xác bằng Google Translate
+                const viWord = await this.translateToVi(query, 'en');
+                let viDef = '';
+                if (rawDef) {
+                    viDef = await this.translateToVi(rawDef, 'en');
+                }
+                const viEx = await this.translateToVi(rawExample, 'en');
+
+                const posLabels = {
+                    noun: 'Danh từ',
+                    verb: 'Động từ',
+                    adjective: 'Tính từ',
+                    adj: 'Tính từ',
+                    adverb: 'Trạng từ',
+                    adv: 'Trạng từ',
+                    preposition: 'Giới từ',
+                    conjunction: 'Liên từ'
+                };
+
+                const meaningCombined = viWord ? (viDef ? `${viWord} (${viDef})` : viWord) : (viDef || 'Giải nghĩa từ vựng');
+                const wordFam = this.deriveWordFamily(query, pos);
+
+                entry = {
+                    lang: 'en',
+                    word: query,
+                    phonetic: phonetic,
+                    pos: pos,
+                    posLabel: posLabels[pos] || pos,
+                    meaning: meaningCombined,
+                    example: rawExample,
+                    exampleTrans: viEx || 'Ví dụ minh họa cho từ vựng này.',
+                    wordFamily: wordFam
+                };
             } catch (dictErr) {
                 console.warn('[AISA Dict fallback err]:', dictErr);
             }
         }
 
-        // Fallback 2: Đa ngữ chung (Hàn, Nhật, Trung, Anh)
+        // Fallback 2: Đa ngữ chung (Hàn, Nhật, Trung)
         if (!entry) {
             try {
-                const trRes = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(query)}&langpair=${lang}|vi`);
-                if (trRes.ok) {
-                    const trJson = await trRes.json();
-                    const viText = trJson.responseData?.translatedText || '';
-                    if (viText && viText.trim().toLowerCase() !== query.toLowerCase()) {
-                        entry = {
-                            lang: lang,
-                            word: query,
-                            phonetic: '',
-                            pos: 'noun',
-                            posLabel: 'Từ vựng',
-                            meaning: viText,
-                            example: `Từ vựng "${query}" được sử dụng phổ biến trong giao tiếp.`,
-                            exampleTrans: `Bản dịch nghĩa: ${viText}`,
-                            wordFamily: { noun: query, verb: '', adj: '', adv: '' }
-                        };
-                    }
+                const viWord = await this.translateToVi(query, lang);
+                if (viWord && viWord.trim().toLowerCase() !== query.toLowerCase()) {
+                    const sampleSentences = {
+                        ko: `"${query}"(은)는 일상 대화에서 자주 사용되는 어휘입니다.`,
+                        ja: `「${query}」は日常会話でよく使われる語彙です。`,
+                        zh: `“${query}”在日常汉语交流中非常常用。`,
+                        en: `The word "${query}" is commonly used in English.`
+                    };
+                    const origEx = sampleSentences[lang] || `The term "${query}" has important meaning.`;
+                    const transEx = await this.translateToVi(origEx, lang);
+
+                    entry = {
+                        lang: lang,
+                        word: query,
+                        phonetic: '',
+                        pos: 'noun',
+                        posLabel: 'Từ vựng',
+                        meaning: viWord,
+                        example: origEx,
+                        exampleTrans: transEx || `Nghĩa tiếng Việt: ${viWord}`,
+                        wordFamily: { noun: query, verb: '-', adj: '-', adv: '-' }
+                    };
                 }
             } catch (e) {
                 console.warn('[AISA Dict general fallback note]:', e);

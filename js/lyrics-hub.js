@@ -2,6 +2,8 @@
  * MHENT STUDY - MUSIC LYRICS STUDY HUB ENGINE
  * Trình phát nhạc đồng bộ lời bài hát từng câu (Sentence-by-Sentence Karaoke)
  * Tự động tìm kiếm LRCLIB, phân tích từ vựng bằng AISA AI & lưu trữ vào Supabase Database
+ * Hỗ trợ bù trừ lệch pha MV YouTube vs Spotify Audio (Time Offset Sync Calibrator)
+ * Giao diện Glassmorphism độc quyền, không dùng bất kỳ UI mặc định nào của trình duyệt
  */
 
 class LyricsHubApp {
@@ -17,11 +19,22 @@ class LyricsHubApp {
         this.activeLang = 'all';
 
         // Media display & YouTube Engine
-        this.mediaMode = 'video'; // Default to video so user can see MV immediately
+        this.mediaMode = 'video'; // 'video' hoặc 'art'
         this.ytPlayer = null;
         this.isYtReady = false;
-        this.useYouTube = true;
+        this.useYouTube = true; // true: YouTube MV, false: Studio/Spotify Audio
         this.syncTimer = null;
+
+        // Custom UI states (No native browser controls)
+        this.playbackRate = 1.0;
+        this.currentVolume = 1.0;
+        this.isMuted = false;
+        this.timeOffset = 0.0; // Bù trừ độ lệch intro video (giây)
+
+        // Modal Search & Song Picker states
+        this.modalCandidates = [];
+        this.modalFilter = 'all';
+        this.modalSearchQuery = '';
 
         // Danh sách bài hát mẫu chất lượng cao sẵn sàng học tập ngay lập tức
         this.featuredSongs = this.initFeaturedSongs();
@@ -30,6 +43,9 @@ class LyricsHubApp {
         this.initYouTubeApi();
     }
 
+    // =========================================================================
+    // 0. KHỞI TẠO VÀ SỰ KIỆN GIAO DIỆN (LIFECYCLE & DOM EVENTS)
+    // =========================================================================
     initYouTubeApi() {
         if (window.YT && window.YT.Player) {
             this.isYtReady = true;
@@ -46,6 +62,9 @@ class LyricsHubApp {
     }
 
     init() {
+        // Expose global toast helper
+        window.showToast = (msg, type) => this.showToast(msg, type);
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.setup());
         } else {
@@ -72,9 +91,11 @@ class LyricsHubApp {
     }
 
     bindDomEvents() {
-        // Search Form
+        // 1. Search Form & Browse Button
         const form = document.getElementById('lyrics-search-form');
         const input = document.getElementById('lyrics-search-input');
+        const browseBtn = document.getElementById('btn-browse-songs');
+
         if (form && input) {
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -83,7 +104,13 @@ class LyricsHubApp {
             });
         }
 
-        // Language Filter Pills
+        if (browseBtn) {
+            browseBtn.addEventListener('click', () => {
+                this.openLibraryBrowser();
+            });
+        }
+
+        // 2. Language Filter Pills (Showcase Header)
         document.querySelectorAll('.lang-pill').forEach(pill => {
             pill.addEventListener('click', () => {
                 document.querySelectorAll('.lang-pill').forEach(p => p.classList.remove('active'));
@@ -93,10 +120,9 @@ class LyricsHubApp {
             });
         });
 
-        // Player Controls
+        // 3. Player Controls
         const playBtn = document.getElementById('btn-player-play');
         const progressBar = document.getElementById('playback-progress');
-        const speedSelect = document.getElementById('playback-speed');
         const toggleMediaBtn = document.getElementById('btn-toggle-media');
 
         if (playBtn) {
@@ -107,24 +133,38 @@ class LyricsHubApp {
             toggleMediaBtn.addEventListener('click', () => this.toggleMediaMode());
         }
 
-        // Audio Timeupdate
-        this.audioPlayer.addEventListener('timeupdate', () => {
-            this.currentTime = this.audioPlayer.currentTime;
-            this.updatePlayerProgress();
-            this.syncActiveSentence(this.currentTime);
+        // 4. Audio Engine Switcher (YouTube MV vs Studio Audio)
+        const engineYt = document.getElementById('btn-engine-yt');
+        const engineAudio = document.getElementById('btn-engine-audio');
 
-            // Kiểm tra Sentence Loop
-            if (this.loopSentenceIndex >= 0 && this.currentSong && this.currentSong.synced_lyrics) {
-                const currentLine = this.currentSong.synced_lyrics[this.loopSentenceIndex];
-                if (currentLine && this.currentTime >= (currentLine.endTime || (currentLine.startTime + 4))) {
-                    this.seekTo(currentLine.startTime);
-                }
+        if (engineYt) {
+            engineYt.addEventListener('click', () => this.switchAudioEngine('yt'));
+        }
+        if (engineAudio) {
+            engineAudio.addEventListener('click', () => this.switchAudioEngine('audio'));
+        }
+
+        // 5. Custom Glassmorphic Speed Dropdown
+        this.setupSpeedDropdown();
+
+        // 6. Custom Volume Control & Mute
+        this.setupVolumeControl();
+
+        // 7. Audio Timeupdate (Studio mode fallback)
+        this.audioPlayer.addEventListener('timeupdate', () => {
+            if (!this.useYouTube) {
+                this.currentTime = this.audioPlayer.currentTime;
+                this.updatePlayerProgress();
+                this.syncActiveSentence(this.currentTime);
+                this.checkSentenceLoop();
             }
         });
 
         this.audioPlayer.addEventListener('loadedmetadata', () => {
-            this.duration = this.audioPlayer.duration || 180;
-            this.updatePlayerProgress();
+            if (!this.useYouTube) {
+                this.duration = this.audioPlayer.duration || 180;
+                this.updatePlayerProgress();
+            }
         });
 
         this.audioPlayer.addEventListener('ended', () => {
@@ -132,6 +172,7 @@ class LyricsHubApp {
             this.updatePlayBtnUi();
         });
 
+        // 8. Progress Slider Drag
         if (progressBar) {
             progressBar.addEventListener('input', (e) => {
                 const time = parseFloat(e.target.value);
@@ -139,20 +180,31 @@ class LyricsHubApp {
             });
         }
 
-        if (speedSelect) {
-            speedSelect.addEventListener('change', (e) => {
-                this.audioPlayer.playbackRate = parseFloat(e.target.value) || 1.0;
-            });
-        }
+        // 9. Song Selection Modal Events
+        this.setupSongSelectModalEvents();
 
-        // Close Popover on Outside Click
+        // 10. Close Popovers & Menus on Outside Click
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.vocab-word-chip') && !e.target.closest('.vocab-popover-box')) {
                 this.hideAllPopovers();
             }
+            if (!e.target.closest('#custom-speed-dropdown')) {
+                const dd = document.getElementById('custom-speed-dropdown');
+                if (dd) dd.classList.remove('open');
+            }
         });
 
-        // Community Modal bindings
+        // 11. Escape Key Handler
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeSongSelectModal();
+                const contribModal = document.getElementById('contrib-modal');
+                if (contribModal) contribModal.classList.remove('active');
+                this.hideAllPopovers();
+            }
+        });
+
+        // 12. Community Modal bindings
         const contribBtn = document.getElementById('btn-open-contrib');
         const contribModal = document.getElementById('contrib-modal');
         const contribClose = document.getElementById('contrib-close');
@@ -197,30 +249,36 @@ class LyricsHubApp {
         if (titleEl) titleEl.textContent = song.title;
         if (artistEl) artistEl.textContent = song.artist;
         if (artImg) artImg.src = song.thumbnail || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=60';
-        
+
         const langMap = { en: 'Tiếng Anh', ko: 'Tiếng Hàn', ja: 'Tiếng Nhật', zh: 'Tiếng Trung' };
         if (langBadge) langBadge.textContent = langMap[song.lang] || 'Đa ngôn ngữ';
 
-        // Khởi động YouTube hoặc Fallback Audio
+        // Tải độ lệch pha đã lưu cho bài hát này (Time Offset)
+        this.loadOffsetForSong(song.id);
+
+        // Khởi động YouTube hoặc Studio Audio
         if (song.youtube_id) {
             this.useYouTube = true;
+            this.updateAudioEngineUi();
             if (this.isYtReady) {
                 this.initYouTubePlayer(song.youtube_id);
             }
         } else {
             this.useYouTube = false;
+            this.updateAudioEngineUi();
         }
 
-        // Tải audio fallback sạch (không dùng URL mixkit bị chặn 403)
+        // Tải audio fallback
         const safeAudio = song.audio_url || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
         this.audioPlayer.src = safeAudio;
         this.audioPlayer.load();
 
-        // Render Version Tabs
+        // Render Version Tabs & Lyrics
         this.renderVersionTabs();
-
-        // Render Lyrics
         this.renderLyrics();
+
+        // Reset nút Loop
+        this.updateLoopBtnUi();
     }
 
     initYouTubePlayer(youtubeId) {
@@ -249,6 +307,13 @@ class LyricsHubApp {
                     onReady: (event) => {
                         this.duration = event.target.getDuration() || 180;
                         this.updatePlayerProgress();
+                        // Áp dụng tốc độ và âm lượng hiện tại
+                        if (typeof event.target.setPlaybackRate === 'function') {
+                            event.target.setPlaybackRate(this.playbackRate);
+                        }
+                        if (typeof event.target.setVolume === 'function') {
+                            event.target.setVolume(this.isMuted ? 0 : this.currentVolume * 100);
+                        }
                     },
                     onStateChange: (event) => {
                         if (event.data === YT.PlayerState.PLAYING) {
@@ -293,6 +358,243 @@ class LyricsHubApp {
         }
     }
 
+    // =========================================================================
+    // 2. AUDIO ENGINE SWITCHER (YOUTUBE MV VS STUDIO/SPOTIFY AUDIO)
+    // =========================================================================
+    switchAudioEngine(engine) {
+        if (engine === 'yt') {
+            if (!this.currentSong || !this.currentSong.youtube_id) {
+                this.showToast('Bài hát này chưa có MV YouTube khả dụng.', 'warning');
+                return;
+            }
+            if (!this.useYouTube) {
+                const wasPlaying = this.isPlaying;
+                this.audioPlayer.pause();
+                this.useYouTube = true;
+                this.updateAudioEngineUi();
+                if (this.mediaMode !== 'video') this.toggleMediaMode();
+
+                if (wasPlaying && this.ytPlayer && typeof this.ytPlayer.playVideo === 'function') {
+                    this.ytPlayer.seekTo(Math.max(0, this.currentTime - this.timeOffset), true);
+                    this.ytPlayer.playVideo();
+                }
+                this.showToast('Đã chuyển sang chế độ MV YouTube', 'info');
+            }
+        } else {
+            // Chuyển sang Studio Audio
+            if (this.useYouTube) {
+                const wasPlaying = this.isPlaying;
+                if (this.ytPlayer && typeof this.ytPlayer.pauseVideo === 'function') {
+                    this.ytPlayer.pauseVideo();
+                }
+                this.useYouTube = false;
+                this.updateAudioEngineUi();
+
+                if (wasPlaying) {
+                    this.audioPlayer.currentTime = this.currentTime;
+                    this.audioPlayer.play().catch(e => console.warn(e));
+                }
+                this.showToast('Đã chuyển sang âm thanh Studio (Không có intro video)', 'info');
+            }
+        }
+    }
+
+    updateAudioEngineUi() {
+        const btnYt = document.getElementById('btn-engine-yt');
+        const btnAudio = document.getElementById('btn-engine-audio');
+
+        if (btnYt) {
+            btnYt.classList.toggle('active', this.useYouTube);
+        }
+        if (btnAudio) {
+            btnAudio.classList.toggle('active', !this.useYouTube);
+        }
+    }
+
+    // =========================================================================
+    // 3. TIME OFFSET SYNC CALIBRATOR (BÙ TRỪ LỆCH PHA LỜI VỚI INTRO VIDEO)
+    // =========================================================================
+    loadOffsetForSong(songId) {
+        if (!songId) {
+            this.timeOffset = 0.0;
+            this.updateOffsetUi();
+            return;
+        }
+
+        const saved = localStorage.getItem(`mhent_lyrics_offset_${songId}`);
+        if (saved !== null) {
+            this.timeOffset = parseFloat(saved) || 0.0;
+        } else {
+            this.timeOffset = 0.0;
+        }
+        this.updateOffsetUi();
+    }
+
+    adjustOffset(delta) {
+        this.timeOffset = Math.round((this.timeOffset + delta) * 10) / 10;
+        // Giới hạn trong khoảng hợp lý [-60s, +60s]
+        this.timeOffset = Math.max(-60, Math.min(60, this.timeOffset));
+
+        if (this.currentSong && this.currentSong.id) {
+            localStorage.setItem(`mhent_lyrics_offset_${this.currentSong.id}`, this.timeOffset.toString());
+        }
+
+        this.updateOffsetUi();
+        // Lập tức đồng bộ lại câu lời theo thời gian hiện tại có offset mới
+        this.syncActiveSentence(this.currentTime, true);
+
+        const sign = this.timeOffset > 0 ? '+' : '';
+        this.showToast(`Lệch pha lời: ${sign}${this.timeOffset.toFixed(1)}s`, 'info', 1200);
+    }
+
+    resetOffset() {
+        this.timeOffset = 0.0;
+        if (this.currentSong && this.currentSong.id) {
+            localStorage.removeItem(`mhent_lyrics_offset_${this.currentSong.id}`);
+        }
+        this.updateOffsetUi();
+        this.syncActiveSentence(this.currentTime, true);
+        this.showToast('Đã đặt lại độ lệch pha về 0.0s', 'info', 1200);
+    }
+
+    updateOffsetUi() {
+        const badge = document.getElementById('calibrator-val-badge');
+        if (!badge) return;
+
+        const sign = this.timeOffset > 0 ? '+' : '';
+        badge.textContent = `${sign}${this.timeOffset.toFixed(1)}s`;
+
+        if (this.timeOffset !== 0) {
+            badge.style.color = '#38bdf8';
+            badge.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+            badge.style.background = 'rgba(56, 189, 248, 0.15)';
+        } else {
+            badge.style.color = '#94a3b8';
+            badge.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            badge.style.background = 'rgba(255, 255, 255, 0.05)';
+        }
+    }
+
+    // =========================================================================
+    // 4. CUSTOM GLASSMORPHIC SPEED SELECTOR & VOLUME SLIDER
+    // =========================================================================
+    setupSpeedDropdown() {
+        const trigger = document.getElementById('btn-speed-trigger');
+        const dropdown = document.getElementById('custom-speed-dropdown');
+        const menu = document.getElementById('custom-speed-menu');
+
+        if (trigger && dropdown) {
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle('open');
+            });
+        }
+
+        if (menu) {
+            menu.querySelectorAll('.speed-opt').forEach(opt => {
+                opt.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const speed = parseFloat(opt.getAttribute('data-speed')) || 1.0;
+                    this.setPlaybackSpeed(speed);
+                    if (dropdown) dropdown.classList.remove('open');
+                });
+            });
+        }
+    }
+
+    setPlaybackSpeed(speed) {
+        this.playbackRate = speed;
+
+        // Áp dụng cho HTML5 Audio
+        this.audioPlayer.playbackRate = speed;
+
+        // Áp dụng cho YouTube Player
+        if (this.ytPlayer && typeof this.ytPlayer.setPlaybackRate === 'function') {
+            try {
+                this.ytPlayer.setPlaybackRate(speed);
+            } catch (e) {
+                console.warn('Set YouTube playback rate:', e);
+            }
+        }
+
+        // Cập nhật nhãn hiển thị trên trigger
+        const label = document.getElementById('speed-label-display');
+        if (label) label.textContent = `${speed}x`;
+
+        // Cập nhật trạng thái active trong menu
+        document.querySelectorAll('.speed-opt').forEach(opt => {
+            const optSpeed = parseFloat(opt.getAttribute('data-speed'));
+            opt.classList.toggle('active', optSpeed === speed);
+        });
+
+        this.showToast(`Tốc độ phát: ${speed}x`, 'info', 1200);
+    }
+
+    setupVolumeControl() {
+        const muteBtn = document.getElementById('btn-volume-mute');
+        const slider = document.getElementById('volume-slider');
+
+        if (slider) {
+            slider.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                this.setVolume(val);
+            });
+        }
+
+        if (muteBtn) {
+            muteBtn.addEventListener('click', () => {
+                if (this.isMuted) {
+                    this.setVolume(this.currentVolume > 0 ? this.currentVolume : 0.8);
+                } else {
+                    this.setVolume(0);
+                }
+            });
+        }
+    }
+
+    setVolume(val) {
+        val = Math.max(0, Math.min(1, val));
+        this.isMuted = (val === 0);
+        if (val > 0) this.currentVolume = val;
+
+        // HTML5 Audio
+        this.audioPlayer.volume = val;
+
+        // YouTube Player
+        if (this.ytPlayer && typeof this.ytPlayer.setVolume === 'function') {
+            try {
+                this.ytPlayer.setVolume(val * 100);
+                if (this.isMuted) {
+                    this.ytPlayer.mute();
+                } else {
+                    this.ytPlayer.unMute();
+                }
+            } catch (e) {}
+        }
+
+        // Slider UI
+        const slider = document.getElementById('volume-slider');
+        if (slider) slider.value = val;
+
+        // Mute button icon
+        const muteBtn = document.getElementById('btn-volume-mute');
+        if (muteBtn) {
+            if (val === 0) {
+                muteBtn.innerHTML = '<i class="fa-solid fa-volume-xmark" style="color: #ef4444;"></i>';
+                muteBtn.classList.add('muted');
+            } else if (val < 0.5) {
+                muteBtn.innerHTML = '<i class="fa-solid fa-volume-low"></i>';
+                muteBtn.classList.remove('muted');
+            } else {
+                muteBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
+                muteBtn.classList.remove('muted');
+            }
+        }
+    }
+
+    // =========================================================================
+    // 5. HIỂN THỊ LỜI BÀI HÁT & POPUP TỪ VỰNG TƯƠNG TÁC
+    // =========================================================================
     renderVersionTabs() {
         const container = document.getElementById('version-tabs-wrap');
         if (!container || !this.currentSong) return;
@@ -348,16 +650,14 @@ class LyricsHubApp {
         let html = '';
         lines.forEach((line, idx) => {
             const timeStr = this.formatSeconds(line.startTime || 0);
-            
-            // Xử lý làm nổi bật từ vựng có chú thích
             const enrichedText = this.highlightVocabInSentence(line.text, line.words || [], idx);
 
             html += `
-                <div class="lyrics-sentence-row" id="sentence-row-${idx}" onclick="window.lyricsApp.seekTo(${line.startTime || 0})">
+                <div class="lyrics-sentence-row" id="sentence-row-${idx}" onclick="window.lyricsApp.seekToSentence(${idx})">
                     <div class="sentence-meta-row">
                         <span class="sentence-time-badge">${timeStr}</span>
-                        <button class="sentence-loop-btn" onclick="event.stopPropagation(); window.lyricsApp.toggleSentenceLoop(${idx})" title="Luyện nghe / phát âm câu này">
-                            <i class="fa-solid fa-repeat"></i> ${this.loopSentenceIndex === idx ? 'Đang lặp' : 'Luyện câu'}
+                        <button class="sentence-loop-btn ${this.loopSentenceIndex === idx ? 'active' : ''}" onclick="event.stopPropagation(); window.lyricsApp.toggleSentenceLoop(${idx})" title="Luyện nghe / phát âm câu này">
+                            <i class="fa-solid fa-repeat"></i> ${this.loopSentenceIndex === idx ? 'Đang lặp câu' : 'Luyện câu'}
                         </button>
                     </div>
 
@@ -420,7 +720,6 @@ class LyricsHubApp {
         const isShown = el.classList.contains('show');
         this.hideAllPopovers();
         if (!isShown) {
-            // Kiểm tra nếu chip từ vựng ở gần mép trên của khung cuộn thì lật xuống dưới
             const chip = el.closest('.vocab-word-chip');
             const container = document.getElementById('lyrics-stream-container');
             if (chip && container) {
@@ -441,7 +740,7 @@ class LyricsHubApp {
     }
 
     // =========================================================================
-    // 2. ĐỒNG BỘ KARAOKE TỪNG CÂU & ĐIỀU KHIỂN PLAYBACK (YOUTUBE + AUDIO DUAL-ENGINE)
+    // 6. ĐỒNG BỘ KARAOKE TỪNG CÂU & PLAYBACK ENGINE
     // =========================================================================
     togglePlay() {
         if (this.isPlaying) {
@@ -466,6 +765,7 @@ class LyricsHubApp {
                     console.warn('[Audio Play Warning]:', e);
                     if (this.ytPlayer && typeof this.ytPlayer.playVideo === 'function') {
                         this.useYouTube = true;
+                        this.updateAudioEngineUi();
                         this.ytPlayer.playVideo();
                         this.isPlaying = true;
                         this.startPlaybackTracker();
@@ -492,17 +792,7 @@ class LyricsHubApp {
 
             this.updatePlayerProgress();
             this.syncActiveSentence(this.currentTime);
-
-            // Kiểm tra Sentence Loop
-            if (this.loopSentenceIndex >= 0 && this.currentSong && this.currentSong.synced_lyrics) {
-                const currentLine = this.currentSong.synced_lyrics[this.loopSentenceIndex];
-                if (currentLine) {
-                    const endTime = currentLine.endTime || (currentLine.startTime + 4.5);
-                    if (this.currentTime >= endTime) {
-                        this.seekTo(currentLine.startTime);
-                    }
-                }
-            }
+            this.checkSentenceLoop();
         }, 150);
     }
 
@@ -535,28 +825,93 @@ class LyricsHubApp {
         }
     }
 
+    seekToSentence(sentenceIdx) {
+        const lines = this.getActiveLyrics();
+        if (!lines || !lines[sentenceIdx]) return;
+
+        const line = lines[sentenceIdx];
+        const lyricsTime = line.startTime || 0;
+
+        // Bù trừ theo Time Offset khi nhảy tới thời điểm của player
+        const playerTime = Math.max(0, lyricsTime - this.timeOffset);
+        this.seekTo(playerTime);
+    }
+
+    getActiveLyrics() {
+        if (!this.currentSong) return [];
+        if (this.currentVersionIndex >= 0 && this.currentSong.community_versions) {
+            const comm = this.currentSong.community_versions[this.currentVersionIndex];
+            if (comm && comm.synced_lyrics) return comm.synced_lyrics;
+        }
+        return this.currentSong.synced_lyrics || [];
+    }
+
     toggleSentenceLoop(idx) {
         if (this.loopSentenceIndex === idx) {
             this.loopSentenceIndex = -1;
+            this.showToast('Đã tắt lặp câu', 'info', 1200);
         } else {
             this.loopSentenceIndex = idx;
-            const lines = this.currentSong.synced_lyrics || [];
-            if (lines[idx]) {
-                this.seekTo(lines[idx].startTime);
-            }
+            this.seekToSentence(idx);
+            this.showToast(`Đang lặp câu ${idx + 1}`, 'info', 1500);
         }
+        this.updateLoopBtnUi();
         this.renderLyrics();
     }
 
+    toggleCurrentSentenceLoop() {
+        if (this.loopSentenceIndex >= 0) {
+            this.toggleSentenceLoop(this.loopSentenceIndex);
+        } else if (this.activeSentenceIndex >= 0) {
+            this.toggleSentenceLoop(this.activeSentenceIndex);
+        } else {
+            this.toggleSentenceLoop(0);
+        }
+    }
+
+    updateLoopBtnUi() {
+        const btn = document.getElementById('btn-loop-global');
+        if (!btn) return;
+
+        if (this.loopSentenceIndex >= 0) {
+            btn.classList.add('active');
+            btn.style.color = '#10b981';
+            btn.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+            btn.style.background = 'rgba(16, 185, 129, 0.15)';
+        } else {
+            btn.classList.remove('active');
+            btn.style.color = '#94a3b8';
+            btn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            btn.style.background = 'rgba(255, 255, 255, 0.05)';
+        }
+    }
+
+    checkSentenceLoop() {
+        if (this.loopSentenceIndex < 0 || !this.currentSong) return;
+        const lines = this.getActiveLyrics();
+        const currentLine = lines[this.loopSentenceIndex];
+        if (!currentLine) return;
+
+        const effectiveTime = this.currentTime + this.timeOffset;
+        const endTime = currentLine.endTime || (currentLine.startTime + 4.5);
+
+        if (effectiveTime >= endTime) {
+            this.seekToSentence(this.loopSentenceIndex);
+        }
+    }
+
     syncActiveSentence(time, forceScroll = false) {
-        if (!this.currentSong || !this.currentSong.synced_lyrics) return;
-        const lines = this.currentSong.synced_lyrics;
+        const lines = this.getActiveLyrics();
+        if (!lines || lines.length === 0) return;
+
+        // Tính thời gian hiệu dụng sau khi bù trừ độ lệch intro video
+        const effectiveTime = time + this.timeOffset;
 
         let activeIdx = -1;
         for (let i = 0; i < lines.length; i++) {
             const start = lines[i].startTime || 0;
             const end = lines[i].endTime || (lines[i + 1] ? lines[i + 1].startTime : start + 6);
-            if (time >= start && time < end) {
+            if (effectiveTime >= start && effectiveTime < end) {
                 activeIdx = i;
                 break;
             }
@@ -565,11 +920,10 @@ class LyricsHubApp {
         if (activeIdx !== this.activeSentenceIndex || forceScroll) {
             this.activeSentenceIndex = activeIdx;
 
-            // Cập nhật active class
+            // Cập nhật class active và cuộn mượt (Apple Music style)
             document.querySelectorAll('.lyrics-sentence-row').forEach((row, i) => {
                 if (i === activeIdx) {
                     row.classList.add('active');
-                    // Tự động cuộn mượt vào giữa khung nhìn (Apple Music style)
                     row.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 } else {
                     row.classList.remove('active');
@@ -609,7 +963,6 @@ class LyricsHubApp {
     }
 
     saveVocabFromLyrics(word, meaning, phonetic, pos) {
-        // 🌟 Bật Popup chọn Sổ từ vựng / Bộ bài học mục tiêu
         if (window.deckSelector) {
             window.deckSelector.open({
                 word: word,
@@ -620,6 +973,7 @@ class LyricsHubApp {
                 lang: this.currentSong ? this.currentSong.lang : 'en',
                 onSave: (deck) => {
                     this.hideAllPopovers();
+                    this.showToast(`Đã lưu "${word}" vào ${deck.title}!`, 'success');
                 }
             });
             return;
@@ -661,15 +1015,11 @@ class LyricsHubApp {
         }
 
         this.hideAllPopovers();
-        if (typeof showToast === 'function') {
-            showToast(`Đã lưu "${word}" vào Sổ từ vựng!`, 'success');
-        } else {
-            alert(`Đã lưu từ vựng "${word}" vào sổ của bạn!`);
-        }
+        this.showToast(`Đã lưu từ vựng "${word}" vào sổ của bạn!`, 'success');
     }
 
     // =========================================================================
-    // 3. TÌM KIẾM BÀI HÁT TỰ ĐỘNG (SUPABASE -> LRCLIB -> AISA AI -> SUPABASE)
+    // 7. TÌM KIẾM BÀI HÁT & MODAL CHỌN BÀI HÁT (SELECTION MODAL)
     // =========================================================================
     async searchSong(query) {
         if (!query) return;
@@ -679,38 +1029,263 @@ class LyricsHubApp {
         if (searchBtn) searchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tìm...';
 
         try {
-            // Bước 1: Kiểm tra Supabase Cloud Database trước
-            if (window.studyCloud && typeof window.studyCloud.getSong === 'function') {
-                const songId = query.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-                const cloudSong = await window.studyCloud.getSong(songId);
-                if (cloudSong) {
-                    console.log('[Lyrics Hub] ⚡ Tìm thấy bài hát trong Supabase Cloud:', cloudSong.title);
-                    this.loadSong(cloudSong);
-                    if (searchBtn) searchBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm';
-                    return;
+            const candidates = [];
+
+            // 1. Kiểm tra trong danh sách Featured Songs cục bộ
+            const qLower = query.toLowerCase();
+            this.featuredSongs.forEach(s => {
+                if (s.title.toLowerCase().includes(qLower) || s.artist.toLowerCase().includes(qLower)) {
+                    candidates.push({
+                        type: 'featured',
+                        rawSong: s,
+                        trackName: s.title,
+                        artistName: s.artist,
+                        albumName: 'Tuyển chọn MHEnt',
+                        duration: s.duration,
+                        hasSynced: true,
+                        lang: s.lang
+                    });
+                }
+            });
+
+            // 2. Tìm kiếm trên LRCLIB API
+            const lrclibUrl = `https://lrclib.net/api/search?q=${encodeURIComponent(query)}`;
+            const res = await fetch(lrclibUrl);
+            if (res.ok) {
+                const results = await res.json();
+                if (Array.isArray(results)) {
+                    results.forEach(r => {
+                        // Tránh trùng lặp với featured
+                        const isDup = candidates.some(c => 
+                            c.trackName.toLowerCase() === r.trackName.toLowerCase() && 
+                            c.artistName.toLowerCase() === r.artistName.toLowerCase()
+                        );
+                        if (!isDup) {
+                            candidates.push({
+                                type: 'lrclib',
+                                lrclibData: r,
+                                trackName: r.trackName,
+                                artistName: r.artistName,
+                                albumName: r.albumName || 'Single / Album',
+                                duration: r.duration || 180,
+                                hasSynced: !!r.syncedLyrics,
+                                lang: this.detectLanguage(r.trackName + ' ' + (r.syncedLyrics || r.plainLyrics || ''))
+                            });
+                        }
+                    });
                 }
             }
 
-            // Bước 2: Tự động tìm kiếm lời bài hát có timestamps trên LRCLIB (Hoàn toàn CORS-friendly)
-            const lrclibUrl = `https://lrclib.net/api/search?q=${encodeURIComponent(query)}`;
-            const res = await fetch(lrclibUrl);
-            if (!res.ok) throw new Error('Không thể kết nối kho lời bài hát');
-
-            const results = await res.json();
-            if (!results || results.length === 0) {
-                alert(`Không tìm thấy bài hát "${query}". Hãy thử tìm kiếm bằng tên tiếng Anh/Hàn/Nhật chuẩn xác hơn!`);
-                if (searchBtn) searchBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm';
+            if (candidates.length === 0) {
+                this.showToast(`Không tìm thấy bài hát nào cho từ khóa "${query}". Hãy thử gõ tên chuẩn tiếng Anh/Hàn/Nhật!`, 'warning');
                 return;
             }
 
-            // Lấy kết quả đầu tiên có syncedLyrics
-            const bestHit = results.find(r => r.syncedLyrics) || results[0];
-            const parsedLyrics = this.parseLrc(bestHit.syncedLyrics || bestHit.plainLyrics || '');
+            // Mở Song Selection Modal để người dùng tự do lựa chọn phiên bản mong muốn
+            this.openSongSelectModal(candidates, `Kết quả tìm kiếm cho "${query}"`, `Tìm thấy ${candidates.length} kết quả phù hợp. Hãy chọn bài hát bạn muốn học:`);
 
-            // Nhận diện ngôn ngữ sơ bộ
-            const detectedLang = this.detectLanguage(bestHit.trackName + ' ' + (bestHit.syncedLyrics || ''));
+        } catch (err) {
+            console.error('[Lyrics Hub] Lỗi tìm kiếm:', err);
+            this.showToast(`Lỗi tìm kiếm: ${err.message}`, 'error');
+        } finally {
+            if (searchBtn) searchBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm';
+        }
+    }
 
-            // Bước 3: Gửi các câu cho AISA AI để bóc tách từ vựng & dịch tiếng Việt
+    openLibraryBrowser() {
+        const candidates = this.featuredSongs.map(s => ({
+            type: 'featured',
+            rawSong: s,
+            trackName: s.title,
+            artistName: s.artist,
+            albumName: 'Kho bài hát MHEnt',
+            duration: s.duration,
+            hasSynced: true,
+            lang: s.lang
+        }));
+
+        this.openSongSelectModal(candidates, 'Kho Bài Hát Ngoại Ngữ Tuyển Chọn', 'Lựa chọn bài hát yêu thích có sẵn lời karaoke đồng bộ và phân tích từ vựng chuyên sâu');
+    }
+
+    openSongSelectModal(candidates, title, subtitle) {
+        this.modalCandidates = candidates || [];
+        this.modalFilter = 'all';
+        this.modalSearchQuery = '';
+
+        const modal = document.getElementById('song-select-modal');
+        const titleEl = document.getElementById('song-select-modal-title');
+        const subEl = document.getElementById('song-select-modal-subtitle');
+        const searchInput = document.getElementById('song-select-search-input');
+
+        if (titleEl && title) titleEl.textContent = title;
+        if (subEl && subtitle) subEl.textContent = subtitle;
+        if (searchInput) searchInput.value = '';
+
+        // Reset filter pills
+        document.querySelectorAll('.song-modal-pill').forEach(p => {
+            p.classList.toggle('active', p.getAttribute('data-filter') === 'all');
+        });
+
+        this.renderSongSelectList();
+
+        if (modal) modal.classList.add('active');
+    }
+
+    closeSongSelectModal() {
+        const modal = document.getElementById('song-select-modal');
+        if (modal) modal.classList.remove('active');
+    }
+
+    setupSongSelectModalEvents() {
+        const closeBtn = document.getElementById('song-select-close');
+        const modal = document.getElementById('song-select-modal');
+        const searchInput = document.getElementById('song-select-search-input');
+        const pillsWrap = document.getElementById('song-select-pills');
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.closeSongSelectModal());
+        }
+
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) this.closeSongSelectModal();
+            });
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                this.modalSearchQuery = e.target.value.toLowerCase().trim();
+                this.renderSongSelectList();
+            });
+        }
+
+        if (pillsWrap) {
+            pillsWrap.querySelectorAll('.song-modal-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    pillsWrap.querySelectorAll('.song-modal-pill').forEach(p => p.classList.remove('active'));
+                    pill.classList.add('active');
+                    this.modalFilter = pill.getAttribute('data-filter') || 'all';
+                    this.renderSongSelectList();
+                });
+            });
+        }
+    }
+
+    renderSongSelectList() {
+        const listContainer = document.getElementById('song-select-list');
+        if (!listContainer) return;
+
+        let filtered = this.modalCandidates;
+
+        // Lọc theo text search
+        if (this.modalSearchQuery) {
+            filtered = filtered.filter(item => 
+                item.trackName.toLowerCase().includes(this.modalSearchQuery) ||
+                item.artistName.toLowerCase().includes(this.modalSearchQuery) ||
+                item.albumName.toLowerCase().includes(this.modalSearchQuery)
+            );
+        }
+
+        // Lọc theo filter pills
+        if (this.modalFilter === 'synced') {
+            filtered = filtered.filter(item => item.hasSynced);
+        } else if (this.modalFilter !== 'all') {
+            filtered = filtered.filter(item => item.lang === this.modalFilter);
+        }
+
+        if (filtered.length === 0) {
+            listContainer.innerHTML = `
+                <div style="text-align: center; color: #94a3b8; padding: 40px;">
+                    <i class="fa-solid fa-compact-disc fa-spin" style="font-size: 2rem; margin-bottom: 12px; opacity: 0.5;"></i>
+                    <p>Không có bài hát nào khớp với bộ lọc hiện tại.</p>
+                </div>
+            `;
+            return;
+        }
+
+        const langMap = { en: '🇬🇧 EN', ko: '🇰🇷 KO', ja: '🇯🇵 JA', zh: '🇨🇳 ZH' };
+
+        listContainer.innerHTML = filtered.map((item, idx) => {
+            const durationStr = this.formatSeconds(item.duration);
+            const isFeatured = item.type === 'featured';
+
+            return `
+                <div class="song-select-item" onclick="window.lyricsApp.selectCandidateByIndex(${idx})">
+                    <div class="song-item-cover-wrap">
+                        <i class="fa-solid fa-music song-item-cover-icon"></i>
+                        <span class="song-item-lang-pill">${langMap[item.lang] || '🌐 ALL'}</span>
+                    </div>
+
+                    <div class="song-item-info">
+                        <div class="song-item-title-row">
+                            <span class="song-item-title">${this.escapeHtml(item.trackName)}</span>
+                            ${isFeatured ? '<span class="badge-featured"><i class="fa-solid fa-star"></i> Tuyển chọn</span>' : ''}
+                        </div>
+                        <div class="song-item-artist">
+                            <i class="fa-solid fa-microphone"></i> ${this.escapeHtml(item.artistName)}
+                        </div>
+                        <div class="song-item-meta">
+                            <span><i class="fa-solid fa-record-vinyl"></i> ${this.escapeHtml(item.albumName)}</span>
+                            <span><i class="fa-solid fa-clock"></i> ${durationStr}</span>
+                        </div>
+                    </div>
+
+                    <div class="song-item-action">
+                        ${item.hasSynced ? 
+                            '<span class="badge-karaoke"><i class="fa-solid fa-bolt"></i> Có Karaoke</span>' : 
+                            '<span class="badge-plain"><i class="fa-solid fa-align-left"></i> Lời thường</span>'}
+                        <button type="button" class="btn-item-pick">
+                            <i class="fa-solid fa-play"></i> Học ngay
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    async selectCandidateByIndex(idx) {
+        // Lấy danh sách đang lọc
+        let filtered = this.modalCandidates;
+        if (this.modalSearchQuery) {
+            filtered = filtered.filter(item => 
+                item.trackName.toLowerCase().includes(this.modalSearchQuery) ||
+                item.artistName.toLowerCase().includes(this.modalSearchQuery) ||
+                item.albumName.toLowerCase().includes(this.modalSearchQuery)
+            );
+        }
+        if (this.modalFilter === 'synced') {
+            filtered = filtered.filter(item => item.hasSynced);
+        } else if (this.modalFilter !== 'all') {
+            filtered = filtered.filter(item => item.lang === this.modalFilter);
+        }
+
+        const candidate = filtered[idx];
+        if (!candidate) return;
+
+        this.closeSongSelectModal();
+
+        if (candidate.type === 'featured' && candidate.rawSong) {
+            this.loadSong(candidate.rawSong);
+            this.showToast(`Đang tải bài hát: ${candidate.trackName}`, 'success');
+            return;
+        }
+
+        // Xử lý bài hát từ LRCLIB
+        const item = candidate.lrclibData;
+        if (!item) return;
+
+        this.showToast(`Đang bóc tách lời bài hát & phân tích từ vựng: ${item.trackName}...`, 'info', 3000);
+
+        try {
+            const parsedLyrics = this.parseLrc(item.syncedLyrics || item.plainLyrics || '');
+            const detectedLang = candidate.lang || this.detectLanguage(item.trackName + ' ' + (item.syncedLyrics || ''));
+
+            // Phân tích từ vựng nâng cao qua AISA AI
             const endpoint = (window.MHENT_CONFIG && window.MHENT_CONFIG.AISA_API_ENDPOINT) || 'https://api.mhentuniverse.com';
             let enrichedLyrics = parsedLyrics;
 
@@ -719,10 +1294,10 @@ class LyricsHubApp {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        lines: parsedLyrics.slice(0, 40), // Phân tích 40 câu đầu tiên tiêu biểu
+                        lines: parsedLyrics.slice(0, 40),
                         lang: detectedLang,
-                        title: bestHit.trackName,
-                        artist: bestHit.artistName
+                        title: item.trackName,
+                        artist: item.artistName
                     })
                 });
 
@@ -733,37 +1308,34 @@ class LyricsHubApp {
                     }
                 }
             } catch (aiErr) {
-                console.warn('[Lyrics Hub] AISA AI phân tích nâng cao lỗi (sử dụng bản gốc):', aiErr);
+                console.warn('[Lyrics Hub] AISA AI bóc tách từ vựng ngầm lỗi (dùng bản gốc):', aiErr);
             }
 
-            // Tạo đối tượng bài hát chuẩn hóa
             const newSong = {
-                id: (bestHit.trackName + '-' + bestHit.artistName).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-                title: bestHit.trackName,
-                artist: bestHit.artistName,
+                id: (item.trackName + '-' + item.artistName).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+                title: item.trackName,
+                artist: item.artistName,
                 lang: detectedLang,
                 thumbnail: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=60',
-                duration: bestHit.duration || 180,
+                duration: item.duration || 180,
                 synced_lyrics: enrichedLyrics,
-                plain_lyrics: bestHit.plainLyrics || '',
+                plain_lyrics: item.plainLyrics || '',
                 views: 1,
                 created_by: 'AISA AI Autosearch',
                 community_versions: []
             };
 
-            // Bước 4: Lưu vào Supabase Cloud để bài hát tồn tại vĩnh viễn cho tất cả người dùng
+            // Lưu vào Supabase Cloud để đồng bộ cho toàn bộ học viên
             if (window.studyCloud && typeof window.studyCloud.saveSong === 'function') {
                 window.studyCloud.saveSong(newSong).catch(e => console.warn('Lưu Supabase ngầm:', e));
             }
 
-            // Tải bài hát vào giao diện
             this.loadSong(newSong);
+            this.showToast(`Sẵn sàng học bài hát: ${newSong.title}!`, 'success');
 
         } catch (err) {
-            console.error('[Lyrics Hub] Lỗi tìm kiếm:', err);
-            alert(`Lỗi tìm kiếm: ${err.message}`);
-        } finally {
-            if (searchBtn) searchBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm';
+            console.error('[Lyrics Hub] Lỗi nạp bài hát đã chọn:', err);
+            this.showToast(`Không thể nạp bài hát: ${err.message}`, 'error');
         }
     }
 
@@ -816,7 +1388,7 @@ class LyricsHubApp {
     }
 
     // =========================================================================
-    // 4. ĐÓNG GÓP BẢN DỊCH CỘNG ĐỒNG (COMMUNITY CONTRIBUTIONS)
+    // 8. ĐÓNG GÓP BẢN DỊCH CỘNG ĐỒNG (COMMUNITY CONTRIBUTIONS)
     // =========================================================================
     async submitCommunityVersion() {
         if (!this.currentSong) return;
@@ -825,7 +1397,6 @@ class LyricsHubApp {
         const versionTitle = (document.getElementById('contrib-title').value || 'Bản dịch mới').trim();
         const note = (document.getElementById('contrib-note').value || '').trim();
 
-        // Tạo bản copy lời bài hát có thể tinh chỉnh
         const baseLyrics = JSON.parse(JSON.stringify(this.currentSong.synced_lyrics || []));
 
         const versionData = {
@@ -845,21 +1416,46 @@ class LyricsHubApp {
         if (!this.currentSong.community_versions) this.currentSong.community_versions = [];
         this.currentSong.community_versions.push(versionData);
 
-        // Đóng modal & chọn phiên bản vừa tạo
         const modal = document.getElementById('contrib-modal');
         if (modal) modal.classList.remove('active');
 
         this.switchVersion(this.currentSong.community_versions.length - 1);
-
-        if (typeof showToast === 'function') {
-            showToast('Đã lưu đóng góp bản dịch của bạn lên Supabase Cloud!', 'success');
-        } else {
-            alert('Đã thêm đóng góp bản dịch thành công!');
-        }
+        this.showToast('Đã lưu đóng góp bản dịch của bạn lên Supabase Cloud!', 'success');
     }
 
     // =========================================================================
-    // 5. DANH SÁCH BÀI HÁT MẪU ĐƯỢC TUYỂN CHỌN (SHOWCASE)
+    // 9. TOAST NOTIFICATIONS HỆ THỐNG (NO BROWSER ALERT)
+    // =========================================================================
+    showToast(message, type = 'info', duration = 3000) {
+        const container = document.getElementById('study-toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `study-toast ${type}`;
+
+        const iconMap = {
+            success: 'fa-circle-check',
+            error: 'fa-circle-exclamation',
+            warning: 'fa-triangle-exclamation',
+            info: 'fa-circle-info'
+        };
+        const iconClass = iconMap[type] || 'fa-circle-info';
+
+        toast.innerHTML = `
+            <i class="fa-solid ${iconClass}"></i>
+            <span class="study-toast-msg">${message}</span>
+        `;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('hide');
+            setTimeout(() => toast.remove(), 400);
+        }, duration);
+    }
+
+    // =========================================================================
+    // 10. DANH SÁCH BÀI HÁT MẪU ĐƯỢC TUYỂN CHỌN (SHOWCASE)
     // =========================================================================
     initFeaturedSongs() {
         return [
@@ -871,6 +1467,7 @@ class LyricsHubApp {
                 youtube_id: 'GxldQ9eX2wo',
                 thumbnail: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=60',
                 audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                duration: 176,
                 synced_lyrics: [
                     {
                         id: 1, startTime: 10.3, endTime: 17.4,
@@ -973,6 +1570,7 @@ class LyricsHubApp {
                 youtube_id: 'xEeFrLSkMm8',
                 thumbnail: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&auto=format&fit=crop&q=60',
                 audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                duration: 274,
                 synced_lyrics: [
                     {
                         id: 1, startTime: 12.0, endTime: 18.0,
@@ -1023,6 +1621,7 @@ class LyricsHubApp {
                 youtube_id: 'SX_ViT4Ra7k',
                 thumbnail: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&q=60',
                 audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                duration: 255,
                 synced_lyrics: [
                     {
                         id: 1, startTime: 14.0, endTime: 22.0,
@@ -1071,6 +1670,7 @@ class LyricsHubApp {
                 youtube_id: 'Z8Mqw0b9ADs',
                 thumbnail: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=60',
                 audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                duration: 239,
                 synced_lyrics: [
                     {
                         id: 1, startTime: 12.0, endTime: 18.0,
