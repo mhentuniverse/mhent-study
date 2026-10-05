@@ -724,45 +724,103 @@ class LyricsHubApp {
     }
 
     highlightVocabInSentence(sentence, words, sentenceIdx) {
-        if (!words || words.length === 0) return sentence;
+        if (!sentence) return '';
+        if (!words || !Array.isArray(words) || words.length === 0) {
+            return this.escapeHtml(sentence);
+        }
 
-        let result = sentence;
-        words.forEach((w, wIdx) => {
-            if (!w.word) return;
-            const regex = new RegExp(`(${this.escapeRegExp(w.word)})`, 'gi');
-            const popoverId = `popover-${sentenceIdx}-${wIdx}`;
+        // 1. Lọc từ hợp lệ và sắp xếp theo độ dài GIẢM DẦN để ưu tiên cụm từ dài trước
+        const validWords = words
+            .map((w, origIdx) => ({ ...w, origIdx }))
+            .filter(w => w && w.word && typeof w.word === 'string' && w.word.trim().length > 0)
+            .sort((a, b) => b.word.length - a.word.length);
 
-            const safeWord = (w.word || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            const safeMeaning = (w.meaning || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            const safePhonetic = (w.phonetic || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            const safePos = (w.pos || 'noun').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        if (validWords.length === 0) return this.escapeHtml(sentence);
 
-            const wordSpan = `
-                <span class="vocab-word-chip" onclick="event.stopPropagation(); window.lyricsApp.togglePopover('${popoverId}')">
-                    $1
-                    <div class="vocab-popover-box" id="${popoverId}" onclick="event.stopPropagation()">
-                        <div class="popover-header">
-                            <span class="popover-word">${this.escapeHtml(w.word)}</span>
-                            <span class="popover-pos">${this.escapeHtml(w.pos || 'Từ vựng')}</span>
-                        </div>
-                        ${w.phonetic ? `<div class="popover-phonetic">${this.escapeHtml(w.phonetic)}</div>` : ''}
-                        <div class="popover-meaning">${this.escapeHtml(w.meaning || '')}</div>
-                        <div class="popover-actions">
-                            <button class="popover-btn-speak" onclick="window.lyricsApp.speak('${safeWord}', '${this.currentSong ? this.currentSong.lang : 'en'}')" title="Phát âm">
-                                <i class="fa-solid fa-volume-high"></i>
-                            </button>
-                            <button class="popover-btn-save" onclick="window.lyricsApp.saveVocabFromLyrics('${safeWord}', '${safeMeaning}', '${safePhonetic}', '${safePos}')">
-                                <i class="fa-solid fa-bookmark"></i> Lưu vào Sổ
-                            </button>
-                        </div>
-                    </div>
-                </span>
-            `;
+        // 2. Định vị các khoảng ký tự không trùng lặp trên câu gốc (tránh triệt để việc regex replace đè vào HTML tag / attribute)
+        const len = sentence.length;
+        const occupied = new Uint8Array(len);
+        const matches = [];
+        const lowerSentence = sentence.toLowerCase();
 
-            result = result.replace(regex, wordSpan);
-        });
+        for (const item of validWords) {
+            const wLower = item.word.toLowerCase();
+            let searchStart = 0;
 
-        return result;
+            while (searchStart < len) {
+                const matchPos = lowerSentence.indexOf(wLower, searchStart);
+                if (matchPos === -1) break;
+
+                const matchEnd = matchPos + wLower.length;
+
+                // Kiểm tra xem vị trí này đã bị từ khóa dài hơn chiếm chưa
+                let canOccupy = true;
+                for (let i = matchPos; i < matchEnd; i++) {
+                    if (occupied[i]) {
+                        canOccupy = false;
+                        break;
+                    }
+                }
+
+                if (canOccupy) {
+                    for (let i = matchPos; i < matchEnd; i++) {
+                        occupied[i] = 1;
+                    }
+                    matches.push({
+                        start: matchPos,
+                        end: matchEnd,
+                        origText: sentence.substring(matchPos, matchEnd),
+                        wordObj: item,
+                        origIdx: item.origIdx
+                    });
+                }
+
+                searchStart = matchPos + 1;
+            }
+        }
+
+        // 3. Sắp xếp các token tìm thấy theo thứ tự xuất hiện từ trái qua phải
+        matches.sort((a, b) => a.start - b.start);
+
+        // 4. Lắp ráp HTML: Đan xen phần text nguyên bản (escapeHtml) và thẻ chip từ vựng
+        let html = '';
+        let lastIdx = 0;
+
+        for (const m of matches) {
+            if (m.start > lastIdx) {
+                html += this.escapeHtml(sentence.substring(lastIdx, m.start));
+            }
+
+            const popoverId = `popover-${sentenceIdx}-${m.origIdx}`;
+            const w = m.wordObj;
+
+            html += `<span class="vocab-word-chip" onclick="event.stopPropagation(); window.lyricsApp.togglePopover('${popoverId}')">${this.escapeHtml(m.origText)}<div class="vocab-popover-box" id="${popoverId}" onclick="event.stopPropagation()"><div class="popover-header"><span class="popover-word">${this.escapeHtml(w.word)}</span><span class="popover-pos">${this.escapeHtml(w.pos || 'Từ vựng')}</span></div>${w.phonetic ? `<div class="popover-phonetic">${this.escapeHtml(w.phonetic)}</div>` : ''}<div class="popover-meaning">${this.escapeHtml(w.meaning || '')}</div><div class="popover-actions"><button type="button" class="popover-btn-speak" onclick="window.lyricsApp.handlePopoverSpeak(${sentenceIdx}, ${m.origIdx})" title="Phát âm"><i class="fa-solid fa-volume-high"></i></button><button type="button" class="popover-btn-save" onclick="window.lyricsApp.handlePopoverSave(${sentenceIdx}, ${m.origIdx})"><i class="fa-solid fa-bookmark"></i> Lưu vào Sổ</button></div></div></span>`;
+
+            lastIdx = m.end;
+        }
+
+        if (lastIdx < len) {
+            html += this.escapeHtml(sentence.substring(lastIdx));
+        }
+
+        return html;
+    }
+
+    handlePopoverSpeak(sentenceIdx, wordIdx) {
+        const lines = this.getActiveLyrics();
+        const line = lines[sentenceIdx];
+        if (!line || !line.words || !line.words[wordIdx]) return;
+        const w = line.words[wordIdx];
+        const lang = this.currentSong ? this.currentSong.lang : 'ja';
+        this.speak(w.word, lang);
+    }
+
+    handlePopoverSave(sentenceIdx, wordIdx) {
+        const lines = this.getActiveLyrics();
+        const line = lines[sentenceIdx];
+        if (!line || !line.words || !line.words[wordIdx]) return;
+        const w = line.words[wordIdx];
+        this.saveVocabFromLyrics(w.word, w.meaning, w.phonetic, w.pos);
     }
 
     escapeRegExp(string) {
@@ -780,10 +838,38 @@ class LyricsHubApp {
             if (chip && container) {
                 const chipRect = chip.getBoundingClientRect();
                 const containerRect = container.getBoundingClientRect();
-                if (chipRect.top - containerRect.top < 180) {
+
+                // 1. Tự lật xuống dưới nếu quá gần mép trên của khung cuộn
+                if (chipRect.top - containerRect.top < 190) {
                     el.classList.add('popover-down');
                 } else {
                     el.classList.remove('popover-down');
+                }
+
+                // 2. Chống tràn/cắt xén 2 bên mép khung nhìn:
+                // Đo khoảng cách tâm chip tới 2 mép khung chứa
+                const chipCenter = chipRect.left + chipRect.width / 2;
+                const distFromLeft = chipCenter - containerRect.left;
+                const distFromRight = containerRect.right - chipCenter;
+
+                if (distFromLeft < 155) {
+                    // Quá sát lề trái -> Căn lề trái popover theo chip thay vì translateX(-50%)
+                    el.style.left = '0';
+                    el.style.right = 'auto';
+                    el.style.transform = 'none';
+                    el.setAttribute('data-align', 'left');
+                } else if (distFromRight < 155) {
+                    // Quá sát lề phải -> Căn lề phải popover theo chip
+                    el.style.left = 'auto';
+                    el.style.right = '0';
+                    el.style.transform = 'none';
+                    el.setAttribute('data-align', 'right');
+                } else {
+                    // Căn giữa chuẩn
+                    el.style.left = '50%';
+                    el.style.right = 'auto';
+                    el.style.transform = 'translateX(-50%)';
+                    el.removeAttribute('data-align');
                 }
             }
             el.classList.add('show');
@@ -791,7 +877,13 @@ class LyricsHubApp {
     }
 
     hideAllPopovers() {
-        document.querySelectorAll('.vocab-popover-box').forEach(el => el.classList.remove('show'));
+        document.querySelectorAll('.vocab-popover-box').forEach(el => {
+            el.classList.remove('show');
+            el.removeAttribute('data-align');
+            el.style.left = '';
+            el.style.right = '';
+            el.style.transform = '';
+        });
     }
 
     saveVocabFromLyrics(word, meaning, phonetic, pos) {
