@@ -37,9 +37,11 @@
     <script src="/js/config.js"></script>
     <!-- Supabase JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- YouTube IFrame API CDN for Video/Audio Playback -->
+    <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 
-<body class="theme-edu">
+<body class="theme-edu lyrics-theme dark-mode">
 
     <!-- NAVIGATION BAR -->
     <nav class="study-nav">
@@ -122,8 +124,14 @@
 
             <!-- LEFT: Track Art & Audio Player Controls -->
             <div class="lyrics-player-card">
-                <div class="track-art-wrap">
-                    <img id="track-art-img" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=60" alt="Track Art" class="track-art-img">
+                <div class="track-media-container" id="track-media-container">
+                    <div class="track-art-wrap" id="track-art-wrap">
+                        <img id="track-art-img" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=60" alt="Track Art" class="track-art-img">
+                    </div>
+                    <div id="youtube-player-frame" class="youtube-player-frame" style="display: none;"></div>
+                    <button type="button" id="btn-toggle-media" class="btn-toggle-media-mode" title="Chuyển đổi Xem MV YouTube / Xem Ảnh Bìa">
+                        <i class="fa-brands fa-youtube"></i> <span>Xem MV</span>
+                    </button>
                 </div>
 
                 <div class="track-info-box">

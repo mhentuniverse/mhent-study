@@ -16,10 +16,33 @@ class LyricsHubApp {
         this.duration = 0;
         this.activeLang = 'all';
 
+        // Media display & YouTube Engine
+        this.mediaMode = 'video'; // Default to video so user can see MV immediately
+        this.ytPlayer = null;
+        this.isYtReady = false;
+        this.useYouTube = true;
+        this.syncTimer = null;
+
         // Danh sách bài hát mẫu chất lượng cao sẵn sàng học tập ngay lập tức
         this.featuredSongs = this.initFeaturedSongs();
 
         this.init();
+        this.initYouTubeApi();
+    }
+
+    initYouTubeApi() {
+        if (window.YT && window.YT.Player) {
+            this.isYtReady = true;
+        } else {
+            const oldReady = window.onYouTubeIframeAPIReady;
+            window.onYouTubeIframeAPIReady = () => {
+                if (typeof oldReady === 'function') oldReady();
+                this.isYtReady = true;
+                if (this.currentSong && this.currentSong.youtube_id) {
+                    this.initYouTubePlayer(this.currentSong.youtube_id);
+                }
+            };
+        }
     }
 
     init() {
@@ -74,9 +97,14 @@ class LyricsHubApp {
         const playBtn = document.getElementById('btn-player-play');
         const progressBar = document.getElementById('playback-progress');
         const speedSelect = document.getElementById('playback-speed');
+        const toggleMediaBtn = document.getElementById('btn-toggle-media');
 
         if (playBtn) {
             playBtn.addEventListener('click', () => this.togglePlay());
+        }
+
+        if (toggleMediaBtn) {
+            toggleMediaBtn.addEventListener('click', () => this.toggleMediaMode());
         }
 
         // Audio Timeupdate
@@ -173,21 +201,96 @@ class LyricsHubApp {
         const langMap = { en: 'Tiếng Anh', ko: 'Tiếng Hàn', ja: 'Tiếng Nhật', zh: 'Tiếng Trung' };
         if (langBadge) langBadge.textContent = langMap[song.lang] || 'Đa ngôn ngữ';
 
-        // Tải audio nếu có
-        if (song.audio_url) {
-            this.audioPlayer.src = song.audio_url;
-            this.audioPlayer.load();
+        // Khởi động YouTube hoặc Fallback Audio
+        if (song.youtube_id) {
+            this.useYouTube = true;
+            if (this.isYtReady) {
+                this.initYouTubePlayer(song.youtube_id);
+            }
         } else {
-            // Sử dụng audio demo hoặc synth
-            this.audioPlayer.src = 'https://assets.mixkit.co/music/preview/mixkit-serene-view-443.mp3';
-            this.audioPlayer.load();
+            this.useYouTube = false;
         }
+
+        // Tải audio fallback sạch (không dùng URL mixkit bị chặn 403)
+        const safeAudio = song.audio_url || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+        this.audioPlayer.src = safeAudio;
+        this.audioPlayer.load();
 
         // Render Version Tabs
         this.renderVersionTabs();
 
         // Render Lyrics
         this.renderLyrics();
+    }
+
+    initYouTubePlayer(youtubeId) {
+        if (!window.YT || !window.YT.Player) return;
+        const frameContainer = document.getElementById('youtube-player-frame');
+        if (!frameContainer) return;
+
+        if (this.ytPlayer && typeof this.ytPlayer.loadVideoById === 'function') {
+            this.ytPlayer.cueVideoById(youtubeId);
+            return;
+        }
+
+        try {
+            this.ytPlayer = new YT.Player('youtube-player-frame', {
+                height: '100%',
+                width: '100%',
+                videoId: youtubeId,
+                playerVars: {
+                    autoplay: 0,
+                    controls: 1,
+                    modestbranding: 1,
+                    rel: 0,
+                    playsinline: 1
+                },
+                events: {
+                    onReady: (event) => {
+                        this.duration = event.target.getDuration() || 180;
+                        this.updatePlayerProgress();
+                    },
+                    onStateChange: (event) => {
+                        if (event.data === YT.PlayerState.PLAYING) {
+                            this.isPlaying = true;
+                            this.updatePlayBtnUi();
+                            this.startPlaybackTracker();
+                        } else if (event.data === YT.PlayerState.PAUSED) {
+                            this.isPlaying = false;
+                            this.updatePlayBtnUi();
+                            this.stopPlaybackTracker();
+                        } else if (event.data === YT.PlayerState.ENDED) {
+                            this.isPlaying = false;
+                            this.updatePlayBtnUi();
+                            this.stopPlaybackTracker();
+                        }
+                    }
+                }
+            });
+        } catch (err) {
+            console.warn('[YouTube Player Init Error]:', err);
+        }
+    }
+
+    toggleMediaMode() {
+        const artWrap = document.getElementById('track-art-wrap');
+        const ytFrame = document.getElementById('youtube-player-frame');
+        const btn = document.getElementById('btn-toggle-media');
+
+        if (this.mediaMode === 'video') {
+            this.mediaMode = 'art';
+            if (artWrap) artWrap.style.display = 'flex';
+            if (ytFrame) ytFrame.style.display = 'none';
+            if (btn) btn.innerHTML = '<i class="fa-brands fa-youtube"></i> <span>Xem MV</span>';
+        } else {
+            this.mediaMode = 'video';
+            if (artWrap) artWrap.style.display = 'none';
+            if (ytFrame) ytFrame.style.display = 'block';
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-image"></i> <span>Xem Bìa</span>';
+            if (this.currentSong && this.currentSong.youtube_id && !this.ytPlayer && this.isYtReady) {
+                this.initYouTubePlayer(this.currentSong.youtube_id);
+            }
+        }
     }
 
     renderVersionTabs() {
@@ -317,6 +420,18 @@ class LyricsHubApp {
         const isShown = el.classList.contains('show');
         this.hideAllPopovers();
         if (!isShown) {
+            // Kiểm tra nếu chip từ vựng ở gần mép trên của khung cuộn thì lật xuống dưới
+            const chip = el.closest('.vocab-word-chip');
+            const container = document.getElementById('lyrics-stream-container');
+            if (chip && container) {
+                const chipRect = chip.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                if (chipRect.top - containerRect.top < 180) {
+                    el.classList.add('popover-down');
+                } else {
+                    el.classList.remove('popover-down');
+                }
+            }
             el.classList.add('show');
         }
     }
@@ -326,19 +441,76 @@ class LyricsHubApp {
     }
 
     // =========================================================================
-    // 2. ĐỒNG BỘ KARAOKE TỪNG CÂU & ĐIỀU KHIỂN PLAYBACK
+    // 2. ĐỒNG BỘ KARAOKE TỪNG CÂU & ĐIỀU KHIỂN PLAYBACK (YOUTUBE + AUDIO DUAL-ENGINE)
     // =========================================================================
     togglePlay() {
         if (this.isPlaying) {
-            this.audioPlayer.pause();
+            if (this.useYouTube && this.ytPlayer && typeof this.ytPlayer.pauseVideo === 'function') {
+                this.ytPlayer.pauseVideo();
+            } else {
+                this.audioPlayer.pause();
+            }
             this.isPlaying = false;
+            this.stopPlaybackTracker();
         } else {
-            this.audioPlayer.play().catch(e => {
-                console.warn('[Audio Play Warning]:', e);
-            });
-            this.isPlaying = true;
+            if (this.useYouTube && this.ytPlayer && typeof this.ytPlayer.playVideo === 'function') {
+                this.ytPlayer.playVideo();
+                this.isPlaying = true;
+                this.startPlaybackTracker();
+            } else {
+                this.audioPlayer.play().then(() => {
+                    this.isPlaying = true;
+                    this.startPlaybackTracker();
+                    this.updatePlayBtnUi();
+                }).catch(e => {
+                    console.warn('[Audio Play Warning]:', e);
+                    if (this.ytPlayer && typeof this.ytPlayer.playVideo === 'function') {
+                        this.useYouTube = true;
+                        this.ytPlayer.playVideo();
+                        this.isPlaying = true;
+                        this.startPlaybackTracker();
+                    }
+                });
+            }
         }
         this.updatePlayBtnUi();
+    }
+
+    startPlaybackTracker() {
+        this.stopPlaybackTracker();
+        this.syncTimer = setInterval(() => {
+            if (this.useYouTube && this.ytPlayer && typeof this.ytPlayer.getCurrentTime === 'function') {
+                try {
+                    this.currentTime = this.ytPlayer.getCurrentTime() || 0;
+                    const dur = this.ytPlayer.getDuration();
+                    if (dur && dur > 0) this.duration = dur;
+                } catch (e) {}
+            } else {
+                this.currentTime = this.audioPlayer.currentTime || 0;
+                if (this.audioPlayer.duration) this.duration = this.audioPlayer.duration;
+            }
+
+            this.updatePlayerProgress();
+            this.syncActiveSentence(this.currentTime);
+
+            // Kiểm tra Sentence Loop
+            if (this.loopSentenceIndex >= 0 && this.currentSong && this.currentSong.synced_lyrics) {
+                const currentLine = this.currentSong.synced_lyrics[this.loopSentenceIndex];
+                if (currentLine) {
+                    const endTime = currentLine.endTime || (currentLine.startTime + 4.5);
+                    if (this.currentTime >= endTime) {
+                        this.seekTo(currentLine.startTime);
+                    }
+                }
+            }
+        }, 150);
+    }
+
+    stopPlaybackTracker() {
+        if (this.syncTimer) {
+            clearInterval(this.syncTimer);
+            this.syncTimer = null;
+        }
     }
 
     updatePlayBtnUi() {
@@ -349,8 +521,12 @@ class LyricsHubApp {
     }
 
     seekTo(seconds) {
-        this.audioPlayer.currentTime = seconds;
         this.currentTime = seconds;
+        if (this.useYouTube && this.ytPlayer && typeof this.ytPlayer.seekTo === 'function') {
+            this.ytPlayer.seekTo(seconds, true);
+        } else {
+            this.audioPlayer.currentTime = seconds;
+        }
         this.updatePlayerProgress();
         this.syncActiveSentence(seconds, true);
 
@@ -692,8 +868,9 @@ class LyricsHubApp {
                 title: 'Until I Found You',
                 artist: 'Stephen Sanchez',
                 lang: 'en',
+                youtube_id: 'GxldQ9eX2wo',
                 thumbnail: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=60',
-                audio_url: 'https://assets.mixkit.co/music/preview/mixkit-serene-view-443.mp3',
+                audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
                 synced_lyrics: [
                     {
                         id: 1, startTime: 10.3, endTime: 17.4,
@@ -793,8 +970,9 @@ class LyricsHubApp {
                 title: 'Spring Day (봄날)',
                 artist: 'BTS (방탄소년단)',
                 lang: 'ko',
+                youtube_id: 'xEeFrLSkMm8',
                 thumbnail: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&auto=format&fit=crop&q=60',
-                audio_url: 'https://assets.mixkit.co/music/preview/mixkit-serene-view-443.mp3',
+                audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
                 synced_lyrics: [
                     {
                         id: 1, startTime: 12.0, endTime: 18.0,
@@ -842,8 +1020,9 @@ class LyricsHubApp {
                 title: 'Lemon (レモン)',
                 artist: 'Kenshi Yonezu (米津玄師)',
                 lang: 'ja',
+                youtube_id: 'SX_ViT4Ra7k',
                 thumbnail: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&q=60',
-                audio_url: 'https://assets.mixkit.co/music/preview/mixkit-serene-view-443.mp3',
+                audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
                 synced_lyrics: [
                     {
                         id: 1, startTime: 14.0, endTime: 22.0,
@@ -889,8 +1068,9 @@ class LyricsHubApp {
                 title: '青花瓷 (Blue and White Porcelain)',
                 artist: 'Jay Chou (周杰伦)',
                 lang: 'zh',
+                youtube_id: 'Z8Mqw0b9ADs',
                 thumbnail: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=60',
-                audio_url: 'https://assets.mixkit.co/music/preview/mixkit-serene-view-443.mp3',
+                audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
                 synced_lyrics: [
                     {
                         id: 1, startTime: 12.0, endTime: 18.0,

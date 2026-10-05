@@ -323,44 +323,55 @@ class AisaDictionary {
                 }
             }
 
+            let entry = null;
+
             // 2. Tra cứu AISA AI qua Worker API
-            const endpoint = (window.MHENT_CONFIG && window.MHENT_CONFIG.AISA_API_ENDPOINT) || 'https://api.mhentuniverse.com';
-            const res = await fetch(`${endpoint}/api/generate-example`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    word: query,
-                    lang: lang,
-                    deckTitle: 'Từ điển AI'
-                })
-            });
+            try {
+                const endpoint = (window.MHENT_CONFIG && window.MHENT_CONFIG.AISA_API_ENDPOINT) || 'https://api.mhentuniverse.com';
+                const res = await fetch(`${endpoint}/api/generate-example`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        word: query,
+                        lang: lang,
+                        deckTitle: 'Từ điển AI'
+                    })
+                });
 
-            if (!res.ok) {
-                throw new Error(`API error ${res.status}`);
+                if (res.ok) {
+                    const resJson = await res.json();
+                    const data = (resJson && resJson.data) ? resJson.data : resJson;
+                    if (data && (data.meaning || data.example)) {
+                        entry = {
+                            lang: lang,
+                            word: data.word || query,
+                            phonetic: data.phonetic || '',
+                            pos: data.pos || 'noun',
+                            posLabel: data.posLabel || data.pos || 'Từ vựng',
+                            meaning: data.meaning || '',
+                            example: data.example || '',
+                            exampleTrans: data.exampleTrans || '',
+                            wordFamily: data.wordFamily || { noun: '', verb: '', adj: '', adv: '' }
+                        };
+                    }
+                }
+            } catch (apiErr) {
+                console.warn('[AISA Dict Worker API warning, trying fallback]:', apiErr.message);
             }
 
-            const resJson = await res.json();
-            const data = (resJson && resJson.data) ? resJson.data : resJson;
-            if (!data || (!data.meaning && !data.example)) {
-                throw new Error('Dữ liệu từ vựng không đầy đủ');
+            // 3. Nếu Worker API chưa trả về kết quả, kích hoạt Fallback Từ điển Quốc tế
+            if (!entry) {
+                console.log('[AISA Dict] Đang kích hoạt Fallback Từ điển...');
+                entry = await this.fetchFallbackWord(query, lang);
             }
 
-            // Chuẩn hóa dữ liệu
-            const entry = {
-                lang: lang,
-                word: data.word || query,
-                phonetic: data.phonetic || '',
-                pos: data.pos || 'noun',
-                posLabel: data.posLabel || data.pos || 'Từ vựng',
-                meaning: data.meaning || '',
-                example: data.example || '',
-                exampleTrans: data.exampleTrans || '',
-                wordFamily: data.wordFamily || { noun: '', verb: '', adj: '', adv: '' }
-            };
+            if (!entry) {
+                throw new Error('Không tìm thấy từ vựng');
+            }
 
-            this.renderResult(entry, 'AISA Neural Sensei');
+            this.renderResult(entry, 'AISA Scholar Core');
 
-            // 3. Tự động lưu vào Supabase Cloud để làm giàu cơ sở dữ liệu chung
+            // 4. Tự động lưu vào Supabase Cloud để làm giàu cơ sở dữ liệu chung
             if (window.studyCloud && typeof window.studyCloud.saveDictWord === 'function') {
                 window.studyCloud.saveDictWord(entry).catch(err => {
                     console.warn('[AISA Dict] Lưu cloud ngầm thất bại (không ảnh hưởng hiển thị):', err);
@@ -380,6 +391,104 @@ class AisaDictionary {
                 </button>
             `;
         }
+    }
+
+    async fetchFallbackWord(query, lang) {
+        let entry = null;
+
+        // Fallback 1: Cho tiếng Anh qua Free Dictionary API + MyMemory
+        if (lang === 'en') {
+            try {
+                const dictRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(query)}`);
+                if (dictRes.ok) {
+                    const dictData = await dictRes.json();
+                    if (Array.isArray(dictData) && dictData.length > 0) {
+                        const item = dictData[0];
+                        const phonetic = item.phonetic || (item.phonetics && item.phonetics.find(p => p.text)?.text) || '';
+                        const firstMeaning = item.meanings && item.meanings[0];
+                        const pos = firstMeaning ? firstMeaning.partOfSpeech : 'noun';
+                        const def = firstMeaning && firstMeaning.definitions[0] ? firstMeaning.definitions[0].definition : '';
+                        const example = (firstMeaning && firstMeaning.definitions[0] && firstMeaning.definitions[0].example) || `I love the concept of ${query}.`;
+
+                        let viMeaning = '';
+                        try {
+                            const trRes = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(query)}&langpair=en|vi`);
+                            if (trRes.ok) {
+                                const trJson = await trRes.json();
+                                viMeaning = trJson.responseData?.translatedText || '';
+                            }
+                        } catch (e) {}
+
+                        if (!viMeaning) viMeaning = def;
+
+                        let viExample = '';
+                        try {
+                            const trEx = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(example)}&langpair=en|vi`);
+                            if (trEx.ok) {
+                                const trJson = await trEx.json();
+                                viExample = trJson.responseData?.translatedText || '';
+                            }
+                        } catch (e) {}
+
+                        const posLabels = {
+                            noun: 'Danh từ',
+                            verb: 'Động từ',
+                            adjective: 'Tính từ',
+                            adj: 'Tính từ',
+                            adverb: 'Trạng từ',
+                            adv: 'Trạng từ'
+                        };
+
+                        entry = {
+                            lang: 'en',
+                            word: item.word || query,
+                            phonetic: phonetic,
+                            pos: pos,
+                            posLabel: posLabels[pos] || pos,
+                            meaning: viMeaning,
+                            example: example,
+                            exampleTrans: viExample || 'Ví dụ minh họa cho từ vựng này.',
+                            wordFamily: {
+                                noun: pos === 'noun' ? query : '',
+                                verb: pos === 'verb' ? query : '',
+                                adj: (pos === 'adjective' || pos === 'adj') ? query : '',
+                                adv: (pos === 'adverb' || pos === 'adv') ? query : ''
+                            }
+                        };
+                    }
+                }
+            } catch (dictErr) {
+                console.warn('[AISA Dict fallback err]:', dictErr);
+            }
+        }
+
+        // Fallback 2: Đa ngữ chung (Hàn, Nhật, Trung, Anh)
+        if (!entry) {
+            try {
+                const trRes = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(query)}&langpair=${lang}|vi`);
+                if (trRes.ok) {
+                    const trJson = await trRes.json();
+                    const viText = trJson.responseData?.translatedText || '';
+                    if (viText && viText.trim().toLowerCase() !== query.toLowerCase()) {
+                        entry = {
+                            lang: lang,
+                            word: query,
+                            phonetic: '',
+                            pos: 'noun',
+                            posLabel: 'Từ vựng',
+                            meaning: viText,
+                            example: `Từ vựng "${query}" được sử dụng phổ biến trong giao tiếp.`,
+                            exampleTrans: `Bản dịch nghĩa: ${viText}`,
+                            wordFamily: { noun: query, verb: '', adj: '', adv: '' }
+                        };
+                    }
+                }
+            } catch (e) {
+                console.warn('[AISA Dict general fallback note]:', e);
+            }
+        }
+
+        return entry;
     }
 
     renderResult(data, source = 'AISA AI') {
