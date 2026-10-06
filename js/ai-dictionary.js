@@ -48,29 +48,41 @@ class AisaDictionary {
             <div class="aisa-dict-container">
                 <!-- Header -->
                 <div class="aisa-dict-header">
-                    <div class="aisa-dict-brand">
-                        <i class="fa-solid fa-brain-circuit" style="color: #0ea5e9;"></i>
-                        <span>AISA Dict</span>
-                        <span class="aisa-dict-brand-badge">AI</span>
-                    </div>
+                    <div class="aisa-dict-header-top">
+                        <div class="aisa-dict-brand">
+                            <div class="aisa-dict-brand-icon">
+                                <i class="fa-solid fa-brain-circuit"></i>
+                            </div>
+                            <div class="aisa-dict-brand-text">
+                                <div class="aisa-dict-brand-name">
+                                    <span>AISA Smart Dictionary</span>
+                                    <span class="aisa-dict-brand-badge">AI 3.5</span>
+                                </div>
+                                <div class="aisa-dict-brand-tagline">Tra cứu ngữ nghĩa, phát âm & sổ từ vựng ngoại ngữ</div>
+                            </div>
+                        </div>
 
-                    <div class="aisa-dict-search-box">
-                        <input type="text" id="aisa-dict-input" class="aisa-dict-input" placeholder="Nhập từ vựng, kanji, nghĩa... (Enter để tra)" autocomplete="off" spellcheck="false">
-                        <button id="aisa-dict-search-btn" class="aisa-dict-search-btn" title="Tìm kiếm">
-                            <i class="fa-solid fa-magnifying-glass"></i>
+                        <button id="aisa-dict-close" class="aisa-dict-close-btn" title="Đóng (Esc)">
+                            <i class="fa-solid fa-xmark"></i>
                         </button>
                     </div>
 
-                    <select id="aisa-dict-lang" class="aisa-dict-lang-select" title="Chọn ngôn ngữ">
-                        <option value="en">🇬🇧 Tiếng Anh</option>
-                        <option value="ko">🇰🇷 Tiếng Hàn</option>
-                        <option value="ja">🇯🇵 Tiếng Nhật</option>
-                        <option value="zh">🇨🇳 Tiếng Trung</option>
-                    </select>
+                    <div class="aisa-dict-search-row">
+                        <div class="aisa-dict-search-box">
+                            <i class="fa-solid fa-magnifying-glass aisa-dict-input-icon"></i>
+                            <input type="text" id="aisa-dict-input" class="aisa-dict-input" placeholder="Nhập từ vựng, chữ Hán, thành ngữ... (Enter để tra)" autocomplete="off" spellcheck="false">
+                            <button id="aisa-dict-search-btn" class="aisa-dict-search-btn" title="Tra cứu">
+                                <span>Tra từ</span>
+                            </button>
+                        </div>
 
-                    <button id="aisa-dict-close" class="aisa-dict-close-btn" title="Đóng (Esc)">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
+                        <select id="aisa-dict-lang" class="aisa-dict-lang-select" title="Chọn ngôn ngữ">
+                            <option value="en">🇬🇧 Tiếng Anh</option>
+                            <option value="ko">🇰🇷 Tiếng Hàn</option>
+                            <option value="ja">🇯🇵 Tiếng Nhật</option>
+                            <option value="zh">🇨🇳 Tiếng Trung</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Body -->
@@ -247,11 +259,18 @@ class AisaDictionary {
         });
     }
 
-    open(prefillWord = '') {
+    open(prefillWord = '', targetLang = '') {
         this.mount();
         const modal = document.getElementById('aisa-dict-modal');
         const input = document.getElementById('aisa-dict-input');
+        const langSelect = document.getElementById('aisa-dict-lang');
         if (!modal) return;
+
+        if (targetLang && ['en', 'ko', 'ja', 'zh'].includes(targetLang)) {
+            this.currentLang = targetLang;
+            if (langSelect) langSelect.value = targetLang;
+            this.updateHotWords();
+        }
 
         modal.classList.add('active');
         this.isOpen = true;

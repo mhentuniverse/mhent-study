@@ -313,21 +313,26 @@ class LyricsHubApp {
             }
         });
 
+        const triggerSearchFromPill = (e) => {
+            e.stopPropagation();
+            if (!currentSelectedWord) return;
+            pill.style.display = 'none';
+            const lang = this.currentSong ? this.currentSong.lang : 'en';
+            if (window.aisaDict && typeof window.aisaDict.open === 'function') {
+                window.aisaDict.open(currentSelectedWord, lang);
+            } else {
+                this.showToast(`Đang tra cứu từ: "${currentSelectedWord}"...`, 'info');
+            }
+        };
+
         if (pillSearch) {
-            pillSearch.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (!currentSelectedWord) return;
-                pill.style.display = 'none';
-                const lang = this.currentSong ? this.currentSong.lang : 'en';
-                if (window.aisaDict && typeof window.aisaDict.open === 'function') {
-                    const langSelect = document.getElementById('aisa-dict-lang');
-                    if (langSelect && lang) langSelect.value = lang;
-                    window.aisaDict.open(currentSelectedWord);
-                } else {
-                    this.showToast(`Đang tra cứu từ: "${currentSelectedWord}"...`, 'info');
-                }
-            });
+            pillSearch.addEventListener('click', triggerSearchFromPill);
         }
+        pill.addEventListener('click', (e) => {
+            if (!e.target.closest('#lookup-pill-btn-save')) {
+                triggerSearchFromPill(e);
+            }
+        });
 
         if (pillSave) {
             pillSave.addEventListener('click', (e) => {
@@ -960,9 +965,11 @@ class LyricsHubApp {
             const enrichedText = this.highlightVocabInSentence(line.text, line.words || [], idx);
 
             html += `
-                <div class="lyrics-sentence-row" id="sentence-row-${idx}" onclick="window.lyricsApp.seekToSentence(${idx})">
+                <div class="lyrics-sentence-row" id="sentence-row-${idx}" onclick="window.lyricsApp.handleSentenceRowClick(event, ${idx})">
                     <div class="sentence-meta-row">
-                        <span class="sentence-time-badge">${timeStr}</span>
+                        <button type="button" class="sentence-play-btn" onclick="event.stopPropagation(); window.lyricsApp.seekToSentence(${idx})" title="Nghe câu này (${timeStr})">
+                            <i class="fa-solid fa-play"></i> <span>${timeStr}</span>
+                        </button>
                         <button class="sentence-loop-btn ${this.loopSentenceIndex === idx ? 'active' : ''}" onclick="event.stopPropagation(); window.lyricsApp.toggleSentenceLoop(${idx})" title="Luyện nghe / phát âm câu này">
                             <i class="fa-solid fa-repeat"></i> ${this.loopSentenceIndex === idx ? 'Đang lặp câu' : 'Luyện câu'}
                         </button>
@@ -1032,8 +1039,8 @@ class LyricsHubApp {
         }
 
         container.innerHTML = lines.map((l, idx) => `
-            <div class="lyrics-plain-line" onclick="window.lyricsApp.seekToSentence(${idx})">
-                <div style="font-weight: 600;">${this.escapeHtml(l.text)}</div>
+            <div class="lyrics-plain-line" onclick="window.lyricsApp.handleSentenceRowClick(event, ${idx})">
+                <div style="font-weight: 600;">${this.formatTextSegment(l.text)}</div>
                 ${l.phonetic ? `<div style="font-size: 0.88rem; color: #38bdf8; font-family: monospace;">${this.escapeHtml(l.phonetic)}</div>` : ''}
                 ${l.translation ? `<div class="lyrics-plain-trans">${this.escapeHtml(l.translation)}</div>` : ''}
             </div>
@@ -1043,7 +1050,7 @@ class LyricsHubApp {
     highlightVocabInSentence(sentence, words, sentenceIdx) {
         if (!sentence) return '';
         if (!words || !Array.isArray(words) || words.length === 0) {
-            return this.escapeHtml(sentence);
+            return this.formatTextSegment(sentence);
         }
 
         // 1. Lọc từ hợp lệ và sắp xếp theo độ dài GIẢM DẦN để ưu tiên cụm từ dài trước
@@ -1052,7 +1059,7 @@ class LyricsHubApp {
             .filter(w => w && w.word && typeof w.word === 'string' && w.word.trim().length > 0)
             .sort((a, b) => b.word.length - a.word.length);
 
-        if (validWords.length === 0) return this.escapeHtml(sentence);
+        if (validWords.length === 0) return this.formatTextSegment(sentence);
 
         // 2. Định vị các khoảng ký tự không trùng lặp trên câu gốc (tránh triệt để việc regex replace đè vào HTML tag / attribute)
         const len = sentence.length;
@@ -1099,13 +1106,13 @@ class LyricsHubApp {
         // 3. Sắp xếp các token tìm thấy theo thứ tự xuất hiện từ trái qua phải
         matches.sort((a, b) => a.start - b.start);
 
-        // 4. Lắp ráp HTML: Đan xen phần text nguyên bản (escapeHtml) và thẻ chip từ vựng
+        // 4. Lắp ráp HTML: Đan xen phần text nguyên bản (formatTextSegment) và thẻ chip từ vựng
         let html = '';
         let lastIdx = 0;
 
         for (const m of matches) {
             if (m.start > lastIdx) {
-                html += this.escapeHtml(sentence.substring(lastIdx, m.start));
+                html += this.formatTextSegment(sentence.substring(lastIdx, m.start));
             }
 
             const popoverId = `popover-${sentenceIdx}-${m.origIdx}`;
@@ -1117,10 +1124,66 @@ class LyricsHubApp {
         }
 
         if (lastIdx < len) {
-            html += this.escapeHtml(sentence.substring(lastIdx));
+            html += this.formatTextSegment(sentence.substring(lastIdx));
         }
 
         return html;
+    }
+
+    formatTextSegment(text) {
+        if (!text) return '';
+        const lang = this.currentSong ? this.currentSong.lang : 'en';
+
+        // Đối với tiếng Anh: Tokenize các từ để người học có thể nhấp trực tiếp vào bất kỳ từ nào để tra AISA Dict
+        if (lang === 'en') {
+            const parts = text.split(/([a-zA-Z0-9]+(?:'[a-zA-Z0-9]+)?)/g);
+            return parts.map(part => {
+                if (/^[a-zA-Z0-9]+(?:'[a-zA-Z0-9]+)?$/.test(part)) {
+                    const escaped = this.escapeHtml(part);
+                    return `<span class="word-token" onclick="event.stopPropagation(); window.lyricsApp.handleWordTokenClick('${escaped}', event)" data-word="${escaped}">${escaped}</span>`;
+                }
+                return this.escapeHtml(part);
+            }).join('');
+        }
+
+        // Đối với các ngôn ngữ khác (JA, KO, ZH): Giữ nguyên văn bản để người dùng tự do bôi đen / chọn từ không lo bị tua câu
+        return this.escapeHtml(text);
+    }
+
+    handleWordTokenClick(word, event) {
+        if (event) event.stopPropagation();
+        if (!word) return;
+        const cleanWord = word.replace(/^[^\w\u00C0-\u024F]+|[^\w\u00C0-\u024F]+$/gu, '').trim();
+        if (!cleanWord) return;
+
+        const lang = this.currentSong ? this.currentSong.lang : 'en';
+        if (window.aisaDict && typeof window.aisaDict.open === 'function') {
+            window.aisaDict.open(cleanWord, lang);
+        } else {
+            this.showToast(`Đang tra từ: ${cleanWord}`, 'info');
+        }
+    }
+
+    handleSentenceRowClick(event, idx) {
+        // 1. Nếu đang có vùng chọn văn bản (người dùng bôi đen câu hoặc từ), tuyệt đối KHÔNG tua bài hát
+        const sel = window.getSelection();
+        if (sel && sel.toString().trim().length > 0) {
+            return;
+        }
+
+        // 2. Nếu người dùng nhấp vào các phần tử nội dung văn bản (để đọc, click tra từ, mở popover, bôi đen)
+        if (event.target.closest('.sentence-orig-text') || 
+            event.target.closest('.sentence-phonetic-text') || 
+            event.target.closest('.sentence-trans-text') || 
+            event.target.closest('.vocab-word-chip') || 
+            event.target.closest('.word-token') || 
+            event.target.closest('.lyric-quick-lookup-pill') || 
+            event.target.closest('button')) {
+            return;
+        }
+
+        // 3. Nếu người dùng nhấp vào lề hoặc nền hàng (ngoài vùng chữ), tiến hành tua tới câu đó
+        this.seekToSentence(idx);
     }
 
     handlePopoverSpeak(sentenceIdx, wordIdx) {

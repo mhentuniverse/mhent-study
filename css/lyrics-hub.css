@@ -749,6 +749,46 @@ body.lyrics-theme .footer-brand-title {
     border-radius: 4px;
 }
 
+.sentence-play-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-family: monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.sentence-play-btn i {
+    font-size: 0.68rem;
+    color: #38bdf8;
+    transition: transform 0.2s;
+}
+
+.sentence-play-btn:hover {
+    background: rgba(14, 165, 233, 0.18);
+    border-color: rgba(14, 165, 233, 0.45);
+    color: #f8fafc;
+    transform: translateY(-1px);
+}
+
+.sentence-play-btn:hover i {
+    transform: scale(1.15);
+}
+
+.lyrics-sentence-row.active .sentence-play-btn {
+    background: rgba(14, 165, 233, 0.25);
+    border-color: rgba(14, 165, 233, 0.6);
+    color: #38bdf8;
+    box-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
+}
+
 .sentence-loop-btn {
     background: transparent;
     border: none;
@@ -772,8 +812,11 @@ body.lyrics-theme .footer-brand-title {
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--lyrics-text-dim);
-    line-height: 1.45;
+    line-height: 1.5;
     transition: all 0.25s ease;
+    user-select: text;
+    -webkit-user-select: text;
+    cursor: text;
 }
 
 .sentence-phonetic-text {
@@ -781,6 +824,9 @@ body.lyrics-theme .footer-brand-title {
     color: var(--lyrics-phonetic-color);
     font-weight: 500;
     opacity: 0.85;
+    user-select: text;
+    -webkit-user-select: text;
+    cursor: text;
 }
 
 .sentence-trans-text {
@@ -788,6 +834,24 @@ body.lyrics-theme .footer-brand-title {
     color: rgba(148, 163, 184, 0.7);
     line-height: 1.4;
     transition: all 0.25s ease;
+    user-select: text;
+    -webkit-user-select: text;
+    cursor: text;
+}
+
+/* Individual clickable words in lyrics (for vocabulary lookup) */
+.word-token {
+    display: inline-block;
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 0 1px;
+    transition: all 0.15s ease;
+}
+
+.word-token:hover {
+    color: #38bdf8 !important;
+    background: rgba(56, 189, 248, 0.16);
+    text-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
 }
 
 /* Key Vocabulary Highlights inside Lyrics */
