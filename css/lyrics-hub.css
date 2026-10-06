@@ -229,9 +229,15 @@ body.lyrics-theme .footer-brand-title {
 /* Main Workspace: 2-Column Grid (Player & Track Info on left, Synced Karaoke on right) */
 .lyrics-workspace {
     display: grid;
-    grid-template-columns: 420px 1fr;
+    grid-template-columns: 460px 1fr;
     gap: 24px;
     min-height: 640px;
+}
+
+@media (min-width: 1400px) {
+    .lyrics-workspace {
+        grid-template-columns: 480px 1fr;
+    }
 }
 
 @media (max-width: 1024px) {
@@ -333,83 +339,65 @@ body.lyrics-theme .footer-brand-title {
     border: none;
 }
 
-.btn-toggle-media-mode {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    z-index: 10;
-    background: rgba(15, 23, 42, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #f8fafc;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.78rem;
+/* Clean Media Toolbar beneath Video (Unobstructed Playback) */
+.track-media-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: -6px;
+    margin-bottom: 2px;
+}
+
+.media-toolbar-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+    padding: 6px 14px;
+    border-radius: 12px;
+    font-size: 0.8rem;
     font-weight: 700;
     display: inline-flex;
     align-items: center;
     gap: 6px;
     cursor: pointer;
+    transition: all 0.2s ease;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    transition: all 0.2s ease;
 }
 
-.btn-toggle-media-mode:hover {
-    background: #ef4444;
+.media-toolbar-btn:hover {
+    background: rgba(14, 165, 233, 0.2);
+    border-color: #0ea5e9;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.media-toolbar-btn.btn-toggle-media-mode:hover {
+    background: rgba(239, 68, 68, 0.25);
     border-color: #ef4444;
     color: #ffffff;
-    transform: scale(1.05);
-}
-
-.btn-change-video {
-    position: absolute;
-    bottom: 10px;
-    right: 108px;
-    z-index: 10;
-    background: rgba(15, 23, 42, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #f8fafc;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.78rem;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    transition: all 0.2s ease;
-}
-
-.btn-change-video:hover {
-    background: #0ea5e9;
-    border-color: #38bdf8;
-    color: #ffffff;
-    transform: scale(1.05);
 }
 
 .tv-size-warning-badge {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    z-index: 12;
-    background: rgba(239, 68, 68, 0.92);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #ffffff;
-    padding: 6px 12px;
-    border-radius: 10px;
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    color: #fca5a5;
+    padding: 5px 12px;
+    border-radius: 12px;
     font-size: 0.76rem;
     font-weight: 700;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     cursor: pointer;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    transition: all 0.2s;
     animation: pulseWarning 2s infinite ease-in-out;
+}
+
+.tv-size-warning-badge:hover {
+    background: #ef4444;
+    color: #ffffff;
 }
 
 @keyframes pulseWarning {
@@ -763,7 +751,7 @@ body.lyrics-theme .footer-brand-title {
 
 .lyrics-sentence-row.active .sentence-orig-text {
     color: #ffffff;
-    font-size: 1.45rem;
+    font-size: 1.25rem;
     text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
 }
 
@@ -847,10 +835,10 @@ body.lyrics-theme .footer-brand-title {
 }
 
 .sentence-orig-text {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: var(--lyrics-text-dim);
-    line-height: 1.5;
+    line-height: 1.45;
     transition: all 0.25s ease;
     user-select: text;
     -webkit-user-select: text;
@@ -858,7 +846,7 @@ body.lyrics-theme .footer-brand-title {
 }
 
 .sentence-phonetic-text {
-    font-size: 0.95rem;
+    font-size: 0.84rem;
     color: var(--lyrics-phonetic-color);
     font-weight: 500;
     opacity: 0.85;
@@ -868,7 +856,7 @@ body.lyrics-theme .footer-brand-title {
 }
 
 .sentence-trans-text {
-    font-size: 0.98rem;
+    font-size: 0.92rem;
     color: rgba(148, 163, 184, 0.7);
     line-height: 1.4;
     transition: all 0.25s ease;
@@ -3853,21 +3841,21 @@ select.contrib-line-trans-input option {
     }
 
     .sentence-orig-text {
-        font-size: 1.15rem;
-        line-height: 1.45;
-    }
-
-    .lyrics-sentence-row.active .sentence-orig-text {
-        font-size: 1.25rem;
-    }
-
-    .sentence-trans-text {
-        font-size: 0.9rem;
+        font-size: 1.05rem;
         line-height: 1.4;
     }
 
+    .lyrics-sentence-row.active .sentence-orig-text {
+        font-size: 1.12rem;
+    }
+
+    .sentence-trans-text {
+        font-size: 0.85rem;
+        line-height: 1.35;
+    }
+
     .sentence-phonetic-text {
-        font-size: 0.82rem;
+        font-size: 0.78rem;
     }
 
     .sentence-meta-row {
@@ -4050,6 +4038,23 @@ select.contrib-line-trans-input option {
         padding: 0 10px;
     }
 
+    /* Compact sentence typography on extra-small mobile */
+    .sentence-orig-text {
+        font-size: 0.98rem;
+    }
+
+    .lyrics-sentence-row.active .sentence-orig-text {
+        font-size: 1.05rem;
+    }
+
+    .sentence-trans-text {
+        font-size: 0.82rem;
+    }
+
+    .sentence-phonetic-text {
+        font-size: 0.74rem;
+    }
+
     /* 1-Column Responsive Cards for Vocab Summary & Featured Songs */
     .vocab-summary-grid {
         grid-template-columns: 1fr !important;
@@ -4075,4 +4080,31 @@ select.contrib-line-trans-input option {
         padding: 4px 8px;
         font-size: 0.72rem;
     }
+}
+
+/* ==========================================================================
+   APP PACKING & OVERLAY ELEVATION RULES (NEVER GET COVERED BY BOTTOM NAV)
+   ========================================================================== */
+/* Hide mobile bottom nav completely on lyrics hub to give 100% height to lyrics */
+.mhent-bottom-nav {
+    display: none !important;
+}
+
+/* Ensure drawers and modals are always above all fixed elements */
+.lyrics-drawer-overlay,
+.song-select-modal-overlay,
+.sync-studio-modal-overlay {
+    z-index: 150000 !important;
+}
+
+.contrib-modal-overlay {
+    z-index: 160000 !important;
+}
+
+.contrib-vocab-dialog-overlay {
+    z-index: 170000 !important;
+}
+
+.study-toast-container {
+    z-index: 200000 !important;
 }

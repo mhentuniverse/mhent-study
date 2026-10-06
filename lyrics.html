@@ -154,14 +154,18 @@
                         <img id="track-art-img" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=60" alt="Track Art" class="track-art-img">
                     </div>
                     <div id="youtube-player-frame" class="youtube-player-frame" style="display: none;"></div>
-                    <button type="button" id="btn-toggle-media" class="btn-toggle-media-mode" title="Chuyển đổi Xem MV YouTube / Xem Ảnh Bìa">
+                </div>
+
+                <!-- Clean Media Toolbar: Nằm dưới video, không che màn hình phát nhạc -->
+                <div class="track-media-toolbar">
+                    <button type="button" id="btn-toggle-media" class="media-toolbar-btn btn-toggle-media-mode" title="Chuyển đổi Xem MV YouTube / Xem Ảnh Bìa">
                         <i class="fa-brands fa-youtube"></i> <span>Xem MV</span>
                     </button>
-                    <button type="button" id="btn-change-video" class="btn-change-video" onclick="window.lyricsApp.openChangeVideoModal()" title="Đổi video MV khác hoặc dán link Full Version">
+                    <button type="button" id="btn-change-video" class="media-toolbar-btn btn-change-video" onclick="window.lyricsApp.openChangeVideoModal()" title="Đổi video MV khác hoặc dán link Full Version">
                         <i class="fa-solid fa-arrows-rotate"></i> <span>Đổi Video</span>
                     </button>
                     <div id="tv-size-warning-badge" class="tv-size-warning-badge" style="display: none;" onclick="window.lyricsApp.openChangeVideoModal()" title="Nhấp để đổi sang bản Full Version">
-                        <i class="fa-solid fa-triangle-exclamation"></i> <span>Video TV Size (ngắn hơn lời) • Bấm đổi bản Full</span>
+                        <i class="fa-solid fa-triangle-exclamation"></i> <span>Bản TV Size • Đổi bản Full</span>
                     </div>
                 </div>
 

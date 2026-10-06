@@ -658,6 +658,11 @@ window.toggleAdminLeftDrawer = function() {
 // 5. HÀM VẼ MENU ĐÁY TỰ ĐỘNG DÀNH CHO STUDY
 // ==========================================
 window.renderBottomNav = function() {
+    if (window.location.pathname.includes('lyrics')) {
+        let existingNav = document.getElementById('mhent-bottom-nav');
+        if (existingNav) existingNav.remove();
+        return;
+    }
     if (window.innerWidth > 768) return;
 
     let nav = document.getElementById('mhent-bottom-nav');
@@ -836,10 +841,18 @@ document.addEventListener("DOMContentLoaded", () => {
     window.renderBottomNav();
 
     // Nhấp vào avatar người dùng trên Navbar để mở Drawer (hỗ trợ cả PC lẫn Mobile)
+    let userProf = document.getElementById('user-profile');
     let avt = document.getElementById('user-avatar');
-    if (avt) {
+    if (userProf) {
+        userProf.style.cursor = 'pointer';
+        userProf.onclick = function(e) {
+            e.preventDefault();
+            window.openSideDrawer();
+        };
+    } else if (avt) {
         avt.style.cursor = 'pointer';
-        avt.onclick = function() {
+        avt.onclick = function(e) {
+            e.preventDefault();
             window.openSideDrawer();
         };
     }

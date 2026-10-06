@@ -55,7 +55,14 @@ export function initNavbarAuth() {
         if (user) {
             if (btnLogin) btnLogin.style.display = 'none';
             if (userProfile) {
-                userProfile.style.display = 'flex';
+                userProfile.style.display = 'inline-flex';
+                userProfile.title = 'Xem thông tin cá nhân & Tiện ích (MHEnt Drawer)';
+                userProfile.onclick = (e) => {
+                    e.preventDefault();
+                    if (typeof window.openSideDrawer === 'function') {
+                        window.openSideDrawer();
+                    }
+                };
                 if (userAvatar) userAvatar.src = user.photoURL || '/assets/avt-web.jpg';
                 if (userName) userName.textContent = user.displayName || user.email.split('@')[0];
             }

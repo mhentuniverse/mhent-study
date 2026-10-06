@@ -2330,9 +2330,19 @@ QUY TẮC ĐẦU RA:
             document.querySelectorAll('.lyrics-sentence-row').forEach((row, i) => {
                 if (i === activeIdx) {
                     row.classList.add('active');
-                    // Chỉ tự động cuộn khi người dùng BẬT chế độ Tự Cuộn (hoặc khi click câu)
+                    // Chỉ tự động cuộn bên trong khung lời bài hát (không cuộn cả trang window)
                     if (this.isAutoScrollEnabled || forceScroll) {
-                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        const container = document.getElementById('lyrics-stream-container');
+                        if (container) {
+                            const rowTop = row.offsetTop;
+                            const rowHeight = row.offsetHeight;
+                            const containerHeight = container.clientHeight;
+                            const targetTop = rowTop - (containerHeight / 2) + (rowHeight / 2);
+                            container.scrollTo({
+                                top: Math.max(0, targetTop),
+                                behavior: 'smooth'
+                            });
+                        }
                     }
                 } else {
                     row.classList.remove('active');
@@ -6681,7 +6691,10 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
         const song = this.featuredSongs.find(s => s.id === id);
         if (song) {
             this.loadSong(song);
-            window.scrollTo({ top: 300, behavior: 'smooth' });
+            if (window.innerWidth <= 768) {
+                const ws = document.querySelector('.lyrics-workspace');
+                if (ws) ws.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
             return true;
         }
         if (window.studyCloud && typeof window.studyCloud.getSong === 'function') {
@@ -6689,7 +6702,10 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
                 const cloudSong = await window.studyCloud.getSong(id);
                 if (cloudSong) {
                     this.loadSong(cloudSong);
-                    window.scrollTo({ top: 300, behavior: 'smooth' });
+                    if (window.innerWidth <= 768) {
+                        const ws = document.querySelector('.lyrics-workspace');
+                        if (ws) ws.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
                     return true;
                 }
             } catch (e) {}
