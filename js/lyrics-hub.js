@@ -416,7 +416,7 @@ class LyricsHubApp {
         if (artistEl) artistEl.textContent = song.artist;
         if (artImg) artImg.src = song.thumbnail || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=60';
 
-        const langMap = { en: 'Tiếng Anh', ko: 'Tiếng Hàn', ja: 'Tiếng Nhật', zh: 'Tiếng Trung' };
+        const langMap = { en: 'Tiếng Anh', ko: 'Tiếng Hàn', ja: 'Tiếng Nhật', zh: 'Tiếng Trung', vi: 'Tiếng Việt' };
         if (langBadge) langBadge.textContent = langMap[song.lang] || 'Đa ngôn ngữ';
 
         // Tải độ lệch pha đã lưu cho bài hát này (Time Offset)
@@ -1902,8 +1902,9 @@ class LyricsHubApp {
 
         const song = this.currentSong;
         const lang = song.lang || this.detectLanguage(song.title + ' ' + (song.synced_lyrics[0] ? song.synced_lyrics[0].text : ''));
-        const langNames = { en: 'tiếng Anh', ko: 'tiếng Hàn', ja: 'tiếng Nhật', zh: 'tiếng Trung' };
-        const langName = langNames[lang] || 'tiếng Nhật';
+        const langNames = { en: 'tiếng Anh', ko: 'tiếng Hàn', ja: 'tiếng Nhật', zh: 'tiếng Trung', vi: 'tiếng Việt' };
+        const langName = langNames[lang] || 'tiếng Việt';
+        const isVietnameseSong = (lang === 'vi');
 
         this.showToast(`✨ AISA AI đang dịch nghĩa & bóc tách từ vựng ${langName}...`, 'info', 4000);
 
@@ -1922,31 +1923,29 @@ class LyricsHubApp {
 
                 const prompt = `Bạn là chuyên gia dịch thuật âm nhạc và giám đốc sáng tạo ngôn ngữ AISA (MHEnt Universe).
 Nhiệm vụ: Phân tích và dịch thuật các câu trong bài hát "${song.title}" của "${song.artist}" (${langName}).
+${isVietnameseSong ? 'LƯU Ý ĐẶC BIỆT: ĐÂY LÀ BÀI HÁT TIẾNG VIỆT -> BẠN HÃY DỊCH CÂU SANG TIẾNG ANH ("translation" là bản dịch thơ mộng, tự nhiên sang tiếng Anh để học viên luyện song ngữ Việt - Anh) VÀ BÓC TÁCH CÁC TỪ VỰNG TIẾNG VIỆT ĐẮT GIÁ, TỪ TƯỢNG HÌNH, THÀNH NGỮ KÈM NGHĨA GIẢI THÍCH SẮC SẢO!' : ''}
 
 BƯỚC 1: XÁC ĐỊNH CỐT TRUYỆN, THỂ LOẠI & SẮC THÁI BÀI HÁT:
 - Dựa trên tên bài hát "${song.title}", nghệ sĩ "${song.artist}" và lời bài hát để xác định đúng phong cách:
   + NẾU LÀ BÀI NỔI LOẠN / CHÂM BIẾM / GAI GÓC / CHỬI ĐỜI / ROCK DISS (như Usseewa, Otonablue, rock, rap diss, v.v.):
-    * Ngôi xưng: "TAO" - "CHÚNG MÀY / LŨ BAY / CÁC NGƯỜI". Sắc thái đanh thép, gai góc, bất cần, dùng từ ngữ mạnh mẽ (ví dụ: "Câm mồm đi!", "Biến đi!", "Đóng dấu X lên bản mặt béo tròn đầy mỡ", "Cái mồm thối tha ngậm lại"). Tuyệt đối KHÔNG dịch kiểu hiền lành, thơ mộng!
+    * Ngôi xưng: "TAO" - "CHÚNG MÀY / LŨ BAY / CÁC NGƯỜI". Sắc thái đanh thép, gai góc, bất cần, dùng từ ngữ mạnh mẽ.
   + NẾU LÀ BÀI TÌNH YÊU / THỨC TỈNH TRƯỚC SỰ THAO TÚNG / CHIA LY / DA DIẾT (như Puppet, Lemon, unlasting, Until I Found You, Spring Day, ballad, RnB, Pop):
     * Ngôi xưng: "ANH - EM" (hoặc "EM - ANH"), da diết hoặc dứt khoát, cay đắng, thức tỉnh trước sự dối trá nhưng giàu cảm xúc.
   + NẾU LÀ BÀI TỰ SỰ / TRIẾT LÝ / TỰ VẤN CUỘC SỐNG:
     * Ngôi xưng: "TÔI", chiêm nghiệm, chân thành.
-- QUY TẮC BẮT BUỘC VỀ NGÔI XƯNG: TOÀN BỘ CÁC CÂU TRONG BÀI PHẢI DÙNG CHUNG MỘT HỆ THỐNG NGÔI XƯNG NHẤT QUÁN. CẤM NHẢY LỘN XỘN (câu này xưng tôi, câu kia xưng anh, câu nọ xưng tao).
+- QUY TẮC BẮT BUỘC VỀ NGÔI XƯNG: TOÀN BỘ CÁC CÂU TRONG BÀI PHẢI DÙNG CHUNG MỘT HỆ THỐNG NGÔI XƯNG NHẤT QUÁN. CẤM NHẢY LỘN XỘN.
 
 BƯỚC 2: MẠCH NGHĨA LIÊN TỤC GIỮA CÁC DÒNG (ENJAMBMENT & NARRATIVE CONTINUITY):
-- Trong lời bài hát, một câu ngữ pháp trọn vẹn thường bị ngắt thành 2-3 dòng theo nhịp nhạc (ví dụ: dòng 1 "Darling, I'm done", dòng 2 "Playing along", dòng 3 "It's time to cut me loose").
-- BẮT BUỘC: Bạn PHẢI nhìn tổng thể các dòng liền kề để dịch nối mạch ý nghĩa của câu chuyện! Dòng sau phải tiếp nối dòng trước một cách mượt mà và làm người nghe hiểu rõ hành động của nhân vật (ví dụ: dòng 1: "Em à, anh đã quá mệt mỏi rồi..." -> dòng 2: "...khi cứ phải hùa theo trò chơi dối trá của em" -> dòng 3: "Đã đến lúc em phải buông tha và cắt đứt sợi dây của anh rồi").
-- TUYỆT ĐỐI CẤM dịch từng dòng rời rạc như cỗ máy không hiểu liên kết (như "anh chịu đủ rồi" rồi dòng dưới "hùa theo trò này nữa" cụt ngủn tối nghĩa). Dùng dấu ba chấm "..." ở cuối câu ngắt hoặc đầu câu tiếp nối khi một ý chưa hoàn chỉnh.
+- BẮT BUỘC nhìn tổng thể các dòng liền kề để dịch nối mạch ý nghĩa câu chuyện, dùng dấu ba chấm "..." khi một ý chưa hoàn chỉnh.
 
 BƯỚC 3: TÍNH ĐỒNG NHẤT TUYỆT ĐỐI CỦA ĐIỆP KHÚC (CHORUS CONSISTENCY):
-- Mọi câu hát hoặc đoạn điệp khúc lặp lại (ở Chorus 1, Chorus 2, Chorus 3, Outro) BẮT BUỘC PHẢI DỊCH NGHĨA HOÀN TOÀN GIỐNG NHAU về mặt từ ngữ và BẮT BUỘC PHẢI CHỌN ĐÚNG TỪ VỰNG ĐỒNG NHẤT ĐỂ BÓC TÁCH.
-- TUYỆT ĐỐI CẤM: Ở Chorus 1 dịch một kiểu, xuống Chorus 2 dịch kiểu khác, hoặc ở trên highlight từ này ở dưới highlight từ khác!
+- Các câu hát lặp lại ở điệp khúc bắt buộc phải dịch nghĩa giống nhau và bóc tách từ vựng đồng nhất.
 
 BƯỚC 4: QUY TẮC PHIÊN ÂM CHUẨN 100% (STRICT ROMANIZATION):
-- Tiếng Nhật: 100% Chữ cái Latinh chuẩn Hepburn. TUYỆT ĐỐI CẤM để sót bất kỳ chữ Hiragana hay Katakana nào trong "phonetic" (đặc biệt là ぇ, ぁ, ぃ, ぅ, ぉ, っ, ゃ, ゅ, ょ). Chữ "うっせぇわ" BẮT BUỘC PHẢI LÀ "Ussee wa" hoặc "Usseewa" (CẤM "Usseぇ wa").
+- Tiếng Nhật: 100% Chữ cái Latinh chuẩn Hepburn.
 - Tiếng Hàn: 100% Latinh Romaja chuẩn.
 - Tiếng Trung: 100% Pinyin có dấu thanh điệu chuẩn.
-- Tiếng Anh: để trống "".
+- Tiếng Anh, Tiếng Việt: để trống "".
 
 BƯỚC 5: TRÍCH XUẤT TỪ VỰNG CHỌN LỌC PHONG PHÚ (RICH & IMPACTFUL VOCABULARY SELECTION):
 - "word": Bóc tách các từ khóa quan trọng, động từ đắt giá, tính từ biểu cảm hoặc thành ngữ/cụm động từ cố định (collocation/idiom/phrasal verb).
@@ -2991,7 +2990,7 @@ QUY TẮC ĐẦU RA:
             return;
         }
 
-        const langMap = { en: '🇬🇧 EN', ko: '🇰🇷 KO', ja: '🇯🇵 JA', zh: '🇨🇳 ZH' };
+        const langMap = { en: '🇬🇧 EN', ko: '🇰🇷 KO', ja: '🇯🇵 JA', zh: '🇨🇳 ZH', vi: '🇻🇳 VI' };
 
         listContainer.innerHTML = filtered.map((item, idx) => {
             const durationStr = this.formatSeconds(item.duration);
@@ -3243,6 +3242,7 @@ QUY TẮC ĐẦU RA:
         if (/[\uac00-\ud7a3]/.test(text)) return 'ko'; // Hangeul
         if (/[\u3040-\u30ff]/.test(text)) return 'ja'; // Kana / Japanese
         if (/[\u4e00-\u9fa5]/.test(text)) return 'zh'; // Chinese
+        if (/[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(text)) return 'vi'; // Tiếng Việt
         return 'en';
     }
 
