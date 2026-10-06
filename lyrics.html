@@ -135,6 +135,12 @@
                     <button type="button" id="btn-toggle-media" class="btn-toggle-media-mode" title="Chuyển đổi Xem MV YouTube / Xem Ảnh Bìa">
                         <i class="fa-brands fa-youtube"></i> <span>Xem MV</span>
                     </button>
+                    <button type="button" id="btn-change-video" class="btn-change-video" onclick="window.lyricsApp.openChangeVideoModal()" title="Đổi video MV khác hoặc dán link Full Version">
+                        <i class="fa-solid fa-arrows-rotate"></i> <span>Đổi Video</span>
+                    </button>
+                    <div id="tv-size-warning-badge" class="tv-size-warning-badge" style="display: none;" onclick="window.lyricsApp.openChangeVideoModal()" title="Nhấp để đổi sang bản Full Version">
+                        <i class="fa-solid fa-triangle-exclamation"></i> <span>Video TV Size (ngắn hơn lời) • Bấm đổi bản Full</span>
+                    </div>
                 </div>
 
                 <div class="track-info-box">
@@ -350,6 +356,48 @@
             <!-- Songs List Container -->
             <div class="song-select-list" id="song-select-list">
                 <!-- Dynamic cards injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- CHANGE VIDEO MODAL: CHỌN BẢN FULL / ĐỔI VIDEO YOUTUBE -->
+    <div id="change-video-modal" class="song-select-modal-overlay">
+        <div class="song-select-modal-card" style="max-width: 620px;">
+            <div class="song-select-modal-header">
+                <div>
+                    <h3 style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-brands fa-youtube" style="color: #ef4444; font-size: 1.3rem;"></i> 
+                        Đổi Video / Chọn Bản Full Version
+                    </h3>
+                    <p>Chọn video YouTube bản dài đầy đủ khớp với lời bài hát hoặc dán link YouTube bất kỳ</p>
+                </div>
+                <button type="button" id="change-video-close" class="modal-close-btn" onclick="window.lyricsApp.closeChangeVideoModal()" title="Đóng">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Custom YouTube URL / ID input -->
+            <div style="margin-bottom: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px;">
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #94a3b8; margin-bottom: 8px;">
+                    <i class="fa-solid fa-link"></i> Dán link YouTube hoặc Video ID:
+                </label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="custom-yt-input" placeholder="Ví dụ: https://www.youtube.com/watch?v=... hoặc video ID" style="flex: 1; background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 14px; color: #fff; font-size: 0.9rem; outline: none;">
+                    <button type="button" class="btn-player-mini" style="background: linear-gradient(135deg, #0ea5e9, #6366f1); color: #fff; border: none; border-radius: 10px; padding: 0 16px; font-weight: 600; cursor: pointer; white-space: nowrap;" onclick="window.lyricsApp.applyCustomYoutubeUrl()">
+                        Áp dụng
+                    </button>
+                </div>
+            </div>
+
+            <!-- Candidate Videos List -->
+            <div style="font-size: 0.84rem; font-weight: 600; color: #cbd5e1; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                <span><i class="fa-solid fa-list-check"></i> Các video YouTube gợi ý:</span>
+                <button type="button" style="background: none; border: none; color: #38bdf8; font-size: 0.8rem; cursor: pointer;" onclick="window.lyricsApp.searchYoutubeFullAlternatives()">
+                    <i class="fa-solid fa-arrows-rotate"></i> Tìm thêm bản Full
+                </button>
+            </div>
+            <div id="change-video-list" class="song-select-list" style="max-height: 280px; overflow-y: auto;">
+                <!-- Injected dynamically via JS -->
             </div>
         </div>
     </div>

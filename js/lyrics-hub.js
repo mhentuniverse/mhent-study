@@ -204,13 +204,24 @@ class LyricsHubApp {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 this.closeSongSelectModal();
+                this.closeChangeVideoModal();
                 const contribModal = document.getElementById('contrib-modal');
                 if (contribModal) contribModal.classList.remove('active');
                 this.hideAllPopovers();
             }
         });
 
-        // 12. Community Modal bindings
+        // 12. Backdrop click for Change Video Modal
+        const changeVideoModal = document.getElementById('change-video-modal');
+        if (changeVideoModal) {
+            changeVideoModal.addEventListener('click', (e) => {
+                if (e.target === changeVideoModal) {
+                    this.closeChangeVideoModal();
+                }
+            });
+        }
+
+        // 13. Community Modal bindings
         const contribBtn = document.getElementById('btn-open-contrib');
         const contribModal = document.getElementById('contrib-modal');
         const contribClose = document.getElementById('contrib-close');
@@ -326,7 +337,8 @@ class LyricsHubApp {
                 },
                 events: {
                     onReady: (event) => {
-                        this.duration = event.target.getDuration() || 180;
+                        const ytDur = event.target.getDuration() || 0;
+                        if (ytDur > 0) this.duration = ytDur;
                         this.updatePlayerProgress();
                         // Áp dụng tốc độ và âm lượng hiện tại
                         if (typeof event.target.setPlaybackRate === 'function') {
@@ -335,6 +347,8 @@ class LyricsHubApp {
                         if (typeof event.target.setVolume === 'function') {
                             event.target.setVolume(this.isMuted ? 0 : this.currentVolume * 100);
                         }
+                        // Kiểm tra độ lệch thời lượng (Phát hiện video TV Size / Short)
+                        this.checkDurationMismatch(ytDur);
                     },
                     onStateChange: (event) => {
                         if (event.data === YT.PlayerState.PLAYING) {
@@ -358,6 +372,26 @@ class LyricsHubApp {
         }
     }
 
+    checkDurationMismatch(ytDur) {
+        if (!this.currentSong || !Array.isArray(this.currentSong.synced_lyrics) || this.currentSong.synced_lyrics.length === 0) return;
+        const lyrics = this.currentSong.synced_lyrics;
+        const lastLyric = lyrics[lyrics.length - 1];
+        const lastTime = lastLyric ? (lastLyric.startTime || 0) : 0;
+        const warnBadge = document.getElementById('tv-size-warning-badge');
+
+        // Nếu lời bài hát kéo dài qua 110s mà video YouTube chỉ dừng ở < (lastTime - 30s) (ví dụ 1:32 TV size vs 3:38 full song)
+        if (lastTime > 110 && ytDur > 0 && ytDur < (lastTime - 30)) {
+            console.warn(`[Duration Mismatch Detected]: Video YouTube (${ytDur}s) ngắn hơn lời bài hát (${lastTime}s)!`);
+            if (warnBadge) {
+                warnBadge.style.display = 'inline-flex';
+                warnBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span>Video TV Size (${this.formatSeconds(ytDur)}) • Bấm đổi bản Full</span>`;
+            }
+            this.showToast(`⚠️ Video YouTube đang phát là bản TV Size (${this.formatSeconds(ytDur)}), ngắn hơn lời bài hát (${this.formatSeconds(lastTime)}). Bấm nút "Đổi Video" để chuyển sang bản Full!`, 'warning', 6000);
+        } else {
+            if (warnBadge) warnBadge.style.display = 'none';
+        }
+    }
+
     toggleMediaMode() {
         const artWrap = document.getElementById('track-art-wrap');
         const ytFrame = document.getElementById('youtube-player-frame');
@@ -376,6 +410,150 @@ class LyricsHubApp {
             if (this.currentSong && this.currentSong.youtube_id && !this.ytPlayer && this.isYtReady) {
                 this.initYouTubePlayer(this.currentSong.youtube_id);
             }
+        }
+    }
+
+    openChangeVideoModal() {
+        const modal = document.getElementById('change-video-modal');
+        const inputEl = document.getElementById('custom-yt-input');
+        if (inputEl) inputEl.value = '';
+        if (!modal) return;
+        modal.classList.add('active');
+        this.renderCandidateVideos();
+    }
+
+    closeChangeVideoModal() {
+        const modal = document.getElementById('change-video-modal');
+        if (modal) modal.classList.remove('active');
+    }
+
+    async renderCandidateVideos() {
+        const listEl = document.getElementById('change-video-list');
+        if (!listEl) return;
+
+        const song = this.currentSong;
+        if (!song) {
+            listEl.innerHTML = '<p style="color: #94a3b8; text-align: center; padding: 20px;">Chưa chọn bài hát.</p>';
+            return;
+        }
+
+        let candidates = Array.isArray(song.yt_candidates) ? [...song.yt_candidates] : [];
+        if (song.youtube_id && !candidates.includes(song.youtube_id)) {
+            candidates.unshift(song.youtube_id);
+        }
+
+        if (candidates.length === 0) {
+            listEl.innerHTML = `
+                <div style="text-align: center; color: #94a3b8; padding: 20px;">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Đang tìm kiếm các video Full Version trên YouTube...
+                </div>
+            `;
+            await this.searchYoutubeFullAlternatives();
+            return;
+        }
+
+        listEl.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                ${candidates.map((vId) => {
+                    const isCurrent = vId === song.youtube_id;
+                    return `
+                        <div class="song-select-item" style="padding: 10px 14px; ${isCurrent ? 'border-color: #38bdf8; background: rgba(56, 189, 248, 0.08);' : ''}" onclick="window.lyricsApp.changeYouTubeVideo('${vId}')">
+                            <img src="https://img.youtube.com/vi/${vId}/mqdefault.jpg" style="width: 80px; height: 50px; object-fit: cover; border-radius: 8px;" alt="Thumbnail" />
+                            <div class="song-item-info" style="flex: 1;">
+                                <div class="song-item-title-row">
+                                    <span class="song-item-title" style="font-size: 0.88rem;">Video ID: ${vId}</span>
+                                    ${isCurrent ? '<span class="badge-featured"><i class="fa-solid fa-check"></i> Đang chọn</span>' : ''}
+                                </div>
+                                <div class="song-item-artist" style="font-size: 0.78rem;">
+                                    <i class="fa-brands fa-youtube" style="color: #ef4444;"></i> youtube.com/watch?v=${vId}
+                                </div>
+                            </div>
+                            <div class="song-item-action">
+                                <button type="button" class="btn-item-pick" style="padding: 6px 12px; font-size: 0.8rem;">
+                                    ${isCurrent ? 'Đang phát' : 'Chọn video này'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+
+    async searchYoutubeFullAlternatives() {
+        if (!this.currentSong) return;
+        const listEl = document.getElementById('change-video-list');
+        if (listEl) {
+            listEl.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 20px;"><i class="fa-solid fa-spinner fa-spin"></i> Đang tìm thêm các bản Full Version trên YouTube...</div>';
+        }
+
+        try {
+            const endpoint = (window.MHENT_CONFIG && window.MHENT_CONFIG.AISA_API_ENDPOINT) || 'https://api.mhentuniverse.com';
+            const query = `${this.currentSong.title} ${this.currentSong.artist} Full`;
+            const res = await fetch(`${endpoint}/api/youtube-search?q=${encodeURIComponent(query)}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data && Array.isArray(data.candidates) && data.candidates.length > 0) {
+                    this.currentSong.yt_candidates = data.candidates;
+                    this.renderCandidateVideos();
+                    return;
+                }
+            }
+        } catch (e) {
+            console.warn('[Search Alternatives Error]:', e);
+        }
+
+        if (listEl) {
+            listEl.innerHTML = '<p style="color: #94a3b8; text-align: center; padding: 20px;">Không tìm thấy video gợi ý tự động. Bạn có thể dán link YouTube bất kỳ ở ô phía trên!</p>';
+        }
+    }
+
+    applyCustomYoutubeUrl() {
+        const input = document.getElementById('custom-yt-input');
+        if (!input || !input.value.trim()) {
+            this.showToast('Vui lòng nhập link hoặc Video ID của YouTube!', 'warning');
+            return;
+        }
+
+        const raw = input.value.trim();
+        let videoId = '';
+        const match = raw.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+        if (match) {
+            videoId = match[1];
+        } else if (/^[\w-]{11}$/.test(raw)) {
+            videoId = raw;
+        }
+
+        if (!videoId) {
+            this.showToast('Link YouTube không hợp lệ. Vui lòng kiểm tra lại!', 'error');
+            return;
+        }
+
+        this.changeYouTubeVideo(videoId);
+    }
+
+    changeYouTubeVideo(videoId) {
+        if (!videoId || !this.currentSong) return;
+        this.currentSong.youtube_id = videoId;
+        this.closeChangeVideoModal();
+
+        const warnBadge = document.getElementById('tv-size-warning-badge');
+        if (warnBadge) warnBadge.style.display = 'none';
+
+        if (this.ytPlayer && typeof this.ytPlayer.loadVideoById === 'function') {
+            this.ytPlayer.loadVideoById(videoId);
+        } else {
+            this.initYouTubePlayer(videoId);
+        }
+
+        if (this.mediaMode !== 'video') {
+            this.toggleMediaMode();
+        }
+
+        this.showToast(`✨ Đã chuyển sang video YouTube mới: ${videoId}!`, 'success');
+
+        if (window.studyCloud && typeof window.studyCloud.saveSong === 'function') {
+            window.studyCloud.saveSong(this.currentSong).catch(() => {});
         }
     }
 
@@ -2150,13 +2328,20 @@ QUY TẮC ĐẦU RA:
 
             // Tự động tìm kiếm video YouTube ID cho bài hát này qua AISA API Worker
             let foundYtId = '';
+            let ytCandidates = [];
             try {
                 const endpoint = (window.MHENT_CONFIG && window.MHENT_CONFIG.AISA_API_ENDPOINT) || 'https://api.mhentuniverse.com';
-                const ytRes = await fetch(`${endpoint}/api/youtube-search?q=${encodeURIComponent(item.trackName + ' ' + item.artistName)}`);
+                // Chiến lược tìm kiếm Full Version: nếu bài hát dài > 90s, thêm "Full" vào từ khóa để tránh vướng phải MV cắt ngắn / TV Size
+                const searchQ = (item.duration && item.duration > 90) ? 
+                    `${item.trackName} ${item.artistName} Full` : 
+                    `${item.trackName} ${item.artistName}`;
+
+                const ytRes = await fetch(`${endpoint}/api/youtube-search?q=${encodeURIComponent(searchQ)}`);
                 if (ytRes.ok) {
                     const ytData = await ytRes.json();
                     if (ytData && ytData.videoId) {
                         foundYtId = ytData.videoId;
+                        ytCandidates = ytData.candidates || [];
                     }
                 }
             } catch (ytErr) {
@@ -2169,6 +2354,7 @@ QUY TẮC ĐẦU RA:
                 artist: item.artistName,
                 lang: detectedLang,
                 youtube_id: foundYtId || '',
+                yt_candidates: ytCandidates,
                 audio_url: candidate.previewUrl || '',
                 thumbnail: candidate.thumbnail || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=60',
                 duration: item.duration || 180,
@@ -2189,41 +2375,75 @@ QUY TẮC ĐẦU RA:
     }
 
     parseLrc(lrcText) {
-        if (!lrcText) return [];
+        if (!lrcText || typeof lrcText !== 'string') return [];
         const lines = lrcText.split('\n');
         const result = [];
-        const timeRegex = /\[(\d{2}):(\d{2})\.(\d{2,3})\](.*)/;
+        
+        // Flexible timestamp regex: matches [mm:ss], [m:ss.xx], [mm:ss:xx], [mm:ss.xxx], [mm:s.xx]
+        const tagRegex = /\[(\d{1,2}):(\d{1,2})(?:[.:](\d{1,3}))?\]/g;
 
-        lines.forEach((line, idx) => {
-            const match = line.match(timeRegex);
-            if (match) {
+        lines.forEach((rawLine) => {
+            const line = rawLine.trim();
+            if (!line || /^\[(ti|ar|al|by|offset|length|re|ve):/i.test(line)) return;
+
+            const timestamps = [];
+            let match;
+            tagRegex.lastIndex = 0;
+
+            while ((match = tagRegex.exec(line)) !== null) {
                 const min = parseInt(match[1], 10);
                 const sec = parseInt(match[2], 10);
-                const ms = parseFloat('0.' + match[3]);
-                const startTime = min * 60 + sec + ms;
-                const text = match[4].trim();
+                const msRaw = match[3] || '0';
+                const ms = parseFloat('0.' + msRaw);
+                timestamps.push(parseFloat((min * 60 + sec + ms).toFixed(3)));
+            }
 
-                if (text) {
+            // Extract text by stripping all timestamp tags
+            const text = line.replace(/\[\d{1,2}:\d{1,2}(?:[.:]\d{1,3})?\]/g, '').trim();
+
+            if (timestamps.length > 0 && text) {
+                timestamps.forEach(t => {
                     result.push({
-                        id: idx + 1,
-                        startTime: startTime,
+                        startTime: t,
                         endTime: 0,
                         text: text,
                         phonetic: '',
                         translation: text,
                         words: []
                     });
-                }
+                });
             }
         });
 
-        for (let i = 0; i < result.length; i++) {
-            if (i < result.length - 1) {
-                result[i].endTime = result[i + 1].startTime;
-            } else {
-                result[i].endTime = result[i].startTime + 5;
-            }
+        // Nếu là plain text không có mốc thời gian, không được bỏ rơi lời bài hát!
+        if (result.length === 0) {
+            const textLines = lines
+                .map(l => l.replace(/^\[.*?\]/, '').trim())
+                .filter(l => l.length > 0 && !/^\[(ti|ar|al|by|offset|length|re|ve):/i.test(l));
+
+            const totalDur = (this.currentSong && this.currentSong.duration) || 180;
+            const step = Math.max(3, parseFloat((totalDur / (textLines.length + 1)).toFixed(2)));
+
+            textLines.forEach((tl, idx) => {
+                result.push({
+                    startTime: parseFloat((idx * step).toFixed(2)),
+                    endTime: parseFloat(((idx + 1) * step).toFixed(2)),
+                    text: tl,
+                    phonetic: '',
+                    translation: tl,
+                    words: []
+                });
+            });
         }
+
+        // Sắp xếp tuần tự theo startTime
+        result.sort((a, b) => a.startTime - b.startTime);
+
+        // Gán ID và endTime liên tục
+        result.forEach((item, idx) => {
+            item.id = idx + 1;
+            item.endTime = (idx < result.length - 1) ? result[idx + 1].startTime : item.startTime + 4.5;
+        });
 
         return result;
     }
@@ -2313,7 +2533,7 @@ QUY TẮC ĐẦU RA:
                       "artist": "John Michael Howell",
                       "lang": "en",
                       "thumbnail": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/bf/25/74/bf2574e4-b77a-ec94-279c-7f55b9e4a8ea/artwork.jpg/600x600bb.jpg",
-                      "youtube_id": "Ie6n-Nq_5rA",
+                      "youtube_id": "BgmW6uIzjmY",
                       "audio_url": "",
                       "duration": 135,
                       "synced_lyrics": [
@@ -3401,7 +3621,1019 @@ QUY TẮC ĐẦU RA:
                     }
                 ],
                 community_versions: []
-            }
+            },
+            {
+          "id": "a-thousand-years-jvke-john-michael-howell",
+          "title": "A Thousand Years",
+          "artist": "John Michael Howell, JVKE & ZVC",
+          "lang": "en",
+          "thumbnail": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/05/23/e8/0523e800-ec89-9896-bc17-76b66e39feef/artwork.jpg/600x600bb.jpg",
+          "youtube_id": "5ptdEemGjrQ",
+          "audio_url": "",
+          "duration": 180,
+          "synced_lyrics": [
+                    {
+                              "id": 1,
+                              "text": "I was a kid looking for love, full of hope inside",
+                              "words": [
+                                        {
+                                                  "pos": "noun phrase",
+                                                  "word": "hope inside",
+                                                  "meaning": "niềm hy vọng bên trong tâm hồn",
+                                                  "phonetic": "hoʊp ˈɪnsaɪd"
+                                        }
+                              ],
+                              "endTime": 12.47,
+                              "phonetic": "",
+                              "startTime": 8.58,
+                              "translation": "Anh từng là một đứa trẻ tìm kiếm tình yêu, trong tim tràn ngập hy vọng."
+                    },
+                    {
+                              "id": 2,
+                              "text": "But time was never kind to me, my heart grew cold as ice",
+                              "words": [
+                                        {
+                                                  "pos": "adjective phrase",
+                                                  "word": "cold as ice",
+                                                  "meaning": "lạnh giá như băng",
+                                                  "phonetic": "koʊld əz aɪs"
+                                        }
+                              ],
+                              "endTime": 16.83,
+                              "phonetic": "",
+                              "startTime": 12.47,
+                              "translation": "Nhưng thời gian chẳng bao giờ dịu dàng với anh, trái tim anh đã lạnh giá tựa băng."
+                    },
+                    {
+                              "id": 3,
+                              "text": "All out of luck thought I was stuck alone for all my life",
+                              "words": [
+                                        {
+                                                  "pos": "adjective phrase",
+                                                  "word": "stuck alone",
+                                                  "meaning": "kẹt lại trong sự cô đơn",
+                                                  "phonetic": "stʌk əˈloʊn"
+                                        }
+                              ],
+                              "endTime": 20.8,
+                              "phonetic": "",
+                              "startTime": 16.83,
+                              "translation": "Cạn kiệt vận may, anh cứ ngỡ mình sẽ mãi cô độc suốt cuộc đời."
+                    },
+                    {
+                              "id": 4,
+                              "text": "But I was proven wrong the moment I looked in your eyes",
+                              "words": [
+                                        {
+                                                  "pos": "verb phrase",
+                                                  "word": "proven wrong",
+                                                  "meaning": "chứng minh là đã sai",
+                                                  "phonetic": "ˈpruvən rɔŋ"
+                                        }
+                              ],
+                              "endTime": 24.93,
+                              "phonetic": "",
+                              "startTime": 20.8,
+                              "translation": "Nhưng anh đã hoàn toàn lầm tưởng vào khoảnh khắc anh nhìn vào đôi mắt em."
+                    },
+                    {
+                              "id": 5,
+                              "text": "It's true, until I'm in the grave, darlin', I'll love you for a thousand years",
+                              "words": [
+                                        {
+                                                  "pos": "prepositional phrase",
+                                                  "word": "in the grave",
+                                                  "meaning": "nằm xuống mồ, khi chết đi",
+                                                  "phonetic": "ɪn ðə greɪv"
+                                        }
+                              ],
+                              "endTime": 34.7,
+                              "phonetic": "",
+                              "startTime": 24.93,
+                              "translation": "Thật đấy, cho đến khi anh nằm xuống mồ sâu, em yêu ơi, anh vẫn sẽ yêu em suốt ngàn năm."
+                    },
+                    {
+                              "id": 6,
+                              "text": "Dear, time is nothing when I'm here with you, ohh",
+                              "words": [
+                                        {
+                                                  "pos": "clause",
+                                                  "word": "time is nothing",
+                                                  "meaning": "thời gian không có nghĩa lý gì",
+                                                  "phonetic": "taɪm ɪz ˈnʌθɪŋ"
+                                        }
+                              ],
+                              "endTime": 41.02,
+                              "phonetic": "",
+                              "startTime": 34.7,
+                              "translation": "Em ơi, thời gian chẳng là gì khi anh được ở bên em, ồ."
+                    },
+                    {
+                              "id": 7,
+                              "text": "All my fears, tears, those memories they disappear with you, ohh",
+                              "words": [
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "disappear",
+                                                  "meaning": "tan biến, biến mất",
+                                                  "phonetic": "ˌdɪsəˈpɪr"
+                                        }
+                              ],
+                              "endTime": 49.33,
+                              "phonetic": "",
+                              "startTime": 41.02,
+                              "translation": "Mọi nỗi sợ, giọt nước mắt và những ký ức ấy đều tan biến cùng em, ồ."
+                    },
+                    {
+                              "id": 8,
+                              "text": "'Til I turn into dust, I'll carry this love, my dear, for a thousand years",
+                              "words": [
+                                        {
+                                                  "pos": "verb phrase",
+                                                  "word": "turn into dust",
+                                                  "meaning": "hóa thành cát bụi",
+                                                  "phonetic": "tɜrn ˈɪntu dʌst"
+                                        }
+                              ],
+                              "endTime": 66.95,
+                              "phonetic": "",
+                              "startTime": 49.33,
+                              "translation": "Cho đến khi anh hóa thành cát bụi, anh vẫn sẽ mang theo tình yêu này, em yêu ơi, suốt ngàn năm."
+                    },
+                    {
+                              "id": 9,
+                              "text": "Saw very soon something will bloom like a lotus flower",
+                              "words": [
+                                        {
+                                                  "pos": "noun phrase",
+                                                  "word": "lotus flower",
+                                                  "meaning": "đóa hoa sen",
+                                                  "phonetic": "ˈloʊtəs ˈflaʊər"
+                                        }
+                              ],
+                              "endTime": 71.14,
+                              "phonetic": "",
+                              "startTime": 66.95,
+                              "translation": "Anh sớm nhận ra điều gì đó sẽ nở rộ tựa đóa hoa sen."
+                    },
+                    {
+                              "id": 10,
+                              "text": "The bluest moon will soon be sun and turn to golden hour",
+                              "words": [
+                                        {
+                                                  "pos": "noun phrase",
+                                                  "word": "golden hour",
+                                                  "meaning": "giờ vàng, khoảnh khắc đẹp nhất",
+                                                  "phonetic": "ˈgoʊldən ˈaʊər"
+                                        }
+                              ],
+                              "endTime": 75.51,
+                              "phonetic": "",
+                              "startTime": 71.14,
+                              "translation": "Ánh trăng xanh thẳm rồi sẽ chuyển hóa thành mặt trời và bước vào khoảnh khắc hoàng kim."
+                    },
+                    {
+                              "id": 11,
+                              "text": "Hours and days lost in your gaze, losing track of time",
+                              "words": [
+                                        {
+                                                  "pos": "verb phrase",
+                                                  "word": "losing track of time",
+                                                  "meaning": "mất khái niệm về thời gian",
+                                                  "phonetic": "ˈluzɪŋ træk ʌv taɪm"
+                                        }
+                              ],
+                              "endTime": 79.76,
+                              "phonetic": "",
+                              "startTime": 75.51,
+                              "translation": "Hàng giờ rồi hàng ngày lạc trôi trong ánh mắt em, quên đi cả thời gian."
+                    },
+                    {
+                              "id": 12,
+                              "text": "Learning how to slow it down appreciate our lives",
+                              "words": [
+                                        {
+                                                  "pos": "verb phrase",
+                                                  "word": "slow it down",
+                                                  "meaning": "làm chậm lại, sống chậm",
+                                                  "phonetic": "sloʊ ɪt daʊn"
+                                        }
+                              ],
+                              "endTime": 83.58,
+                              "phonetic": "",
+                              "startTime": 79.76,
+                              "translation": "Học cách sống chậm lại để trân trọng cuộc đời chúng ta."
+                    },
+                    {
+                              "id": 13,
+                              "text": "Just know until I'm in the grave darlin', I'll love you for a thousand years",
+                              "words": [
+                                        {
+                                                  "pos": "phrase",
+                                                  "word": "just know",
+                                                  "meaning": "hãy biết rằng, hãy hiểu cho",
+                                                  "phonetic": "ʤʌst noʊ"
+                                        }
+                              ],
+                              "endTime": 93.16,
+                              "phonetic": "",
+                              "startTime": 83.58,
+                              "translation": "Hãy biết rằng cho đến khi anh nằm xuống mồ sâu, em yêu ơi, anh vẫn sẽ yêu em suốt ngàn năm."
+                    },
+                    {
+                              "id": 14,
+                              "text": "Dear, time is nothing when I'm here with you, ohh",
+                              "words": [
+                                        {
+                                                  "pos": "clause",
+                                                  "word": "time is nothing",
+                                                  "meaning": "thời gian không có nghĩa lý gì",
+                                                  "phonetic": "taɪm ɪz ˈnʌθɪŋ"
+                                        }
+                              ],
+                              "endTime": 99.69,
+                              "phonetic": "",
+                              "startTime": 93.16,
+                              "translation": "Em ơi, thời gian chẳng là gì khi anh được ở bên em, ồ."
+                    },
+                    {
+                              "id": 15,
+                              "text": "All my fears, tears, those memories they disappear with you, ohh",
+                              "words": [
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "disappear",
+                                                  "meaning": "tan biến, biến mất",
+                                                  "phonetic": "ˌdɪsəˈpɪr"
+                                        }
+                              ],
+                              "endTime": 107.97,
+                              "phonetic": "",
+                              "startTime": 99.69,
+                              "translation": "Mọi nỗi sợ, giọt nước mắt và những ký ức ấy đều tan biến cùng em, ồ."
+                    },
+                    {
+                              "id": 16,
+                              "text": "'Til I turn into dust I'll carry this love, my dear, for a thousand years",
+                              "words": [
+                                        {
+                                                  "pos": "verb phrase",
+                                                  "word": "turn into dust",
+                                                  "meaning": "hóa thành cát bụi",
+                                                  "phonetic": "tɜrn ˈɪntu dʌst"
+                                        }
+                              ],
+                              "endTime": 125.85,
+                              "phonetic": "",
+                              "startTime": 107.97,
+                              "translation": "Cho đến khi anh hóa thành cát bụi, anh vẫn sẽ mang theo tình yêu này, em yêu ơi, suốt ngàn năm."
+                    },
+                    {
+                              "id": 17,
+                              "text": "Set it all on fire, let it burn up brighter",
+                              "words": [
+                                        {
+                                                  "pos": "verb phrase",
+                                                  "word": "set on fire",
+                                                  "meaning": "thắp lửa, đốt cháy",
+                                                  "phonetic": "sɛt ɒn ˈfaɪər"
+                                        }
+                              ],
+                              "endTime": 129.99,
+                              "phonetic": "",
+                              "startTime": 125.85,
+                              "translation": "Thắp bùng lên tất cả, hãy để ngọn lửa cháy rực rỡ hơn."
+                    },
+                    {
+                              "id": 18,
+                              "text": "Love is a flame, it's dancing away to David playing on a lyre",
+                              "words": [
+                                        {
+                                                  "pos": "verb phrase",
+                                                  "word": "dancing away",
+                                                  "meaning": "nhảy múa say sưa",
+                                                  "phonetic": "ˈdɑnsɪŋ əˈweɪ"
+                                        }
+                              ],
+                              "endTime": 134.04,
+                              "phonetic": "",
+                              "startTime": 129.99,
+                              "translation": "Tình yêu là ngọn lửa, đang nhảy múa theo tiếng đàn lia của David."
+                    },
+                    {
+                              "id": 19,
+                              "text": "Set it all on fire, let the smoke go higher",
+                              "words": [
+                                        {
+                                                  "pos": "clause",
+                                                  "word": "smoke go higher",
+                                                  "meaning": "làn khói bay cao",
+                                                  "phonetic": "smoʊk goʊ ˈhaɪər"
+                                        }
+                              ],
+                              "endTime": 138.13,
+                              "phonetic": "",
+                              "startTime": 134.04,
+                              "translation": "Thắp bùng lên tất cả, hãy để làn khói bay cao hơn nữa."
+                    },
+                    {
+                              "id": 20,
+                              "text": "'Cause darlin', I'll love you for a thousand years",
+                              "words": [
+                                        {
+                                                  "pos": "noun phrase",
+                                                  "word": "a thousand years",
+                                                  "meaning": "khoảng thời gian ngàn năm",
+                                                  "phonetic": "ə ˈθaʊzənd jɪrz"
+                                        }
+                              ],
+                              "endTime": 143.32,
+                              "phonetic": "",
+                              "startTime": 138.13,
+                              "translation": "Vì em yêu ơi, anh sẽ yêu em suốt ngàn năm."
+                    },
+                    {
+                              "id": 21,
+                              "text": "Dear, time is nothing when I'm here with you, ohh",
+                              "words": [
+                                        {
+                                                  "pos": "clause",
+                                                  "word": "time is nothing",
+                                                  "meaning": "thời gian không có nghĩa lý gì",
+                                                  "phonetic": "taɪm ɪz ˈnʌθɪŋ"
+                                        }
+                              ],
+                              "endTime": 149.88,
+                              "phonetic": "",
+                              "startTime": 143.32,
+                              "translation": "Em ơi, thời gian chẳng là gì khi anh được ở bên em, ồ."
+                    },
+                    {
+                              "id": 22,
+                              "text": "All my fears, tears, those memories they disappear with you, ohh",
+                              "words": [
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "disappear",
+                                                  "meaning": "tan biến, biến mất",
+                                                  "phonetic": "ˌdɪsəˈpɪr"
+                                        }
+                              ],
+                              "endTime": 158.17,
+                              "phonetic": "",
+                              "startTime": 149.88,
+                              "translation": "Mọi nỗi sợ, giọt nước mắt và những ký ức ấy đều tan biến cùng em, ồ."
+                    },
+                    {
+                              "id": 23,
+                              "text": "'Til the air leaves my lungs with each breath, I'll hold you near",
+                              "words": [
+                                        {
+                                                  "pos": "verb phrase",
+                                                  "word": "hold you near",
+                                                  "meaning": "ôm ấp, giữ bên cạnh",
+                                                  "phonetic": "hoʊld ju nɪr"
+                                        }
+                              ],
+                              "endTime": 166.54,
+                              "phonetic": "",
+                              "startTime": 158.17,
+                              "translation": "Cho đến khi hơi thở cuối cùng rời khỏi lồng ngực, anh vẫn sẽ ôm chặt lấy em."
+                    },
+                    {
+                              "id": 24,
+                              "text": "'Til I turn into dust, I'll carry this love, my dear, for a thousand years",
+                              "words": [
+                                        {
+                                                  "pos": "verb phrase",
+                                                  "word": "carry this love",
+                                                  "meaning": "ôm ấp và gìn giữ tình yêu",
+                                                  "phonetic": "ˈkæri ðɪs lʌv"
+                                        }
+                              ],
+                              "endTime": 171.04,
+                              "phonetic": "",
+                              "startTime": 166.54,
+                              "translation": "Cho đến khi anh hóa thành cát bụi, anh vẫn sẽ mang theo tình yêu này, em yêu ơi, suốt ngàn năm."
+                    }
+          ]
+},
+            {
+          "id": "awakening-harmony-cure-zukyoon-kiss",
+          "title": "Awakening Harmony",
+          "artist": "キュアズキューン (南條愛乃) & キュアキッス (花井美春)",
+          "lang": "ja",
+          "thumbnail": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/71/34/23/713423ea-7221-a1e6-23cb-a92e1069f213/artwork.jpg/600x600bb.jpg",
+          "youtube_id": "OlZK4BPps_g",
+          "audio_url": "",
+          "duration": 218,
+          "synced_lyrics": [
+                    {
+                              "id": 1,
+                              "text": "暗闇のまんなか 真っ直ぐな眼差しで",
+                              "words": [
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "暗闇",
+                                                  "meaning": "bóng tối",
+                                                  "phonetic": "kurayami"
+                                        },
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "眼差し",
+                                                  "meaning": "ánh mắt",
+                                                  "phonetic": "manazashi"
+                                        }
+                              ],
+                              "endTime": 23.17,
+                              "phonetic": "Kurayami no mannaka massugu na manazashi de",
+                              "startTime": 17.35,
+                              "translation": "Giữa chốn tối tăm mịt mờ, với ánh nhìn thẳng tắp và kiên định"
+                    },
+                    {
+                              "id": 2,
+                              "text": "立ち上がる姿 ちゃんと見ていたよ",
+                              "words": [
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "立ち上がる",
+                                                  "meaning": "đứng dậy",
+                                                  "phonetic": "tachiagaru"
+                                        },
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "姿",
+                                                  "meaning": "dáng hình",
+                                                  "phonetic": "sugata"
+                                        }
+                              ],
+                              "endTime": 28.53,
+                              "phonetic": "Tachiagaru sugata chanto miteita yo",
+                              "startTime": 23.17,
+                              "translation": "Tôi vẫn luôn dõi theo dáng hình kiên cường đứng dậy ấy"
+                    },
+                    {
+                              "id": 3,
+                              "text": "閉じ込められそうな 心を奮い立たせ",
+                              "words": [
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "心",
+                                                  "meaning": "trái tim",
+                                                  "phonetic": "kokoro"
+                                        },
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "奮い立たせ",
+                                                  "meaning": "vực dậy",
+                                                  "phonetic": "furuitatase"
+                                        }
+                              ],
+                              "endTime": 34.31,
+                              "phonetic": "Tojikomerare sou na kokoro o furuitatase",
+                              "startTime": 28.53,
+                              "translation": "Hãy thắp lên và vực dậy trái tim tưởng chừng như đang bị giam cầm"
+                    },
+                    {
+                              "id": 4,
+                              "text": "おさまりきらない 輝きを放ち",
+                              "words": [
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "輝き",
+                                                  "meaning": "ánh sáng",
+                                                  "phonetic": "kagayaki"
+                                        },
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "放ち",
+                                                  "meaning": "tỏa ra",
+                                                  "phonetic": "hanachi"
+                                        }
+                              ],
+                              "endTime": 39.02,
+                              "phonetic": "Osamrikiranai kagayaki o hanachi",
+                              "startTime": 34.31,
+                              "translation": "Tỏa ra thứ ánh sáng rực rỡ chẳng thể nào kìm nén thêm nữa"
+                    },
+                    {
+                              "id": 5,
+                              "text": "射抜かれた胸のおく 焼きついた目映さは",
+                              "words": [
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "胸",
+                                                  "meaning": "lồng ngực",
+                                                  "phonetic": "mune"
+                                        },
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "目映さ",
+                                                  "meaning": "sự chói lọi",
+                                                  "phonetic": "mabayusa"
+                                        }
+                              ],
+                              "endTime": 44.74,
+                              "phonetic": "Inukareta mune no oku yakitsuita mabayusa wa",
+                              "startTime": 39.02,
+                              "translation": "Vẻ rực rỡ đã khắc sâu vào tận đáy lồng ngực vừa bị xuyên thấu ấy"
+                    },
+                    {
+                              "id": 6,
+                              "text": "それだけでもう理由になる 待っていて",
+                              "words": [
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "理由",
+                                                  "meaning": "lý do",
+                                                  "phonetic": "riyuu"
+                                        },
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "待って",
+                                                  "meaning": "chờ đợi",
+                                                  "phonetic": "matte"
+                                        }
+                              ],
+                              "endTime": 50.47,
+                              "phonetic": "Sore dake mou riyuu ni naru matte ite",
+                              "startTime": 44.74,
+                              "translation": "Chỉ thế thôi cũng đủ thành lý do rồi, hãy chờ tôi nhé"
+                    },
+                    {
+                              "id": 7,
+                              "text": "取り戻したい 光の世界",
+                              "words": [
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "取り戻す",
+                                                  "meaning": "lấy lại",
+                                                  "phonetic": "torimodosu"
+                                        },
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "光",
+                                                  "meaning": "ánh sáng",
+                                                  "phonetic": "hikari"
+                                        }
+                              ],
+                              "endTime": 56.03,
+                              "phonetic": "Torimodoshitai hikari no sekai",
+                              "startTime": 50.47,
+                              "translation": "Chúng ta muốn lấy lại thế giới tràn ngập ánh sáng"
+                    },
+                    {
+                              "id": 8,
+                              "text": "その笑顔 勇気 涙 夢 希望の兆し",
+                              "words": [
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "笑顔",
+                                                  "meaning": "nụ cười",
+                                                  "phonetic": "egao"
+                                        },
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "希望",
+                                                  "meaning": "hy vọng",
+                                                  "phonetic": "kibou"
+                                        }
+                              ],
+                              "endTime": 61.63,
+                              "phonetic": "Sono egao yuuki namida yume kibou no kizashi",
+                              "startTime": 56.03,
+                              "translation": "Nụ cười, lòng dũng cảm, giọt nước mắt, ước mơ và điềm báo hy vọng của bạn"
+                    },
+                    {
+                              "id": 9,
+                              "text": "キミと明日を 願うチカラで",
+                              "words": [
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "明日",
+                                                  "meaning": "ngày mai",
+                                                  "phonetic": "ashita"
+                                        },
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "力",
+                                                  "meaning": "sức mạnh",
+                                                  "phonetic": "chikara"
+                                        }
+                              ],
+                              "endTime": 67.03,
+                              "phonetic": "Kimi to ashita o negau chikara de",
+                              "startTime": 61.63,
+                              "translation": "Bằng sức mạnh ước nguyện về một ngày mai cùng bạn"
+                    },
+                    {
+                              "id": 10,
+                              "text": "うまれる わたし達のハーモニー",
+                              "words": [
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "生まれ",
+                                                  "meaning": "sinh ra",
+                                                  "phonetic": "umare"
+                                        },
+                                        {
+                                                  "pos": "pronoun",
+                                                  "word": "私たち",
+                                                  "meaning": "chúng ta",
+                                                  "phonetic": "watashitachi"
+                                        }
+                              ],
+                              "endTime": 73.02,
+                              "phonetic": "Umareru watashitachi no haamanii",
+                              "startTime": 67.03,
+                              "translation": "Giai điệu hòa ca của chúng ta được sinh ra"
+                    },
+                    {
+                              "id": 11,
+                              "text": "響け",
+                              "words": [
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "響け",
+                                                  "meaning": "vang vọng",
+                                                  "phonetic": "hibike"
+                                        }
+                              ],
+                              "endTime": 84.97,
+                              "phonetic": "Hibike",
+                              "startTime": 73.02,
+                              "translation": "Hãy vang lên thật xa!"
+                    },
+                    {
+                              "id": 12,
+                              "text": "それでも暗闇は 訪れてしまうもの",
+                              "words": [
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "暗闇",
+                                                  "meaning": "bóng tối",
+                                                  "phonetic": "kurayami"
+                                        },
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "訪れる",
+                                                  "meaning": "ghé đến",
+                                                  "phonetic": "otozureru"
+                                        }
+                              ],
+                              "endTime": 90.83,
+                              "phonetic": "Soredemo kurayami wa otozurete shimau mono",
+                              "startTime": 84.97,
+                              "translation": "Dẫu vậy, đôi khi bóng tối vẫn cứ bất chợt kéo đến"
+                    },
+                    {
+                              "id": 13,
+                              "text": "惑わされないで キミはキミだから",
+                              "words": [
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "惑わされない",
+                                                  "meaning": "bị mê hoặc/lung lay",
+                                                  "phonetic": "madowasarenai"
+                                        },
+                                        {
+                                                  "pos": "pronoun",
+                                                  "word": "キミ",
+                                                  "meaning": "bạn",
+                                                  "phonetic": "kimi"
+                                        }
+                              ],
+                              "endTime": 96.53,
+                              "phonetic": "Madowasarenai de kimi wa kimi dakara",
+                              "startTime": 90.83,
+                              "translation": "Đừng để bản thân bị lung lay, bởi vì bạn mãi là chính bạn"
+                    },
+                    {
+                              "id": 14,
+                              "text": "渡しあえた日々が ハートを輝かせる",
+                              "words": [
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "日々",
+                                                  "meaning": "ngày tháng",
+                                                  "phonetic": "hibi"
+                                        },
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "輝かせる",
+                                                  "meaning": "làm cho tỏa sáng",
+                                                  "phonetic": "kagayakaseru"
+                                        }
+                              ],
+                              "endTime": 101.94,
+                              "phonetic": "Watashiaeta hibi ga haato o kagayakaseru",
+                              "startTime": 96.53,
+                              "translation": "Những ngày tháng sẻ chia cùng nhau thắp sáng trái tim này"
+                    },
+                    {
+                              "id": 15,
+                              "text": "ひとりじゃないこと 気づかせてくれる",
+                              "words": [
+                                        {
+                                                  "pos": "adjective",
+                                                  "word": "ひとり",
+                                                  "meaning": "một mình",
+                                                  "phonetic": "hitori"
+                                        },
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "気づかせ",
+                                                  "meaning": "làm cho nhận ra",
+                                                  "phonetic": "kizukase"
+                                        }
+                              ],
+                              "endTime": 106.88,
+                              "phonetic": "Hitori ja nai koto kizukasete kureru",
+                              "startTime": 101.94,
+                              "translation": "Đã cho tôi nhận ra rằng chúng ta không hề cô độc"
+                    },
+                    {
+                              "id": 16,
+                              "text": "抱えきれないほどの「ありがとう」のかわりに",
+                              "words": [
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "抱えきれない",
+                                                  "meaning": "không ôm hết",
+                                                  "phonetic": "kaka kirenai"
+                                        },
+                                        {
+                                                  "pos": "interjection",
+                                                  "word": "ありがとう",
+                                                  "meaning": "cảm ơn",
+                                                  "phonetic": "arigatou"
+                                        }
+                              ],
+                              "endTime": 112.55,
+                              "phonetic": "Kaka kirenai hodo no \"arigatou\" no kawari ni",
+                              "startTime": 106.88,
+                              "translation": "Thay cho ngàn lời \"cảm ơn\" mà tôi chứa chan chẳng thể ôm hết"
+                    },
+                    {
+                              "id": 17,
+                              "text": "鍵をかけてひとつになる 受け止めて",
+                              "words": [
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "鍵",
+                                                  "meaning": "chìa khóa",
+                                                  "phonetic": "kagi"
+                                        },
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "受け止めて",
+                                                  "meaning": "đón nhận",
+                                                  "phonetic": "uketomete"
+                                        }
+                              ],
+                              "endTime": 118.09,
+                              "phonetic": "Kagi o kakete hitotsu ni naru uketomete",
+                              "startTime": 112.55,
+                              "translation": "Khóa chặt lại để hòa làm một, xin hãy đón nhận lấy nhé"
+                    },
+                    {
+                              "id": 18,
+                              "text": "取り戻すんだ 光の未来",
+                              "words": [
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "取り戻す",
+                                                  "meaning": "lấy lại",
+                                                  "phonetic": "torimodosu"
+                                        },
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "未来",
+                                                  "meaning": "tương lai",
+                                                  "phonetic": "mirai"
+                                        }
+                              ],
+                              "endTime": 123.75,
+                              "phonetic": "Torimodosunda hikari no mirai",
+                              "startTime": 118.09,
+                              "translation": "Chúng ta nhất định sẽ lấy lại tương lai ngập tràn ánh sáng"
+                    },
+                    {
+                              "id": 19,
+                              "text": "今アツい オモイ 繋ぐ 声 叶えに行くよ",
+                              "words": [
+                                        {
+                                                  "pos": "adjective",
+                                                  "word": "熱い",
+                                                  "meaning": "nhiệt huyết",
+                                                  "phonetic": "atsui"
+                                        },
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "声",
+                                                  "meaning": "tiếng nói",
+                                                  "phonetic": "koe"
+                                        }
+                              ],
+                              "endTime": 129.4,
+                              "phonetic": "Ima atsui omoi tsunagu koe kanae ni iku yo",
+                              "startTime": 123.75,
+                              "translation": "Giờ đây, tiếng gọi kết nối những xúc cảm nhiệt huyết sẽ đi thực hiện điều ước"
+                    },
+                    {
+                              "id": 20,
+                              "text": "キミと一緒に 願える奇跡",
+                              "words": [
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "一緒",
+                                                  "meaning": "cùng nhau",
+                                                  "phonetic": "issho"
+                                        },
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "奇跡",
+                                                  "meaning": "phép màu",
+                                                  "phonetic": "kiseki"
+                                        }
+                              ],
+                              "endTime": 134.77,
+                              "phonetic": "Kimi to issho ni negaeru kiseki",
+                              "startTime": 129.4,
+                              "translation": "Phép màu mà tôi được ước nguyện cùng với bạn"
+                    },
+                    {
+                              "id": 21,
+                              "text": "かさねて 広がっていくハーモニー",
+                              "words": [
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "重ねて",
+                                                  "meaning": "chồng lên/hòa quyện",
+                                                  "phonetic": "kasanete"
+                                        },
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "広がって",
+                                                  "meaning": "lan rộng",
+                                                  "phonetic": "hirogatte"
+                                        }
+                              ],
+                              "endTime": 164.09,
+                              "phonetic": "Kasanete hirogatte iku haamanii",
+                              "startTime": 134.77,
+                              "translation": "Giai điệu hòa ca cứ thế chồng chất và lan tỏa rộng lớn"
+                    },
+                    {
+                              "id": 22,
+                              "text": "目覚める時が来たね ホントの自分になる",
+                              "words": [
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "目覚める",
+                                                  "meaning": "thức tỉnh",
+                                                  "phonetic": "mezameru"
+                                        },
+                                        {
+                                                  "pos": "pronoun",
+                                                  "word": "自分",
+                                                  "meaning": "bản thân",
+                                                  "phonetic": "jibun"
+                                        }
+                              ],
+                              "endTime": 169.79,
+                              "phonetic": "Mezameru toki ga kita ne honto no jibun ni naru",
+                              "startTime": 164.09,
+                              "translation": "Thời khắc thức tỉnh đã đến rồi, chúng ta trở thành chính mình thật sự"
+                    },
+                    {
+                              "id": 23,
+                              "text": "満ちる運命",
+                              "words": [
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "満ちる",
+                                                  "meaning": "tràn đầy",
+                                                  "phonetic": "michiru"
+                                        },
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "運命",
+                                                  "meaning": "định mệnh",
+                                                  "phonetic": "unmei"
+                                        }
+                              ],
+                              "endTime": 174.6,
+                              "phonetic": "Michiru unmei",
+                              "startTime": 169.79,
+                              "translation": "Định mệnh đang dần trọn vẹn và viên mãn"
+                    },
+                    {
+                              "id": 24,
+                              "text": "取り戻したい 光の世界",
+                              "words": [
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "取り戻す",
+                                                  "meaning": "lấy lại",
+                                                  "phonetic": "torimodosu"
+                                        },
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "光",
+                                                  "meaning": "ánh sáng",
+                                                  "phonetic": "hikari"
+                                        }
+                              ],
+                              "endTime": 180.14,
+                              "phonetic": "Torimodoshitai hikari no sekai",
+                              "startTime": 174.6,
+                              "translation": "Chúng ta muốn lấy lại thế giới tràn ngập ánh sáng"
+                    },
+                    {
+                              "id": 25,
+                              "text": "その笑顔 勇気 涙 夢 希望の兆し",
+                              "words": [
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "笑顔",
+                                                  "meaning": "nụ cười",
+                                                  "phonetic": "egao"
+                                        },
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "希望",
+                                                  "meaning": "hy vọng",
+                                                  "phonetic": "kibou"
+                                        }
+                              ],
+                              "endTime": 185.97,
+                              "phonetic": "Sono egao yuuki namida yume kibou no kizashi",
+                              "startTime": 180.14,
+                              "translation": "Nụ cười, lòng dũng cảm, giọt nước mắt, ước mơ và điềm báo hy vọng của bạn"
+                    },
+                    {
+                              "id": 26,
+                              "text": "キミと明日を 願うチカラで",
+                              "words": [
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "明日",
+                                                  "meaning": "ngày mai",
+                                                  "phonetic": "ashita"
+                                        },
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "力",
+                                                  "meaning": "sức mạnh",
+                                                  "phonetic": "chikara"
+                                        }
+                              ],
+                              "endTime": 191.07,
+                              "phonetic": "Kimi to ashita o negau chikara de",
+                              "startTime": 185.97,
+                              "translation": "Bằng sức mạnh ước nguyện về một ngày mai cùng bạn"
+                    },
+                    {
+                              "id": 27,
+                              "text": "うまれる わたし達のハーモニー",
+                              "words": [
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "生まれ",
+                                                  "meaning": "sinh ra",
+                                                  "phonetic": "umare"
+                                        },
+                                        {
+                                                  "pos": "pronoun",
+                                                  "word": "私たち",
+                                                  "meaning": "chúng ta",
+                                                  "phonetic": "watashitachi"
+                                        }
+                              ],
+                              "endTime": 197.17,
+                              "phonetic": "Umareru watashitachi no haamanii",
+                              "startTime": 191.07,
+                              "translation": "Giai điệu hòa ca của chúng ta được sinh ra"
+                    },
+                    {
+                              "id": 28,
+                              "text": "響け",
+                              "words": [
+                                        {
+                                                  "pos": "verb",
+                                                  "word": "響け",
+                                                  "meaning": "vang vọng",
+                                                  "phonetic": "hibike"
+                                        }
+                              ],
+                              "endTime": 201.67,
+                              "phonetic": "Hibike",
+                              "startTime": 197.17,
+                              "translation": "Hãy vang lên thật xa!"
+                    }
+          ]
+}
         ];
     }
 
