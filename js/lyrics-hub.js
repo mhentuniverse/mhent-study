@@ -81,18 +81,19 @@ class LyricsHubApp {
     setup() {
         this.bindDomEvents();
         this.renderShowcaseCards();
-
-        // Mặc định nạp bài hát đầu tiên
-        const defaultSong = this.featuredSongs[0];
-        if (defaultSong) {
-            this.loadSong(defaultSong);
-        }
+        this.setupContribVocabHighlighter();
 
         // Tự động kiểm tra nếu có tham số URL ?song=...
         const urlParams = new URLSearchParams(window.location.search);
         const songParam = urlParams.get('song');
         if (songParam) {
             this.searchSong(songParam);
+        } else {
+            // Mặc định nạp bài hát đầu tiên
+            const defaultSong = this.featuredSongs[0];
+            if (defaultSong) {
+                this.loadSong(defaultSong);
+            }
         }
     }
 
@@ -429,6 +430,9 @@ class LyricsHubApp {
         if (this.isPlainMode) {
             this.renderPlainLyrics();
         }
+
+        // Cập nhật Deep-link URL, Title trình duyệt và SEO Schema.org JSON-LD
+        this.updatePageMetaAndUrl(song);
 
         // Reset nút Loop
         this.updateLoopBtnUi();
@@ -2246,6 +2250,25 @@ QUY TẮC ĐẦU RA:
     // =========================================================================
     // 7. TÌM KIẾM BÀI HÁT THÔNG MINH ĐA TẦNG (SMART MULTI-STRATEGY SEARCH)
     // =========================================================================
+    removeVietnameseTones(str) {
+        if (!str) return '';
+        str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+        str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+        str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+        str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+        str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+        str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+        str = str.replace(/đ/g, "d");
+        str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
+        str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
+        str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
+        str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
+        str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
+        str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
+        str = str.replace(/Đ/g, "D");
+        return str.toLowerCase().trim();
+    }
+
     async searchSong(query) {
         if (!query) return;
         query = query.trim();
@@ -2268,6 +2291,30 @@ QUY TẮC ĐẦU RA:
                     }
                 } catch (oeErr) {}
 
+                // Làm sạch tiêu đề video để tự động dò lời trên LRCLIB
+                const cleanTitle = ytTitle
+                    .replace(/\[(?:Vietsub|Pinyin|Official|MV|Lyrics|HD|4K|Audio|Full)[^\]]*\]/gi, '')
+                    .replace(/\((?:Vietsub|Pinyin|Official|MV|Lyrics|HD|4K|Audio|Full)[^\)]*\)/gi, '')
+                    .replace(/[\-–—|].*$/, '')
+                    .trim();
+
+                let fetchedLyrics = [];
+                let plainText = '';
+
+                try {
+                    const lrcUrl = `https://lrclib.net/api/search?q=${encodeURIComponent(cleanTitle || ytTitle)}`;
+                    const lrcRes = await fetch(lrcUrl).then(r => r.json());
+                    if (Array.isArray(lrcRes) && lrcRes.length > 0) {
+                        const topHit = lrcRes[0];
+                        if (topHit.syncedLyrics) {
+                            fetchedLyrics = this.parseLrc(topHit.syncedLyrics);
+                            plainText = topHit.plainLyrics || topHit.syncedLyrics;
+                        }
+                    }
+                } catch (lrcErr) {
+                    console.warn('[LRCLIB YouTube Auto-Lyrics]', lrcErr);
+                }
+
                 const customSong = {
                     id: `yt-${vId}`,
                     title: ytTitle,
@@ -2278,24 +2325,41 @@ QUY TẮC ĐẦU RA:
                     yt_candidates: [vId],
                     audio_url: '',
                     duration: 180,
-                    synced_lyrics: [],
-                    plain_lyrics: '',
+                    synced_lyrics: fetchedLyrics,
+                    plain_lyrics: plainText,
                     views: 1,
                     created_by: 'YouTube Direct',
                     community_versions: []
                 };
+
                 this.loadSong(customSong);
-                this.showToast(`✨ Đã nạp video YouTube: "${ytTitle}"! Bạn có thể bấm "Phân tích AI" để bóc tách lời nhé!`, 'success', 3500);
+                if (fetchedLyrics.length > 0) {
+                    this.showToast(`✨ Đã nhận diện bài hát và tự động nạp ${fetchedLyrics.length} câu lời Karaoke!`, 'success', 3500);
+                } else {
+                    this.showToast(`✨ Đã nạp MV YouTube: "${ytTitle}"! Bạn có thể bấm "Đóng góp bản dịch" để nhập lời nhé!`, 'info', 3500);
+                }
                 return;
             }
 
             const candidates = [];
+            const qNorm = this.removeVietnameseTones(query);
             const qLower = query.toLowerCase();
             const qClean = query.replace(/[-–—|/]/g, ' ').replace(/\s+/g, ' ').trim();
 
-            // 1. Kiểm tra trong danh sách Featured Songs cục bộ trước
+            // 1. Kiểm tra trong danh sách Featured Songs cục bộ (hỗ trợ tiếng Việt không dấu & Hán Việt)
             this.featuredSongs.forEach(s => {
-                if (s.title.toLowerCase().includes(qLower) || s.artist.toLowerCase().includes(qLower) || qLower.includes(s.id)) {
+                const titleNorm = this.removeVietnameseTones(s.title);
+                const artistNorm = this.removeVietnameseTones(s.artist);
+                const aliases = Array.isArray(s.aliases) ? s.aliases.map(a => this.removeVietnameseTones(a)) : [];
+                
+                const isMatch = titleNorm.includes(qNorm) || 
+                                artistNorm.includes(qNorm) || 
+                                aliases.some(a => a.includes(qNorm)) || 
+                                s.title.toLowerCase().includes(qLower) || 
+                                s.artist.toLowerCase().includes(qLower) || 
+                                qLower.includes(s.id);
+
+                if (isMatch) {
                     candidates.push({
                         type: 'featured',
                         rawSong: s,
@@ -2310,13 +2374,24 @@ QUY TẮC ĐẦU RA:
                 }
             });
 
-            // 1B. Kiểm tra trong Supabase Cloud (các bài hát đã được dịch & chuẩn hóa đầy đủ lời)
+            // 1B. Kiểm tra trong Supabase Cloud
             if (window.studyCloud && typeof window.studyCloud.listSongs === 'function') {
                 try {
                     const cloudSongs = await window.studyCloud.listSongs();
                     if (Array.isArray(cloudSongs)) {
                         for (const cs of cloudSongs) {
-                            if (cs.title.toLowerCase().includes(qLower) || cs.artist.toLowerCase().includes(qLower) || qLower.includes(cs.id)) {
+                            const csTitleNorm = this.removeVietnameseTones(cs.title);
+                            const csArtistNorm = this.removeVietnameseTones(cs.artist);
+                            const csAliases = Array.isArray(cs.aliases) ? cs.aliases.map(a => this.removeVietnameseTones(a)) : [];
+
+                            const isCsMatch = csTitleNorm.includes(qNorm) || 
+                                              csArtistNorm.includes(qNorm) || 
+                                              csAliases.some(a => a.includes(qNorm)) || 
+                                              cs.title.toLowerCase().includes(qLower) || 
+                                              cs.artist.toLowerCase().includes(qLower) || 
+                                              qLower.includes(cs.id);
+
+                            if (isCsMatch) {
                                 const fullSong = await window.studyCloud.getSong(cs.id);
                                 if (fullSong) {
                                     const isDup = candidates.some(c => c.rawSong && c.rawSong.id === fullSong.id);
@@ -2863,6 +2938,8 @@ QUY TẮC ĐẦU RA:
     // =========================================================================
     // 8. ĐÓNG GÓP BẢN DỊCH CỘNG ĐỒNG (COMMUNITY CONTRIBUTIONS)
     // =========================================================================
+    // 8. ĐÓNG GÓP BẢN DỊCH & THẺ TỪ VỰNG CỘNG ĐỒNG (COMMUNITY CONTRIBUTIONS & VOCAB)
+    // =========================================================================
     openContribModal() {
         if (!this.currentSong) return;
         const modal = document.getElementById('contrib-modal');
@@ -2874,19 +2951,30 @@ QUY TẮC ĐẦU RA:
         const authorInput = document.getElementById('contrib-author');
         const titleInput = document.getElementById('contrib-title');
 
-        if (countBadge) countBadge.textContent = `${lines.length} câu`;
-        if (authorInput && !authorInput.value) {
-            try {
-                const savedUser = JSON.parse(localStorage.getItem('mhent_user') || '{}');
-                authorInput.value = savedUser.displayName || savedUser.name || '';
-            } catch (e) {}
+        // Tạo bản sao độc lập của lyrics kèm danh sách words trên từng câu
+        this.contribLyrics = JSON.parse(JSON.stringify(lines));
+        this.contribLyrics.forEach(l => {
+            if (!Array.isArray(l.words)) l.words = [];
+        });
+
+        if (countBadge) countBadge.textContent = `${this.contribLyrics.length} câu`;
+        
+        // Tự động nhận diện danh tính người dùng từ hệ thống Auth
+        let userDisplayName = '';
+        try {
+            const savedProfile = JSON.parse(localStorage.getItem('mhent_user_profile') || localStorage.getItem('mhent_user') || '{}');
+            userDisplayName = savedProfile.displayName || savedProfile.name || '';
+        } catch (e) {}
+
+        if (authorInput && (!authorInput.value || authorInput.value.includes('học viên'))) {
+            authorInput.value = userDisplayName || 'Học viên MHEnt';
         }
         if (titleInput && !titleInput.value) {
             titleInput.value = `Bản dịch của ${authorInput && authorInput.value ? authorInput.value : 'học viên'}`;
         }
 
         if (container) {
-            container.innerHTML = lines.map((line, idx) => {
+            container.innerHTML = this.contribLyrics.map((line, idx) => {
                 const timeStr = this.formatSeconds(line.startTime || 0);
                 return `
                     <div class="contrib-line-edit-item" data-index="${idx}">
@@ -2894,42 +2982,310 @@ QUY TẮC ĐẦU RA:
                             <span class="contrib-line-time"><i class="fa-solid fa-clock"></i> ${timeStr}</span>
                             <span class="contrib-line-idx">Câu ${idx + 1}</span>
                         </div>
-                        <div class="contrib-line-orig">${this.escapeHtml(line.text)}</div>
+                        <div class="contrib-line-orig" data-index="${idx}" title="Bôi đen một từ trong câu này để tạo thẻ từ vựng">${this.escapeHtml(line.text)}</div>
                         ${line.phonetic ? `<div class="contrib-line-phonetic">${this.escapeHtml(line.phonetic)}</div>` : ''}
                         <div class="contrib-line-input-wrap">
                             <input type="text" class="contrib-line-trans-input" data-index="${idx}" value="${this.escapeHtml(line.translation || '')}" placeholder="Nhập bản dịch tiếng Việt cho câu này..." spellcheck="false">
                         </div>
+                        <div class="contrib-line-words-section">
+                            <div class="contrib-line-words-header">
+                                <span class="contrib-words-title"><i class="fa-solid fa-highlighter" style="color: #f59e0b;"></i> Thẻ từ vựng câu này:</span>
+                                <button type="button" class="btn-add-word-manual" data-index="${idx}" title="Thêm từ vựng thủ công vào câu này">
+                                    <i class="fa-solid fa-plus"></i> Thêm từ
+                                </button>
+                            </div>
+                            <div class="contrib-words-chips-list" id="contrib-words-list-${idx}">
+                                <!-- Dynamic chips -->
+                            </div>
+                        </div>
                     </div>
                 `;
             }).join('');
+
+            // Render word chips và gắn listener cho từng câu
+            this.contribLyrics.forEach((_, idx) => {
+                this.renderContribLineWords(idx);
+            });
+
+            container.querySelectorAll('.btn-add-word-manual').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const idx = parseInt(btn.dataset.index, 10);
+                    if (!isNaN(idx)) {
+                        this.openContribVocabDialog(idx, '');
+                    }
+                });
+            });
         }
 
         modal.classList.add('active');
     }
 
+    renderContribLineWords(lineIdx) {
+        const container = document.getElementById(`contrib-words-list-${lineIdx}`);
+        if (!container || !this.contribLyrics || !this.contribLyrics[lineIdx]) return;
+
+        const words = Array.isArray(this.contribLyrics[lineIdx].words) ? this.contribLyrics[lineIdx].words : [];
+        if (words.length === 0) {
+            container.innerHTML = `<span class="contrib-words-empty-hint">Chưa có thẻ từ vựng. Bôi đen chữ câu trên hoặc bấm "+ Thêm từ" để gắn thẻ!</span>`;
+            return;
+        }
+
+        container.innerHTML = words.map((w, wIdx) => `
+            <span class="contrib-word-chip" data-line-idx="${lineIdx}" data-word-idx="${wIdx}">
+                <span class="chip-w">${this.escapeHtml(w.word)}</span>
+                <span class="chip-m">(${this.escapeHtml(w.meaning || '')})</span>
+                <button type="button" class="chip-del" data-line-idx="${lineIdx}" data-word-idx="${wIdx}" title="Xóa thẻ">&times;</button>
+            </span>
+        `).join('');
+
+        container.querySelectorAll('.chip-del').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const lIdx = parseInt(btn.dataset.lineIdx, 10);
+                const wIdx = parseInt(btn.dataset.wordIdx, 10);
+                if (!isNaN(lIdx) && !isNaN(wIdx) && this.contribLyrics[lIdx] && Array.isArray(this.contribLyrics[lIdx].words)) {
+                    this.contribLyrics[lIdx].words.splice(wIdx, 1);
+                    this.renderContribLineWords(lIdx);
+                    this.showToast('Đã gỡ thẻ từ vựng khỏi câu', 'info', 1200);
+                }
+            });
+        });
+    }
+
+    openContribVocabDialog(lineIdx, initialWord = '') {
+        const dialog = document.getElementById('contrib-vocab-dialog');
+        if (!dialog || lineIdx < 0) return;
+
+        this.activeContribTargetLineIdx = lineIdx;
+
+        const wordInput = document.getElementById('vocab-dialog-word');
+        const meaningInput = document.getElementById('vocab-dialog-meaning');
+        const phoneticInput = document.getElementById('vocab-dialog-phonetic');
+        const posSelect = document.getElementById('vocab-dialog-pos');
+
+        if (wordInput) wordInput.value = initialWord;
+        if (meaningInput) meaningInput.value = '';
+        if (phoneticInput) phoneticInput.value = '';
+        if (posSelect) posSelect.value = 'noun';
+
+        dialog.style.display = 'flex';
+        setTimeout(() => {
+            if (initialWord && meaningInput) {
+                meaningInput.focus();
+            } else if (wordInput) {
+                wordInput.focus();
+            }
+        }, 50);
+    }
+
+    setupContribVocabHighlighter() {
+        const pill = document.getElementById('contrib-selection-tag-pill');
+        const pillWord = document.getElementById('contrib-pill-word');
+        const dialog = document.getElementById('contrib-vocab-dialog');
+        const closeBtn = document.getElementById('btn-vocab-dialog-close');
+        const cancelBtn = document.getElementById('btn-vocab-dialog-cancel');
+        const saveBtn = document.getElementById('btn-vocab-dialog-save');
+        const aiAutofillBtn = document.getElementById('btn-vocab-ai-autofill');
+        const linesContainer = document.getElementById('contrib-lines-container');
+
+        if (!dialog) return;
+
+        let selectedWord = '';
+        let targetLineIdx = -1;
+
+        const checkSelection = () => {
+            if (!pill) return;
+            const sel = window.getSelection();
+            if (!sel || sel.isCollapsed) {
+                pill.style.display = 'none';
+                return;
+            }
+
+            const rawText = sel.toString().trim();
+            if (!rawText || rawText.length > 50) {
+                pill.style.display = 'none';
+                return;
+            }
+
+            const anchorNode = sel.anchorNode;
+            const itemEl = anchorNode && anchorNode.nodeType ? anchorNode.parentElement?.closest('.contrib-line-edit-item') : null;
+            if (!itemEl || !linesContainer || !linesContainer.contains(itemEl)) {
+                pill.style.display = 'none';
+                return;
+            }
+
+            const idx = parseInt(itemEl.dataset.index, 10);
+            if (isNaN(idx)) {
+                pill.style.display = 'none';
+                return;
+            }
+
+            selectedWord = rawText;
+            targetLineIdx = idx;
+            if (pillWord) pillWord.textContent = rawText.length > 15 ? rawText.slice(0, 12) + '...' : rawText;
+
+            try {
+                const range = sel.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                pill.style.left = `${rect.left + rect.width / 2}px`;
+                pill.style.top = `${Math.max(10, rect.top - 8)}px`;
+                pill.style.display = 'flex';
+            } catch (e) {
+                pill.style.display = 'none';
+            }
+        };
+
+        if (linesContainer) {
+            linesContainer.addEventListener('mouseup', checkSelection);
+            linesContainer.addEventListener('keyup', checkSelection);
+        }
+        document.addEventListener('selectionchange', () => {
+            const modal = document.getElementById('contrib-modal');
+            if (modal && modal.classList.contains('active')) {
+                checkSelection();
+            } else if (pill) {
+                pill.style.display = 'none';
+            }
+        });
+
+        if (pill) {
+            pill.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                pill.style.display = 'none';
+                this.openContribVocabDialog(targetLineIdx, selectedWord);
+            });
+        }
+
+        const closeDialog = () => {
+            dialog.style.display = 'none';
+        };
+        if (closeBtn) closeBtn.addEventListener('click', closeDialog);
+        if (cancelBtn) cancelBtn.addEventListener('click', closeDialog);
+
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                const wordInput = document.getElementById('vocab-dialog-word');
+                const meaningInput = document.getElementById('vocab-dialog-meaning');
+                const phoneticInput = document.getElementById('vocab-dialog-phonetic');
+                const posSelect = document.getElementById('vocab-dialog-pos');
+
+                const word = (wordInput?.value || '').trim();
+                const meaning = (meaningInput?.value || '').trim();
+                const phonetic = (phoneticInput?.value || '').trim();
+                const pos = posSelect?.value || 'noun';
+
+                if (!word || !meaning) {
+                    this.showToast('Vui lòng nhập từ vựng và nghĩa tiếng Việt!', 'warning');
+                    return;
+                }
+
+                if (this.activeContribTargetLineIdx >= 0 && this.contribLyrics && this.contribLyrics[this.activeContribTargetLineIdx]) {
+                    const line = this.contribLyrics[this.activeContribTargetLineIdx];
+                    if (!Array.isArray(line.words)) line.words = [];
+                    const existingIdx = line.words.findIndex(w => w.word.toLowerCase() === word.toLowerCase());
+                    if (existingIdx >= 0) {
+                        line.words[existingIdx] = { word, meaning, phonetic, pos };
+                    } else {
+                        line.words.push({ word, meaning, phonetic, pos });
+                    }
+
+                    this.renderContribLineWords(this.activeContribTargetLineIdx);
+                    this.showToast(`✨ Đã thêm thẻ từ "${word}" vào câu ${this.activeContribTargetLineIdx + 1}!`, 'success', 2000);
+                    closeDialog();
+                }
+            });
+        }
+
+        if (aiAutofillBtn) {
+            aiAutofillBtn.addEventListener('click', async () => {
+                const wordInput = document.getElementById('vocab-dialog-word');
+                const word = (wordInput?.value || '').trim();
+                if (!word) {
+                    this.showToast('Vui lòng nhập từ gốc trước khi nhờ AI tra cứu!', 'warning');
+                    return;
+                }
+
+                aiAutofillBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tra...';
+                aiAutofillBtn.disabled = true;
+
+                try {
+                    const lineText = (this.activeContribTargetLineIdx >= 0 && this.contribLyrics && this.contribLyrics[this.activeContribTargetLineIdx]) ? this.contribLyrics[this.activeContribTargetLineIdx].text : '';
+                    const lang = this.currentSong ? this.currentSong.lang : 'en';
+
+                    let result = null;
+                    if (window.studyCloud && typeof window.studyCloud.lookupWord === 'function') {
+                        result = await window.studyCloud.lookupWord(lang, word);
+                    }
+
+                    if (!result && window.aisaWorker && typeof window.aisaWorker.fetchTranslation === 'function') {
+                        result = await window.aisaWorker.fetchTranslation(word, lang, 'vi');
+                    }
+
+                    if (result) {
+                        const meaningInput = document.getElementById('vocab-dialog-meaning');
+                        const phoneticInput = document.getElementById('vocab-dialog-phonetic');
+                        const posSelect = document.getElementById('vocab-dialog-pos');
+
+                        if (meaningInput && (result.meaning || result.translation)) {
+                            meaningInput.value = result.meaning || result.translation;
+                        }
+                        if (phoneticInput && (result.phonetic || result.pinyin || result.romaji)) {
+                            phoneticInput.value = result.phonetic || result.pinyin || result.romaji;
+                        }
+                        if (posSelect && result.pos) {
+                            posSelect.value = result.pos;
+                        }
+                        this.showToast('AI đã tự động tra xong nghĩa & phiên âm!', 'success');
+                    } else {
+                        const meaningInput = document.getElementById('vocab-dialog-meaning');
+                        if (meaningInput && !meaningInput.value) {
+                            meaningInput.value = word;
+                        }
+                        this.showToast('Đã tra xong, bạn có thể chỉnh lại nghĩa theo phong cách riêng!', 'info');
+                    }
+                } catch (e) {
+                    this.showToast('Không thể kết nối AI, bạn có thể tự gõ nghĩa nhé!', 'warning');
+                } finally {
+                    aiAutofillBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> AI Tra Nhanh';
+                    aiAutofillBtn.disabled = false;
+                }
+            });
+        }
+    }
+
     async submitCommunityVersion() {
         if (!this.currentSong) return;
 
-        const authorName = (document.getElementById('contrib-author')?.value || 'Học viên MHEnt').trim();
+        let userUid = null;
+        let defaultAuthor = 'Học viên MHEnt';
+        try {
+            const savedProfile = JSON.parse(localStorage.getItem('mhent_user_profile') || localStorage.getItem('mhent_user') || '{}');
+            if (savedProfile.uid) userUid = savedProfile.uid;
+            if (savedProfile.displayName || savedProfile.name) defaultAuthor = savedProfile.displayName || savedProfile.name;
+        } catch (e) {}
+
+        const authorName = (document.getElementById('contrib-author')?.value || defaultAuthor).trim();
         const versionTitle = (document.getElementById('contrib-title')?.value || 'Bản dịch mới').trim();
         const note = (document.getElementById('contrib-note')?.value || '').trim();
 
-        // 1. Sao chép danh sách câu hiện tại và cập nhật bản dịch từ form chỉnh sửa của người dùng
-        const baseLyrics = JSON.parse(JSON.stringify(this.getActiveLyrics()));
+        // Đồng bộ các ô bản dịch tiếng Việt vào this.contribLyrics
         const inputs = document.querySelectorAll('.contrib-line-trans-input');
         inputs.forEach(input => {
             const idx = parseInt(input.dataset.index, 10);
-            if (!isNaN(idx) && baseLyrics[idx]) {
-                baseLyrics[idx].translation = input.value.trim();
+            if (!isNaN(idx) && this.contribLyrics && this.contribLyrics[idx]) {
+                this.contribLyrics[idx].translation = input.value.trim();
             }
         });
 
         const versionData = {
             id: 'comm_' + Date.now(),
             author: authorName,
+            authorUid: userUid,
             title: versionTitle,
             note: note,
-            synced_lyrics: baseLyrics,
+            synced_lyrics: this.contribLyrics,
             likes: 0,
             createdAt: new Date().toISOString()
         };
@@ -2945,7 +3301,75 @@ QUY TẮC ĐẦU RA:
         if (modal) modal.classList.remove('active');
 
         this.switchVersion(this.currentSong.community_versions.length - 1);
-        this.showToast('Đã lưu đóng góp bản dịch của bạn lên Supabase Cloud!', 'success');
+        this.showToast('Đã lưu đóng góp bản dịch và hệ thống từ vựng của bạn lên Supabase Cloud!', 'success');
+    }
+
+    // =========================================================================
+    // 8B. SEO SCHEMA.ORG JSON-LD & DEEP-LINK URL MANAGER
+    // =========================================================================
+    updatePageMetaAndUrl(song) {
+        if (!song) return;
+
+        // 1. Cập nhật Title trang
+        const titleStr = `${song.title} - ${song.artist} | Lời Bài Hát & Dịch Nghĩa | MHEnt. Study`;
+        document.title = titleStr;
+
+        // 2. Cập nhật URL tham số mà không reload trang (Deep Link)
+        try {
+            const currentParams = new URLSearchParams(window.location.search);
+            if (currentParams.get('song') !== song.id) {
+                currentParams.set('song', song.id);
+                const newRelativePath = `${window.location.pathname}?${currentParams.toString()}`;
+                window.history.replaceState({ songId: song.id }, titleStr, newRelativePath);
+            }
+        } catch (e) {}
+
+        // 3. Cập nhật Meta Description cho SEO & Social Sharing
+        const metaDesc = document.querySelector('meta[name="description"]');
+        const lyricsPreview = (song.plain_lyrics || (song.synced_lyrics || []).map(l => l.text).join(' ')).slice(0, 160);
+        const descContent = `Lời bài hát ${song.title} (${song.artist}) kèm phụ đề karaoke từng câu, dịch nghĩa tiếng Việt và bóc tách từ vựng học ngoại ngữ. "${lyricsPreview}..."`;
+        if (metaDesc) metaDesc.setAttribute('content', descContent);
+
+        // 4. Bơm dữ liệu cấu trúc Schema.org JSON-LD (MusicRecording + MusicLyrics)
+        this.injectSchemaOrgJsonLd(song);
+    }
+
+    injectSchemaOrgJsonLd(song) {
+        try {
+            let scriptTag = document.getElementById('schema-music-jsonld');
+            if (!scriptTag) {
+                scriptTag = document.createElement('script');
+                scriptTag.id = 'schema-music-jsonld';
+                scriptTag.type = 'application/ld+json';
+                document.head.appendChild(scriptTag);
+            }
+
+            const plainText = song.plain_lyrics || (song.synced_lyrics || []).map(l => l.text).join('\n');
+            const schemaData = {
+                "@context": "https://schema.org",
+                "@type": "MusicRecording",
+                "name": song.title,
+                "byArtist": {
+                    "@type": "MusicGroup",
+                    "name": song.artist
+                },
+                "image": song.thumbnail || 'https://study.mhentuniverse.com/assets/study-logo.png',
+                "inLanguage": song.lang || "en",
+                "lyrics": {
+                    "@type": "MusicLyrics",
+                    "text": plainText
+                }
+            };
+            scriptTag.textContent = JSON.stringify(schemaData, null, 2);
+
+            // Cập nhật container crawlable HTML tĩnh cho Googlebot
+            const crawlableEl = document.getElementById('seo-crawlable-lyrics');
+            if (crawlableEl) {
+                crawlableEl.textContent = `${song.title} - ${song.artist}\n${plainText}`;
+            }
+        } catch (e) {
+            console.warn('[SEO] Không thể gắn Schema JSON-LD:', e);
+        }
     }
 
     // =========================================================================
@@ -2988,6 +3412,7 @@ QUY TẮC ĐẦU RA:
                       "id": "puppet-john-michael-howell",
                       "title": "Puppet",
                       "artist": "John Michael Howell",
+                      "aliases": ["Con Rối", "Con Roi", "Puppet", "John Michael Howell"],
                       "lang": "en",
                       "thumbnail": "https://img.youtube.com/vi/BgmW6uIzjmY/hqdefault.jpg",
                       "youtube_id": "BgmW6uIzjmY",
@@ -4083,6 +4508,7 @@ QUY TẮC ĐẦU RA:
           "id": "a-thousand-years-jvke-john-michael-howell",
           "title": "A Thousand Years",
           "artist": "John Michael Howell, JVKE & ZVC",
+          "aliases": ["Một Ngàn Năm", "Nghìn Năm", "Mot Ngan Nam", "Nghin Nam", "A Thousand Years", "JVKE", "John Michael Howell"],
           "lang": "en",
           "thumbnail": "https://img.youtube.com/vi/5ptdEemGjrQ/hqdefault.jpg",
           "youtube_id": "5ptdEemGjrQ",
@@ -4479,6 +4905,7 @@ QUY TẮC ĐẦU RA:
           "id": "awakening-harmony-cure-zukyoon-kiss",
           "title": "Awakening Harmony",
           "artist": "キュアズキューン (南條愛乃) & キュアキッス (花井美春)",
+          "aliases": ["Tỉnh Thức Hòa Ca", "Hòa Ca Thức Tỉnh", "Bừng Sáng", "Awakening Harmony", "Cure Zukyoon", "Cure Kiss", "Tinh Thuc Hoa Ca", "Hoa Ca Thuc Tinh", "Bung Sang", "Precure", "Pretty Cure", "キミとアイドルプリキュア"],
           "lang": "ja",
           "thumbnail": "https://img.youtube.com/vi/OlZK4BPps_g/hqdefault.jpg",
           "youtube_id": "OlZK4BPps_g",

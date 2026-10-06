@@ -1346,6 +1346,247 @@ body.lyrics-theme .footer-brand-title {
     background: rgba(15, 23, 42, 0.95);
 }
 
+/* Vocab tags attached to line inside contrib modal */
+.contrib-line-words-section {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.contrib-line-words-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.contrib-words-title {
+    font-size: 0.74rem;
+    color: #94a3b8;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-add-word-manual {
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    color: #fbbf24;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-add-word-manual:hover {
+    background: rgba(245, 158, 11, 0.25);
+    border-color: #f59e0b;
+    transform: translateY(-1px);
+}
+
+.contrib-words-chips-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 24px;
+    align-items: center;
+}
+
+.contrib-words-empty-hint {
+    font-size: 0.76rem;
+    color: #64748b;
+    font-style: italic;
+}
+
+.contrib-word-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.28);
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-size: 0.8rem;
+    color: #e2e8f0;
+    transition: all 0.2s;
+}
+
+.contrib-word-chip .chip-w {
+    font-weight: 700;
+    color: #38bdf8;
+}
+
+.contrib-word-chip .chip-m {
+    color: #cbd5e1;
+    font-size: 0.75rem;
+}
+
+.contrib-word-chip .chip-del {
+    background: transparent;
+    border: none;
+    color: #ef4444;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+    margin-left: 2px;
+    border-radius: 3px;
+    transition: all 0.15s;
+}
+
+.contrib-word-chip .chip-del:hover {
+    background: rgba(239, 68, 68, 0.25);
+    color: #f87171;
+}
+
+/* Floating selection tag pill */
+.contrib-selection-tag-pill {
+    position: fixed;
+    z-index: 10005;
+    background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+    color: #ffffff;
+    border: none;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    box-shadow: 0 4px 18px rgba(14, 165, 233, 0.45);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transform: translate(-50%, -100%);
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s;
+    pointer-events: auto;
+}
+
+.contrib-selection-tag-pill:hover {
+    transform: translate(-50%, -100%) scale(1.05);
+    box-shadow: 0 6px 22px rgba(139, 92, 246, 0.6);
+}
+
+/* Mini Vocab Dialog Modal */
+.contrib-vocab-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    z-index: 10010;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.contrib-vocab-dialog-card {
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.contrib-vocab-dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.contrib-vocab-dialog-header h4 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-dialog-close {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.4rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+}
+
+.btn-dialog-close:hover {
+    color: #f8fafc;
+}
+
+.contrib-vocab-dialog-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.vocab-dialog-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.vocab-dialog-field label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #94a3b8;
+}
+
+.vocab-dialog-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.btn-ai-autofill {
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    border: none;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 0 12px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.btn-ai-autofill:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.contrib-vocab-dialog-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.5);
+}
+
 .contrib-footer {
     display: flex;
     align-items: center;
