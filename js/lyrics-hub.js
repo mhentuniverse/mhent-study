@@ -3310,38 +3310,137 @@ QUY TẮC ĐẦU RA:
                     const lang = this.currentSong ? this.currentSong.lang : 'en';
 
                     let result = null;
-                    if (window.studyCloud && typeof window.studyCloud.lookupWord === 'function') {
-                        result = await window.studyCloud.lookupWord(lang, word);
+
+                    // Chiến lược 1: AISA Cloudflare Worker API (/api/generate-example)
+                    try {
+                        const endpoint = (window.MHENT_CONFIG && window.MHENT_CONFIG.AISA_API_ENDPOINT) || 'https://api.mhentuniverse.com';
+                        const res = await fetch(`${endpoint}/api/generate-example`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                word: word,
+                                lang: lang,
+                                deckTitle: this.currentSong?.title || 'Lyrics Study',
+                                sentence: lineText
+                            })
+                        });
+                        if (res.ok) {
+                            const json = await res.json();
+                            const data = (json && json.data) ? json.data : json;
+                            if (data && data.meaning && data.meaning.trim() && data.meaning.trim().toLowerCase() !== word.toLowerCase()) {
+                                result = {
+                                    meaning: data.meaning.trim(),
+                                    phonetic: (data.phonetic || '').trim(),
+                                    pos: (data.pos || 'noun').trim()
+                                };
+                            }
+                        }
+                    } catch (eWorker) {
+                        console.warn('[AI Tra Nhanh Worker Error]:', eWorker);
                     }
 
-                    if (!result && window.aisaWorker && typeof window.aisaWorker.fetchTranslation === 'function') {
-                        result = await window.aisaWorker.fetchTranslation(word, lang, 'vi');
+                    // Chiến lược 2: Gọi trực tiếp Gemini API nếu có key
+                    if (!result) {
+                        const apiKey = (window.MHENT_CONFIG && window.MHENT_CONFIG.GEMINI_API_KEY) || localStorage.getItem('mhent_ai_api_key');
+                        if (apiKey) {
+                            try {
+                                const prompt = `Bạn là chuyên gia ngôn ngữ học. Hãy phân tích từ vựng "${word}" trong câu hát "${lineText}" (ngôn ngữ: ${lang}).
+Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc markdown):
+{"meaning": "nghĩa tiếng Việt chính xác trong ngữ cảnh này", "phonetic": "phiên âm chuẩn (IPA cho tiếng Anh, Furigana/Romaji cho tiếng Nhật, Pinyin cho tiếng Trung)", "pos": "noun|verb|adj|adv|phrase"}`;
+
+                                const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        contents: [{ parts: [{ text: prompt }] }],
+                                        generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
+                                    })
+                                });
+                                if (geminiRes.ok) {
+                                    const gemData = await geminiRes.json();
+                                    const raw = gemData.candidates?.[0]?.content?.parts?.[0]?.text;
+                                    if (raw) {
+                                        const parsed = JSON.parse(raw.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim());
+                                        if (parsed && parsed.meaning && parsed.meaning.trim().toLowerCase() !== word.toLowerCase()) {
+                                            result = {
+                                                meaning: parsed.meaning.trim(),
+                                                phonetic: (parsed.phonetic || '').trim(),
+                                                pos: (parsed.pos || 'noun').trim()
+                                            };
+                                        }
+                                    }
+                                }
+                            } catch (eGem) {
+                                console.warn('[AI Tra Nhanh Gemini Error]:', eGem);
+                            }
+                        }
                     }
 
-                    if (result) {
+                    // Chiến lược 3: Google Translate GTX Fallback
+                    if (!result) {
+                        try {
+                            const gtxRes = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${lang}&tl=vi&dt=t&q=${encodeURIComponent(word)}`);
+                            if (gtxRes.ok) {
+                                const gtxData = await gtxRes.json();
+                                if (gtxData && gtxData[0] && Array.isArray(gtxData[0])) {
+                                    const trans = gtxData[0].map(item => item[0]).filter(Boolean).join('').trim();
+                                    if (trans && trans.toLowerCase() !== word.toLowerCase()) {
+                                        result = {
+                                            meaning: trans,
+                                            phonetic: '',
+                                            pos: 'noun'
+                                        };
+                                    }
+                                }
+                            }
+                        } catch (eGtx) {
+                            console.warn('[AI Tra Nhanh GTX Error]:', eGtx);
+                        }
+                    }
+
+                    // Chiến lược 4: Kiểm tra Supabase study_dictionary
+                    if (!result && window.studyCloud && typeof window.studyCloud.lookupWord === 'function') {
+                        try {
+                            const dictRes = await window.studyCloud.lookupWord(lang, word);
+                            if (dictRes && (dictRes.meaning || dictRes.translation)) {
+                                result = {
+                                    meaning: dictRes.meaning || dictRes.translation,
+                                    phonetic: dictRes.phonetic || '',
+                                    pos: dictRes.pos || 'noun'
+                                };
+                            }
+                        } catch (eDict) {}
+                    }
+
+                    // CẬP NHẬT KẾT QUẢ VÀO MODAL
+                    if (result && result.meaning) {
                         const meaningInput = document.getElementById('vocab-dialog-meaning');
                         const phoneticInput = document.getElementById('vocab-dialog-phonetic');
                         const posSelect = document.getElementById('vocab-dialog-pos');
 
-                        if (meaningInput && (result.meaning || result.translation)) {
-                            meaningInput.value = result.meaning || result.translation;
+                        if (meaningInput) {
+                            meaningInput.value = result.meaning;
                         }
-                        if (phoneticInput && (result.phonetic || result.pinyin || result.romaji)) {
-                            phoneticInput.value = result.phonetic || result.pinyin || result.romaji;
+                        if (phoneticInput && result.phonetic) {
+                            phoneticInput.value = result.phonetic.replace(/[\[\]]/g, '');
                         }
-                        if (posSelect && result.pos) {
-                            posSelect.value = result.pos;
+                        if (posSelect) {
+                            let normalizedPos = 'noun';
+                            const p = (result.pos || '').toLowerCase();
+                            if (p.includes('verb') && !p.includes('phrasal')) normalizedPos = 'verb';
+                            else if (p.includes('adj')) normalizedPos = 'adj';
+                            else if (p.includes('adv')) normalizedPos = 'adv';
+                            else if (p.includes('phrase') || p.includes('collocation') || p.includes('idiom')) normalizedPos = 'phrase';
+                            else if (p.includes('particle') || p.includes('gramm')) normalizedPos = 'particle';
+                            posSelect.value = normalizedPos;
                         }
-                        this.showToast('AI đã tự động tra xong nghĩa & phiên âm!', 'success');
+                        this.showToast(`✨ Đã tra xong: "${result.meaning}"`, 'success', 2500);
                     } else {
-                        const meaningInput = document.getElementById('vocab-dialog-meaning');
-                        if (meaningInput && !meaningInput.value) {
-                            meaningInput.value = word;
-                        }
-                        this.showToast('Đã tra xong, bạn có thể chỉnh lại nghĩa theo phong cách riêng!', 'info');
+                        this.showToast('Không thể tự động tìm nghĩa cho từ này, bạn hãy tự gõ nghĩa nhé!', 'warning', 3000);
                     }
                 } catch (e) {
-                    this.showToast('Không thể kết nối AI, bạn có thể tự gõ nghĩa nhé!', 'warning');
+                    console.error('[AI Tra Nhanh Fatal]', e);
+                    this.showToast('Không thể kết nối AI, bạn hãy tự gõ nghĩa nhé!', 'warning');
                 } finally {
                     aiAutofillBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> AI Tra Nhanh';
                     aiAutofillBtn.disabled = false;

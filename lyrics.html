@@ -88,12 +88,17 @@
                 <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập
             </button>
 
-            <!-- Profile khi đã đăng nhập -->
-            <div id="user-profile" class="user-chip" style="display: none;">
+            <!-- Profile khi đã đăng nhập (Chỉ hiện Avatar tròn, bấm để mở Drawer thông tin chi tiết) -->
+            <div id="user-profile" class="user-chip user-chip-avatar-only" style="display: none;" onclick="window.openSideDrawer && window.openSideDrawer()" title="Xem trang cá nhân & Menu Tiện ích (MHEnt Drawer)">
                 <img id="user-avatar" src="/assets/avt-web.jpg" alt="User">
-                <span id="user-name">Đang tải...</span>
-                <button id="btn-logout" class="btn-logout-tiny" title="Đăng xuất"><i class="fa-solid fa-right-from-bracket"></i></button>
+                <span id="user-name" style="display: none;">Đang tải...</span>
+                <button id="btn-logout" class="btn-logout-tiny" title="Đăng xuất" style="display: none;"><i class="fa-solid fa-right-from-bracket"></i></button>
             </div>
+
+            <!-- Nút bật Menu Drawer -->
+            <button class="mobile-drawer-toggle" onclick="window.openSideDrawer && window.openSideDrawer()" title="Menu Tiện Ích">
+                <i class="fa-solid fa-bars"></i>
+            </button>
         </div>
     </nav>
 

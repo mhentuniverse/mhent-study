@@ -3265,6 +3265,79 @@ body.lyrics-theme .footer-brand-title {
     font-family: monospace;
 }
 
+/* ==========================================================================
+   USER PROFILE CHIP (AVATAR ONLY) & MOBILE DRAWER TOGGLE
+   ========================================================================== */
+.user-chip,
+.user-chip-avatar-only {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 2px !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer !important;
+    border-radius: 50% !important;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
+}
+
+.user-chip:hover,
+.user-chip-avatar-only:hover {
+    transform: scale(1.1) !important;
+}
+
+.user-chip img,
+.user-chip #user-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    border: 2px solid #0ea5e9 !important;
+    box-shadow: 0 0 10px rgba(14, 165, 233, 0.4) !important;
+}
+
+.user-chip #user-name,
+.user-chip .btn-logout-tiny {
+    display: none !important;
+}
+
+.mobile-drawer-toggle {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 10px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #f1f5f9 !important;
+    cursor: pointer !important;
+    font-size: 0.95rem !important;
+    transition: all 0.2s ease !important;
+}
+
+.mobile-drawer-toggle:hover {
+    background: rgba(14, 165, 233, 0.2) !important;
+    border-color: #0ea5e9 !important;
+    color: #38bdf8 !important;
+    transform: translateY(-1px) !important;
+}
+
+/* ==========================================================================
+   VOCAB DIALOG SELECT OPTIONS CONTRAST FIX
+   ========================================================================== */
+select.contrib-line-trans-input {
+    background-color: #0f172a !important;
+    color: #38bdf8 !important;
+    cursor: pointer;
+}
+
+select.contrib-line-trans-input option {
+    background-color: #0f172a !important;
+    color: #f1f5f9 !important;
+    padding: 8px 12px;
+}
+
 
 
 
