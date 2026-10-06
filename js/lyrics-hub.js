@@ -84,11 +84,11 @@ class LyricsHubApp {
         this.setupContribVocabHighlighter();
         this.initSyncStudioEvents();
 
-        // Tự động kiểm tra nếu có tham số URL ?song=...
+        // Tự động kiểm tra nếu có tham số URL ?song=... (Deep-linking)
         const urlParams = new URLSearchParams(window.location.search);
         const songParam = urlParams.get('song');
         if (songParam) {
-            this.searchSong(songParam);
+            this.loadSongByParam(songParam);
         } else {
             // Mặc định nạp bài hát đầu tiên
             const defaultSong = this.featuredSongs[0];
@@ -6330,12 +6330,79 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
         }).join('');
     }
 
-    loadSongById(id) {
+    async loadSongById(id) {
+        if (!id) return false;
         const song = this.featuredSongs.find(s => s.id === id);
         if (song) {
             this.loadSong(song);
             window.scrollTo({ top: 300, behavior: 'smooth' });
+            return true;
         }
+        if (window.studyCloud && typeof window.studyCloud.getSong === 'function') {
+            try {
+                const cloudSong = await window.studyCloud.getSong(id);
+                if (cloudSong) {
+                    this.loadSong(cloudSong);
+                    window.scrollTo({ top: 300, behavior: 'smooth' });
+                    return true;
+                }
+            } catch (e) {}
+        }
+        return false;
+    }
+
+    async loadSongByParam(param) {
+        if (!param) return;
+        const pTrim = decodeURIComponent(param).trim();
+        const pLower = pTrim.toLowerCase();
+        const pClean = pLower.replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
+
+        // 1. Kiểm tra chính xác theo ID hoặc Slug trong featuredSongs
+        let match = this.featuredSongs.find(s => 
+            s.id.toLowerCase() === pLower ||
+            s.id.toLowerCase().replace(/[-_]/g, ' ') === pClean ||
+            s.title.toLowerCase() === pLower ||
+            s.title.toLowerCase() === pClean
+        );
+
+        // 2. Kiểm tra theo aliases (Hán Việt, Việt dịch, Romaji, Pinyin...)
+        if (!match) {
+            match = this.featuredSongs.find(s => {
+                const titleNorm = this.removeVietnameseTones(s.title);
+                const qNorm = this.removeVietnameseTones(pClean);
+                const hasAlias = Array.isArray(s.aliases) && s.aliases.some(a => {
+                    const aNorm = this.removeVietnameseTones(a);
+                    return aNorm === qNorm || aNorm.includes(qNorm) || qNorm.includes(aNorm);
+                });
+                return hasAlias || titleNorm === qNorm || pLower.includes(s.id.toLowerCase()) || s.id.toLowerCase().includes(pLower);
+            });
+        }
+
+        if (match) {
+            this.loadSong(match);
+            return;
+        }
+
+        // 3. Kiểm tra trên Supabase Cloud (study_songs)
+        if (window.studyCloud && typeof window.studyCloud.getSong === 'function') {
+            try {
+                const cloudSong = await window.studyCloud.getSong(pTrim);
+                if (cloudSong) {
+                    this.loadSong(cloudSong);
+                    return;
+                }
+            } catch (e) {}
+        }
+
+        // 4. Nếu là link YouTube hoặc Video ID (11 ký tự)
+        const ytMatch = pTrim.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/|^)([a-zA-Z0-9_-]{11})(?:\S*)?$/i);
+        if (ytMatch && ytMatch[1] && (pTrim.includes('http') || pTrim.includes('youtu') || pTrim.length === 11 || pTrim.startsWith('yt-'))) {
+            await this.searchSong(ytMatch[1]);
+            return;
+        }
+
+        // 5. Nếu không khớp trực tiếp bài hát cụ thể nào trong kho -> lúc đó mới mở tìm kiếm
+        await this.searchSong(pClean);
     }
 }
 
