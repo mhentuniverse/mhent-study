@@ -1740,11 +1740,16 @@ class LyricsHubApp {
                     el.removeAttribute('data-align');
                 }
             }
+            const parentRow = chip ? chip.closest('.lyrics-sentence-row') : null;
+            if (parentRow) parentRow.classList.add('has-active-popover');
             el.classList.add('show');
         }
     }
 
     hideAllPopovers() {
+        document.querySelectorAll('.lyrics-sentence-row.has-active-popover').forEach(r => {
+            r.classList.remove('has-active-popover');
+        });
         document.querySelectorAll('.vocab-popover-box').forEach(el => {
             el.classList.remove('show');
             el.removeAttribute('data-align');
