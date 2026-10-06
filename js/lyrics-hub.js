@@ -245,6 +245,98 @@ class LyricsHubApp {
                 this.submitCommunityVersion();
             });
         }
+
+        // 14. Bôi đen văn bản / nhấp đúp từ trong lời bài hát để tra từ điển AI & lưu vào Sổ từ vựng
+        this.setupLyricTextSelectionLookup();
+    }
+
+    setupLyricTextSelectionLookup() {
+        const pill = document.getElementById('lyric-quick-lookup-pill');
+        const pillText = document.getElementById('lookup-pill-text');
+        const pillSearch = document.getElementById('lookup-pill-btn-search');
+        const pillSave = document.getElementById('lookup-pill-btn-save');
+        if (!pill) return;
+
+        let currentSelectedWord = '';
+
+        const handleSelection = () => {
+            const sel = window.getSelection();
+            if (!sel || sel.isCollapsed) {
+                pill.style.display = 'none';
+                return;
+            }
+
+            const rawText = sel.toString().trim();
+            if (!rawText || rawText.length > 50) {
+                pill.style.display = 'none';
+                return;
+            }
+
+            // Kiểm tra xem vùng chọn có nằm trong container lời bài hát không
+            const anchorNode = sel.anchorNode;
+            const container = document.getElementById('lyrics-stream-container') || document.getElementById('lyrics-plain-container');
+            if (!container || !container.contains(anchorNode)) {
+                pill.style.display = 'none';
+                return;
+            }
+
+            currentSelectedWord = rawText;
+            if (pillText) pillText.textContent = `Tra từ: "${rawText.length > 18 ? rawText.slice(0, 15) + '...' : rawText}"`;
+
+            // Định vị pill ở ngay trên vùng chọn
+            try {
+                const range = sel.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                const left = rect.left + rect.width / 2;
+                const top = Math.max(10, rect.top - 8);
+
+                pill.style.left = `${left}px`;
+                pill.style.top = `${top}px`;
+                pill.style.display = 'flex';
+            } catch (e) {
+                pill.style.display = 'none';
+            }
+        };
+
+        document.addEventListener('mouseup', () => {
+            setTimeout(handleSelection, 60);
+        });
+
+        document.addEventListener('touchend', () => {
+            setTimeout(handleSelection, 100);
+        });
+
+        // Ẩn pill khi click ra ngoài
+        document.addEventListener('mousedown', (e) => {
+            if (pill && !pill.contains(e.target)) {
+                pill.style.display = 'none';
+            }
+        });
+
+        if (pillSearch) {
+            pillSearch.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!currentSelectedWord) return;
+                pill.style.display = 'none';
+                const lang = this.currentSong ? this.currentSong.lang : 'en';
+                if (window.aisaDict && typeof window.aisaDict.open === 'function') {
+                    const langSelect = document.getElementById('aisa-dict-lang');
+                    if (langSelect && lang) langSelect.value = lang;
+                    window.aisaDict.open(currentSelectedWord);
+                } else {
+                    this.showToast(`Đang tra cứu từ: "${currentSelectedWord}"...`, 'info');
+                }
+            });
+        }
+
+        if (pillSave) {
+            pillSave.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!currentSelectedWord) return;
+                pill.style.display = 'none';
+                this.saveVocabFromLyrics(currentSelectedWord, 'Đang cập nhật nghĩa...', '', 'từ vựng');
+            });
+        }
     }
 
     // =========================================================================
@@ -273,16 +365,25 @@ class LyricsHubApp {
         // Tải độ lệch pha đã lưu cho bài hát này (Time Offset)
         this.loadOffsetForSong(song.id);
 
-        // Khởi động YouTube hoặc Pure Audio
+        // Luôn ưu tiên phát video YouTube làm chế độ mặc định trực quan nhất
+        this.mediaMode = 'video';
+        this.useYouTube = true;
+        const artWrap = document.getElementById('track-art-wrap');
+        const ytFrame = document.getElementById('youtube-player-frame');
+        if (artWrap) artWrap.style.display = 'none';
+        if (ytFrame) ytFrame.style.display = 'block';
+        const toggleBtn = document.getElementById('btn-toggle-media');
+        if (toggleBtn) toggleBtn.innerHTML = '<i class="fa-solid fa-image"></i> <span>Xem Bìa</span>';
+
+        // Khởi động YouTube hoặc tự động dò tìm Video MV
         if (song.youtube_id) {
-            this.useYouTube = true;
             this.updateAudioEngineUi();
             if (this.isYtReady) {
                 this.initYouTubePlayer(song.youtube_id);
             }
         } else {
-            this.useYouTube = false;
             this.updateAudioEngineUi();
+            this.autoFindYouTubeVideo(song);
         }
 
         // Tải audio fallback thực tế (TUYỆT ĐỐI KHÔNG dùng SoundHelix fake audio)
@@ -372,6 +473,26 @@ class LyricsHubApp {
         }
     }
 
+    async autoFindYouTubeVideo(song) {
+        if (!song || song.youtube_id) return;
+        try {
+            const endpoint = (window.MHENT_CONFIG && window.MHENT_CONFIG.AISA_API_ENDPOINT) || 'https://api.mhentuniverse.com';
+            const searchQ = `${song.title} ${song.artist} Full MV`;
+            const res = await fetch(`${endpoint}/api/youtube-search?q=${encodeURIComponent(searchQ)}`).then(r => r.json());
+            if (res && res.videoId) {
+                song.youtube_id = res.videoId;
+                if (Array.isArray(res.candidates)) song.yt_candidates = res.candidates;
+                this.useYouTube = true;
+                this.updateAudioEngineUi();
+                if (this.isYtReady) {
+                    this.initYouTubePlayer(song.youtube_id);
+                }
+            }
+        } catch (e) {
+            console.warn('[Auto Find YouTube Failed]:', e);
+        }
+    }
+
     checkDurationMismatch(ytDur) {
         if (!this.currentSong || !Array.isArray(this.currentSong.synced_lyrics) || this.currentSong.synced_lyrics.length === 0) return;
         const lyrics = this.currentSong.synced_lyrics;
@@ -453,22 +574,40 @@ class LyricsHubApp {
         }
 
         listEl.innerHTML = `
+            <div style="text-align: center; color: #94a3b8; padding: 20px;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Đang tải thông tin các video...
+            </div>
+        `;
+
+        // Lấy tiêu đề thực tế từ YouTube oEmbed để hiển thị tên bài chuẩn
+        const metaList = await Promise.all(candidates.map(async (vId) => {
+            try {
+                const res = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${vId}&format=json`);
+                if (res.ok) {
+                    const data = await res.json();
+                    return { vId, title: data.title || `Bản Full • ${vId}`, author: data.author_name || 'YouTube' };
+                }
+            } catch (e) {}
+            return { vId, title: `Bản Full Version / MV • ${vId}`, author: 'YouTube' };
+        }));
+
+        listEl.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 8px;">
-                ${candidates.map((vId) => {
-                    const isCurrent = vId === song.youtube_id;
+                ${metaList.map((item) => {
+                    const isCurrent = item.vId === song.youtube_id;
                     return `
-                        <div class="song-select-item" style="padding: 10px 14px; ${isCurrent ? 'border-color: #38bdf8; background: rgba(56, 189, 248, 0.08);' : ''}" onclick="window.lyricsApp.changeYouTubeVideo('${vId}')">
-                            <img src="https://img.youtube.com/vi/${vId}/mqdefault.jpg" style="width: 80px; height: 50px; object-fit: cover; border-radius: 8px;" alt="Thumbnail" />
-                            <div class="song-item-info" style="flex: 1;">
+                        <div class="song-select-item" style="padding: 10px 14px; ${isCurrent ? 'border-color: #38bdf8; background: rgba(56, 189, 248, 0.08);' : ''}" onclick="window.lyricsApp.changeYouTubeVideo('${item.vId}')">
+                            <img src="https://img.youtube.com/vi/${item.vId}/mqdefault.jpg" style="width: 80px; height: 50px; object-fit: cover; border-radius: 8px;" alt="Thumbnail" />
+                            <div class="song-item-info" style="flex: 1; min-width: 0;">
                                 <div class="song-item-title-row">
-                                    <span class="song-item-title" style="font-size: 0.88rem;">Video ID: ${vId}</span>
-                                    ${isCurrent ? '<span class="badge-featured"><i class="fa-solid fa-check"></i> Đang chọn</span>' : ''}
+                                    <span class="song-item-title" style="font-size: 0.88rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; max-width: 320px;" title="${this.escapeHtml(item.title)}">${this.escapeHtml(item.title)}</span>
+                                    ${isCurrent ? '<span class="badge-featured" style="flex-shrink: 0;"><i class="fa-solid fa-check"></i> Đang chọn</span>' : ''}
                                 </div>
-                                <div class="song-item-artist" style="font-size: 0.78rem;">
-                                    <i class="fa-brands fa-youtube" style="color: #ef4444;"></i> youtube.com/watch?v=${vId}
+                                <div class="song-item-artist" style="font-size: 0.78rem; color: #94a3b8;">
+                                    <i class="fa-brands fa-youtube" style="color: #ef4444;"></i> ${this.escapeHtml(item.author)} • ID: ${item.vId}
                                 </div>
                             </div>
-                            <div class="song-item-action">
+                            <div class="song-item-action" style="flex-shrink: 0;">
                                 <button type="button" class="btn-item-pick" style="padding: 6px 12px; font-size: 0.8rem;">
                                     ${isCurrent ? 'Đang phát' : 'Chọn video này'}
                                 </button>
@@ -1336,10 +1475,12 @@ BƯỚC 4: QUY TẮC PHIÊN ÂM CHUẨN 100% (STRICT ROMANIZATION):
 - Tiếng Trung: 100% Pinyin có dấu thanh điệu chuẩn.
 - Tiếng Anh: để trống "".
 
-BƯỚC 5: TRÍCH XUẤT TỪ VỰNG CHỌN LỌC (STRICT QUALITY VOCABULARY SELECTION):
-- "word": CHỈ bóc tách từ đơn đắt giá (như "puppet", "loose", "darling") hoặc 1 thành ngữ / cụm động từ cố định đắt giá (collocation/idiom như "play along", "cut loose", "wrapped around your finger").
+BƯỚC 5: TRÍCH XUẤT TỪ VỰNG CHỌN LỌC PHONG PHÚ (RICH & IMPACTFUL VOCABULARY SELECTION):
+- "word": Bóc tách các từ khóa quan trọng, động từ đắt giá, tính từ biểu cảm hoặc thành ngữ/cụm động từ cố định (collocation/idiom/phrasal verb).
+- Mỗi câu trích xuất từ 2-4 từ vựng / cụm từ thực sự có giá trị học tập để người học mở rộng vốn từ vựng phong phú (không chỉ chọn 1 từ đơn điệu).
 - TUYỆT ĐỐI CẤM bôi đen nguyên cả câu hoặc nửa câu dài vô nghĩa.
-- CẤM bóc tách các từ chức năng ngữ pháp quá đơn giản (như "I", "you", "me", "to", "a", "the", "is", "in"). Mỗi câu chỉ bóc tách tối đa 1-2 từ hoặc cụm từ thực sự có giá trị học tập và gắn liền với chủ đề bài hát.
+- CẤM bóc tách các từ chức năng ngữ pháp quá đơn giản (như "I", "you", "me", "to", "a", "the", "is", "in").
+- Đối với tiếng Nhật, tiếng Hàn, tiếng Trung: Hãy bóc tách cả từ gốc (dạng từ điển) và các từ Kanji/Hán tự có ý nghĩa biểu cảm cao trong bài hát.
 - "phonetic": Phiên âm 100% Latinh hoặc IPA.
 - "pos": "noun"|"verb"|"adj"|"adv"|"phrase".
 - "meaning": Nghĩa tiếng Việt sắc sảo, tự nhiên, đúng ngữ cảnh bài hát.
@@ -1817,13 +1958,18 @@ QUY TẮC ĐẦU RA:
                 <div class="vocab-summary-grid">
                     ${vocabList.map(item => `
                         <div class="vocab-summary-chip-card" onclick="window.lyricsApp.seekToSentence(${item.sentenceIndex})">
-                            <div class="vocab-chip-top">
-                                <span class="vocab-chip-word">${this.escapeHtml(item.word)}</span>
-                                <span class="vocab-chip-pos">${this.escapeHtml(item.pos)}</span>
+                            <div class="chip-card-top">
+                                <div class="chip-word-group">
+                                    <span class="chip-card-word">${this.escapeHtml(item.word)}</span>
+                                    <button type="button" class="chip-card-speak-btn" onclick="event.stopPropagation(); window.lyricsApp.speak('${this.escapeHtml(item.word).replace(/'/g, "\\'")}', '${this.currentSong?.lang || 'en'}')" title="Phát âm">
+                                        <i class="fa-solid fa-volume-high"></i>
+                                    </button>
+                                </div>
+                                <span class="chip-card-pos">${this.escapeHtml(item.pos || 'từ vựng')}</span>
                             </div>
-                            ${item.phonetic ? `<div class="vocab-chip-phonetic">${this.escapeHtml(item.phonetic)}</div>` : ''}
-                            <div class="vocab-chip-meaning">${this.escapeHtml(item.meaning)}</div>
-                            <div class="vocab-chip-actions">
+                            ${item.phonetic ? `<div class="chip-card-phonetic">${this.escapeHtml(item.phonetic)}</div>` : ''}
+                            <div class="chip-card-meaning">${this.escapeHtml(item.meaning)}</div>
+                            <div class="chip-card-actions">
                                 <button type="button" class="btn-save-single-vocab" onclick="event.stopPropagation(); window.lyricsApp.saveVocabFromLyrics('${this.escapeHtml(item.word).replace(/'/g, "\\'")}', '${this.escapeHtml(item.meaning).replace(/'/g, "\\'")}', '${this.escapeHtml(item.phonetic).replace(/'/g, "\\'")}', '${this.escapeHtml(item.pos)}')">
                                     <i class="fa-solid fa-bookmark"></i> Lưu từ
                                 </button>
@@ -1942,6 +2088,41 @@ QUY TẮC ĐẦU RA:
         if (searchBtn) searchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tìm...';
 
         try {
+            // 0. Nếu người dùng nhập thẳng URL YouTube hoặc Video ID (11 ký tự):
+            const ytMatch = query.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/|^)([a-zA-Z0-9_-]{11})(?:\S*)?$/i);
+            if (ytMatch && ytMatch[1] && (query.includes('http') || query.includes('youtu') || query.length === 11)) {
+                const vId = ytMatch[1];
+                let ytTitle = 'Bài hát YouTube';
+                let ytChannel = 'YouTube Music';
+                try {
+                    const oeRes = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${vId}&format=json`).then(r => r.json());
+                    if (oeRes && oeRes.title) {
+                        ytTitle = oeRes.title;
+                        ytChannel = oeRes.author_name || 'YouTube';
+                    }
+                } catch (oeErr) {}
+
+                const customSong = {
+                    id: `yt-${vId}`,
+                    title: ytTitle,
+                    artist: ytChannel,
+                    lang: this.detectLanguage(ytTitle),
+                    thumbnail: `https://img.youtube.com/vi/${vId}/hqdefault.jpg`,
+                    youtube_id: vId,
+                    yt_candidates: [vId],
+                    audio_url: '',
+                    duration: 180,
+                    synced_lyrics: [],
+                    plain_lyrics: '',
+                    views: 1,
+                    created_by: 'YouTube Direct',
+                    community_versions: []
+                };
+                this.loadSong(customSong);
+                this.showToast(`✨ Đã nạp video YouTube: "${ytTitle}"! Bạn có thể bấm "Phân tích AI" để bóc tách lời nhé!`, 'success', 3500);
+                return;
+            }
+
             const candidates = [];
             const qLower = query.toLowerCase();
             const qClean = query.replace(/[-–—|/]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -2099,7 +2280,43 @@ QUY TẮC ĐẦU RA:
             });
 
             if (candidates.length === 0) {
-                this.showToast(`Không tìm thấy bài hát nào cho từ khóa "${query}". Hãy thử gõ tên chuẩn tiếng Anh/Hàn/Nhật!`, 'warning');
+                // Tầng dự phòng cao cấp: Tìm kiếm video YouTube qua AISA Worker để người học vẫn có thể học bất kỳ bài hát nào
+                try {
+                    const endpoint = (window.MHENT_CONFIG && window.MHENT_CONFIG.AISA_API_ENDPOINT) || 'https://api.mhentuniverse.com';
+                    const ytRes = await fetch(`${endpoint}/api/youtube-search?q=${encodeURIComponent(query + ' MV Full')}`).then(r => r.json());
+                    if (ytRes && Array.isArray(ytRes.candidates) && ytRes.candidates.length > 0) {
+                        const topIds = ytRes.candidates.slice(0, 4);
+                        for (const yId of topIds) {
+                            let yTitle = `Video YouTube: ${query}`;
+                            let yAuthor = 'YouTube Music';
+                            try {
+                                const oe = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${yId}&format=json`).then(r => r.json());
+                                if (oe?.title) {
+                                    yTitle = oe.title;
+                                    yAuthor = oe.author_name || 'YouTube';
+                                }
+                            } catch (e) {}
+
+                            candidates.push({
+                                type: 'youtube',
+                                youtubeId: yId,
+                                trackName: yTitle,
+                                artistName: yAuthor,
+                                albumName: 'Bản YouTube MV',
+                                duration: 180,
+                                hasSynced: false,
+                                thumbnail: `https://img.youtube.com/vi/${yId}/hqdefault.jpg`,
+                                lang: this.detectLanguage(yTitle)
+                            });
+                        }
+                    }
+                } catch (ytErr) {
+                    console.warn('[YouTube Search Fallback Error]:', ytErr);
+                }
+            }
+
+            if (candidates.length === 0) {
+                this.showToast(`Không tìm thấy bài hát nào cho từ khóa "${query}". Bạn có thể dán link YouTube của bài hát vào đây để học nhé!`, 'warning');
                 return;
             }
 
@@ -2294,6 +2511,28 @@ QUY TẮC ĐẦU RA:
         if (candidate.type === 'featured' && candidate.rawSong) {
             this.loadSong(candidate.rawSong);
             this.showToast(`Đang tải bài hát: ${candidate.trackName}`, 'success');
+            return;
+        }
+
+        if (candidate.type === 'youtube') {
+            const newSong = {
+                id: `yt-${candidate.youtubeId}`,
+                title: candidate.trackName,
+                artist: candidate.artistName,
+                lang: candidate.lang || 'en',
+                youtube_id: candidate.youtubeId,
+                yt_candidates: [candidate.youtubeId],
+                audio_url: '',
+                thumbnail: candidate.thumbnail,
+                duration: 180,
+                synced_lyrics: [],
+                plain_lyrics: '',
+                views: 1,
+                created_by: 'YouTube Direct',
+                community_versions: []
+            };
+            this.loadSong(newSong);
+            this.showToast(`✨ Đã nạp video: "${newSong.title}". Hãy bấm nút "Phân tích AI" hoặc thêm lời để học nhé!`, 'success');
             return;
         }
 
@@ -2532,7 +2771,7 @@ QUY TẮC ĐẦU RA:
                       "title": "Puppet",
                       "artist": "John Michael Howell",
                       "lang": "en",
-                      "thumbnail": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/bf/25/74/bf2574e4-b77a-ec94-279c-7f55b9e4a8ea/artwork.jpg/600x600bb.jpg",
+                      "thumbnail": "https://img.youtube.com/vi/BgmW6uIzjmY/hqdefault.jpg",
                       "youtube_id": "BgmW6uIzjmY",
                       "audio_url": "",
                       "duration": 135,
@@ -3627,7 +3866,7 @@ QUY TẮC ĐẦU RA:
           "title": "A Thousand Years",
           "artist": "John Michael Howell, JVKE & ZVC",
           "lang": "en",
-          "thumbnail": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/05/23/e8/0523e800-ec89-9896-bc17-76b66e39feef/artwork.jpg/600x600bb.jpg",
+          "thumbnail": "https://img.youtube.com/vi/5ptdEemGjrQ/hqdefault.jpg",
           "youtube_id": "5ptdEemGjrQ",
           "audio_url": "",
           "duration": 180,
@@ -4023,7 +4262,7 @@ QUY TẮC ĐẦU RA:
           "title": "Awakening Harmony",
           "artist": "キュアズキューン (南條愛乃) & キュアキッス (花井美春)",
           "lang": "ja",
-          "thumbnail": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/71/34/23/713423ea-7221-a1e6-23cb-a92e1069f213/artwork.jpg/600x600bb.jpg",
+          "thumbnail": "https://img.youtube.com/vi/OlZK4BPps_g/hqdefault.jpg",
           "youtube_id": "OlZK4BPps_g",
           "audio_url": "",
           "duration": 218,
@@ -4648,16 +4887,20 @@ QUY TẮC ĐẦU RA:
 
         const langLabels = { en: 'Tiếng Anh', ko: 'Tiếng Hàn', ja: 'Tiếng Nhật', zh: 'Tiếng Trung' };
 
-        grid.innerHTML = filtered.map(s => `
+        grid.innerHTML = filtered.map(s => {
+            const ytBackup = s.youtube_id ? `https://img.youtube.com/vi/${s.youtube_id}/hqdefault.jpg` : 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=60';
+            const imgSrc = s.thumbnail || ytBackup;
+            return `
             <div class="song-card" onclick="window.lyricsApp.loadSongById('${s.id}')">
                 <div class="song-card-img-wrap">
-                    <img src="${s.thumbnail}" alt="${s.title}" class="song-card-img">
+                    <img src="${imgSrc}" onerror="this.onerror=null; this.src='${ytBackup}';" alt="${this.escapeHtml(s.title)}" class="song-card-img">
                     <span class="song-card-lang-tag">${langLabels[s.lang] || 'Học tiếng'}</span>
                 </div>
-                <div class="song-card-title">${s.title}</div>
-                <div class="song-card-artist">${s.artist}</div>
+                <div class="song-card-title">${this.escapeHtml(s.title)}</div>
+                <div class="song-card-artist">${this.escapeHtml(s.artist)}</div>
             </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     loadSongById(id) {

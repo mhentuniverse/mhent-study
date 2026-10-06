@@ -2017,4 +2017,209 @@ body.lyrics-theme .footer-brand-title {
     border-radius: 10px;
 }
 
+/* =========================================================================
+   ENHANCED VOCABULARY CHIP CARDS & ACTIONS
+   ========================================================================= */
+.chip-card-top,
+.vocab-chip-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.chip-word-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.chip-card-word,
+.vocab-chip-word {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+}
+
+.chip-card-pos,
+.vocab-chip-pos {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 2px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+}
+
+.chip-card-phonetic,
+.vocab-chip-phonetic {
+    font-size: 0.88rem;
+    color: #0ea5e9;
+    font-family: 'Fira Code', monospace;
+    margin-bottom: 2px;
+}
+
+.chip-card-meaning,
+.vocab-chip-meaning {
+    font-size: 0.94rem;
+    color: #e2e8f0;
+    line-height: 1.45;
+    margin-bottom: 8px;
+}
+
+.chip-card-actions,
+.vocab-chip-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.btn-save-single-vocab {
+    background: rgba(14, 165, 233, 0.12);
+    border: 1px solid rgba(14, 165, 233, 0.3);
+    color: #38bdf8;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-save-single-vocab:hover {
+    background: #0ea5e9;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-goto-sentence {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-goto-sentence:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: white;
+}
+
+/* =========================================================================
+   FLOATING QUICK LOOKUP TOOLTIP FOR SELECTED TEXT IN LYRICS
+   ========================================================================= */
+.lyric-quick-lookup-pill {
+    position: fixed;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(15, 23, 42, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 30px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 15px rgba(14, 165, 233, 0.3);
+    transform: translate(-50%, -100%);
+    margin-top: -10px;
+    animation: pillSlideUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: auto;
+}
+
+@keyframes pillSlideUp {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -90%) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -100%) scale(1);
+    }
+}
+
+.lookup-pill-text {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #f8fafc;
+    max-width: 150px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lookup-pill-btn-search {
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    border: none;
+    color: white;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+}
+
+.lookup-pill-btn-search:hover {
+    transform: scale(1.04);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.5);
+}
+
+.lookup-pill-btn-save {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #e2e8f0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.lookup-pill-btn-save:hover {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: #f59e0b;
+    color: #fbbf24;
+}
+
+/* Modal header fix */
+.song-select-header,
+.song-select-modal-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 16px;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+
 
