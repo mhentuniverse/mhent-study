@@ -82,6 +82,7 @@ class LyricsHubApp {
         this.bindDomEvents();
         this.renderShowcaseCards();
         this.setupContribVocabHighlighter();
+        this.initSyncStudioEvents();
 
         // Tự động kiểm tra nếu có tham số URL ?song=...
         const urlParams = new URLSearchParams(window.location.search);
@@ -268,6 +269,20 @@ class LyricsHubApp {
             contribForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.submitCommunityVersion();
+            });
+        }
+
+        const btnSyncStudio = document.getElementById('btn-open-sync-studio');
+        if (btnSyncStudio) {
+            btnSyncStudio.addEventListener('click', () => {
+                this.openSyncStudioModal();
+            });
+        }
+
+        const btnDictation = document.getElementById('btn-toggle-dictation');
+        if (btnDictation) {
+            btnDictation.addEventListener('click', () => {
+                this.toggleDictationMode();
             });
         }
 
@@ -979,21 +994,76 @@ class LyricsHubApp {
 
         if (lines.length === 0) {
             container.innerHTML = `
-                <div style="text-align: center; color: #94a3b8; padding: 40px;">
-                    <i class="fa-solid fa-music" style="font-size: 2rem; margin-bottom: 12px; opacity: 0.5;"></i>
-                    <p>Chưa có lời đồng bộ cho bài hát này.</p>
+                <div style="text-align: center; color: #94a3b8; padding: 45px 20px;">
+                    <i class="fa-solid fa-microphone-lines" style="font-size: 2.4rem; margin-bottom: 14px; color: #a855f7;"></i>
+                    <h3 style="color: #f8fafc; font-size: 1.2rem; margin-bottom: 6px;">Bài hát này chưa có lời đồng bộ</h3>
+                    <p style="font-size: 0.9rem; max-width: 440px; margin: 0 auto 18px; line-height: 1.5;">
+                        Bạn có thể mở Phòng Thu Đồng Bộ Lời để dán lời và gõ phím Space theo nhịp bài hát để tạo bản Karaoke cho cả cộng đồng cùng học!
+                    </p>
+                    <button type="button" class="btn-sync-tool" onclick="window.lyricsApp.openSyncStudioModal()" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; font-size: 0.95rem; background: linear-gradient(135deg, #a855f7, #6366f1); color: #fff; border: none; border-radius: 12px; cursor: pointer; font-weight: 800; box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);">
+                        <i class="fa-solid fa-microphone-lines"></i> Mở Phòng Thu Đồng Bộ Lời (Musixmatch Lite)
+                    </button>
                 </div>
             `;
             return;
         }
 
         let html = '';
+
+        if (this.isDictationMode) {
+            html += `
+                <div class="dictation-game-header">
+                    <div class="dictation-game-title">
+                        <i class="fa-solid fa-feather-pointed"></i> <span>Chế Độ Chép Chính Tả (Shadowing)</span>
+                    </div>
+                    <div class="dictation-game-stats">
+                        <span><i class="fa-solid fa-star" style="color: #fbbf24;"></i> Điểm: <b id="dictation-score-num">${this.dictationScore || 0}</b></span>
+                        <span><i class="fa-solid fa-fire" style="color: #f97316;"></i> Chuỗi: <b id="dictation-streak-num">🔥 ${this.dictationStreak || 0}</b></span>
+                    </div>
+                </div>
+            `;
+        }
+
         lines.forEach((line, idx) => {
             const timeStr = this.formatSeconds(line.startTime || 0);
-            const enrichedText = this.highlightVocabInSentence(line.text, line.words || [], idx);
+            const isCurrentActive = idx === this.activeSentenceIndex;
+            let dictationBoxHtml = '';
+            let enrichedText = '';
+
+            if (this.isDictationMode && isCurrentActive) {
+                const targetWordObj = (Array.isArray(line.words) && line.words.length > 0) ? line.words[0] : null;
+                const targetWord = targetWordObj ? targetWordObj.word : '';
+                if (targetWord) {
+                    const re = new RegExp(this.escapeRegExp(targetWord), 'gi');
+                    const rawMasked = line.text.replace(re, '___BLANK_TOKEN___');
+                    const parts = rawMasked.split('___BLANK_TOKEN___');
+                    enrichedText = parts.map(p => this.formatTextSegment(p)).join('<span class="blank-word-mask">______</span>');
+                } else {
+                    enrichedText = `<span class="blank-word-mask">______ (Nghe & chép lại câu này) ______</span>`;
+                }
+                dictationBoxHtml = `
+                    <div class="dictation-box" onclick="event.stopPropagation()">
+                        <div class="dictation-input-row">
+                            <input type="text" id="dictation-input-${idx}" class="dictation-input" placeholder="Nghe và gõ từ khuyết vào đây..." autocomplete="off">
+                            <button type="button" class="btn-dictation-submit" onclick="window.lyricsApp.submitDictationAnswer(${idx})">
+                                <i class="fa-solid fa-check"></i> Kiểm tra
+                            </button>
+                            <button type="button" class="btn-dictation-hint" onclick="window.lyricsApp.hintDictationAnswer(${idx})" title="Xem gợi ý">
+                                <i class="fa-solid fa-lightbulb"></i>
+                            </button>
+                            <button type="button" class="btn-dictation-skip" onclick="window.lyricsApp.skipDictationAnswer(${idx})" title="Bỏ qua sang câu sau">
+                                <i class="fa-solid fa-forward"></i>
+                            </button>
+                        </div>
+                        <div id="dictation-feedback-${idx}" class="dictation-feedback"></div>
+                    </div>
+                `;
+            } else {
+                enrichedText = this.highlightVocabInSentence(line.text, line.words || [], idx);
+            }
 
             html += `
-                <div class="lyrics-sentence-row" id="sentence-row-${idx}" onclick="window.lyricsApp.handleSentenceRowClick(event, ${idx})">
+                <div class="lyrics-sentence-row ${isCurrentActive ? 'active' : ''}" id="sentence-row-${idx}" onclick="window.lyricsApp.handleSentenceRowClick(event, ${idx})">
                     <div class="sentence-meta-row">
                         <button type="button" class="sentence-play-btn" onclick="event.stopPropagation(); window.lyricsApp.seekToSentence(${idx})" title="Nghe câu này (${timeStr})">
                             <i class="fa-solid fa-play"></i> <span>${timeStr}</span>
@@ -1008,11 +1078,28 @@ class LyricsHubApp {
                     ${line.phonetic ? `<div class="sentence-phonetic-text">${line.phonetic}</div>` : ''}
 
                     <div class="sentence-trans-text">${line.translation || ''}</div>
+
+                    ${dictationBoxHtml}
                 </div>
             `;
         });
 
         container.innerHTML = html + this.getVocabSummaryHtml();
+
+        if (this.isDictationMode && this.activeSentenceIndex >= 0) {
+            setTimeout(() => {
+                const curInput = document.getElementById(`dictation-input-${this.activeSentenceIndex}`);
+                if (curInput) {
+                    curInput.focus();
+                    curInput.onkeydown = (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            this.submitDictationAnswer(this.activeSentenceIndex);
+                        }
+                    };
+                }
+            }, 60);
+        }
     }
 
     toggleAutoScroll() {
@@ -2010,7 +2097,15 @@ QUY TẮC ĐẦU RA:
         }
 
         if (activeIdx !== this.activeSentenceIndex || forceScroll) {
+            const prevIdx = this.activeSentenceIndex;
             this.activeSentenceIndex = activeIdx;
+
+            // Nếu đang trong chế độ Luyện Chép, tự động chuyển vòng lặp và dời ô nhập
+            if (this.isDictationMode && activeIdx !== prevIdx && activeIdx >= 0) {
+                this.loopSentenceIndex = activeIdx;
+                this.renderLyrics();
+                return;
+            }
 
             document.querySelectorAll('.lyrics-sentence-row').forEach((row, i) => {
                 if (i === activeIdx) {
@@ -3370,6 +3465,564 @@ QUY TẮC ĐẦU RA:
         } catch (e) {
             console.warn('[SEO] Không thể gắn Schema JSON-LD:', e);
         }
+    }
+
+    getCurrentMediaTime() {
+        if (this.useYouTube && this.ytPlayer && typeof this.ytPlayer.getCurrentTime === 'function') {
+            try {
+                return this.ytPlayer.getCurrentTime() || 0;
+            } catch (e) {}
+        }
+        if (this.audioPlayer) {
+            return this.audioPlayer.currentTime || 0;
+        }
+        return this.currentTime || 0;
+    }
+
+    seekToSeconds(sec) {
+        sec = Math.max(0, sec);
+        if (this.useYouTube && this.ytPlayer && typeof this.ytPlayer.seekTo === 'function') {
+            try {
+                this.ytPlayer.seekTo(sec, true);
+                if (typeof this.ytPlayer.playVideo === 'function') this.ytPlayer.playVideo();
+            } catch (e) {}
+        } else if (this.audioPlayer) {
+            this.audioPlayer.currentTime = sec;
+            this.audioPlayer.play();
+        }
+    }
+
+    // =========================================================================
+    // 8C. PHÒNG THU ĐỒNG BỘ LỜI BÀI HÁT (MUSIXMATCH LITE - TIMING SYNC STUDIO)
+    // =========================================================================
+    openSyncStudioModal() {
+        const modal = document.getElementById('sync-studio-modal');
+        if (!modal) return;
+
+        this.syncStudioLines = [];
+        this.syncStudioIndex = 0;
+        this.syncStudioTicker = null;
+
+        // Điền trước thông tin nếu đang nạp bài hát
+        const titleInput = document.getElementById('sync-input-title');
+        const artistInput = document.getElementById('sync-input-artist');
+        const langInput = document.getElementById('sync-input-lang');
+        const lyricsInput = document.getElementById('sync-plain-lyrics-input');
+
+        if (this.currentSong) {
+            if (titleInput) titleInput.value = this.currentSong.title || '';
+            if (artistInput) artistInput.value = this.currentSong.artist || '';
+            if (langInput && this.currentSong.lang) langInput.value = this.currentSong.lang;
+            if (lyricsInput) {
+                const plain = this.currentSong.plain_lyrics || (this.currentSong.synced_lyrics || []).map(l => l.text).join('\n');
+                lyricsInput.value = plain;
+                const countBadge = document.getElementById('sync-plain-line-count');
+                if (countBadge) {
+                    const count = plain.split('\n').map(l => l.trim()).filter(Boolean).length;
+                    countBadge.textContent = `${count} câu`;
+                }
+            }
+        }
+
+        // Chuyển về Bước 1
+        this.switchSyncStudioStep(1);
+        modal.classList.add('active');
+    }
+
+    switchSyncStudioStep(stepNum) {
+        document.querySelectorAll('.studio-step-item').forEach((item, idx) => {
+            item.classList.toggle('active', (idx + 1) === stepNum);
+        });
+
+        const step1 = document.getElementById('sync-studio-step-1');
+        const step2 = document.getElementById('sync-studio-step-2');
+        const step3 = document.getElementById('sync-studio-step-3');
+
+        if (step1) step1.style.display = stepNum === 1 ? 'flex' : 'none';
+        if (step2) step2.style.display = stepNum === 2 ? 'flex' : 'none';
+        if (step3) step3.style.display = stepNum === 3 ? 'flex' : 'none';
+
+        if (stepNum === 2) {
+            this.startSyncStudioTicker();
+            this.updateSyncStudioStep2Ui();
+        } else {
+            this.stopSyncStudioTicker();
+        }
+    }
+
+    startSyncStudioTicker() {
+        this.stopSyncStudioTicker();
+        this.syncStudioTicker = setInterval(() => {
+            const timeEl = document.getElementById('sync-current-time');
+            if (timeEl) {
+                const cur = this.getCurrentMediaTime();
+                const m = Math.floor(cur / 60);
+                const s = Math.floor(cur % 60);
+                const ms = Math.floor((cur % 1) * 10);
+                timeEl.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms}`;
+            }
+        }, 100);
+    }
+
+    stopSyncStudioTicker() {
+        if (this.syncStudioTicker) {
+            clearInterval(this.syncStudioTicker);
+            this.syncStudioTicker = null;
+        }
+    }
+
+    updateSyncStudioStep2Ui() {
+        if (!Array.isArray(this.syncStudioLines) || this.syncStudioLines.length === 0) return;
+
+        const curIdx = this.syncStudioIndex;
+        const total = this.syncStudioLines.length;
+
+        const counterEl = document.getElementById('sync-current-index-display');
+        const totalEl = document.getElementById('sync-total-lines-display');
+        if (counterEl) counterEl.textContent = Math.min(curIdx + 1, total);
+        if (totalEl) totalEl.textContent = total;
+
+        const prevEl = document.getElementById('sync-prev-line');
+        const prevText = document.getElementById('sync-prev-line-text');
+        const activeText = document.getElementById('sync-active-line-text');
+        const activeTime = document.getElementById('sync-active-line-time');
+        const nextEl = document.getElementById('sync-next-line');
+        const nextText = document.getElementById('sync-next-line-text');
+
+        if (curIdx > 0 && this.syncStudioLines[curIdx - 1]) {
+            if (prevEl) prevEl.style.visibility = 'visible';
+            if (prevText) prevText.textContent = `${this.formatSeconds(this.syncStudioLines[curIdx - 1].startTime)} - ${this.syncStudioLines[curIdx - 1].text}`;
+        } else {
+            if (prevEl) prevEl.style.visibility = 'hidden';
+        }
+
+        if (curIdx < total && this.syncStudioLines[curIdx]) {
+            const curLine = this.syncStudioLines[curIdx];
+            if (activeText) activeText.textContent = curLine.text;
+            if (activeTime) {
+                activeTime.textContent = curLine.startTime > 0 ? `Đã gán: ${this.formatSeconds(curLine.startTime)}` : 'Chờ gõ Space khi câu cất giọng';
+            }
+        } else {
+            if (activeText) activeText.textContent = '🎉 Đã hoàn thành toàn bộ bài hát!';
+            if (activeTime) activeTime.textContent = 'Bấm "Hoàn tất & Sang bước AI" bên dưới để lưu nhé';
+        }
+
+        if (curIdx + 1 < total && this.syncStudioLines[curIdx + 1]) {
+            if (nextEl) nextEl.style.visibility = 'visible';
+            if (nextText) nextText.textContent = this.syncStudioLines[curIdx + 1].text;
+        } else {
+            if (nextEl) nextEl.style.visibility = 'hidden';
+        }
+    }
+
+    handleSyncStudioTap() {
+        if (!Array.isArray(this.syncStudioLines) || this.syncStudioIndex >= this.syncStudioLines.length) {
+            this.switchSyncStudioStep(3);
+            this.renderSyncStudioReviewLines();
+            return;
+        }
+
+        const curTime = parseFloat(this.getCurrentMediaTime().toFixed(2));
+        const idx = this.syncStudioIndex;
+        const curLine = this.syncStudioLines[idx];
+
+        curLine.startTime = curTime;
+
+        // Cập nhật endTime cho câu trước
+        if (idx > 0) {
+            const prev = this.syncStudioLines[idx - 1];
+            if (!prev.endTime || prev.endTime <= prev.startTime) {
+                prev.endTime = curTime;
+            }
+        }
+
+        // Hiệu ứng pulse sáng rực rỡ
+        const activeBox = document.getElementById('sync-active-line');
+        if (activeBox) {
+            activeBox.style.transform = 'scale(1.02)';
+            activeBox.style.boxShadow = '0 0 35px rgba(56, 189, 248, 0.7)';
+            setTimeout(() => {
+                activeBox.style.transform = 'none';
+                activeBox.style.boxShadow = '';
+            }, 180);
+        }
+
+        this.syncStudioIndex++;
+
+        if (this.syncStudioIndex >= this.syncStudioLines.length) {
+            curLine.endTime = curTime + 4;
+            this.showToast('🎉 Đã bấm nhịp xong toàn bộ bài hát!', 'success', 2500);
+            setTimeout(() => {
+                this.switchSyncStudioStep(3);
+                this.renderSyncStudioReviewLines();
+            }, 600);
+        } else {
+            this.updateSyncStudioStep2Ui();
+        }
+    }
+
+    renderSyncStudioReviewLines() {
+        const container = document.getElementById('sync-review-lines-container');
+        if (!container || !Array.isArray(this.syncStudioLines)) return;
+
+        container.innerHTML = this.syncStudioLines.map((line, idx) => `
+            <div class="sync-review-item">
+                <span class="rev-time">${this.formatSeconds(line.startTime)}</span>
+                <span class="rev-text">${this.escapeHtml(line.text)}</span>
+                <input type="text" class="rev-trans-input" data-index="${idx}" value="${this.escapeHtml(line.translation || '')}" placeholder="Bản dịch tiếng Việt (tùy chọn)...">
+            </div>
+        `).join('');
+
+        // Lắng nghe thay đổi bản dịch
+        container.querySelectorAll('.rev-trans-input').forEach(input => {
+            input.addEventListener('input', () => {
+                const idx = parseInt(input.dataset.index, 10);
+                if (!isNaN(idx) && this.syncStudioLines[idx]) {
+                    this.syncStudioLines[idx].translation = input.value.trim();
+                }
+            });
+        });
+    }
+
+    initSyncStudioEvents() {
+        const modal = document.getElementById('sync-studio-modal');
+        const closeBtn = document.getElementById('sync-studio-close');
+        const plainInput = document.getElementById('sync-plain-lyrics-input');
+        const countBadge = document.getElementById('sync-plain-line-count');
+        const btnGoStep2 = document.getElementById('btn-sync-goto-step-2');
+        const btnBackStep1 = document.getElementById('btn-sync-back-step-1');
+        const btnGoStep3 = document.getElementById('btn-sync-goto-step-3');
+        const btnBackStep2 = document.getElementById('btn-sync-back-step-2');
+        const btnTap = document.getElementById('btn-sync-tap-action');
+        const btnPrev = document.getElementById('btn-sync-prev-step');
+        const btnMinus = document.getElementById('btn-sync-minus-half');
+        const btnPlus = document.getElementById('btn-sync-plus-half');
+        const btnSkip = document.getElementById('btn-sync-skip-line');
+        const btnPlayToggle = document.getElementById('btn-sync-play-toggle');
+        const btnRestart = document.getElementById('btn-sync-restart');
+        const btnRunAi = document.getElementById('btn-sync-run-ai');
+        const btnPublish = document.getElementById('btn-sync-publish');
+
+        if (closeBtn && modal) {
+            closeBtn.addEventListener('click', () => {
+                modal.classList.remove('active');
+                this.stopSyncStudioTicker();
+            });
+        }
+
+        if (plainInput && countBadge) {
+            plainInput.addEventListener('input', () => {
+                const count = plainInput.value.split('\n').map(l => l.trim()).filter(Boolean).length;
+                countBadge.textContent = `${count} câu`;
+            });
+        }
+
+        if (btnGoStep2) {
+            btnGoStep2.addEventListener('click', () => {
+                const title = (document.getElementById('sync-input-title')?.value || '').trim();
+                const rawLyrics = (plainInput?.value || '').trim();
+                if (!title) {
+                    this.showToast('Vui lòng nhập tiêu đề bài hát!', 'warning');
+                    return;
+                }
+                const lines = rawLyrics.split('\n').map(l => l.trim()).filter(Boolean);
+                if (lines.length === 0) {
+                    this.showToast('Vui lòng dán lời bài hát để bắt đầu căn nhịp!', 'warning');
+                    return;
+                }
+
+                this.syncStudioLines = lines.map((text, i) => ({
+                    id: i + 1,
+                    text: text,
+                    startTime: 0,
+                    endTime: 0,
+                    translation: '',
+                    phonetic: '',
+                    words: []
+                }));
+                this.syncStudioIndex = 0;
+
+                // Tự động phát nhạc từ 00:00
+                this.seekToSeconds(0);
+                this.switchSyncStudioStep(2);
+                this.showToast('🎵 Nhạc bắt đầu phát! Hãy gõ phím Space khi ca sĩ bắt đầu hát mỗi câu nhé!', 'info', 4000);
+            });
+        }
+
+        if (btnBackStep1) btnBackStep1.addEventListener('click', () => this.switchSyncStudioStep(1));
+        if (btnGoStep3) {
+            btnGoStep3.addEventListener('click', () => {
+                this.switchSyncStudioStep(3);
+                this.renderSyncStudioReviewLines();
+            });
+        }
+        if (btnBackStep2) btnBackStep2.addEventListener('click', () => this.switchSyncStudioStep(2));
+
+        if (btnTap) btnTap.addEventListener('click', () => this.handleSyncStudioTap());
+
+        // Lắng nghe phím Spacebar toàn cục khi đang ở Bước 2 của modal
+        window.addEventListener('keydown', (e) => {
+            const step2 = document.getElementById('sync-studio-step-2');
+            if (modal && modal.classList.contains('active') && step2 && step2.style.display !== 'none') {
+                if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    this.handleSyncStudioTap();
+                }
+            }
+        });
+
+        if (btnPrev) {
+            btnPrev.addEventListener('click', () => {
+                this.syncStudioIndex = Math.max(0, this.syncStudioIndex - 1);
+                this.updateSyncStudioStep2Ui();
+            });
+        }
+
+        if (btnMinus) {
+            btnMinus.addEventListener('click', () => {
+                const targetIdx = this.syncStudioIndex > 0 ? this.syncStudioIndex - 1 : this.syncStudioIndex;
+                if (this.syncStudioLines && this.syncStudioLines[targetIdx]) {
+                    this.syncStudioLines[targetIdx].startTime = Math.max(0, parseFloat((this.syncStudioLines[targetIdx].startTime - 0.5).toFixed(2)));
+                    this.showToast(`Đã lùi 0.5s câu ${targetIdx + 1}`, 'info', 1000);
+                    this.updateSyncStudioStep2Ui();
+                }
+            });
+        }
+
+        if (btnPlus) {
+            btnPlus.addEventListener('click', () => {
+                const targetIdx = this.syncStudioIndex > 0 ? this.syncStudioIndex - 1 : this.syncStudioIndex;
+                if (this.syncStudioLines && this.syncStudioLines[targetIdx]) {
+                    this.syncStudioLines[targetIdx].startTime = parseFloat((this.syncStudioLines[targetIdx].startTime + 0.5).toFixed(2));
+                    this.showToast(`Đã tăng 0.5s câu ${targetIdx + 1}`, 'info', 1000);
+                    this.updateSyncStudioStep2Ui();
+                }
+            });
+        }
+
+        if (btnSkip) {
+            btnSkip.addEventListener('click', () => {
+                this.syncStudioIndex++;
+                this.updateSyncStudioStep2Ui();
+            });
+        }
+
+        if (btnPlayToggle) {
+            btnPlayToggle.addEventListener('click', () => {
+                this.togglePlay();
+            });
+        }
+
+        if (btnRestart) {
+            btnRestart.addEventListener('click', () => {
+                this.seekToSeconds(0);
+                this.syncStudioIndex = 0;
+                this.updateSyncStudioStep2Ui();
+                this.showToast('Đã phát lại từ 00:00 và đặt lại câu 1', 'info', 1500);
+            });
+        }
+
+        // Chạy AI phân tích & dịch toàn bộ lời
+        if (btnRunAi) {
+            btnRunAi.addEventListener('click', async () => {
+                if (!Array.isArray(this.syncStudioLines) || this.syncStudioLines.length === 0) return;
+
+                btnRunAi.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang phân tích cùng Gemini AI...';
+                btnRunAi.disabled = true;
+
+                try {
+                    const lang = document.getElementById('sync-input-lang')?.value || 'ja';
+                    const sampleTexts = this.syncStudioLines.map(l => l.text).join('\n');
+
+                    if (window.MHENT_CONFIG && window.MHENT_CONFIG.GEMINI_API_KEY) {
+                        const prompt = `Bạn là trợ lý học ngoại ngữ chuyên nghiệp. Hãy dịch các câu sau sang tiếng Việt và bóc tách 1-3 từ vựng nổi bật cho từng câu:\nNgôn ngữ gốc: ${lang}\nNội dung các câu:\n${sampleTexts}\n\nTrả về mảng JSON đúng thứ tự: [{"translation": "...", "phonetic": "...", "words": [{"word": "...", "meaning": "...", "pos": "noun|verb|adj", "phonetic": "..."}]}]`;
+                        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${window.MHENT_CONFIG.GEMINI_API_KEY}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                contents: [{ parts: [{ text: prompt }] }],
+                                generationConfig: { responseMimeType: 'application/json' }
+                            })
+                        }).then(r => r.json());
+
+                        const textJson = res.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (textJson) {
+                            const parsed = JSON.parse(textJson);
+                            if (Array.isArray(parsed)) {
+                                parsed.forEach((item, i) => {
+                                    if (this.syncStudioLines[i]) {
+                                        this.syncStudioLines[i].translation = item.translation || '';
+                                        this.syncStudioLines[i].phonetic = item.phonetic || '';
+                                        this.syncStudioLines[i].words = Array.isArray(item.words) ? item.words : [];
+                                    }
+                                });
+                            }
+                        }
+                    }
+
+                    this.renderSyncStudioReviewLines();
+                    this.showToast('✨ Gemini AI đã bóc tách từ vựng & dịch nghĩa toàn bài thành công!', 'success', 3000);
+                } catch (e) {
+                    console.warn('[AI Sync Studio Analysis]', e);
+                    this.showToast('Lỗi AI, bạn có thể tự nhập bản dịch nhé!', 'warning');
+                } finally {
+                    btnRunAi.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> AI Bóc Tách Từ Vựng & Dịch Toàn Bộ';
+                    btnRunAi.disabled = false;
+                }
+            });
+        }
+
+        // Xuất bản bài hát
+        if (btnPublish) {
+            btnPublish.addEventListener('click', async () => {
+                const title = (document.getElementById('sync-input-title')?.value || 'Bài hát mới').trim();
+                const artist = (document.getElementById('sync-input-artist')?.value || 'Nghệ sĩ').trim();
+                const lang = document.getElementById('sync-input-lang')?.value || 'ja';
+
+                let defaultAuthor = 'Học viên MHEnt';
+                try {
+                    const savedProfile = JSON.parse(localStorage.getItem('mhent_user_profile') || localStorage.getItem('mhent_user') || '{}');
+                    if (savedProfile.displayName || savedProfile.name) defaultAuthor = savedProfile.displayName || savedProfile.name;
+                } catch (e) {}
+
+                const songId = 'synced_' + Date.now();
+                const newSong = {
+                    id: songId,
+                    title: title,
+                    artist: artist,
+                    lang: lang,
+                    thumbnail: this.currentSong ? this.currentSong.thumbnail : 'https://img.youtube.com/vi/OlZK4BPps_g/hqdefault.jpg',
+                    youtube_id: this.currentSong ? this.currentSong.youtube_id : '',
+                    audio_url: this.currentSong ? this.currentSong.audio_url : '',
+                    duration: Math.ceil(this.syncStudioLines[this.syncStudioLines.length - 1]?.endTime || 180),
+                    synced_lyrics: this.syncStudioLines,
+                    plain_lyrics: this.syncStudioLines.map(l => l.text).join('\n'),
+                    views: 1,
+                    likes: 0,
+                    created_by: defaultAuthor,
+                    community_versions: []
+                };
+
+                if (window.studyCloud && typeof window.studyCloud.saveSong === 'function') {
+                    await window.studyCloud.saveSong(newSong);
+                }
+
+                modal.classList.remove('active');
+                this.stopSyncStudioTicker();
+                this.loadSong(newSong);
+                this.showToast(`🎉 Xuất bản bài hát "${title}" thành công! Lời Karaoke đã sẵn sàng.`, 'success', 4000);
+            });
+        }
+    }
+
+    // =========================================================================
+    // 8D. MINIGAME: CHÉP CHÍNH TẢ & SHADOWING (DICTATION MODE)
+    // =========================================================================
+    toggleDictationMode() {
+        this.isDictationMode = !this.isDictationMode;
+
+        const btn = document.getElementById('btn-toggle-dictation');
+        const label = document.getElementById('dictation-mode-label');
+
+        if (btn) btn.classList.toggle('active', this.isDictationMode);
+        if (label) label.textContent = this.isDictationMode ? 'Thoát Chép' : 'Luyện chép';
+
+        if (this.isDictationMode) {
+            this.loopSentenceIndex = this.activeSentenceIndex >= 0 ? this.activeSentenceIndex : 0;
+            this.updateLoopBtnUi();
+            this.seekToSentence(this.loopSentenceIndex);
+            this.showToast('✍️ Đã bật Chế độ Luyện Chép Chính Tả! Câu hát sẽ lặp lại liên tục để bạn nghe và điền từ.', 'info', 3500);
+        } else {
+            this.loopSentenceIndex = -1;
+            this.updateLoopBtnUi();
+            this.showToast('Đã trở về Chế độ Karaoke bình thường.', 'info', 1500);
+        }
+
+        this.renderLyrics();
+    }
+
+    submitDictationAnswer(idx) {
+        const input = document.getElementById(`dictation-input-${idx}`);
+        const feedback = document.getElementById(`dictation-feedback-${idx}`);
+        if (!input || !this.currentSong) return;
+
+        const val = input.value.trim().toLowerCase();
+        const lines = this.getActiveLyrics();
+        const line = lines[idx];
+        if (!line) return;
+
+        const targetWordObj = (Array.isArray(line.words) && line.words.length > 0) ? line.words[0] : null;
+        const targetWord = (targetWordObj ? targetWordObj.word : line.text).trim().toLowerCase();
+
+        // Kiểm tra độ khớp
+        let isMatched = false;
+        if (val) {
+            if (targetWordObj) {
+                isMatched = (val === targetWord || this.removeVietnameseTones(val) === this.removeVietnameseTones(targetWord));
+            } else {
+                const cleanLineText = line.text.trim().toLowerCase();
+                isMatched = (val === cleanLineText || this.removeVietnameseTones(val) === this.removeVietnameseTones(cleanLineText));
+            }
+        }
+
+        if (isMatched) {
+            this.dictationScore = (this.dictationScore || 0) + 10;
+            this.dictationStreak = (this.dictationStreak || 0) + 1;
+
+            if (feedback) {
+                feedback.className = 'dictation-feedback correct';
+                feedback.innerHTML = `<i class="fa-solid fa-circle-check"></i> Chính xác! Tuyệt vời (+10 Điểm ✨)`;
+            }
+
+            this.showToast(`🎉 Chính xác! (+10 XP) - Chuỗi: 🔥 ${this.dictationStreak} câu`, 'success', 2000);
+
+            const scoreEl = document.getElementById('dictation-score-num');
+            const streakEl = document.getElementById('dictation-streak-num');
+            if (scoreEl) scoreEl.textContent = this.dictationScore;
+            if (streakEl) streakEl.innerHTML = `🔥 ${this.dictationStreak}`;
+
+            setTimeout(() => {
+                const nextIdx = (idx + 1) < lines.length ? (idx + 1) : 0;
+                this.loopSentenceIndex = nextIdx;
+                this.seekToSentence(nextIdx);
+                this.renderLyrics();
+            }, 1000);
+        } else {
+            this.dictationStreak = 0;
+            const streakEl = document.getElementById('dictation-streak-num');
+            if (streakEl) streakEl.innerHTML = `🔥 0`;
+
+            if (feedback) {
+                feedback.className = 'dictation-feedback incorrect';
+                feedback.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Chưa đúng rồi! Nghe lại nhé (Gợi ý: từ có ${targetWord.length} ký tự).`;
+            }
+
+            this.seekToSentence(idx);
+            input.focus();
+        }
+    }
+
+    hintDictationAnswer(idx) {
+        const lines = this.getActiveLyrics();
+        const line = lines[idx];
+        const feedback = document.getElementById(`dictation-feedback-${idx}`);
+        if (!line || !feedback) return;
+
+        const targetWordObj = (Array.isArray(line.words) && line.words.length > 0) ? line.words[0] : null;
+        const targetWord = targetWordObj ? targetWordObj.word : line.text;
+        const phonetic = targetWordObj ? targetWordObj.phonetic : line.phonetic;
+
+        feedback.className = 'dictation-feedback';
+        feedback.innerHTML = `<i class="fa-solid fa-lightbulb" style="color: #fbbf24;"></i> Gợi ý: Bắt đầu bằng chữ "<b>${targetWord.slice(0, 2)}...</b>" ${phonetic ? `(Phiên âm: ${phonetic})` : ''}`;
+    }
+
+    skipDictationAnswer(idx) {
+        const lines = this.getActiveLyrics();
+        const nextIdx = (idx + 1) < lines.length ? (idx + 1) : 0;
+        this.loopSentenceIndex = nextIdx;
+        this.seekToSentence(nextIdx);
+        this.renderLyrics();
+        this.showToast('Đã bỏ qua sang câu tiếp theo', 'info', 1000);
     }
 
     // =========================================================================

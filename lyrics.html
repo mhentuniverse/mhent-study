@@ -266,6 +266,12 @@
                         <button type="button" id="btn-toggle-viewmode" class="btn-tool-action" title="Chuyển sang chế độ đọc toàn bài" onclick="window.lyricsApp.togglePlainMode()">
                             <i class="fa-solid fa-book-open"></i> <span id="viewmode-label">Đọc lời</span>
                         </button>
+                        <button type="button" id="btn-toggle-dictation" class="btn-tool-action btn-dictation-tool" onclick="window.lyricsApp.toggleDictationMode()" title="Minigame: Luyện chép chính tả & Shadowing">
+                            <i class="fa-solid fa-feather-pointed" style="color: #ec4899;"></i> <span id="dictation-mode-label">Luyện chép</span>
+                        </button>
+                        <button type="button" id="btn-open-sync-studio" class="btn-tool-action btn-sync-tool" onclick="window.lyricsApp.openSyncStudioModal()" title="Phòng thu đồng bộ lời bài hát bấm nhịp (Musixmatch Lite)">
+                            <i class="fa-solid fa-microphone-lines" style="color: #a855f7;"></i> <span>Đồng bộ lời</span>
+                        </button>
                         <button type="button" id="btn-open-contrib" class="btn-contribute-version" onclick="window.lyricsApp.openContribModal()">
                             <i class="fa-solid fa-pen-nib"></i> Đóng góp bản dịch
                         </button>
@@ -281,6 +287,9 @@
                 <div class="lyrics-plain-container" id="lyrics-plain-container" style="display: none;">
                     <!-- Plain lyrics injected dynamically -->
                 </div>
+
+                <!-- SEO Crawlable Static Lyrics Container (Structured itemprop for Search Engines) -->
+                <div id="seo-crawlable-lyrics" class="seo-crawlable-lyrics" itemprop="lyrics" style="display: none; visibility: hidden; position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;" aria-hidden="true"></div>
             </div>
 
         </section>
@@ -410,6 +419,177 @@
                 <button type="button" class="dict-btn-save" id="btn-vocab-dialog-save">
                     <i class="fa-solid fa-check"></i> Lưu Thẻ Vào Câu
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MUSIXMATCH LITE - TIMING SYNC STUDIO MODAL -->
+    <div id="sync-studio-modal" class="sync-studio-modal-overlay">
+        <div class="sync-studio-card">
+            <div class="sync-studio-header">
+                <div class="sync-studio-header-title">
+                    <div class="studio-logo-icon"><i class="fa-solid fa-microphone-lines"></i></div>
+                    <div>
+                        <h3>Phòng Thu Đồng Bộ Lời Bài Hát (Musixmatch Lite)</h3>
+                        <p>Dán lời thô và gõ phím Space theo điệu nhạc để căn giây Karaoke chuẩn từng câu</p>
+                    </div>
+                </div>
+                <button type="button" id="sync-studio-close" class="btn-dialog-close" title="Đóng">&times;</button>
+            </div>
+
+            <!-- Steps Tab Navigation -->
+            <div class="sync-studio-steps">
+                <div class="studio-step-item active" id="studio-step-tab-1">
+                    <span class="step-num">1</span> <span>Dán lời thô</span>
+                </div>
+                <div class="studio-step-divider"></div>
+                <div class="studio-step-item" id="studio-step-tab-2">
+                    <span class="step-num">2</span> <span>Bấm nhịp (Spacebar)</span>
+                </div>
+                <div class="studio-step-divider"></div>
+                <div class="studio-step-item" id="studio-step-tab-3">
+                    <span class="step-num">3</span> <span>AI Phân tích & Lưu</span>
+                </div>
+            </div>
+
+            <!-- STEP 1: PASTE PLAIN LYRICS -->
+            <div class="sync-studio-body" id="sync-studio-step-1">
+                <div class="studio-form-row">
+                    <div class="contrib-field-group">
+                        <label class="contrib-label">Tiêu đề bài hát:</label>
+                        <input type="text" id="sync-input-title" class="contrib-input" placeholder="VD: Awakening Harmony..." required>
+                    </div>
+                    <div class="contrib-field-group">
+                        <label class="contrib-label">Nghệ sĩ / Ca sĩ:</label>
+                        <input type="text" id="sync-input-artist" class="contrib-input" placeholder="VD: Cure Zukyoon...">
+                    </div>
+                    <div class="contrib-field-group">
+                        <label class="contrib-label">Ngôn ngữ bài hát:</label>
+                        <select id="sync-input-lang" class="contrib-input">
+                            <option value="ja">🇯🇵 Tiếng Nhật (Japanese)</option>
+                            <option value="zh">🇨🇳 Tiếng Trung (Chinese)</option>
+                            <option value="ko">🇰🇷 Tiếng Hàn (Korean)</option>
+                            <option value="en">🇬🇧 Tiếng Anh (English)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="contrib-field-group" style="margin-top: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label class="contrib-label">Dán toàn bộ lời bài hát (Mỗi dòng là 1 câu hát):</label>
+                        <span id="sync-plain-line-count" style="font-size: 0.78rem; color: #38bdf8; font-weight: 700;">0 câu</span>
+                    </div>
+                    <textarea id="sync-plain-lyrics-input" class="contrib-textarea" rows="10" placeholder="暗闇のまんなか 真っ直ぐな眼差しで&#10;立ち上がる姿 ちゃんと見ていたよ&#10;閉じ込められそうな 心を奮い立たせ&#10;おさまりきらない 輝きを放ち..."></textarea>
+                </div>
+
+                <div class="sync-studio-footer">
+                    <button type="button" class="btn-cancel" onclick="document.getElementById('sync-studio-modal').classList.remove('active')">Hủy bỏ</button>
+                    <button type="button" id="btn-sync-goto-step-2" class="dict-btn-save">
+                        <span>Tiếp tục: Bắt đầu bấm nhịp</span> <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: TAP-TO-SYNC STUDIO -->
+            <div class="sync-studio-body" id="sync-studio-step-2" style="display: none;">
+                <!-- Audio/Video status & progress bar -->
+                <div class="sync-player-status-strip">
+                    <div class="sync-current-time-display">
+                        <i class="fa-solid fa-clock"></i> <span id="sync-current-time">00:00.0</span>
+                    </div>
+                    <div class="sync-progress-counter">
+                        Đang căn câu: <b id="sync-current-index-display">1</b> / <span id="sync-total-lines-display">0</span>
+                    </div>
+                    <div class="sync-track-controls">
+                        <button type="button" id="btn-sync-play-toggle" class="sync-mini-btn" title="Phát / Tạm dừng">
+                            <i class="fa-solid fa-play"></i>
+                        </button>
+                        <button type="button" id="btn-sync-restart" class="sync-mini-btn" title="Phát lại từ đầu (00:00)">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Big Interactive Lyric Display -->
+                <div class="sync-stage-box">
+                    <div class="sync-prev-line-preview" id="sync-prev-line">
+                        <span class="preview-tag">Câu trước:</span> <span class="preview-text" id="sync-prev-line-text">...</span>
+                    </div>
+
+                    <div class="sync-active-line-display" id="sync-active-line">
+                        <div class="active-line-badge">CÂU HIỆN TẠI (CHỜ GÕ SPACE KHI HÁT ĐẾN)</div>
+                        <div class="active-line-text" id="sync-active-line-text">Đang tải câu...</div>
+                        <div class="active-line-time" id="sync-active-line-time">Chưa gán giây</div>
+                    </div>
+
+                    <div class="sync-next-line-preview" id="sync-next-line">
+                        <span class="preview-tag">Câu tiếp theo:</span> <span class="preview-text" id="sync-next-line-text">...</span>
+                    </div>
+                </div>
+
+                <!-- Big Tap Button & Adjust Tools -->
+                <div class="sync-tap-controls">
+                    <button type="button" id="btn-sync-tap-action" class="btn-sync-big-tap">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span class="tap-label">BẤM NHỊP CHO CÂU NÀY</span>
+                        <kbd class="tap-kbd">Phím SPACEBAR</kbd>
+                    </button>
+
+                    <div class="sync-fine-tune-row">
+                        <button type="button" id="btn-sync-prev-step" class="sync-tune-btn" title="Quay lại câu trước">
+                            <i class="fa-solid fa-backward-step"></i> Câu trước
+                        </button>
+                        <button type="button" id="btn-sync-minus-half" class="sync-tune-btn" title="Lùi 0.5 giây cho câu vừa bấm">
+                            -0.5s
+                        </button>
+                        <button type="button" id="btn-sync-plus-half" class="sync-tune-btn" title="Tăng 0.5 giây cho câu vừa bấm">
+                            +0.5s
+                        </button>
+                        <button type="button" id="btn-sync-skip-line" class="sync-tune-btn" title="Bỏ qua câu này">
+                            Bỏ qua <i class="fa-solid fa-forward-step"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="sync-studio-footer">
+                    <button type="button" id="btn-sync-back-step-1" class="btn-cancel">
+                        <i class="fa-solid fa-arrow-left"></i> Sửa lại lời
+                    </button>
+                    <button type="button" id="btn-sync-goto-step-3" class="dict-btn-save">
+                        <span>Hoàn tất & Sang bước AI</span> <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 3: AI ANALYSIS & PUBLISH -->
+            <div class="sync-studio-body" id="sync-studio-step-3" style="display: none;">
+                <div class="sync-review-header">
+                    <div>
+                        <h4 style="color: #f8fafc; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-sparkles" style="color: #a855f7;"></i> Kiểm tra & Phân tích thông minh bằng AI
+                        </h4>
+                        <p style="color: #94a3b8; font-size: 0.85rem; margin: 4px 0 0;">
+                            Hệ thống đã ghi nhận mốc thời gian của từng câu. Bạn có thể nhờ AI dịch và bóc tách từ vựng tự động!
+                        </p>
+                    </div>
+                    <button type="button" id="btn-sync-run-ai" class="btn-ai-autofill" style="padding: 10px 18px; font-size: 0.9rem;">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> AI Bóc Tách Từ Vựng & Dịch Toàn Bộ
+                    </button>
+                </div>
+
+                <!-- Preview list of synced lines -->
+                <div class="sync-review-lines-container" id="sync-review-lines-container">
+                    <!-- Lines with time and translations -->
+                </div>
+
+                <div class="sync-studio-footer">
+                    <button type="button" id="btn-sync-back-step-2" class="btn-cancel">
+                        <i class="fa-solid fa-arrow-left"></i> Bấm nhịp lại
+                    </button>
+                    <button type="button" id="btn-sync-publish" class="dict-btn-save">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Xuất bản lên MHEnt Study
+                    </button>
+                </div>
             </div>
         </div>
     </div>
