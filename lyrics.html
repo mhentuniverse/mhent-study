@@ -253,8 +253,11 @@
                 <!-- Header with Version Tabs & Toggles -->
                 <div class="lyrics-viewport-header">
                     <div class="version-tabs-wrap" id="version-tabs-wrap">
-                        <button class="version-tab active">
-                            <i class="fa-solid fa-globe"></i> Bản chuẩn Web/AI
+                        <button type="button" class="btn-version-drawer-open" id="btn-version-drawer-open" onclick="window.lyricsApp.openVersionsDrawer()" title="Xem danh sách bản dịch bài hát (Drawer)">
+                            <i class="fa-solid fa-layer-group" style="color: #38bdf8;"></i>
+                            <span id="version-current-label">Bản chuẩn Web/AI</span>
+                            <span class="version-count-badge" id="version-count-badge">1 bản</span>
+                            <i class="fa-solid fa-chevron-down" style="font-size: 0.72rem; opacity: 0.7; margin-left: 2px;"></i>
                         </button>
                     </div>
 
@@ -315,7 +318,7 @@
     <div id="contrib-modal" class="contrib-modal-overlay">
         <div class="contrib-modal-card">
             <div class="contrib-modal-header">
-                <h3 style="color: #f8fafc; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                <h3 id="contrib-modal-title" style="color: #f8fafc; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
                     <i class="fa-solid fa-pen-nib" style="color: #10b981;"></i> Đóng Góp Phiên Bản Lời Dịch Mới
                 </h3>
                 <button type="button" id="contrib-close" style="background: transparent; border: none; color: #94a3b8; font-size: 1.2rem; cursor: pointer;">
@@ -364,10 +367,10 @@
                 </div>
 
                 <div class="contrib-footer">
-                    <button type="button" class="btn-cancel" onclick="document.getElementById('contrib-modal').classList.remove('active')">
+                    <button type="button" class="btn-cancel" onclick="window.lyricsApp.closeContribModal()">
                         Hủy bỏ
                     </button>
-                    <button type="submit" class="dict-btn-save">
+                    <button type="submit" id="btn-contrib-submit" class="dict-btn-save">
                         <i class="fa-solid fa-cloud-arrow-up"></i> Lưu & Xuất bản lên Supabase Cloud
                     </button>
                 </div>
@@ -423,6 +426,32 @@
                 <button type="button" class="btn-cancel" id="btn-vocab-dialog-cancel">Hủy</button>
                 <button type="button" class="dict-btn-save" id="btn-vocab-dialog-save">
                     <i class="fa-solid fa-check"></i> Lưu Thẻ Vào Câu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DRAWER: DANH SÁCH BẢN DỊCH & ĐÓNG GÓP CỘNG ĐỒNG -->
+    <div id="lyrics-versions-drawer" class="lyrics-drawer-overlay" style="display: none;">
+        <div class="lyrics-drawer-panel">
+            <div class="lyrics-drawer-header">
+                <div class="lyrics-drawer-title">
+                    <i class="fa-solid fa-layer-group" style="color: #38bdf8;"></i>
+                    <h3>Bản Dịch & Đóng Góp</h3>
+                </div>
+                <button type="button" class="btn-drawer-close" onclick="window.lyricsApp.closeVersionsDrawer()" title="Đóng">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="lyrics-drawer-desc">
+                Chọn phiên bản lời dịch tiếng Việt và hệ thống từ vựng bạn muốn sử dụng khi học bài hát này:
+            </div>
+            <div class="lyrics-drawer-list" id="versions-drawer-list">
+                <!-- Danh sách các bản dịch được inject động -->
+            </div>
+            <div class="lyrics-drawer-footer">
+                <button type="button" class="btn-drawer-add-contrib" onclick="window.lyricsApp.openContribModal()">
+                    <i class="fa-solid fa-plus"></i> Đóng góp thêm bản dịch mới
                 </button>
             </div>
         </div>

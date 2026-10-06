@@ -1120,7 +1120,7 @@ body.lyrics-theme .footer-brand-title {
 .contrib-modal-overlay {
     position: fixed;
     inset: 0;
-    z-index: 10000;
+    z-index: 10050;
     background: rgba(10, 15, 29, 0.8);
     backdrop-filter: blur(12px);
     display: none;
@@ -1479,7 +1479,7 @@ body.lyrics-theme .footer-brand-title {
     inset: 0;
     background: rgba(0, 0, 0, 0.75);
     backdrop-filter: blur(8px);
-    z-index: 10010;
+    z-index: 10100;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3336,6 +3336,312 @@ select.contrib-line-trans-input option {
     background-color: #0f172a !important;
     color: #f1f5f9 !important;
     padding: 8px 12px;
+}
+
+/* ==========================================================================
+   COMMUNITY TRANSLATIONS DRAWER (LIST DRAWER & CONTRIB MANAGER)
+   ========================================================================== */
+.btn-version-drawer-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border-radius: 10px;
+    background: rgba(14, 165, 233, 0.12);
+    border: 1px solid rgba(14, 165, 233, 0.3);
+    color: #38bdf8;
+    font-size: 0.85rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-version-drawer-open:hover {
+    background: rgba(14, 165, 233, 0.22);
+    border-color: #0ea5e9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(14, 165, 233, 0.2);
+}
+
+.version-count-badge {
+    background: rgba(255, 255, 255, 0.15);
+    color: #f8fafc;
+    font-size: 0.72rem;
+    padding: 2px 7px;
+    border-radius: 12px;
+    font-weight: 700;
+}
+
+.lyrics-drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 15, 29, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    justify-content: flex-end;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.lyrics-drawer-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.lyrics-drawer-panel {
+    width: 100%;
+    max-width: 440px;
+    height: 100%;
+    background: #0f172a;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.lyrics-drawer-overlay.active .lyrics-drawer-panel {
+    transform: translateX(0);
+}
+
+.lyrics-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.9);
+}
+
+.lyrics-drawer-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.lyrics-drawer-title h3 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #f8fafc;
+    margin: 0;
+}
+
+.btn-drawer-close {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.btn-drawer-close:hover {
+    color: #f1f5f9;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.lyrics-drawer-desc {
+    padding: 12px 20px;
+    font-size: 0.82rem;
+    color: #94a3b8;
+    line-height: 1.5;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    background: rgba(15, 23, 42, 0.5);
+}
+
+.lyrics-drawer-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.version-card-item {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 14px 16px;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.version-card-item:hover {
+    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(14, 165, 233, 0.4);
+    transform: translateY(-1px);
+}
+
+.version-card-item.active {
+    background: rgba(14, 165, 233, 0.1);
+    border-color: #0ea5e9;
+    box-shadow: 0 0 15px rgba(14, 165, 233, 0.2);
+}
+
+.version-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.version-card-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.version-card-title {
+    font-size: 0.96rem;
+    font-weight: 800;
+    color: #f8fafc;
+}
+
+.version-card-author {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.version-card-badge {
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+.version-card-badge.official {
+    background: rgba(14, 165, 233, 0.2);
+    color: #38bdf8;
+    border: 1px solid rgba(14, 165, 233, 0.4);
+}
+
+.version-card-badge.community {
+    background: rgba(168, 85, 247, 0.2);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+}
+
+.version-card-note {
+    font-size: 0.8rem;
+    color: #cbd5e1;
+    font-style: italic;
+    background: rgba(15, 23, 42, 0.6);
+    padding: 6px 10px;
+    border-radius: 8px;
+    border-left: 2px solid #8b5cf6;
+}
+
+.version-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.version-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.btn-version-apply {
+    flex: 1;
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    border: none;
+    background: rgba(14, 165, 233, 0.2);
+    color: #38bdf8;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-version-apply:hover {
+    background: #0ea5e9;
+    color: #fff;
+}
+
+.btn-version-apply.is-current {
+    background: #0ea5e9;
+    color: #fff;
+    cursor: default;
+}
+
+.btn-version-action-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: #cbd5e1;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.btn-version-action-icon.edit:hover {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: #f59e0b;
+    color: #fbbf24;
+}
+
+.btn-version-action-icon.delete:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
+    color: #f87171;
+}
+
+.lyrics-drawer-footer {
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.95);
+}
+
+.btn-drawer-add-contrib {
+    width: 100%;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.btn-drawer-add-contrib:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
 }
 
 

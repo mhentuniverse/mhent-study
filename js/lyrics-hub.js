@@ -11,6 +11,7 @@ class LyricsHubApp {
     constructor() {
         this.currentSong = null;
         this.currentVersionIndex = -1; // -1: Official, 0..n: Community
+        this.editingVersionId = null; // ID bản dịch đang chỉnh sửa
         this.activeSentenceIndex = -1;
         this.loopSentenceIndex = -1;
         this.audioPlayer = new Audio();
@@ -207,13 +208,13 @@ class LyricsHubApp {
             if (e.key === 'Escape') {
                 this.closeSongSelectModal();
                 this.closeChangeVideoModal();
-                const contribModal = document.getElementById('contrib-modal');
-                if (contribModal) contribModal.classList.remove('active');
+                this.closeVersionsDrawer();
+                this.closeContribModal();
                 this.hideAllPopovers();
             }
         });
 
-        // 12. Backdrop click for Change Video Modal
+        // 12. Backdrop click for Change Video Modal & Versions Drawer
         const changeVideoModal = document.getElementById('change-video-modal');
         if (changeVideoModal) {
             changeVideoModal.addEventListener('click', (e) => {
@@ -223,9 +224,17 @@ class LyricsHubApp {
             });
         }
 
+        const versionsDrawer = document.getElementById('lyrics-versions-drawer');
+        if (versionsDrawer) {
+            versionsDrawer.addEventListener('click', (e) => {
+                if (e.target === versionsDrawer) {
+                    this.closeVersionsDrawer();
+                }
+            });
+        }
+
         // 13. Community Modal bindings
         const contribBtn = document.getElementById('btn-open-contrib');
-        const contribModal = document.getElementById('contrib-modal');
         const contribClose = document.getElementById('contrib-close');
         const contribForm = document.getElementById('contrib-form');
 
@@ -235,9 +244,9 @@ class LyricsHubApp {
             });
         }
 
-        if (contribClose && contribModal) {
+        if (contribClose) {
             contribClose.addEventListener('click', () => {
-                contribModal.classList.remove('active');
+                this.closeContribModal();
             });
         }
 
@@ -393,6 +402,9 @@ class LyricsHubApp {
         this.currentVersionIndex = -1;
         this.activeSentenceIndex = -1;
         this.loopSentenceIndex = -1;
+
+        // Đồng bộ các bản dịch cộng đồng (Local Cache & Supabase Cloud)
+        this.syncCommunityVersionsForSong(song);
 
         // Cập nhật thông tin bài hát
         const titleEl = document.getElementById('track-title');
@@ -961,22 +973,25 @@ class LyricsHubApp {
         const container = document.getElementById('version-tabs-wrap');
         if (!container || !this.currentSong) return;
 
-        let html = `
-            <button class="version-tab ${this.currentVersionIndex === -1 ? 'active' : ''}" onclick="window.lyricsApp.switchVersion(-1)">
-                <i class="fa-solid fa-globe"></i> Bản chuẩn Web/AI
+        const commVersions = Array.isArray(this.currentSong.community_versions) ? this.currentSong.community_versions : [];
+        const totalCount = 1 + commVersions.length;
+
+        let currentLabel = 'Bản chuẩn Web/AI';
+        if (this.currentVersionIndex >= 0 && commVersions[this.currentVersionIndex]) {
+            const cur = commVersions[this.currentVersionIndex];
+            currentLabel = cur.title || `Bản dịch của ${cur.author || 'học viên'}`;
+        }
+
+        container.innerHTML = `
+            <button type="button" class="btn-version-drawer-open" id="btn-version-drawer-open" onclick="window.lyricsApp.openVersionsDrawer()" title="Xem danh sách bản dịch bài hát (Drawer)">
+                <i class="fa-solid fa-layer-group" style="color: #38bdf8;"></i>
+                <span id="version-current-label">${this.escapeHtml(currentLabel)}</span>
+                <span class="version-count-badge" id="version-count-badge">${totalCount} bản</span>
+                <i class="fa-solid fa-chevron-down" style="font-size: 0.72rem; opacity: 0.7; margin-left: 2px;"></i>
             </button>
         `;
 
-        const commVersions = this.currentSong.community_versions || [];
-        commVersions.forEach((v, idx) => {
-            html += `
-                <button class="version-tab ${this.currentVersionIndex === idx ? 'active' : ''}" onclick="window.lyricsApp.switchVersion(${idx})">
-                    <i class="fa-solid fa-user-check"></i> ${v.author || 'User'} (${v.title || 'Bản dịch'})
-                </button>
-            `;
-        });
-
-        container.innerHTML = html;
+        this.renderVersionsDrawerList();
     }
 
     switchVersion(index) {
@@ -984,6 +999,207 @@ class LyricsHubApp {
         this.renderVersionTabs();
         this.renderLyrics();
         if (this.isPlainMode) this.renderPlainLyrics();
+        this.closeVersionsDrawer();
+    }
+
+    openVersionsDrawer() {
+        const drawer = document.getElementById('lyrics-versions-drawer');
+        if (!drawer) return;
+        drawer.style.display = 'flex';
+        requestAnimationFrame(() => {
+            drawer.classList.add('active');
+        });
+        this.renderVersionsDrawerList();
+    }
+
+    closeVersionsDrawer() {
+        const drawer = document.getElementById('lyrics-versions-drawer');
+        if (!drawer) return;
+        drawer.classList.remove('active');
+        setTimeout(() => {
+            if (!drawer.classList.contains('active')) {
+                drawer.style.display = 'none';
+            }
+        }, 280);
+    }
+
+    renderVersionsDrawerList() {
+        const listContainer = document.getElementById('versions-drawer-list');
+        if (!listContainer || !this.currentSong) return;
+
+        const commVersions = Array.isArray(this.currentSong.community_versions) ? this.currentSong.community_versions : [];
+        const baseLyrics = this.currentSong.synced_lyrics || [];
+
+        // Đếm số từ vựng gắn thẻ trong bản chuẩn
+        let baseVocabCount = 0;
+        baseLyrics.forEach(l => {
+            if (Array.isArray(l.words)) baseVocabCount += l.words.length;
+        });
+
+        let html = `
+            <!-- BẢN CHUẨN WEB / AI -->
+            <div class="version-card-item ${this.currentVersionIndex === -1 ? 'active' : ''}">
+                <div class="version-card-top">
+                    <div class="version-card-title-group">
+                        <div class="version-card-title">
+                            <i class="fa-solid fa-globe" style="color: #38bdf8;"></i> Bản chuẩn Web/AI & Lời đồng bộ
+                        </div>
+                        <div class="version-card-author">
+                            <i class="fa-solid fa-robot"></i> MHEnt AI Engine & LRCLIB
+                        </div>
+                    </div>
+                    <span class="version-card-badge official"><i class="fa-solid fa-shield-halved"></i> Mặc định</span>
+                </div>
+                <div class="version-card-meta">
+                    <span><i class="fa-solid fa-music"></i> ${baseLyrics.length} câu hát</span>
+                    ${baseVocabCount > 0 ? `<span><i class="fa-solid fa-book-bookmark" style="color: #a855f7;"></i> ${baseVocabCount} từ vựng</span>` : ''}
+                </div>
+                <div class="version-card-actions">
+                    ${this.currentVersionIndex === -1 ?
+                        `<button type="button" class="btn-version-apply is-current"><i class="fa-solid fa-check"></i> Đang áp dụng</button>` :
+                        `<button type="button" class="btn-version-apply" onclick="window.lyricsApp.switchVersion(-1)"><i class="fa-solid fa-circle-play"></i> Dùng bản này</button>`
+                    }
+                </div>
+            </div>
+        `;
+
+        // CÁC BẢN DỊCH CỘNG ĐỒNG
+        if (commVersions.length === 0) {
+            html += `
+                <div style="text-align: center; padding: 24px 16px; color: #94a3b8; font-size: 0.85rem; border: 1px dashed rgba(255, 255, 255, 0.1); border-radius: 12px; margin-top: 6px;">
+                    <i class="fa-regular fa-comments" style="font-size: 1.8rem; margin-bottom: 8px; color: #a855f7; display: block;"></i>
+                    Chưa có bản dịch đóng góp nào khác từ cộng đồng.<br>
+                    Hãy là người đầu tiên đóng góp bản dịch cho bài hát này!
+                </div>
+            `;
+        } else {
+            commVersions.forEach((v, idx) => {
+                const vLyrics = v.synced_lyrics || [];
+                let vVocabCount = 0;
+                vLyrics.forEach(l => {
+                    if (Array.isArray(l.words)) vVocabCount += l.words.length;
+                });
+
+                const isActive = this.currentVersionIndex === idx;
+                const dateStr = this.formatDateShort(v.updatedAt || v.createdAt);
+
+                html += `
+                    <div class="version-card-item ${isActive ? 'active' : ''}">
+                        <div class="version-card-top">
+                            <div class="version-card-title-group">
+                                <div class="version-card-title">
+                                    <i class="fa-solid fa-pen-nib" style="color: #10b981;"></i> ${this.escapeHtml(v.title || 'Bản dịch cộng đồng')}
+                                </div>
+                                <div class="version-card-author">
+                                    <i class="fa-solid fa-user-pen"></i> ${this.escapeHtml(v.author || 'Học viên MHEnt')}
+                                    ${dateStr ? ` • <span style="opacity: 0.8;">${dateStr}</span>` : ''}
+                                </div>
+                            </div>
+                            <span class="version-card-badge community"><i class="fa-solid fa-users"></i> Đóng góp</span>
+                        </div>
+
+                        ${v.note ? `<div class="version-card-note"><i class="fa-solid fa-quote-left" style="opacity: 0.5; margin-right: 4px;"></i>${this.escapeHtml(v.note)}</div>` : ''}
+
+                        <div class="version-card-meta">
+                            <span><i class="fa-solid fa-music"></i> ${vLyrics.length} câu hát</span>
+                            ${vVocabCount > 0 ? `<span><i class="fa-solid fa-book-bookmark" style="color: #a855f7;"></i> ${vVocabCount} từ vựng</span>` : ''}
+                        </div>
+
+                        <div class="version-card-actions">
+                            ${isActive ?
+                                `<button type="button" class="btn-version-apply is-current"><i class="fa-solid fa-check"></i> Đang áp dụng</button>` :
+                                `<button type="button" class="btn-version-apply" onclick="window.lyricsApp.switchVersion(${idx})"><i class="fa-solid fa-circle-play"></i> Dùng bản này</button>`
+                            }
+                            <button type="button" class="btn-version-action-icon edit" onclick="window.lyricsApp.editCommunityVersion('${v.id}')" title="Chỉnh sửa bản dịch này">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button type="button" class="btn-version-action-icon delete" onclick="window.lyricsApp.deleteCommunityVersion('${v.id}')" title="Xóa bản dịch này">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        listContainer.innerHTML = html;
+    }
+
+    getStoredCommunityVersions(songId) {
+        if (!songId) return [];
+        try {
+            const raw = localStorage.getItem(`mhent_lyrics_versions_${songId}`);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) return parsed;
+            }
+        } catch (e) {
+            console.warn('Lỗi đọc community versions từ localStorage:', e);
+        }
+        return [];
+    }
+
+    saveStoredCommunityVersions(songId, list) {
+        if (!songId) return;
+        try {
+            localStorage.setItem(`mhent_lyrics_versions_${songId}`, JSON.stringify(list || []));
+        } catch (e) {
+            console.warn('Lỗi lưu community versions vào localStorage:', e);
+        }
+    }
+
+    syncCommunityVersionsForSong(song) {
+        if (!song || !song.id) return;
+
+        // 1. Đọc từ localStorage cục bộ
+        const localList = this.getStoredCommunityVersions(song.id);
+        const currentList = Array.isArray(song.community_versions) ? song.community_versions : [];
+
+        const map = new Map();
+        currentList.forEach(v => {
+            if (v && v.id) map.set(v.id, v);
+        });
+        localList.forEach(v => {
+            if (v && v.id) map.set(v.id, v);
+        });
+
+        song.community_versions = Array.from(map.values());
+        this.saveStoredCommunityVersions(song.id, song.community_versions);
+
+        // 2. Tải ngầm từ Supabase Cloud để đồng bộ các bản dịch mới nhất
+        if (window.studyCloud && typeof window.studyCloud.getSong === 'function') {
+            window.studyCloud.getSong(song.id).then(cloudSong => {
+                if (cloudSong && Array.isArray(cloudSong.community_versions) && this.currentSong && this.currentSong.id === song.id) {
+                    let hasNew = false;
+                    cloudSong.community_versions.forEach(cv => {
+                        if (cv && cv.id && !map.has(cv.id)) {
+                            map.set(cv.id, cv);
+                            hasNew = true;
+                        }
+                    });
+                    if (hasNew) {
+                        this.currentSong.community_versions = Array.from(map.values());
+                        this.saveStoredCommunityVersions(song.id, this.currentSong.community_versions);
+                        this.renderVersionTabs();
+                        this.renderVersionsDrawerList();
+                    }
+                }
+            }).catch(err => console.warn('Sync cloud versions:', err));
+        }
+    }
+
+    formatDateShort(dateStr) {
+        if (!dateStr) return '';
+        try {
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return '';
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}/${month}/${year}`;
+        } catch (e) {
+            return '';
+        }
     }
 
     renderLyrics() {
@@ -3035,25 +3251,21 @@ QUY TẮC ĐẦU RA:
     // =========================================================================
     // 8. ĐÓNG GÓP BẢN DỊCH & THẺ TỪ VỰNG CỘNG ĐỒNG (COMMUNITY CONTRIBUTIONS & VOCAB)
     // =========================================================================
-    openContribModal() {
+    openContribModal(versionToEdit = null) {
         if (!this.currentSong) return;
         const modal = document.getElementById('contrib-modal');
         if (!modal) return;
 
-        const lines = this.getActiveLyrics();
-        const container = document.getElementById('contrib-lines-container');
-        const countBadge = document.getElementById('contrib-line-count-badge');
+        this.editingVersionId = versionToEdit ? versionToEdit.id : null;
+
+        const modalTitle = document.getElementById('contrib-modal-title');
+        const submitBtn = document.getElementById('btn-contrib-submit');
         const authorInput = document.getElementById('contrib-author');
         const titleInput = document.getElementById('contrib-title');
+        const noteInput = document.getElementById('contrib-note');
+        const container = document.getElementById('contrib-lines-container');
+        const countBadge = document.getElementById('contrib-line-count-badge');
 
-        // Tạo bản sao độc lập của lyrics kèm danh sách words trên từng câu
-        this.contribLyrics = JSON.parse(JSON.stringify(lines));
-        this.contribLyrics.forEach(l => {
-            if (!Array.isArray(l.words)) l.words = [];
-        });
-
-        if (countBadge) countBadge.textContent = `${this.contribLyrics.length} câu`;
-        
         // Tự động nhận diện danh tính người dùng từ hệ thống Auth
         let userDisplayName = '';
         try {
@@ -3061,12 +3273,41 @@ QUY TẮC ĐẦU RA:
             userDisplayName = savedProfile.displayName || savedProfile.name || '';
         } catch (e) {}
 
-        if (authorInput && (!authorInput.value || authorInput.value.includes('học viên'))) {
-            authorInput.value = userDisplayName || 'Học viên MHEnt';
+        if (versionToEdit) {
+            if (modalTitle) {
+                modalTitle.innerHTML = `<i class="fa-solid fa-pen-nib" style="color: #38bdf8;"></i> Chỉnh Sửa Bản Dịch: "${this.escapeHtml(versionToEdit.title || '')}"`;
+            }
+            if (submitBtn) {
+                submitBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Lưu Thay Đổi Bản Dịch`;
+            }
+            if (authorInput) authorInput.value = versionToEdit.author || userDisplayName || 'Học viên MHEnt';
+            if (titleInput) titleInput.value = versionToEdit.title || '';
+            if (noteInput) noteInput.value = versionToEdit.note || '';
+
+            const sourceLines = (Array.isArray(versionToEdit.synced_lyrics) && versionToEdit.synced_lyrics.length > 0)
+                ? versionToEdit.synced_lyrics
+                : this.getActiveLyrics();
+            this.contribLyrics = JSON.parse(JSON.stringify(sourceLines));
+        } else {
+            if (modalTitle) {
+                modalTitle.innerHTML = `<i class="fa-solid fa-pen-nib" style="color: #10b981;"></i> Đóng Góp Phiên Bản Lời Dịch Mới`;
+            }
+            if (submitBtn) {
+                submitBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Lưu & Xuất bản lên Supabase Cloud`;
+            }
+            if (authorInput) authorInput.value = userDisplayName || 'Học viên MHEnt';
+            if (titleInput) titleInput.value = userDisplayName ? `Bản dịch của ${userDisplayName}` : 'Bản dịch mới';
+            if (noteInput) noteInput.value = '';
+
+            const baseLines = this.currentSong.synced_lyrics || this.getActiveLyrics();
+            this.contribLyrics = JSON.parse(JSON.stringify(baseLines));
         }
-        if (titleInput && !titleInput.value) {
-            titleInput.value = `Bản dịch của ${authorInput && authorInput.value ? authorInput.value : 'học viên'}`;
-        }
+
+        this.contribLyrics.forEach(l => {
+            if (!Array.isArray(l.words)) l.words = [];
+        });
+
+        if (countBadge) countBadge.textContent = `${this.contribLyrics.length} câu`;
 
         if (container) {
             container.innerHTML = this.contribLyrics.map((line, idx) => {
@@ -3113,7 +3354,19 @@ QUY TẮC ĐẦU RA:
             });
         }
 
+        // Đóng drawer nếu đang mở
+        this.closeVersionsDrawer();
+
         modal.classList.add('active');
+        setTimeout(() => {
+            if (titleInput) titleInput.focus();
+        }, 150);
+    }
+
+    closeContribModal() {
+        const modal = document.getElementById('contrib-modal');
+        if (modal) modal.classList.remove('active');
+        this.editingVersionId = null;
     }
 
     renderContribLineWords(lineIdx) {
@@ -3473,29 +3726,117 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
             }
         });
 
-        const versionData = {
-            id: 'comm_' + Date.now(),
-            author: authorName,
-            authorUid: userUid,
-            title: versionTitle,
-            note: note,
-            synced_lyrics: this.contribLyrics,
-            likes: 0,
-            createdAt: new Date().toISOString()
-        };
-
-        if (window.studyCloud && typeof window.studyCloud.addCommunityVersion === 'function') {
-            await window.studyCloud.addCommunityVersion(this.currentSong.id, versionData);
+        if (!Array.isArray(this.currentSong.community_versions)) {
+            this.currentSong.community_versions = [];
         }
 
-        if (!this.currentSong.community_versions) this.currentSong.community_versions = [];
-        this.currentSong.community_versions.push(versionData);
+        let targetIndex = -1;
+        let isEdit = false;
 
-        const modal = document.getElementById('contrib-modal');
-        if (modal) modal.classList.remove('active');
+        if (this.editingVersionId) {
+            // Chế độ chỉnh sửa phiên bản đã có
+            const exIdx = this.currentSong.community_versions.findIndex(v => v.id === this.editingVersionId);
+            if (exIdx >= 0) {
+                isEdit = true;
+                this.currentSong.community_versions[exIdx] = {
+                    ...this.currentSong.community_versions[exIdx],
+                    author: authorName,
+                    title: versionTitle,
+                    note: note,
+                    synced_lyrics: this.contribLyrics,
+                    updatedAt: new Date().toISOString()
+                };
+                targetIndex = exIdx;
+            }
+        }
 
-        this.switchVersion(this.currentSong.community_versions.length - 1);
-        this.showToast('Đã lưu đóng góp bản dịch và hệ thống từ vựng của bạn lên Supabase Cloud!', 'success');
+        if (!isEdit) {
+            // Chế độ thêm phiên bản mới
+            const versionData = {
+                id: 'comm_' + Date.now(),
+                author: authorName,
+                authorUid: userUid,
+                title: versionTitle,
+                note: note,
+                synced_lyrics: this.contribLyrics,
+                likes: 0,
+                createdAt: new Date().toISOString()
+            };
+            this.currentSong.community_versions.push(versionData);
+            targetIndex = this.currentSong.community_versions.length - 1;
+        }
+
+        // 1. Lưu ngay vào localStorage để không bao giờ bị mất khi F5 / tải lại
+        this.saveStoredCommunityVersions(this.currentSong.id, this.currentSong.community_versions);
+
+        // 2. Lưu đồng bộ lên Supabase Cloud
+        if (window.studyCloud && typeof window.studyCloud.saveCommunityVersions === 'function') {
+            try {
+                await window.studyCloud.saveCommunityVersions(this.currentSong.id, this.currentSong.community_versions, this.currentSong);
+            } catch (e) {
+                console.warn('Lỗi lưu Supabase Cloud:', e);
+            }
+        }
+
+        this.closeContribModal();
+
+        // Kích hoạt ngay phiên bản vừa lưu/sửa
+        if (targetIndex >= 0) {
+            this.switchVersion(targetIndex);
+        } else {
+            this.renderVersionTabs();
+        }
+
+        this.showToast(isEdit ? 'Đã cập nhật bản dịch thành công!' : 'Đã xuất bản bản dịch mới của bạn thành công!', 'success');
+    }
+
+    editCommunityVersion(versionId) {
+        if (!this.currentSong || !Array.isArray(this.currentSong.community_versions)) return;
+        const versionToEdit = this.currentSong.community_versions.find(v => v.id === versionId);
+        if (!versionToEdit) {
+            this.showToast('Không tìm thấy bản dịch để chỉnh sửa!', 'error');
+            return;
+        }
+        this.openContribModal(versionToEdit);
+    }
+
+    async deleteCommunityVersion(versionId) {
+        if (!this.currentSong || !Array.isArray(this.currentSong.community_versions)) return;
+        const versionIdx = this.currentSong.community_versions.findIndex(v => v.id === versionId);
+        if (versionIdx < 0) return;
+
+        const versionTitle = this.currentSong.community_versions[versionIdx].title || 'Bản dịch này';
+        if (!confirm(`Bạn có chắc chắn muốn xóa bản dịch "${versionTitle}" không? Hành động này không thể hoàn tác.`)) {
+            return;
+        }
+
+        // Xóa khỏi danh sách hiện tại
+        this.currentSong.community_versions.splice(versionIdx, 1);
+
+        // Lưu cập nhật vào localStorage
+        this.saveStoredCommunityVersions(this.currentSong.id, this.currentSong.community_versions);
+
+        // Xóa trên Supabase Cloud
+        if (window.studyCloud && typeof window.studyCloud.deleteCommunityVersion === 'function') {
+            try {
+                await window.studyCloud.deleteCommunityVersion(this.currentSong.id, versionId);
+            } catch (e) {
+                console.warn('Lỗi xóa trên Supabase Cloud:', e);
+            }
+        }
+
+        // Điều chỉnh currentVersionIndex nếu bản vừa xóa đang được chọn
+        if (this.currentVersionIndex === versionIdx) {
+            this.currentVersionIndex = -1; // Quay về bản chuẩn Web/AI
+            this.renderLyrics();
+            if (this.isPlainMode) this.renderPlainLyrics();
+        } else if (this.currentVersionIndex > versionIdx) {
+            this.currentVersionIndex--;
+        }
+
+        this.renderVersionTabs();
+        this.renderVersionsDrawerList();
+        this.showToast(`Đã xóa bản dịch "${versionTitle}" thành công!`, 'success');
     }
 
     // =========================================================================

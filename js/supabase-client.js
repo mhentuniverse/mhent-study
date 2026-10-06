@@ -446,15 +446,52 @@ class StudyCloudClient {
         return false;
     }
 
-    async addCommunityVersion(songId, versionData) {
-        const song = await this.getSong(songId);
+    async saveCommunityVersions(songId, versionsList, fullSongData = null) {
+        if (!songId) return false;
+        let song = await this.getSong(songId);
+        if (!song && fullSongData) {
+            song = {
+                id: songId,
+                title: fullSongData.title || 'Bài hát',
+                artist: fullSongData.artist || 'Nghệ sĩ',
+                lang: fullSongData.lang || 'en',
+                thumbnail: fullSongData.thumbnail || '',
+                youtube_id: fullSongData.youtube_id || '',
+                audio_url: fullSongData.audio_url || '',
+                duration: fullSongData.duration || 180,
+                synced_lyrics: fullSongData.synced_lyrics || [],
+                plain_lyrics: fullSongData.plain_lyrics || '',
+                aliases: fullSongData.aliases || [],
+                views: fullSongData.views || 1,
+                likes: fullSongData.likes || 0
+            };
+        }
         if (!song) return false;
-        const versions = Array.isArray(song.community_versions) ? song.community_versions : [];
-        versions.push(versionData);
         return this.saveSong({
             ...song,
-            community_versions: versions
+            community_versions: versionsList
         });
+    }
+
+    async addCommunityVersion(songId, versionData, fullSongData = null) {
+        const song = await this.getSong(songId);
+        const versions = (song && Array.isArray(song.community_versions)) ? [...song.community_versions] : [];
+        const vId = versionData.id || ('comm_' + Date.now());
+        versionData.id = vId;
+        const exIdx = versions.findIndex(v => v.id === vId);
+        if (exIdx >= 0) {
+            versions[exIdx] = versionData;
+        } else {
+            versions.push(versionData);
+        }
+        return this.saveCommunityVersions(songId, versions, song || fullSongData);
+    }
+
+    async deleteCommunityVersion(songId, versionId) {
+        const song = await this.getSong(songId);
+        if (!song || !Array.isArray(song.community_versions)) return false;
+        const filtered = song.community_versions.filter(v => v.id !== versionId);
+        return this.saveCommunityVersions(songId, filtered, song);
     }
 }
 
