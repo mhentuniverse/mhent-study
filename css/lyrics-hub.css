@@ -228,6 +228,19 @@ body.lyrics-theme .footer-brand-title {
 @media (max-width: 1024px) {
     .lyrics-workspace {
         grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .lyrics-player-card {
+        position: static;
+        top: auto;
+        padding: 20px;
+        border-radius: 20px;
+    }
+
+    .lyrics-viewport-card {
+        max-height: none;
+        min-height: 520px;
     }
 }
 
@@ -3644,6 +3657,309 @@ select.contrib-line-trans-input option {
     box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
 }
 
+/* ==========================================================================
+   MOBILE RESPONSIVE UI ENHANCEMENTS (TABLET & SMARTPHONE)
+   ========================================================================== */
+@media (max-width: 768px) {
+    /* Page Layout & Container */
+    .lyrics-page-wrapper {
+        padding: 14px 12px 60px;
+        gap: 16px;
+    }
 
+    /* Hero Section */
+    .lyrics-hero {
+        padding: 18px 16px;
+        border-radius: 16px;
+        gap: 14px;
+    }
 
+    .lyrics-hero-title-box h1 {
+        font-size: 1.35rem;
+        gap: 8px;
+    }
 
+    .lyrics-hero-title-box p {
+        font-size: 0.85rem;
+        line-height: 1.45;
+    }
+
+    /* Search Bar & Library Button */
+    .lyrics-search-form {
+        gap: 8px;
+        width: 100%;
+    }
+
+    .lyrics-search-input-wrap {
+        width: 100%;
+        min-width: 100%;
+    }
+
+    .lyrics-search-btn, 
+    .btn-browse-library {
+        flex: 1;
+        justify-content: center;
+        padding: 10px 14px;
+        font-size: 0.88rem;
+    }
+
+    /* Horizontal Scrollable Language Pills */
+    .lyrics-lang-pills {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        width: 100%;
+        gap: 6px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .lyrics-lang-pills::-webkit-scrollbar {
+        display: none;
+    }
+
+    .lang-pill {
+        white-space: nowrap;
+        flex-shrink: 0;
+        padding: 5px 12px;
+        font-size: 0.78rem;
+    }
+
+    /* Player Card on Mobile */
+    .lyrics-player-card {
+        padding: 16px 14px;
+        gap: 16px;
+        border-radius: 16px;
+    }
+
+    .track-title {
+        font-size: 1.2rem;
+    }
+
+    .track-artist {
+        font-size: 0.88rem;
+    }
+
+    /* Time Offset Calibrator Row */
+    .lyrics-calibrator-card {
+        padding: 8px 10px;
+    }
+
+    .calibrator-buttons-row {
+        gap: 3px;
+    }
+
+    .btn-offset-step, 
+    .btn-offset-reset {
+        padding: 5px 3px;
+        font-size: 0.68rem;
+        flex: 1;
+        min-width: 0;
+        text-align: center;
+    }
+
+    /* Player Audio Tools */
+    .player-tools-row {
+        font-size: 0.8rem;
+    }
+
+    /* Lyrics Viewport Card & Header */
+    .lyrics-viewport-card {
+        border-radius: 16px;
+        min-height: 480px;
+    }
+
+    .lyrics-viewport-header {
+        padding: 12px 14px;
+        gap: 10px;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .version-tabs-wrap {
+        width: 100%;
+    }
+
+    .btn-version-drawer-open {
+        width: 100%;
+        justify-content: space-between;
+        padding: 8px 12px;
+        font-size: 0.82rem;
+    }
+
+    /* Horizontally Swipeable Tool Strip */
+    .viewport-header-tools {
+        width: 100%;
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        gap: 6px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .viewport-header-tools::-webkit-scrollbar {
+        display: none;
+    }
+
+    .btn-tool-action, 
+    .btn-contribute-version {
+        white-space: nowrap;
+        flex-shrink: 0;
+        padding: 6px 11px;
+        font-size: 0.78rem;
+    }
+
+    /* Karaoke Lyrics Sentences */
+    .lyrics-stream-container {
+        padding: 20px 12px 80px;
+        gap: 16px;
+    }
+
+    .lyrics-sentence-row {
+        padding: 12px 14px;
+        border-radius: 14px;
+        gap: 6px;
+    }
+
+    .sentence-orig-text {
+        font-size: 1.15rem;
+        line-height: 1.45;
+    }
+
+    .lyrics-sentence-row.active .sentence-orig-text {
+        font-size: 1.25rem;
+    }
+
+    .sentence-trans-text {
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .sentence-phonetic-text {
+        font-size: 0.82rem;
+    }
+
+    .sentence-meta-row {
+        font-size: 0.72rem;
+    }
+
+    .sentence-play-btn, 
+    .sentence-loop-btn {
+        padding: 3px 7px;
+        font-size: 0.72rem;
+    }
+
+    /* Vocabulary Popover Box */
+    .vocab-popover-box {
+        max-width: min(290px, calc(100vw - 28px));
+        width: 275px;
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+
+    /* Community Translations Drawer */
+    .lyrics-drawer-panel {
+        max-width: 100%;
+        border-left: none;
+    }
+
+    .lyrics-drawer-header {
+        padding: 14px 16px;
+    }
+
+    .lyrics-drawer-list {
+        padding: 12px 14px;
+        gap: 10px;
+    }
+
+    /* Modal Overlays & Cards on Mobile */
+    .contrib-modal-overlay,
+    .song-select-modal-overlay,
+    .sync-studio-modal-overlay {
+        padding: 8px;
+    }
+
+    .contrib-modal-card,
+    .song-select-modal-card,
+    .sync-studio-card {
+        max-width: 100%;
+        max-height: 94vh;
+        border-radius: 16px;
+    }
+
+    .contrib-modal-header,
+    .song-select-header,
+    .sync-studio-header {
+        padding: 12px 16px;
+    }
+
+    .contrib-modal-body,
+    .song-select-body,
+    .sync-studio-body {
+        padding: 14px 16px;
+        gap: 12px;
+    }
+
+    .contrib-footer {
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+
+    .contrib-footer button {
+        width: 100%;
+        justify-content: center;
+        padding: 10px 14px;
+    }
+}
+
+/* Extra Small Phones (< 480px) */
+@media (max-width: 480px) {
+    .playback-buttons-row {
+        gap: 10px;
+    }
+
+    .btn-player-action {
+        width: 34px;
+        height: 34px;
+        font-size: 0.95rem;
+    }
+
+    .btn-player-play {
+        width: 44px;
+        height: 44px;
+        font-size: 1.15rem;
+    }
+
+    .track-media-container {
+        border-radius: 14px;
+    }
+
+    /* Dictation Game Box */
+    .dictation-input-row {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .dictation-input {
+        min-width: 100%;
+        padding: 8px 10px;
+        font-size: 0.95rem;
+    }
+
+    .btn-dictation-submit {
+        flex: 1;
+        height: 38px;
+        font-size: 0.85rem;
+        justify-content: center;
+    }
+
+    .btn-dictation-hint,
+    .btn-dictation-skip {
+        height: 38px;
+        font-size: 0.78rem;
+        padding: 0 10px;
+    }
+}
