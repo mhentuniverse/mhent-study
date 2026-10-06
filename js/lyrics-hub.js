@@ -227,15 +227,39 @@ class LyricsHubApp {
         const contribClose = document.getElementById('contrib-close');
         const contribForm = document.getElementById('contrib-form');
 
-        if (contribBtn && contribModal) {
+        if (contribBtn) {
             contribBtn.addEventListener('click', () => {
-                contribModal.classList.add('active');
+                this.openContribModal();
             });
         }
 
         if (contribClose && contribModal) {
             contribClose.addEventListener('click', () => {
                 contribModal.classList.remove('active');
+            });
+        }
+
+        const btnFillCurrent = document.getElementById('btn-contrib-fill-current');
+        if (btnFillCurrent) {
+            btnFillCurrent.addEventListener('click', () => {
+                const lines = this.getActiveLyrics();
+                document.querySelectorAll('.contrib-line-trans-input').forEach(input => {
+                    const idx = parseInt(input.dataset.index, 10);
+                    if (!isNaN(idx) && lines[idx]) {
+                        input.value = lines[idx].translation || '';
+                    }
+                });
+                this.showToast('Đã điền lại bản dịch mẫu hiện tại', 'info', 1200);
+            });
+        }
+
+        const btnClearAll = document.getElementById('btn-contrib-clear-all');
+        if (btnClearAll) {
+            btnClearAll.addEventListener('click', () => {
+                document.querySelectorAll('.contrib-line-trans-input').forEach(input => {
+                    input.value = '';
+                });
+                this.showToast('Đã xóa trắng các câu để bạn tự dịch', 'info', 1200);
             });
         }
 
@@ -1067,39 +1091,49 @@ class LyricsHubApp {
         const matches = [];
         const lowerSentence = sentence.toLowerCase();
 
+        const lang = this.currentSong ? this.currentSong.lang : 'ja';
+
         for (const item of validWords) {
-            const wLower = item.word.toLowerCase();
-            let searchStart = 0;
+            const candidates = this.getWordMatchCandidates(item, lang);
 
-            while (searchStart < len) {
-                const matchPos = lowerSentence.indexOf(wLower, searchStart);
-                if (matchPos === -1) break;
+            for (const cand of candidates) {
+                const candLower = cand.toLowerCase();
+                let searchStart = 0;
+                let foundMatch = false;
 
-                const matchEnd = matchPos + wLower.length;
+                while (searchStart < len) {
+                    const matchPos = lowerSentence.indexOf(candLower, searchStart);
+                    if (matchPos === -1) break;
 
-                // Kiểm tra xem vị trí này đã bị từ khóa dài hơn chiếm chưa
-                let canOccupy = true;
-                for (let i = matchPos; i < matchEnd; i++) {
-                    if (occupied[i]) {
-                        canOccupy = false;
-                        break;
-                    }
-                }
+                    const matchEnd = matchPos + candLower.length;
 
-                if (canOccupy) {
+                    // Kiểm tra xem vị trí này đã bị từ khóa dài hơn chiếm chưa
+                    let canOccupy = true;
                     for (let i = matchPos; i < matchEnd; i++) {
-                        occupied[i] = 1;
+                        if (occupied[i]) {
+                            canOccupy = false;
+                            break;
+                        }
                     }
-                    matches.push({
-                        start: matchPos,
-                        end: matchEnd,
-                        origText: sentence.substring(matchPos, matchEnd),
-                        wordObj: item,
-                        origIdx: item.origIdx
-                    });
+
+                    if (canOccupy) {
+                        for (let i = matchPos; i < matchEnd; i++) {
+                            occupied[i] = 1;
+                        }
+                        matches.push({
+                            start: matchPos,
+                            end: matchEnd,
+                            origText: sentence.substring(matchPos, matchEnd),
+                            wordObj: item,
+                            origIdx: item.origIdx
+                        });
+                        foundMatch = true;
+                    }
+
+                    searchStart = matchPos + 1;
                 }
 
-                searchStart = matchPos + 1;
+                if (foundMatch) break; // Ưu tiên candidate dài nhất đã match
             }
         }
 
@@ -1128,6 +1162,75 @@ class LyricsHubApp {
         }
 
         return html;
+    }
+
+    getWordMatchCandidates(item, lang = 'ja') {
+        const candidates = new Set();
+        if (!item || !item.word) return [];
+
+        const w = item.word.trim();
+        candidates.add(w);
+
+        const kataToHira = (str) => str.replace(/[\u30a1-\u30f6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+        const hiraToKata = (str) => str.replace(/[\u3041-\u3096]/g, ch => String.fromCharCode(ch.charCodeAt(0) + 0x60));
+
+        if (lang === 'ja') {
+            candidates.add(kataToHira(w));
+            candidates.add(hiraToKata(w));
+
+            if (item.surface) {
+                candidates.add(item.surface.trim());
+                candidates.add(kataToHira(item.surface.trim()));
+            }
+
+            const jaVariants = {
+                '生まれ': ['うまれ', 'うまれる', '生まれる'],
+                '生まれる': ['うまれる', '生まれ', 'うまれ'],
+                '私たち': ['わたし達', 'わたしたち', '私達'],
+                '私達': ['わたし達', '私たち', 'わたしたち'],
+                'わたし達': ['私たち', '私達', 'わたしたち'],
+                '力': ['チカラ', 'ちから'],
+                'チカラ': ['力', 'ちから'],
+                '君': ['キミ', 'きみ'],
+                'キミ': ['君', 'きみ'],
+                '明日': ['あした', 'アシタ', 'あす'],
+                '心': ['こころ', 'ココロ'],
+                '光': ['ひかり', 'ヒカリ'],
+                '世界': ['せかい'],
+                '夢': ['ゆめ', 'ユメ'],
+                '笑顔': ['えがお'],
+                '勇気': ['ゆうき'],
+                '涙': ['なみだ'],
+                '希望': ['きぼう'],
+                'ハーモニー': ['haamanii', 'はーもにー'],
+                '胸': ['むね'],
+                '熱い': ['アツい', 'あツイ', 'あつい'],
+                '重ねて': ['かさねて', 'かさね'],
+                '訪れる': ['訪れて', 'おとずれる', 'おとづれて'],
+                '取り戻す': ['取り戻し', '取り戻したい', 'とりもどす'],
+                '思い': ['オモイ', 'おもい'],
+                '声': ['こえ', 'コエ'],
+                '立ち上がる': ['たちあがる', '立ちあがり', 'たちあがり'],
+                '理由': ['りゆう']
+            };
+
+            if (jaVariants[w]) {
+                jaVariants[w].forEach(v => {
+                    candidates.add(v);
+                    candidates.add(kataToHira(v));
+                    candidates.add(hiraToKata(v));
+                });
+            }
+
+            // Verb / Adj stems (bỏ đuôi る, す, む, く, etc. nếu độ dài >= 2)
+            if (w.length >= 2 && /[るすくむつぬぶぐうい]/.test(w.slice(-1))) {
+                const stem = w.slice(0, -1);
+                candidates.add(stem);
+                candidates.add(kataToHira(stem));
+            }
+        }
+
+        return Array.from(candidates).filter(c => c && c.length >= 1).sort((a, b) => b.length - a.length);
     }
 
     formatTextSegment(text) {
@@ -2760,14 +2863,66 @@ QUY TẮC ĐẦU RA:
     // =========================================================================
     // 8. ĐÓNG GÓP BẢN DỊCH CỘNG ĐỒNG (COMMUNITY CONTRIBUTIONS)
     // =========================================================================
+    openContribModal() {
+        if (!this.currentSong) return;
+        const modal = document.getElementById('contrib-modal');
+        if (!modal) return;
+
+        const lines = this.getActiveLyrics();
+        const container = document.getElementById('contrib-lines-container');
+        const countBadge = document.getElementById('contrib-line-count-badge');
+        const authorInput = document.getElementById('contrib-author');
+        const titleInput = document.getElementById('contrib-title');
+
+        if (countBadge) countBadge.textContent = `${lines.length} câu`;
+        if (authorInput && !authorInput.value) {
+            try {
+                const savedUser = JSON.parse(localStorage.getItem('mhent_user') || '{}');
+                authorInput.value = savedUser.displayName || savedUser.name || '';
+            } catch (e) {}
+        }
+        if (titleInput && !titleInput.value) {
+            titleInput.value = `Bản dịch của ${authorInput && authorInput.value ? authorInput.value : 'học viên'}`;
+        }
+
+        if (container) {
+            container.innerHTML = lines.map((line, idx) => {
+                const timeStr = this.formatSeconds(line.startTime || 0);
+                return `
+                    <div class="contrib-line-edit-item" data-index="${idx}">
+                        <div class="contrib-line-meta">
+                            <span class="contrib-line-time"><i class="fa-solid fa-clock"></i> ${timeStr}</span>
+                            <span class="contrib-line-idx">Câu ${idx + 1}</span>
+                        </div>
+                        <div class="contrib-line-orig">${this.escapeHtml(line.text)}</div>
+                        ${line.phonetic ? `<div class="contrib-line-phonetic">${this.escapeHtml(line.phonetic)}</div>` : ''}
+                        <div class="contrib-line-input-wrap">
+                            <input type="text" class="contrib-line-trans-input" data-index="${idx}" value="${this.escapeHtml(line.translation || '')}" placeholder="Nhập bản dịch tiếng Việt cho câu này..." spellcheck="false">
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        modal.classList.add('active');
+    }
+
     async submitCommunityVersion() {
         if (!this.currentSong) return;
 
-        const authorName = (document.getElementById('contrib-author').value || 'Học viên MHEnt').trim();
-        const versionTitle = (document.getElementById('contrib-title').value || 'Bản dịch mới').trim();
-        const note = (document.getElementById('contrib-note').value || '').trim();
+        const authorName = (document.getElementById('contrib-author')?.value || 'Học viên MHEnt').trim();
+        const versionTitle = (document.getElementById('contrib-title')?.value || 'Bản dịch mới').trim();
+        const note = (document.getElementById('contrib-note')?.value || '').trim();
 
-        const baseLyrics = JSON.parse(JSON.stringify(this.currentSong.synced_lyrics || []));
+        // 1. Sao chép danh sách câu hiện tại và cập nhật bản dịch từ form chỉnh sửa của người dùng
+        const baseLyrics = JSON.parse(JSON.stringify(this.getActiveLyrics()));
+        const inputs = document.querySelectorAll('.contrib-line-trans-input');
+        inputs.forEach(input => {
+            const idx = parseInt(input.dataset.index, 10);
+            if (!isNaN(idx) && baseLyrics[idx]) {
+                baseLyrics[idx].translation = input.value.trim();
+            }
+        });
 
         const versionData = {
             id: 'comm_' + Date.now(),
@@ -4511,6 +4666,12 @@ QUY TẮC ĐẦU RA:
                               "text": "キミと明日を 願うチカラで",
                               "words": [
                                         {
+                                                  "pos": "pronoun",
+                                                  "word": "キミ",
+                                                  "meaning": "bạn, cậu (君)",
+                                                  "phonetic": "kimi"
+                                        },
+                                        {
                                                   "pos": "noun",
                                                   "word": "明日",
                                                   "meaning": "ngày mai",
@@ -4518,8 +4679,8 @@ QUY TẮC ĐẦU RA:
                                         },
                                         {
                                                   "pos": "noun",
-                                                  "word": "力",
-                                                  "meaning": "sức mạnh",
+                                                  "word": "チカラ",
+                                                  "meaning": "sức mạnh (力)",
                                                   "phonetic": "chikara"
                                         }
                               ],
@@ -4534,15 +4695,21 @@ QUY TẮC ĐẦU RA:
                               "words": [
                                         {
                                                   "pos": "verb",
-                                                  "word": "生まれ",
-                                                  "meaning": "sinh ra",
-                                                  "phonetic": "umare"
+                                                  "word": "うまれる",
+                                                  "meaning": "sinh ra, chào đời (生まれる)",
+                                                  "phonetic": "umareru"
                                         },
                                         {
                                                   "pos": "pronoun",
-                                                  "word": "私たち",
-                                                  "meaning": "chúng ta",
+                                                  "word": "わたし達",
+                                                  "meaning": "chúng ta, chúng mình (私たち)",
                                                   "phonetic": "watashitachi"
+                                        },
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "ハーモニー",
+                                                  "meaning": "giai điệu hòa ca, hòa âm",
+                                                  "phonetic": "haamanii"
                                         }
                               ],
                               "endTime": 73.02,
@@ -4770,15 +4937,21 @@ QUY TẮC ĐẦU RA:
                               "words": [
                                         {
                                                   "pos": "verb",
-                                                  "word": "重ねて",
-                                                  "meaning": "chồng lên/hòa quyện",
+                                                  "word": "かさねて",
+                                                  "meaning": "chồng lên/hòa quyện (重ねて)",
                                                   "phonetic": "kasanete"
                                         },
                                         {
                                                   "pos": "verb",
                                                   "word": "広がって",
-                                                  "meaning": "lan rộng",
+                                                  "meaning": "lan rộng (広がる)",
                                                   "phonetic": "hirogatte"
+                                        },
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "ハーモニー",
+                                                  "meaning": "giai điệu hòa ca, hòa âm",
+                                                  "phonetic": "haamanii"
                                         }
                               ],
                               "endTime": 164.09,
@@ -4879,6 +5052,12 @@ QUY TẮC ĐẦU RA:
                               "text": "キミと明日を 願うチカラで",
                               "words": [
                                         {
+                                                  "pos": "pronoun",
+                                                  "word": "キミ",
+                                                  "meaning": "bạn, cậu (君)",
+                                                  "phonetic": "kimi"
+                                        },
+                                        {
                                                   "pos": "noun",
                                                   "word": "明日",
                                                   "meaning": "ngày mai",
@@ -4886,8 +5065,8 @@ QUY TẮC ĐẦU RA:
                                         },
                                         {
                                                   "pos": "noun",
-                                                  "word": "力",
-                                                  "meaning": "sức mạnh",
+                                                  "word": "チカラ",
+                                                  "meaning": "sức mạnh (力)",
                                                   "phonetic": "chikara"
                                         }
                               ],
@@ -4902,15 +5081,21 @@ QUY TẮC ĐẦU RA:
                               "words": [
                                         {
                                                   "pos": "verb",
-                                                  "word": "生まれ",
-                                                  "meaning": "sinh ra",
-                                                  "phonetic": "umare"
+                                                  "word": "うまれる",
+                                                  "meaning": "sinh ra, chào đời (生まれる)",
+                                                  "phonetic": "umareru"
                                         },
                                         {
                                                   "pos": "pronoun",
-                                                  "word": "私たち",
-                                                  "meaning": "chúng ta",
+                                                  "word": "わたし達",
+                                                  "meaning": "chúng ta, chúng mình (私たち)",
                                                   "phonetic": "watashitachi"
+                                        },
+                                        {
+                                                  "pos": "noun",
+                                                  "word": "ハーモニー",
+                                                  "meaning": "giai điệu hòa ca, hòa âm",
+                                                  "phonetic": "haamanii"
                                         }
                               ],
                               "endTime": 197.17,

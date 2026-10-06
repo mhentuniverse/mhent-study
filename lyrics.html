@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Học Ngoại Ngữ Qua Lời Bài Hát (Music Lyrics Hub) | MHEnt. Study</title>
     <meta name="description" content="Luyện nghe và học từ vựng tiếng Anh, Hàn, Nhật, Trung qua lời bài hát đồng bộ từng câu (Sentence-by-Sentence Karaoke) với AI và Supabase Cloud.">
-    <link rel="icon" type="image/png" sizes="48x48" href="/assets/icon-web.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="/assets/study-logo.png">
 
     <!-- CSS Core & Modules -->
     <link rel="stylesheet" href="/css/study-core.css">
@@ -46,7 +46,7 @@
     <!-- NAVIGATION BAR -->
     <nav class="study-nav">
         <a href="/" class="nav-brand-box">
-            <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="brand-avatar">
+            <img src="/assets/study-logo.png" alt="MHEnt Study Logo" class="brand-avatar">
             <div class="brand-title-wrap">
                 <span class="brand-main-title">MHEnt. <span>Study</span></span>
                 <span class="brand-sub-badge">MUSIC & LYRICS HUB</span>
@@ -254,7 +254,7 @@
                         <button type="button" id="btn-toggle-viewmode" class="btn-tool-action" title="Chuyển sang chế độ đọc toàn bài" onclick="window.lyricsApp.togglePlainMode()">
                             <i class="fa-solid fa-book-open"></i> <span id="viewmode-label">Đọc lời</span>
                         </button>
-                        <button type="button" id="btn-open-contrib" class="btn-contribute-version">
+                        <button type="button" id="btn-open-contrib" class="btn-contribute-version" onclick="window.lyricsApp.openContribModal()">
                             <i class="fa-solid fa-pen-nib"></i> Đóng góp bản dịch
                         </button>
                     </div>
@@ -297,24 +297,52 @@
                 </button>
             </div>
             <form id="contrib-form" class="contrib-modal-body">
-                <div class="contrib-field-group">
-                    <label class="contrib-label">Tên của bạn hoặc Nickname</label>
-                    <input type="text" id="contrib-author" class="contrib-input" placeholder="VD: Sakura, Minh Anh..." required>
-                </div>
+                <div class="contrib-grid-meta">
+                    <div class="contrib-field-group">
+                        <label class="contrib-label">Tên của bạn hoặc Nickname</label>
+                        <input type="text" id="contrib-author" class="contrib-input" placeholder="VD: Sakura, Minh Anh..." required>
+                    </div>
 
-                <div class="contrib-field-group">
-                    <label class="contrib-label">Tiêu đề phiên bản</label>
-                    <input type="text" id="contrib-title" class="contrib-input" placeholder="VD: Bản dịch thơ mộng, Bản dịch giải nghĩa chi tiết..." required>
+                    <div class="contrib-field-group">
+                        <label class="contrib-label">Tiêu đề phiên bản dịch</label>
+                        <input type="text" id="contrib-title" class="contrib-input" placeholder="VD: Bản dịch thơ mộng, Bản dịch giải nghĩa chi tiết..." required>
+                    </div>
                 </div>
 
                 <div class="contrib-field-group">
                     <label class="contrib-label">Ghi chú hoặc lời nhắn cho người học</label>
-                    <textarea id="contrib-note" class="contrib-textarea" placeholder="Chia sẻ cảm nhận, lưu ý ngữ pháp hoặc lý do dịch theo phong cách này..."></textarea>
+                    <textarea id="contrib-note" class="contrib-textarea" rows="2" placeholder="Chia sẻ cảm nhận, lưu ý ngữ pháp hoặc lý do dịch theo phong cách này..."></textarea>
                 </div>
 
-                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
-                    <button type="submit" class="dict-btn-save" style="border-radius: 10px; padding: 10px 20px;">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> Lưu lên Supabase Cloud
+                <!-- Interactive Translation Editor Section -->
+                <div class="contrib-editor-section">
+                    <div class="contrib-editor-header">
+                        <div class="contrib-editor-title">
+                            <i class="fa-solid fa-language" style="color: #38bdf8;"></i>
+                            <span>Trình chỉnh sửa bản dịch từng câu:</span>
+                            <span class="contrib-line-count-badge" id="contrib-line-count-badge">0 câu</span>
+                        </div>
+                        <div class="contrib-editor-tools">
+                            <button type="button" class="contrib-tool-btn" id="btn-contrib-fill-current" title="Điền lại bản dịch đang hiển thị của bài">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Lấy bản dịch mẫu
+                            </button>
+                            <button type="button" class="contrib-tool-btn" id="btn-contrib-clear-all" title="Xóa trắng để tự viết lại toàn bộ">
+                                <i class="fa-solid fa-eraser"></i> Xóa hết để dịch mới
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="contrib-lines-container" id="contrib-lines-container">
+                        <!-- Dynamic sentence translation inputs injected via JS -->
+                    </div>
+                </div>
+
+                <div class="contrib-footer">
+                    <button type="button" class="btn-cancel" onclick="document.getElementById('contrib-modal').classList.remove('active')">
+                        Hủy bỏ
+                    </button>
+                    <button type="submit" class="dict-btn-save">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Lưu & Xuất bản lên Supabase Cloud
                     </button>
                 </div>
             </form>
@@ -425,7 +453,7 @@
                 <!-- Cột 1: Thương hiệu MHEnt Study -->
                 <div class="footer-brand-col">
                     <a onclick="window.location.href='/'" class="footer-brand-title" style="cursor: pointer;">
-                        <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="footer-brand-logo">
+                        <img src="/assets/study-logo.png" alt="MHEnt Study Logo" class="footer-brand-logo">
                         <span class="footer-brand-name">MHEnt. Study</span>
                     </a>
                     <p class="footer-brand-slogan">
