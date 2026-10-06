@@ -129,103 +129,14 @@ body.dark-mode .mobile-drawer-toggle {
 }
 
 /* ==============================================================
-   2. THANH ĐIỀU HƯỚNG ĐÁY CHUẨN APP (BOTTOM NAVIGATION BAR)
+   2. THANH ĐIỀU HƯỚNG ĐÁY (ĐÃ VÔ HIỆU HÓA HOÀN TOÀN ĐỂ TRẢ LẠI 100% DIỆN TÍCH CHO HỌC TẬP)
    ============================================================== */
 .mhent-bottom-nav {
-    display: none;
-}
-
-@media screen and (max-width: 768px) {
-    .mhent-bottom-nav {
-        display: flex !important;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 54px;
-        background: var(--bg-glass-strong, rgba(255, 255, 255, 0.96));
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border-top: 1px solid var(--border-color, rgba(226, 232, 240, 0.8));
-        justify-content: space-around;
-        align-items: center;
-        z-index: 99999;
-        box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.05);
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-        box-sizing: content-box;
-    }
-
-    body.dark-mode .mhent-bottom-nav {
-        background: var(--bg-glass-strong, rgba(19, 27, 46, 0.96));
-        border-top-color: rgba(255, 255, 255, 0.08);
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.45);
-    }
-
-    .bottom-nav-item {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-decoration: none;
-        color: var(--text-secondary, #64748b);
-        font-family: 'Nunito', sans-serif;
-        font-size: 10px;
-        font-weight: 700;
-        gap: 2px;
-        height: 100%;
-        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        user-select: none;
-        position: relative;
-    }
-
-    .bottom-nav-item svg,
-    .bottom-nav-item i,
-    .bottom-nav-item .nav-emoji {
-        font-size: 17px;
-        width: 19px;
-        height: 19px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .bottom-nav-item.active {
-        color: var(--theme-accent, #0ea5e9);
-        font-weight: 900;
-    }
-
-    .bottom-nav-item.active svg,
-    .bottom-nav-item.active i,
-    .bottom-nav-item.active .nav-emoji {
-        transform: scale(1.15) translateY(-1px);
-        animation: navIconBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    }
-
-    .bottom-nav-item.active::after {
-        content: '';
-        width: 3.5px;
-        height: 3.5px;
-        background: var(--theme-accent, #0ea5e9);
-        border-radius: 50%;
-        position: absolute;
-        bottom: 3px;
-        box-shadow: 0 0 5px var(--theme-accent, #0ea5e9);
-    }
-
-    .bottom-nav-item[data-lang="ko"].active { color: #ec4899; }
-    .bottom-nav-item[data-lang="ko"].active::after { background: #ec4899; box-shadow: 0 0 5px #ec4899; }
-
-    .bottom-nav-item[data-lang="ja"].active { color: #ef4444; }
-    .bottom-nav-item[data-lang="ja"].active::after { background: #ef4444; box-shadow: 0 0 5px #ef4444; }
-
-    .bottom-nav-item[data-lang="zh"].active { color: #f59e0b; }
-    .bottom-nav-item[data-lang="zh"].active::after { background: #f59e0b; box-shadow: 0 0 5px #f59e0b; }
-
-    .bottom-nav-item:active {
-        transform: scale(0.9);
-    }
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    opacity: 0 !important;
 }
 
 /* ==============================================================

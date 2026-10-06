@@ -655,55 +655,11 @@ window.toggleAdminLeftDrawer = function() {
 };
 
 // ==========================================
-// 5. HÀM VẼ MENU ĐÁY TỰ ĐỘNG DÀNH CHO STUDY
+// 5. HÀM VẼ MENU ĐÁY TỰ ĐỘNG DÀNH CHO STUDY (ĐÃ VÔ HIỆU HÓA HOÀN TOÀN ĐỂ TRẢ LẠI 100% DIỆN TÍCH MÀN HÌNH)
 // ==========================================
 window.renderBottomNav = function() {
-    if (window.location.pathname.includes('lyrics')) {
-        let existingNav = document.getElementById('mhent-bottom-nav');
-        if (existingNav) existingNav.remove();
-        return;
-    }
-    if (window.innerWidth > 768) return;
-
-    let nav = document.getElementById('mhent-bottom-nav');
-    if (!nav) {
-        nav = document.createElement('div');
-        nav.id = 'mhent-bottom-nav';
-        nav.className = 'mhent-bottom-nav';
-        document.body.appendChild(nav);
-    }
-
-    let p = window.location.pathname;
-    let isHome = (p === '/' || p === '/index.html' || p.endsWith('/mhent-study/index.html') || p.endsWith('/mhent-study/'));
-    let isKo = p.includes('/ko/');
-    let isJa = p.includes('/ja/');
-    let isZh = p.includes('/zh/');
-    let isEn = p.includes('/en/');
-
-    let html = `
-        <a href="/" class="bottom-nav-item ${isHome ? 'active' : ''}">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-            <span>Tổng Quan</span>
-        </a>
-        <a href="/ko/index.html" class="bottom-nav-item ${isKo ? 'active' : ''}" data-lang="ko">
-            <span class="nav-emoji">🇰🇷</span>
-            <span>Hàn</span>
-        </a>
-        <a href="/ja/index.html" class="bottom-nav-item ${isJa ? 'active' : ''}" data-lang="ja">
-            <span class="nav-emoji">🇯🇵</span>
-            <span>Nhật</span>
-        </a>
-        <a href="/zh/index.html" class="bottom-nav-item ${isZh ? 'active' : ''}" data-lang="zh">
-            <span class="nav-emoji">🇨🇳</span>
-            <span>Trung</span>
-        </a>
-        <a onclick="window.openSideDrawer(); return false;" class="bottom-nav-item ${isEn ? 'active' : ''}" style="cursor: pointer;">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle><circle cx="5" cy="12" r="1.5"></circle></svg>
-            <span>Menu</span>
-        </a>
-    `;
-
-    nav.innerHTML = html;
+    let existingNav = document.getElementById('mhent-bottom-nav');
+    if (existingNav) existingNav.remove();
 };
 
 // ==========================================
