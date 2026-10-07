@@ -426,11 +426,18 @@ class LyricsHubApp {
         this.mediaMode = 'video';
         this.useYouTube = true;
         const artWrap = document.getElementById('track-art-wrap');
+        const ytWrapper = document.getElementById('youtube-player-wrapper');
         const ytFrame = document.getElementById('youtube-player-frame');
         if (artWrap) artWrap.style.display = 'none';
+        if (ytWrapper) ytWrapper.style.display = 'block';
         if (ytFrame) ytFrame.style.display = 'block';
         const toggleBtn = document.getElementById('btn-toggle-media');
         if (toggleBtn) toggleBtn.innerHTML = '<i class="fa-solid fa-image"></i> <span>Xem Bìa</span>';
+
+        // Tự động lưu vào danh sách bài hát tùy chỉnh cục bộ nếu có dữ liệu lời
+        if (song && song.id && !this.featuredSongs.some(f => f.id === song.id)) {
+            this.saveCustomSongToLocal(song);
+        }
 
         // Khởi động YouTube hoặc tự động dò tìm Video MV
         if (song.youtube_id) {
@@ -575,17 +582,20 @@ class LyricsHubApp {
 
     toggleMediaMode() {
         const artWrap = document.getElementById('track-art-wrap');
+        const ytWrapper = document.getElementById('youtube-player-wrapper');
         const ytFrame = document.getElementById('youtube-player-frame');
         const btn = document.getElementById('btn-toggle-media');
 
         if (this.mediaMode === 'video') {
             this.mediaMode = 'art';
             if (artWrap) artWrap.style.display = 'flex';
+            if (ytWrapper) ytWrapper.style.display = 'none';
             if (ytFrame) ytFrame.style.display = 'none';
             if (btn) btn.innerHTML = '<i class="fa-brands fa-youtube"></i> <span>Xem MV</span>';
         } else {
             this.mediaMode = 'video';
             if (artWrap) artWrap.style.display = 'none';
+            if (ytWrapper) ytWrapper.style.display = 'block';
             if (ytFrame) ytFrame.style.display = 'block';
             if (btn) btn.innerHTML = '<i class="fa-solid fa-image"></i> <span>Xem Bìa</span>';
             if (this.currentSong && this.currentSong.youtube_id && !this.ytPlayer && this.isYtReady) {
@@ -1082,6 +1092,7 @@ class LyricsHubApp {
 
                 const isActive = this.currentVersionIndex === idx;
                 const dateStr = this.formatDateShort(v.updatedAt || v.createdAt);
+                const canManage = this.canManageCommunityVersion(v);
 
                 html += `
                     <div class="version-card-item ${isActive ? 'active' : ''}">
@@ -1110,12 +1121,14 @@ class LyricsHubApp {
                                 `<button type="button" class="btn-version-apply is-current"><i class="fa-solid fa-check"></i> Đang áp dụng</button>` :
                                 `<button type="button" class="btn-version-apply" onclick="window.lyricsApp.switchVersion(${idx})"><i class="fa-solid fa-circle-play"></i> Dùng bản này</button>`
                             }
-                            <button type="button" class="btn-version-action-icon edit" onclick="window.lyricsApp.editCommunityVersion('${v.id}')" title="Chỉnh sửa bản dịch này">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-                            <button type="button" class="btn-version-action-icon delete" onclick="window.lyricsApp.deleteCommunityVersion('${v.id}')" title="Xóa bản dịch này">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
+                            ${canManage ? `
+                                <button type="button" class="btn-version-action-icon edit" onclick="window.lyricsApp.editCommunityVersion('${v.id}')" title="Chỉnh sửa bản dịch của bạn">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button type="button" class="btn-version-action-icon delete" onclick="window.lyricsApp.deleteCommunityVersion('${v.id}')" title="Xóa bản dịch này">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            ` : ''}
                         </div>
                     </div>
                 `;
@@ -1123,6 +1136,79 @@ class LyricsHubApp {
         }
 
         listContainer.innerHTML = html;
+    }
+
+    getCurrentUser() {
+        let profile = {};
+        try {
+            profile = JSON.parse(localStorage.getItem('mhent_user_profile') || localStorage.getItem('mhent_user') || '{}');
+        } catch (e) {}
+
+        const uid = profile.uid || profile.id || window.currentUserUid || null;
+        const email = profile.email || window.currentUserEmail || '';
+        const displayName = profile.displayName || profile.name || (email ? email.split('@')[0] : '');
+        const role = (profile.role || localStorage.getItem('mhent_user_role') || 'guest').toLowerCase();
+        const isAdmin = ['admin', 'superadmin', 'staff', 'teacher', 'manager'].includes(role);
+
+        return { uid, email, displayName, role, isAdmin };
+    }
+
+    canManageCommunityVersion(version) {
+        if (!version) return false;
+        const user = this.getCurrentUser();
+
+        // 1. Quản trị viên (Admin / Superadmin / Staff) luôn có toàn quyền quản trị & xóa
+        if (user.isAdmin) return true;
+
+        // 2. So khớp theo UID định danh tài khoản
+        if (user.uid && version.authorUid && String(user.uid) === String(version.authorUid)) {
+            return true;
+        }
+
+        // 3. So khớp theo Email tài khoản
+        if (user.email && version.authorEmail && user.email.trim().toLowerCase() === version.authorEmail.trim().toLowerCase()) {
+            return true;
+        }
+
+        // 4. So khớp theo DisplayName nếu bản dịch chưa lưu UID
+        if (user.displayName && version.author) {
+            const authorClean = version.author.trim().toLowerCase();
+            const userClean = user.displayName.trim().toLowerCase();
+            if (authorClean === userClean) return true;
+        }
+
+        return false;
+    }
+
+    getAllCustomSongs() {
+        try {
+            const raw = localStorage.getItem('mhent_custom_songs');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) return parsed;
+            }
+        } catch (e) {
+            console.warn('Lỗi đọc mhent_custom_songs:', e);
+        }
+        return [];
+    }
+
+    saveCustomSongToLocal(song) {
+        if (!song || !song.id || !song.title) return;
+        try {
+            let list = this.getAllCustomSongs();
+            const songKey = `${(song.title || '').trim().toLowerCase()}___${(song.artist || '').trim().toLowerCase()}`;
+            const idx = list.findIndex(s => s.id === song.id || `${(s.title || '').trim().toLowerCase()}___${(s.artist || '').trim().toLowerCase()}` === songKey);
+            if (idx >= 0) {
+                list[idx] = { ...list[idx], ...song };
+            } else {
+                list.unshift(song);
+            }
+            if (list.length > 100) list = list.slice(0, 100);
+            localStorage.setItem('mhent_custom_songs', JSON.stringify(list));
+        } catch (e) {
+            console.warn('Lỗi lưu mhent_custom_songs:', e);
+        }
     }
 
     getStoredCommunityVersions(songId) {
@@ -2699,7 +2785,37 @@ QUY TẮC ĐẦU RA:
                 }
             });
 
-            // 1B. Kiểm tra trong Supabase Cloud
+            // 1B. Kiểm tra trong danh sách Custom Songs do học viên/người dùng đã thêm
+            const customSongs = this.getAllCustomSongs();
+            customSongs.forEach(s => {
+                const titleNorm = this.removeVietnameseTones(s.title || '');
+                const artistNorm = this.removeVietnameseTones(s.artist || '');
+                const aliases = Array.isArray(s.aliases) ? s.aliases.map(a => this.removeVietnameseTones(a)) : [];
+                
+                const isMatch = titleNorm.includes(qNorm) || 
+                                artistNorm.includes(qNorm) || 
+                                aliases.some(a => a.includes(qNorm)) || 
+                                (s.title && s.title.toLowerCase().includes(qLower)) || 
+                                (s.artist && s.artist.toLowerCase().includes(qLower)) || 
+                                qLower.includes(s.id);
+
+                if (isMatch && !candidates.some(c => c.rawSong && c.rawSong.id === s.id)) {
+                    candidates.push({
+                        type: 'custom',
+                        rawSong: s,
+                        trackName: s.title,
+                        artistName: s.artist || 'Nghệ sĩ',
+                        albumName: s.created_by ? `Đăng bởi ${s.created_by}` : 'Học viên MHEnt',
+                        duration: s.duration || 180,
+                        hasSynced: Array.isArray(s.synced_lyrics) && s.synced_lyrics.length > 0,
+                        thumbnail: s.thumbnail || (s.youtube_id ? `https://img.youtube.com/vi/${s.youtube_id}/hqdefault.jpg` : ''),
+                        lang: s.lang || 'en',
+                        badge: 'Học viên đăng'
+                    });
+                }
+            });
+
+            // 1C. Kiểm tra trong Supabase Cloud
             if (window.studyCloud && typeof window.studyCloud.listSongs === 'function') {
                 try {
                     const cloudSongs = await window.studyCloud.listSongs();
@@ -2897,19 +3013,108 @@ QUY TẮC ĐẦU RA:
         }
     }
 
-    openLibraryBrowser() {
+    async openLibraryBrowser() {
+        // 1. Tuyển chọn có sẵn (Featured Songs)
         const candidates = this.featuredSongs.map(s => ({
             type: 'featured',
             rawSong: s,
             trackName: s.title,
             artistName: s.artist,
-            albumName: 'Kho bài hát MHEnt',
+            albumName: 'Tuyển chọn MHEnt',
             duration: s.duration,
             hasSynced: true,
-            lang: s.lang
+            lang: s.lang,
+            thumbnail: s.thumbnail || '',
+            badge: 'Tuyển chọn'
         }));
 
-        this.openSongSelectModal(candidates, 'Kho Bài Hát Ngoại Ngữ Tuyển Chọn', 'Lựa chọn bài hát yêu thích có sẵn lời karaoke đồng bộ và phân tích từ vựng chuyên sâu');
+        const addedIds = new Set(this.featuredSongs.map(s => s.id));
+        const addedKeys = new Set(this.featuredSongs.map(s => `${(s.title || '').trim().toLowerCase()}___${(s.artist || '').trim().toLowerCase()}`));
+
+        // 2. Toàn bộ bài hát do người dùng thêm/điền lưu trong localStorage (Custom Songs & Sync Studio)
+        const customSongs = this.getAllCustomSongs();
+        customSongs.forEach(cs => {
+            const key = `${(cs.title || '').trim().toLowerCase()}___${(cs.artist || '').trim().toLowerCase()}`;
+            if (!addedIds.has(cs.id) && !addedKeys.has(key)) {
+                addedIds.add(cs.id);
+                addedKeys.add(key);
+                candidates.push({
+                    type: 'custom',
+                    rawSong: cs,
+                    trackName: cs.title,
+                    artistName: cs.artist || 'Nghệ sĩ',
+                    albumName: cs.created_by ? `Đăng bởi ${cs.created_by}` : 'Học viên MHEnt',
+                    duration: cs.duration || 180,
+                    hasSynced: Array.isArray(cs.synced_lyrics) && cs.synced_lyrics.length > 0,
+                    lang: cs.lang || 'en',
+                    thumbnail: cs.thumbnail || (cs.youtube_id ? `https://img.youtube.com/vi/${cs.youtube_id}/hqdefault.jpg` : ''),
+                    badge: 'Học viên đăng'
+                });
+            }
+        });
+
+        // 3. Nếu bài hiện tại đang mở chưa có trong danh sách, đưa vào luôn
+        if (this.currentSong && this.currentSong.title) {
+            const curKey = `${(this.currentSong.title || '').trim().toLowerCase()}___${(this.currentSong.artist || '').trim().toLowerCase()}`;
+            if (!addedIds.has(this.currentSong.id) && !addedKeys.has(curKey)) {
+                addedIds.add(this.currentSong.id);
+                addedKeys.add(curKey);
+                candidates.unshift({
+                    type: 'custom',
+                    rawSong: this.currentSong,
+                    trackName: this.currentSong.title,
+                    artistName: this.currentSong.artist || 'Nghệ sĩ',
+                    albumName: 'Bài đang học',
+                    duration: this.currentSong.duration || 180,
+                    hasSynced: Array.isArray(this.currentSong.synced_lyrics) && this.currentSong.synced_lyrics.length > 0,
+                    lang: this.currentSong.lang || 'en',
+                    thumbnail: this.currentSong.thumbnail || (this.currentSong.youtube_id ? `https://img.youtube.com/vi/${this.currentSong.youtube_id}/hqdefault.jpg` : ''),
+                    badge: 'Đang mở'
+                });
+            }
+        }
+
+        // Mở modal ngay lập tức để người học không phải chờ đợi
+        this.openSongSelectModal(candidates, 'Kho Bài Hát Ngoại Ngữ Tuyển Chọn', `Khám phá toàn bộ ${candidates.length} bài hát có sẵn lời karaoke đồng bộ và phân tích từ vựng chuyên sâu`);
+
+        // 4. Tải tiếp toàn bộ bài hát từ máy chủ Supabase Cloud (study_songs)
+        if (window.studyCloud && typeof window.studyCloud.listSongs === 'function') {
+            try {
+                const cloudSongs = await window.studyCloud.listSongs('all');
+                if (Array.isArray(cloudSongs) && cloudSongs.length > 0) {
+                    let hasNew = false;
+                    cloudSongs.forEach(cs => {
+                        const key = `${(cs.title || '').trim().toLowerCase()}___${(cs.artist || '').trim().toLowerCase()}`;
+                        if (!addedIds.has(cs.id) && !addedKeys.has(key)) {
+                            addedIds.add(cs.id);
+                            addedKeys.add(key);
+                            candidates.push({
+                                type: 'cloud',
+                                cloudId: cs.id,
+                                rawSong: cs,
+                                trackName: cs.title,
+                                artistName: cs.artist || 'Nghệ sĩ',
+                                albumName: cs.created_by ? `Đăng bởi ${cs.created_by}` : 'Cộng đồng MHEnt',
+                                duration: cs.duration || 180,
+                                hasSynced: true,
+                                lang: cs.lang || 'en',
+                                thumbnail: cs.thumbnail || (cs.youtube_id ? `https://img.youtube.com/vi/${cs.youtube_id}/hqdefault.jpg` : ''),
+                                badge: 'Cộng đồng'
+                            });
+                            hasNew = true;
+                        }
+                    });
+
+                    if (hasNew) {
+                        const subEl = document.getElementById('song-select-modal-subtitle');
+                        if (subEl) subEl.textContent = `Khám phá toàn bộ ${candidates.length} bài hát có sẵn lời karaoke đồng bộ và phân tích từ vựng chuyên sâu`;
+                        this.renderSongSelectList();
+                    }
+                }
+            } catch (cloudErr) {
+                console.warn('Lỗi tải bài hát cloud:', cloudErr);
+            }
+        }
     }
 
     openSongSelectModal(candidates, title, subtitle) {
@@ -3025,7 +3230,10 @@ QUY TẮC ĐẦU RA:
                     <div class="song-item-info">
                         <div class="song-item-title-row">
                             <span class="song-item-title">${this.escapeHtml(item.trackName)}</span>
-                            ${isFeatured ? '<span class="badge-featured"><i class="fa-solid fa-star"></i> Tuyển chọn</span>' : ''}
+                            ${isFeatured ? 
+                                '<span class="badge-featured"><i class="fa-solid fa-star"></i> Tuyển chọn</span>' : 
+                                (item.badge ? `<span class="badge-featured" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2)); color: #34d399; border-color: rgba(52, 211, 153, 0.4);"><i class="fa-solid fa-users"></i> ${this.escapeHtml(item.badge)}</span>` : '')
+                            }
                         </div>
                         <div class="song-item-artist">
                             <i class="fa-solid fa-microphone"></i> ${this.escapeHtml(item.artistName)}
@@ -3077,6 +3285,32 @@ QUY TẮC ĐẦU RA:
         if (candidate.type === 'featured' && candidate.rawSong) {
             this.loadSong(candidate.rawSong);
             this.showToast(`Đang tải bài hát: ${candidate.trackName}`, 'success');
+            return;
+        }
+
+        if (candidate.type === 'custom' && candidate.rawSong) {
+            this.loadSong(candidate.rawSong);
+            this.showToast(`Đang tải bài hát: ${candidate.trackName}`, 'success');
+            return;
+        }
+
+        if (candidate.type === 'cloud') {
+            this.showToast(`Đang tải bài hát từ máy chủ: ${candidate.trackName}...`, 'info', 2000);
+            let fullSong = null;
+            if (window.studyCloud && typeof window.studyCloud.getSong === 'function') {
+                try {
+                    fullSong = await window.studyCloud.getSong(candidate.cloudId || candidate.rawSong?.id);
+                } catch (e) {
+                    console.warn('Lỗi lấy bài hát chi tiết từ cloud:', e);
+                }
+            }
+            if (fullSong) {
+                this.saveCustomSongToLocal(fullSong);
+                this.loadSong(fullSong);
+                this.showToast(`Đã tải bài hát: ${fullSong.title}`, 'success');
+            } else if (candidate.rawSong) {
+                this.loadSong(candidate.rawSong);
+            }
             return;
         }
 
@@ -3720,13 +3954,8 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
     async submitCommunityVersion() {
         if (!this.currentSong) return;
 
-        let userUid = null;
-        let defaultAuthor = 'Học viên MHEnt';
-        try {
-            const savedProfile = JSON.parse(localStorage.getItem('mhent_user_profile') || localStorage.getItem('mhent_user') || '{}');
-            if (savedProfile.uid) userUid = savedProfile.uid;
-            if (savedProfile.displayName || savedProfile.name) defaultAuthor = savedProfile.displayName || savedProfile.name;
-        } catch (e) {}
+        const currentUser = this.getCurrentUser();
+        let defaultAuthor = currentUser.displayName || 'Học viên MHEnt';
 
         const authorName = (document.getElementById('contrib-author')?.value || defaultAuthor).trim();
         const versionTitle = (document.getElementById('contrib-title')?.value || 'Bản dịch mới').trim();
@@ -3752,10 +3981,17 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
             // Chế độ chỉnh sửa phiên bản đã có
             const exIdx = this.currentSong.community_versions.findIndex(v => v.id === this.editingVersionId);
             if (exIdx >= 0) {
+                const targetVer = this.currentSong.community_versions[exIdx];
+                if (!this.canManageCommunityVersion(targetVer)) {
+                    this.showToast('Bạn không có quyền chỉnh sửa bản dịch này!', 'warning', 4500);
+                    return;
+                }
                 isEdit = true;
                 this.currentSong.community_versions[exIdx] = {
-                    ...this.currentSong.community_versions[exIdx],
+                    ...targetVer,
                     author: authorName,
+                    authorUid: targetVer.authorUid || currentUser.uid,
+                    authorEmail: targetVer.authorEmail || currentUser.email,
                     title: versionTitle,
                     note: note,
                     synced_lyrics: this.contribLyrics,
@@ -3770,7 +4006,8 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
             const versionData = {
                 id: 'comm_' + Date.now(),
                 author: authorName,
-                authorUid: userUid,
+                authorUid: currentUser.uid || null,
+                authorEmail: currentUser.email || null,
                 title: versionTitle,
                 note: note,
                 synced_lyrics: this.contribLyrics,
@@ -3812,6 +4049,10 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
             this.showToast('Không tìm thấy bản dịch để chỉnh sửa!', 'error');
             return;
         }
+        if (!this.canManageCommunityVersion(versionToEdit)) {
+            this.showToast('Bạn không có quyền chỉnh sửa bản dịch của người khác!', 'warning', 4500);
+            return;
+        }
         this.openContribModal(versionToEdit);
     }
 
@@ -3820,7 +4061,13 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
         const versionIdx = this.currentSong.community_versions.findIndex(v => v.id === versionId);
         if (versionIdx < 0) return;
 
-        const versionTitle = this.currentSong.community_versions[versionIdx].title || 'Bản dịch này';
+        const versionToDelete = this.currentSong.community_versions[versionIdx];
+        if (!this.canManageCommunityVersion(versionToDelete)) {
+            this.showToast('Bạn không có quyền xóa bản dịch này. Chỉ người đóng góp hoặc Quản trị viên mới có thể xóa!', 'warning', 4500);
+            return;
+        }
+
+        const versionTitle = versionToDelete.title || 'Bản dịch này';
         if (!confirm(`Bạn có chắc chắn muốn xóa bản dịch "${versionTitle}" không? Hành động này không thể hoàn tác.`)) {
             return;
         }
@@ -4567,6 +4814,9 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
                     created_by: defaultAuthor,
                     community_versions: this.currentSong?.community_versions || []
                 };
+
+                // Lưu vào danh sách custom songs cục bộ để hiển thị ngay trong kho bài hát
+                this.saveCustomSongToLocal(newSong);
 
                 if (window.studyCloud && typeof window.studyCloud.saveSong === 'function') {
                     await window.studyCloud.saveSong(newSong);
@@ -6951,6 +7201,19 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
 
         if (match) {
             this.loadSong(match);
+            return;
+        }
+
+        // 2B. Kiểm tra trong danh sách Custom Songs do học viên/người dùng đã thêm
+        const customSongs = this.getAllCustomSongs();
+        let matchCustom = customSongs.find(s => 
+            s.id.toLowerCase() === pLower ||
+            s.id.toLowerCase().replace(/[-_]/g, ' ') === pClean ||
+            s.title.toLowerCase() === pLower ||
+            s.title.toLowerCase() === pClean
+        );
+        if (matchCustom) {
+            this.loadSong(matchCustom);
             return;
         }
 
