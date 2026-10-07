@@ -3948,8 +3948,31 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
     }
 
     // =========================================================================
-    // 8C. PHÒNG THU ĐỒNG BỘ LỜI BÀI HÁT (MUSIXMATCH LITE - TIMING SYNC STUDIO)
+    // 8C. PHÒNG THU ĐỒNG BỘ LỜI BÀI HÁT (MUSIXMATCH PRO STUDIO - TIMING SYNC ENGINE)
     // =========================================================================
+    getCurrentMediaDuration() {
+        if (this.useYouTube && this.ytPlayer && typeof this.ytPlayer.getDuration === 'function') {
+            try {
+                const d = this.ytPlayer.getDuration();
+                if (d && d > 0) return d;
+            } catch (e) {}
+        }
+        if (this.audioPlayer && this.audioPlayer.duration && !isNaN(this.audioPlayer.duration) && this.audioPlayer.duration > 0) {
+            return this.audioPlayer.duration;
+        }
+        if (this.duration && this.duration > 0) return this.duration;
+        if (this.currentSong && this.currentSong.duration && this.currentSong.duration > 0) return this.currentSong.duration;
+        return 180;
+    }
+
+    formatMxmTime(sec) {
+        if (sec === undefined || sec === null || isNaN(sec) || sec <= 0) return '--:--.--';
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60);
+        const cs = Math.floor((sec % 1) * 100);
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${cs.toString().padStart(2, '0')}`;
+    }
+
     openSyncStudioModal() {
         const modal = document.getElementById('sync-studio-modal');
         if (!modal) return;
@@ -3957,64 +3980,199 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
         this.syncStudioLines = [];
         this.syncStudioIndex = 0;
         this.syncStudioTicker = null;
+        this.activeMxmTab = 'sync';
+        this.isDraggingMxmSlider = false;
 
-        // Điền trước thông tin nếu đang nạp bài hát
+        const thumbEl = document.getElementById('sync-studio-thumb');
+        const titleEl = document.getElementById('sync-studio-track-title');
+        const artistEl = document.getElementById('sync-studio-track-artist');
+
         const titleInput = document.getElementById('sync-input-title');
         const artistInput = document.getElementById('sync-input-artist');
         const langInput = document.getElementById('sync-input-lang');
-        const lyricsInput = document.getElementById('sync-plain-lyrics-input');
+        const plainInput = document.getElementById('sync-plain-lyrics-input');
 
         if (this.currentSong) {
+            if (thumbEl) thumbEl.src = this.currentSong.thumbnail || 'https://img.youtube.com/vi/OlZK4BPps_g/hqdefault.jpg';
+            if (titleEl) titleEl.textContent = this.currentSong.title || 'Bài hát';
+            if (artistEl) artistEl.textContent = this.currentSong.artist || 'Nghệ sĩ';
+
             if (titleInput) titleInput.value = this.currentSong.title || '';
             if (artistInput) artistInput.value = this.currentSong.artist || '';
             if (langInput && this.currentSong.lang) langInput.value = this.currentSong.lang;
-            if (lyricsInput) {
-                const plain = this.currentSong.plain_lyrics || (this.currentSong.synced_lyrics || []).map(l => l.text).join('\n');
-                lyricsInput.value = plain;
-                const countBadge = document.getElementById('sync-plain-line-count');
-                if (countBadge) {
-                    const count = plain.split('\n').map(l => l.trim()).filter(Boolean).length;
-                    countBadge.textContent = `${count} câu`;
-                }
+
+            if (Array.isArray(this.currentSong.synced_lyrics) && this.currentSong.synced_lyrics.length > 0) {
+                this.syncStudioLines = this.currentSong.synced_lyrics.map((l, i) => ({
+                    id: l.id || i + 1,
+                    text: l.text || '',
+                    startTime: parseFloat((l.startTime || 0).toFixed(2)),
+                    endTime: parseFloat((l.endTime || 0).toFixed(2)),
+                    translation: l.translation || '',
+                    phonetic: l.phonetic || '',
+                    words: Array.isArray(l.words) ? l.words : []
+                }));
+            } else {
+                const raw = this.currentSong.plain_lyrics || '';
+                const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+                this.syncStudioLines = lines.map((text, i) => ({
+                    id: i + 1,
+                    text: text,
+                    startTime: 0,
+                    endTime: 0,
+                    translation: '',
+                    phonetic: '',
+                    words: []
+                }));
             }
+
+            if (plainInput) {
+                plainInput.value = this.syncStudioLines.map(l => l.text).join('\n');
+                const countBadge = document.getElementById('sync-plain-line-count');
+                if (countBadge) countBadge.textContent = `${this.syncStudioLines.length} câu`;
+            }
+        } else {
+            if (titleEl) titleEl.textContent = 'Bài hát mới';
+            if (artistEl) artistEl.textContent = 'Phòng thu lời';
         }
 
-        // Chuyển về Bước 1
-        this.switchSyncStudioStep(1);
         modal.classList.add('active');
+
+        if (this.syncStudioLines.length > 0) {
+            this.switchMxmStudioTab('sync');
+        } else {
+            this.switchMxmStudioTab('transcript');
+        }
+
+        this.startSyncStudioTicker();
     }
 
-    switchSyncStudioStep(stepNum) {
-        document.querySelectorAll('.studio-step-item').forEach((item, idx) => {
-            item.classList.toggle('active', (idx + 1) === stepNum);
+    closeSyncStudioModal() {
+        const modal = document.getElementById('sync-studio-modal');
+        if (modal) modal.classList.remove('active');
+        this.stopSyncStudioTicker();
+    }
+
+    switchMxmStudioTab(tabName) {
+        this.activeMxmTab = tabName;
+
+        document.querySelectorAll('.mxm-tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tabName);
         });
 
-        const step1 = document.getElementById('sync-studio-step-1');
-        const step2 = document.getElementById('sync-studio-step-2');
-        const step3 = document.getElementById('sync-studio-step-3');
+        const viewSync = document.getElementById('mxm-view-sync');
+        const viewTranscript = document.getElementById('mxm-view-transcript');
+        const viewTranslate = document.getElementById('mxm-view-translate');
 
-        if (step1) step1.style.display = stepNum === 1 ? 'flex' : 'none';
-        if (step2) step2.style.display = stepNum === 2 ? 'flex' : 'none';
-        if (step3) step3.style.display = stepNum === 3 ? 'flex' : 'none';
+        if (viewSync) viewSync.style.display = tabName === 'sync' ? 'flex' : 'none';
+        if (viewTranscript) viewTranscript.style.display = tabName === 'transcript' ? 'flex' : 'none';
+        if (viewTranslate) viewTranslate.style.display = tabName === 'translate' ? 'flex' : 'none';
 
-        if (stepNum === 2) {
-            this.startSyncStudioTicker();
-            this.updateSyncStudioStep2Ui();
-        } else {
-            this.stopSyncStudioTicker();
+        if (tabName === 'sync') {
+            this.renderMxmSyncLines();
+            this.scrollActiveMxmLineIntoView();
+        } else if (tabName === 'translate') {
+            this.renderSyncStudioReviewLines();
+        }
+    }
+
+    renderMxmSyncLines() {
+        const listEl = document.getElementById('mxm-lines-list');
+        if (!listEl) return;
+
+        const total = this.syncStudioLines.length;
+
+        const curIndexEl = document.getElementById('sync-current-index-display');
+        const totalLinesEl = document.getElementById('sync-total-lines-display');
+        if (curIndexEl) curIndexEl.textContent = total > 0 ? Math.min(this.syncStudioIndex + 1, total) : 0;
+        if (totalLinesEl) totalLinesEl.textContent = total;
+
+        if (total === 0) {
+            listEl.innerHTML = `
+                <div style="text-align: center; color: #94a3b8; padding: 40px 20px;">
+                    <p style="margin-bottom: 12px; font-size: 1rem;">Chưa có lời bài hát nào để căn nhịp.</p>
+                    <button type="button" class="dict-btn-save" onclick="window.lyricsApp.switchMxmStudioTab('transcript')">
+                        <i class="fa-solid fa-file-pen"></i> Chuyển sang tab Transcript để dán lời
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        listEl.innerHTML = this.syncStudioLines.map((line, idx) => {
+            const isActive = (idx === this.syncStudioIndex);
+            const isSynced = (line.startTime > 0);
+            const timeStr = this.formatMxmTime(line.startTime);
+
+            return `
+                <div class="mxm-line-row ${isActive ? 'active' : ''} ${isSynced ? 'synced' : ''}" data-index="${idx}" id="mxm-line-row-${idx}">
+                    <button type="button" class="mxm-btn-line-delete" data-index="${idx}" title="Xóa mốc giây câu này">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <div class="mxm-stepper-wrap">
+                        <button type="button" class="mxm-step-btn" data-action="minus-large" data-index="${idx}" title="Lùi 0.5 giây">&laquo;</button>
+                        <button type="button" class="mxm-step-btn" data-action="minus-small" data-index="${idx}" title="Lùi 0.1 giây">&lsaquo;</button>
+                        <span class="mxm-line-time-badge ${isSynced ? 'has-time' : ''}" data-index="${idx}">${timeStr}</span>
+                        <button type="button" class="mxm-step-btn" data-action="plus-small" data-index="${idx}" title="Tăng 0.1 giây">&rsaquo;</button>
+                        <button type="button" class="mxm-step-btn" data-action="plus-large" data-index="${idx}" title="Tăng 0.5 giây">&raquo;</button>
+                    </div>
+                    <button type="button" class="mxm-btn-line-play" data-index="${idx}" title="Nghe câu này">
+                        <i class="fa-solid fa-play"></i>
+                    </button>
+                    <div class="mxm-line-text-wrap" data-index="${idx}">
+                        <span class="mxm-line-text">${this.escapeHtml(line.text)}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    scrollActiveMxmLineIntoView() {
+        const row = document.getElementById(`mxm-line-row-${this.syncStudioIndex}`);
+        const container = document.getElementById('mxm-lines-container');
+        if (row && container) {
+            const rowTop = row.offsetTop;
+            const containerHeight = container.clientHeight;
+            const targetScroll = rowTop - (containerHeight / 2) + (row.clientHeight / 2);
+            container.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
         }
     }
 
     startSyncStudioTicker() {
         this.stopSyncStudioTicker();
         this.syncStudioTicker = setInterval(() => {
-            const timeEl = document.getElementById('sync-current-time');
-            if (timeEl) {
-                const cur = this.getCurrentMediaTime();
-                const m = Math.floor(cur / 60);
-                const s = Math.floor(cur % 60);
-                const ms = Math.floor((cur % 1) * 10);
-                timeEl.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms}`;
+            const cur = this.getCurrentMediaTime();
+            const dur = this.getCurrentMediaDuration();
+
+            const curTimeEl = document.getElementById('mxm-current-time-display');
+            const totalTimeEl = document.getElementById('mxm-total-time-display');
+            const slider = document.getElementById('mxm-progress-slider');
+            const fill = document.getElementById('mxm-progress-fill');
+            const playBtn = document.getElementById('mxm-btn-play-toggle');
+
+            if (curTimeEl) curTimeEl.textContent = this.formatSeconds(cur);
+            if (totalTimeEl) totalTimeEl.textContent = this.formatSeconds(dur);
+
+            if (!this.isDraggingMxmSlider && slider && fill) {
+                const pct = dur > 0 ? Math.min(100, Math.max(0, (cur / dur) * 100)) : 0;
+                slider.value = pct;
+                fill.style.width = `${pct}%`;
+            }
+
+            if (playBtn) {
+                playBtn.innerHTML = this.isPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
+                playBtn.title = this.isPlaying ? 'Tạm dừng' : 'Phát nhạc';
+            }
+
+            // Đánh dấu câu đang cất giọng theo dòng thời gian thực
+            if (this.activeMxmTab === 'sync' && Array.isArray(this.syncStudioLines)) {
+                for (let i = 0; i < this.syncStudioLines.length; i++) {
+                    const l = this.syncStudioLines[i];
+                    const row = document.getElementById(`mxm-line-row-${i}`);
+                    if (row) {
+                        const isSinging = (l.startTime > 0 && cur >= l.startTime && (l.endTime ? cur < l.endTime : cur < l.startTime + 4));
+                        row.classList.toggle('playing-now', isSinging);
+                    }
+                }
             }
         }, 100);
     }
@@ -4026,54 +4184,11 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
         }
     }
 
-    updateSyncStudioStep2Ui() {
+    handleSyncStudioTap() {
         if (!Array.isArray(this.syncStudioLines) || this.syncStudioLines.length === 0) return;
 
-        const curIdx = this.syncStudioIndex;
-        const total = this.syncStudioLines.length;
-
-        const counterEl = document.getElementById('sync-current-index-display');
-        const totalEl = document.getElementById('sync-total-lines-display');
-        if (counterEl) counterEl.textContent = Math.min(curIdx + 1, total);
-        if (totalEl) totalEl.textContent = total;
-
-        const prevEl = document.getElementById('sync-prev-line');
-        const prevText = document.getElementById('sync-prev-line-text');
-        const activeText = document.getElementById('sync-active-line-text');
-        const activeTime = document.getElementById('sync-active-line-time');
-        const nextEl = document.getElementById('sync-next-line');
-        const nextText = document.getElementById('sync-next-line-text');
-
-        if (curIdx > 0 && this.syncStudioLines[curIdx - 1]) {
-            if (prevEl) prevEl.style.visibility = 'visible';
-            if (prevText) prevText.textContent = `${this.formatSeconds(this.syncStudioLines[curIdx - 1].startTime)} - ${this.syncStudioLines[curIdx - 1].text}`;
-        } else {
-            if (prevEl) prevEl.style.visibility = 'hidden';
-        }
-
-        if (curIdx < total && this.syncStudioLines[curIdx]) {
-            const curLine = this.syncStudioLines[curIdx];
-            if (activeText) activeText.textContent = curLine.text;
-            if (activeTime) {
-                activeTime.textContent = curLine.startTime > 0 ? `Đã gán: ${this.formatSeconds(curLine.startTime)}` : 'Chờ gõ Space khi câu cất giọng';
-            }
-        } else {
-            if (activeText) activeText.textContent = '🎉 Đã hoàn thành toàn bộ bài hát!';
-            if (activeTime) activeTime.textContent = 'Bấm "Hoàn tất & Sang bước AI" bên dưới để lưu nhé';
-        }
-
-        if (curIdx + 1 < total && this.syncStudioLines[curIdx + 1]) {
-            if (nextEl) nextEl.style.visibility = 'visible';
-            if (nextText) nextText.textContent = this.syncStudioLines[curIdx + 1].text;
-        } else {
-            if (nextEl) nextEl.style.visibility = 'hidden';
-        }
-    }
-
-    handleSyncStudioTap() {
-        if (!Array.isArray(this.syncStudioLines) || this.syncStudioIndex >= this.syncStudioLines.length) {
-            this.switchSyncStudioStep(3);
-            this.renderSyncStudioReviewLines();
+        if (this.syncStudioIndex >= this.syncStudioLines.length) {
+            this.showToast('🎉 Đã đồng bộ xong toàn bộ câu trong bài hát!', 'success', 3000);
             return;
         }
 
@@ -4081,6 +4196,7 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
         const idx = this.syncStudioIndex;
         const curLine = this.syncStudioLines[idx];
 
+        // Gán mốc giây cho câu hiện tại
         curLine.startTime = curTime;
 
         // Cập nhật endTime cho câu trước
@@ -4091,44 +4207,57 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
             }
         }
 
-        // Hiệu ứng pulse sáng rực rỡ
-        const activeBox = document.getElementById('sync-active-line');
-        if (activeBox) {
-            activeBox.style.transform = 'scale(1.02)';
-            activeBox.style.boxShadow = '0 0 35px rgba(56, 189, 248, 0.7)';
+        // Tự động phát nếu đang dừng
+        if (!this.isPlaying) {
+            this.togglePlay();
+        }
+
+        // Hiệu ứng pulse sáng rực rỡ trên câu vừa căn
+        const row = document.getElementById(`mxm-line-row-${idx}`);
+        if (row) {
+            row.style.transform = 'scale(1.02)';
+            row.style.boxShadow = '0 0 28px rgba(56, 189, 248, 0.7)';
             setTimeout(() => {
-                activeBox.style.transform = 'none';
-                activeBox.style.boxShadow = '';
-            }, 180);
+                if (row) {
+                    row.style.transform = '';
+                    row.style.boxShadow = '';
+                }
+            }, 160);
         }
 
         this.syncStudioIndex++;
 
         if (this.syncStudioIndex >= this.syncStudioLines.length) {
             curLine.endTime = curTime + 4;
-            this.showToast('🎉 Đã bấm nhịp xong toàn bộ bài hát!', 'success', 2500);
-            setTimeout(() => {
-                this.switchSyncStudioStep(3);
-                this.renderSyncStudioReviewLines();
-            }, 600);
-        } else {
-            this.updateSyncStudioStep2Ui();
+            this.showToast('🎉 Đã bấm nhịp xong toàn bộ bài hát! Bạn có thể xem bản dịch hoặc bấm Xuất Bản.', 'success', 3500);
         }
+
+        this.renderMxmSyncLines();
+        this.scrollActiveMxmLineIntoView();
     }
 
     renderSyncStudioReviewLines() {
         const container = document.getElementById('sync-review-lines-container');
         if (!container || !Array.isArray(this.syncStudioLines)) return;
 
+        const fromLangEl = document.getElementById('mxm-trans-from-label');
+        const songLang = document.getElementById('sync-input-lang')?.value || this.currentSong?.lang || 'ja';
+        const langNames = { ja: 'Japanese', zh: 'Chinese', ko: 'Korean', en: 'English' };
+        if (fromLangEl) fromLangEl.textContent = langNames[songLang] || 'Original';
+
         container.innerHTML = this.syncStudioLines.map((line, idx) => `
-            <div class="sync-review-item">
+            <div class="mxm-translate-item">
                 <span class="rev-time">${this.formatSeconds(line.startTime)}</span>
-                <span class="rev-text">${this.escapeHtml(line.text)}</span>
-                <input type="text" class="rev-trans-input" data-index="${idx}" value="${this.escapeHtml(line.translation || '')}" placeholder="Bản dịch tiếng Việt (tùy chọn)...">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button type="button" class="mxm-btn-line-play" style="width: 28px; height: 28px; font-size: 0.75rem;" onclick="window.lyricsApp.seekToSeconds(${line.startTime}); if (!window.lyricsApp.isPlaying) window.lyricsApp.togglePlay();" title="Nghe câu này">
+                        <i class="fa-solid fa-play"></i>
+                    </button>
+                    <span class="rev-text">${this.escapeHtml(line.text)}</span>
+                </div>
+                <input type="text" class="rev-trans-input" data-index="${idx}" value="${this.escapeHtml(line.translation || '')}" placeholder="Bản dịch tiếng Việt...">
             </div>
         `).join('');
 
-        // Lắng nghe thay đổi bản dịch
         container.querySelectorAll('.rev-trans-input').forEach(input => {
             input.addEventListener('input', () => {
                 const idx = parseInt(input.dataset.index, 10);
@@ -4142,29 +4271,34 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
     initSyncStudioEvents() {
         const modal = document.getElementById('sync-studio-modal');
         const closeBtn = document.getElementById('sync-studio-close');
+        const backBtn = document.getElementById('sync-studio-back-btn');
         const plainInput = document.getElementById('sync-plain-lyrics-input');
         const countBadge = document.getElementById('sync-plain-line-count');
-        const btnGoStep2 = document.getElementById('btn-sync-goto-step-2');
-        const btnBackStep1 = document.getElementById('btn-sync-back-step-1');
-        const btnGoStep3 = document.getElementById('btn-sync-goto-step-3');
-        const btnBackStep2 = document.getElementById('btn-sync-back-step-2');
-        const btnTap = document.getElementById('btn-sync-tap-action');
-        const btnPrev = document.getElementById('btn-sync-prev-step');
-        const btnMinus = document.getElementById('btn-sync-minus-half');
-        const btnPlus = document.getElementById('btn-sync-plus-half');
-        const btnSkip = document.getElementById('btn-sync-skip-line');
-        const btnPlayToggle = document.getElementById('btn-sync-play-toggle');
-        const btnRestart = document.getElementById('btn-sync-restart');
+        const btnApplyTranscript = document.getElementById('btn-transcript-apply-sync');
+        const btnTap = document.getElementById('btn-sync-action-down-sync');
+        const btnPrev = document.getElementById('btn-sync-action-up');
+        const btnPlayToggle = document.getElementById('mxm-btn-play-toggle');
+        const btnRewind = document.getElementById('mxm-btn-rewind-3s');
+        const btnForward = document.getElementById('mxm-btn-forward-3s');
+        const progressSlider = document.getElementById('mxm-progress-slider');
         const btnRunAi = document.getElementById('btn-sync-run-ai');
         const btnPublish = document.getElementById('btn-sync-publish');
+        const linesList = document.getElementById('mxm-lines-list');
 
-        if (closeBtn && modal) {
-            closeBtn.addEventListener('click', () => {
-                modal.classList.remove('active');
-                this.stopSyncStudioTicker();
+        // Tab buttons
+        document.querySelectorAll('.mxm-tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetTab = btn.dataset.tab;
+                if (targetTab) this.switchMxmStudioTab(targetTab);
             });
-        }
+        });
 
+        // Close events
+        const doClose = () => this.closeSyncStudioModal();
+        if (closeBtn) closeBtn.addEventListener('click', doClose);
+        if (backBtn) backBtn.addEventListener('click', doClose);
+
+        // Plain lyrics line count update
         if (plainInput && countBadge) {
             plainInput.addEventListener('input', () => {
                 const count = plainInput.value.split('\n').map(l => l.trim()).filter(Boolean).length;
@@ -4172,125 +4306,197 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
             });
         }
 
-        if (btnGoStep2) {
-            btnGoStep2.addEventListener('click', () => {
-                const title = (document.getElementById('sync-input-title')?.value || '').trim();
+        // Apply plain lyrics to Time Sync
+        if (btnApplyTranscript) {
+            btnApplyTranscript.addEventListener('click', () => {
                 const rawLyrics = (plainInput?.value || '').trim();
-                if (!title) {
-                    this.showToast('Vui lòng nhập tiêu đề bài hát!', 'warning');
-                    return;
-                }
                 const lines = rawLyrics.split('\n').map(l => l.trim()).filter(Boolean);
                 if (lines.length === 0) {
-                    this.showToast('Vui lòng dán lời bài hát để bắt đầu căn nhịp!', 'warning');
+                    this.showToast('Vui lòng dán lời bài hát vào ô văn bản!', 'warning');
                     return;
                 }
 
-                this.syncStudioLines = lines.map((text, i) => ({
-                    id: i + 1,
-                    text: text,
-                    startTime: 0,
-                    endTime: 0,
-                    translation: '',
-                    phonetic: '',
-                    words: []
-                }));
+                // Giữ lại các mốc giây đã có nếu lời trùng khớp
+                const oldMap = new Map();
+                (this.syncStudioLines || []).forEach(l => {
+                    if (l.startTime > 0) oldMap.set(l.text, l);
+                });
+
+                this.syncStudioLines = lines.map((text, i) => {
+                    const existing = oldMap.get(text);
+                    return {
+                        id: i + 1,
+                        text: text,
+                        startTime: existing ? existing.startTime : 0,
+                        endTime: existing ? existing.endTime : 0,
+                        translation: existing ? existing.translation : '',
+                        phonetic: existing ? existing.phonetic : '',
+                        words: existing ? existing.words : []
+                    };
+                });
+
                 this.syncStudioIndex = 0;
-
-                // Tự động phát nhạc từ 00:00
-                this.seekToSeconds(0);
-                this.switchSyncStudioStep(2);
-                this.showToast('🎵 Nhạc bắt đầu phát! Hãy gõ phím Space khi ca sĩ bắt đầu hát mỗi câu nhé!', 'info', 4000);
+                this.switchMxmStudioTab('sync');
+                this.showToast(`✨ Đã nạp ${lines.length} câu vào phòng thu Time Sync!`, 'success');
             });
         }
 
-        if (btnBackStep1) btnBackStep1.addEventListener('click', () => this.switchSyncStudioStep(1));
-        if (btnGoStep3) {
-            btnGoStep3.addEventListener('click', () => {
-                this.switchSyncStudioStep(3);
-                this.renderSyncStudioReviewLines();
+        // Delegated events on lines list (Play per line, click row, stepper adjust, delete timestamp)
+        if (linesList) {
+            linesList.addEventListener('click', (e) => {
+                // 1. Click Play button on specific line
+                const playBtn = e.target.closest('.mxm-btn-line-play');
+                if (playBtn) {
+                    e.stopPropagation();
+                    const idx = parseInt(playBtn.dataset.index, 10);
+                    const line = this.syncStudioLines[idx];
+                    if (line) {
+                        this.syncStudioIndex = idx;
+                        const targetTime = line.startTime > 0 ? line.startTime : this.getCurrentMediaTime();
+                        this.seekToSeconds(targetTime);
+                        if (!this.isPlaying) this.togglePlay();
+                        this.renderMxmSyncLines();
+                        this.scrollActiveMxmLineIntoView();
+                        this.showToast(`▶ Đang phát câu ${idx + 1}: ${this.formatSeconds(targetTime)}`, 'info', 1200);
+                    }
+                    return;
+                }
+
+                // 2. Click stepper button (<<, <, >, >>)
+                const stepBtn = e.target.closest('.mxm-step-btn');
+                if (stepBtn) {
+                    e.stopPropagation();
+                    const action = stepBtn.dataset.action;
+                    const idx = parseInt(stepBtn.dataset.index, 10);
+                    const line = this.syncStudioLines[idx];
+                    if (line) {
+                        if (line.startTime <= 0) {
+                            line.startTime = parseFloat(this.getCurrentMediaTime().toFixed(2));
+                        }
+                        if (action === 'minus-large') line.startTime = Math.max(0, parseFloat((line.startTime - 0.5).toFixed(2)));
+                        if (action === 'minus-small') line.startTime = Math.max(0, parseFloat((line.startTime - 0.1).toFixed(2)));
+                        if (action === 'plus-small') line.startTime = parseFloat((line.startTime + 0.1).toFixed(2));
+                        if (action === 'plus-large') line.startTime = parseFloat((line.startTime + 0.5).toFixed(2));
+
+                        if (idx > 0 && this.syncStudioLines[idx - 1]) {
+                            this.syncStudioLines[idx - 1].endTime = line.startTime;
+                        }
+
+                        this.renderMxmSyncLines();
+                    }
+                    return;
+                }
+
+                // 3. Click delete / reset timestamp button
+                const delBtn = e.target.closest('.mxm-btn-line-delete');
+                if (delBtn) {
+                    e.stopPropagation();
+                    const idx = parseInt(delBtn.dataset.index, 10);
+                    if (this.syncStudioLines[idx]) {
+                        this.syncStudioLines[idx].startTime = 0;
+                        this.syncStudioLines[idx].endTime = 0;
+                        this.renderMxmSyncLines();
+                    }
+                    return;
+                }
+
+                // 4. Click row / text to select as current syncing sentence
+                const row = e.target.closest('.mxm-line-row');
+                if (row) {
+                    const idx = parseInt(row.dataset.index, 10);
+                    if (!isNaN(idx)) {
+                        this.syncStudioIndex = idx;
+                        this.renderMxmSyncLines();
+                        this.scrollActiveMxmLineIntoView();
+                    }
+                }
             });
         }
-        if (btnBackStep2) btnBackStep2.addEventListener('click', () => this.switchSyncStudioStep(2));
 
+        // Tap action / Down / Space
         if (btnTap) btnTap.addEventListener('click', () => this.handleSyncStudioTap());
 
-        // Lắng nghe phím Spacebar toàn cục khi đang ở Bước 2 của modal
+        // Up action
+        if (btnPrev) {
+            btnPrev.addEventListener('click', () => {
+                this.syncStudioIndex = Math.max(0, this.syncStudioIndex - 1);
+                this.renderMxmSyncLines();
+                this.scrollActiveMxmLineIntoView();
+            });
+        }
+
+        // Global Keyboard shortcuts in Studio modal
         window.addEventListener('keydown', (e) => {
-            const step2 = document.getElementById('sync-studio-step-2');
-            if (modal && modal.classList.contains('active') && step2 && step2.style.display !== 'none') {
-                if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            if (modal && modal.classList.contains('active')) {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    if (this.activeMxmTab === 'sync') {
+                        this.handleSyncStudioTap();
+                    } else {
+                        this.togglePlay();
+                    }
+                } else if (e.code === 'ArrowDown' && this.activeMxmTab === 'sync') {
                     e.preventDefault();
                     this.handleSyncStudioTap();
+                } else if (e.code === 'ArrowUp' && this.activeMxmTab === 'sync') {
+                    e.preventDefault();
+                    this.syncStudioIndex = Math.max(0, this.syncStudioIndex - 1);
+                    this.renderMxmSyncLines();
+                    this.scrollActiveMxmLineIntoView();
+                } else if (e.code === 'ArrowLeft') {
+                    e.preventDefault();
+                    this.seekToSeconds(Math.max(0, this.getCurrentMediaTime() - 3));
+                } else if (e.code === 'ArrowRight') {
+                    e.preventDefault();
+                    this.seekToSeconds(this.getCurrentMediaTime() + 3);
                 }
             }
         });
 
-        if (btnPrev) {
-            btnPrev.addEventListener('click', () => {
-                this.syncStudioIndex = Math.max(0, this.syncStudioIndex - 1);
-                this.updateSyncStudioStep2Ui();
+        // Bottom Scrubber Slider
+        if (progressSlider) {
+            progressSlider.addEventListener('input', (e) => {
+                this.isDraggingMxmSlider = true;
+                const dur = this.getCurrentMediaDuration();
+                const previewSec = (parseFloat(e.target.value) / 100) * dur;
+                const curTimeEl = document.getElementById('mxm-current-time-display');
+                const fillEl = document.getElementById('mxm-progress-fill');
+                if (curTimeEl) curTimeEl.textContent = this.formatSeconds(previewSec);
+                if (fillEl) fillEl.style.width = `${e.target.value}%`;
+            });
+
+            progressSlider.addEventListener('change', (e) => {
+                this.isDraggingMxmSlider = false;
+                const dur = this.getCurrentMediaDuration();
+                const targetSec = (parseFloat(e.target.value) / 100) * dur;
+                this.seekToSeconds(targetSec);
             });
         }
 
-        if (btnMinus) {
-            btnMinus.addEventListener('click', () => {
-                const targetIdx = this.syncStudioIndex > 0 ? this.syncStudioIndex - 1 : this.syncStudioIndex;
-                if (this.syncStudioLines && this.syncStudioLines[targetIdx]) {
-                    this.syncStudioLines[targetIdx].startTime = Math.max(0, parseFloat((this.syncStudioLines[targetIdx].startTime - 0.5).toFixed(2)));
-                    this.showToast(`Đã lùi 0.5s câu ${targetIdx + 1}`, 'info', 1000);
-                    this.updateSyncStudioStep2Ui();
-                }
-            });
-        }
+        // Transport controls
+        if (btnPlayToggle) btnPlayToggle.addEventListener('click', () => this.togglePlay());
+        if (btnRewind) btnRewind.addEventListener('click', () => this.seekToSeconds(Math.max(0, this.getCurrentMediaTime() - 3)));
+        if (btnForward) btnForward.addEventListener('click', () => this.seekToSeconds(this.getCurrentMediaTime() + 3));
 
-        if (btnPlus) {
-            btnPlus.addEventListener('click', () => {
-                const targetIdx = this.syncStudioIndex > 0 ? this.syncStudioIndex - 1 : this.syncStudioIndex;
-                if (this.syncStudioLines && this.syncStudioLines[targetIdx]) {
-                    this.syncStudioLines[targetIdx].startTime = parseFloat((this.syncStudioLines[targetIdx].startTime + 0.5).toFixed(2));
-                    this.showToast(`Đã tăng 0.5s câu ${targetIdx + 1}`, 'info', 1000);
-                    this.updateSyncStudioStep2Ui();
-                }
-            });
-        }
-
-        if (btnSkip) {
-            btnSkip.addEventListener('click', () => {
-                this.syncStudioIndex++;
-                this.updateSyncStudioStep2Ui();
-            });
-        }
-
-        if (btnPlayToggle) {
-            btnPlayToggle.addEventListener('click', () => {
-                this.togglePlay();
-            });
-        }
-
-        if (btnRestart) {
-            btnRestart.addEventListener('click', () => {
-                this.seekToSeconds(0);
-                this.syncStudioIndex = 0;
-                this.updateSyncStudioStep2Ui();
-                this.showToast('Đã phát lại từ 00:00 và đặt lại câu 1', 'info', 1500);
-            });
-        }
-
-        // Chạy AI phân tích & dịch toàn bộ lời
+        // Gemini AI auto-translation
         if (btnRunAi) {
             btnRunAi.addEventListener('click', async () => {
-                if (!Array.isArray(this.syncStudioLines) || this.syncStudioLines.length === 0) return;
+                if (!Array.isArray(this.syncStudioLines) || this.syncStudioLines.length === 0) {
+                    this.showToast('Chưa có danh sách câu để AI dịch!', 'warning');
+                    return;
+                }
 
-                btnRunAi.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang phân tích cùng Gemini AI...';
+                btnRunAi.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Gemini AI đang phân tích toàn bài...';
                 btnRunAi.disabled = true;
 
                 try {
-                    const lang = document.getElementById('sync-input-lang')?.value || 'ja';
+                    const lang = document.getElementById('sync-input-lang')?.value || this.currentSong?.lang || 'ja';
                     const sampleTexts = this.syncStudioLines.map(l => l.text).join('\n');
 
                     if (window.MHENT_CONFIG && window.MHENT_CONFIG.GEMINI_API_KEY) {
-                        const prompt = `Bạn là trợ lý học ngoại ngữ chuyên nghiệp. Hãy dịch các câu sau sang tiếng Việt và bóc tách 1-3 từ vựng nổi bật cho từng câu:\nNgôn ngữ gốc: ${lang}\nNội dung các câu:\n${sampleTexts}\n\nTrả về mảng JSON đúng thứ tự: [{"translation": "...", "phonetic": "...", "words": [{"word": "...", "meaning": "...", "pos": "noun|verb|adj", "phonetic": "..."}]}]`;
+                        const prompt = `Bạn là trợ lý học ngoại ngữ chuyên nghiệp. Hãy dịch các câu sau sang tiếng Việt chuẩn xác và tự nhiên theo ngữ cảnh bài hát:\nNgôn ngữ gốc: ${lang}\nNội dung các câu:\n${sampleTexts}\n\nTrả về mảng JSON đúng thứ tự: [{"translation": "...", "phonetic": "..."}]`;
                         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${window.MHENT_CONFIG.GEMINI_API_KEY}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -4308,7 +4514,6 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
                                     if (this.syncStudioLines[i]) {
                                         this.syncStudioLines[i].translation = item.translation || '';
                                         this.syncStudioLines[i].phonetic = item.phonetic || '';
-                                        this.syncStudioLines[i].words = Array.isArray(item.words) ? item.words : [];
                                     }
                                 });
                             }
@@ -4316,23 +4521,28 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
                     }
 
                     this.renderSyncStudioReviewLines();
-                    this.showToast('✨ Gemini AI đã bóc tách từ vựng & dịch nghĩa toàn bài thành công!', 'success', 3000);
+                    this.showToast('✨ Gemini AI đã dịch nghĩa toàn bài thành công!', 'success', 3000);
                 } catch (e) {
                     console.warn('[AI Sync Studio Analysis]', e);
                     this.showToast('Lỗi AI, bạn có thể tự nhập bản dịch nhé!', 'warning');
                 } finally {
-                    btnRunAi.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> AI Bóc Tách Từ Vựng & Dịch Toàn Bộ';
+                    btnRunAi.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> AI Bóc Tách Từ Vựng & Dịch Toàn Bộ (Gemini)';
                     btnRunAi.disabled = false;
                 }
             });
         }
 
-        // Xuất bản bài hát
+        // Publish to MHEnt Study
         if (btnPublish) {
             btnPublish.addEventListener('click', async () => {
-                const title = (document.getElementById('sync-input-title')?.value || 'Bài hát mới').trim();
-                const artist = (document.getElementById('sync-input-artist')?.value || 'Nghệ sĩ').trim();
-                const lang = document.getElementById('sync-input-lang')?.value || 'ja';
+                if (!Array.isArray(this.syncStudioLines) || this.syncStudioLines.length === 0) {
+                    this.showToast('Vui lòng thêm lời bài hát trước khi xuất bản!', 'warning');
+                    return;
+                }
+
+                const title = (document.getElementById('sync-input-title')?.value || this.currentSong?.title || 'Bài hát mới').trim();
+                const artist = (document.getElementById('sync-input-artist')?.value || this.currentSong?.artist || 'Nghệ sĩ').trim();
+                const lang = document.getElementById('sync-input-lang')?.value || this.currentSong?.lang || 'ja';
 
                 let defaultAuthor = 'Học viên MHEnt';
                 try {
@@ -4340,7 +4550,7 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
                     if (savedProfile.displayName || savedProfile.name) defaultAuthor = savedProfile.displayName || savedProfile.name;
                 } catch (e) {}
 
-                const songId = 'synced_' + Date.now();
+                const songId = this.currentSong?.id || ('synced_' + Date.now());
                 const newSong = {
                     id: songId,
                     title: title,
@@ -4349,21 +4559,20 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
                     thumbnail: this.currentSong ? this.currentSong.thumbnail : 'https://img.youtube.com/vi/OlZK4BPps_g/hqdefault.jpg',
                     youtube_id: this.currentSong ? this.currentSong.youtube_id : '',
                     audio_url: this.currentSong ? this.currentSong.audio_url : '',
-                    duration: Math.ceil(this.syncStudioLines[this.syncStudioLines.length - 1]?.endTime || 180),
+                    duration: Math.ceil(this.syncStudioLines[this.syncStudioLines.length - 1]?.endTime || this.getCurrentMediaDuration() || 180),
                     synced_lyrics: this.syncStudioLines,
                     plain_lyrics: this.syncStudioLines.map(l => l.text).join('\n'),
-                    views: 1,
-                    likes: 0,
+                    views: this.currentSong?.views || 1,
+                    likes: this.currentSong?.likes || 0,
                     created_by: defaultAuthor,
-                    community_versions: []
+                    community_versions: this.currentSong?.community_versions || []
                 };
 
                 if (window.studyCloud && typeof window.studyCloud.saveSong === 'function') {
                     await window.studyCloud.saveSong(newSong);
                 }
 
-                modal.classList.remove('active');
-                this.stopSyncStudioTicker();
+                this.closeSyncStudioModal();
                 this.loadSong(newSong);
                 this.showToast(`🎉 Xuất bản bài hát "${title}" thành công! Lời Karaoke đã sẵn sàng.`, 'success', 4000);
             });
