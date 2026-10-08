@@ -194,13 +194,20 @@ jobs:
           *Build tự động bởi GitHub Actions • ${GITHUB_SHA}*
           EOF
 
+          mapfile -d '' -t WINDOWS_ASSETS < <(find release-assets/windows -maxdepth 1 -type f \( -name '*.exe' -o -name '*.nsis.7z' \) -print0)
+          mapfile -d '' -t ANDROID_ASSETS < <(find release-assets/android -maxdepth 1 -type f -name '*.apk' -print0)
+          if [ "${#WINDOWS_ASSETS[@]}" -eq 0 ] || [ "${#ANDROID_ASSETS[@]}" -eq 0 ]; then
+            echo "Required release assets are missing" >&2
+            exit 1
+          fi
+
           for attempt in 1 2 3 4 5; do
             if gh release view "$TAG" >/dev/null 2>&1; then
               gh release edit "$TAG" --target "$GITHUB_SHA" --title "MHEnt Study v${VERSION}" --notes-file "$NOTES_FILE"
             else
               gh release create "$TAG" --target "$GITHUB_SHA" --title "MHEnt Study v${VERSION}" --notes-file "$NOTES_FILE"
             fi
-            if gh release upload "$TAG" release-assets/windows/*.exe release-assets/windows/*.nsis.7z release-assets/android/*.apk --clobber; then
+            if gh release upload "$TAG" "${WINDOWS_ASSETS[@]}" "${ANDROID_ASSETS[@]}" --clobber; then
               exit 0
             fi
             echo "Release API attempt ${attempt} failed; retrying..."
