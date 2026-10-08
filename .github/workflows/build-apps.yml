@@ -144,24 +144,24 @@ jobs:
           ls -la release-assets/windows/ || echo "No windows files"
           ls -la release-assets/android/ || echo "No android files"
 
+          mkdir -p release-assets/windows/release release-assets/android/release
           while IFS= read -r -d '' f; do
             FNAME="$(basename "$f")"
             NEWNAME="$(printf '%s' "$FNAME" | sed 's/ /-/g')"
-            if [ "$FNAME" != "$NEWNAME" ]; then
-              mv "$f" "release-assets/windows/$NEWNAME"
-            fi
-          done < <(find release-assets/windows -maxdepth 1 -type f \( -name '*.exe' -o -name '*.nsis.7z' \) -print0)
+            cp "$f" "release-assets/windows/release/$NEWNAME"
+          done < <(find release-assets/windows -type f \( -name '*.exe' -o -name '*.nsis.7z' \) -print0)
 
-          # Flatten android apks
-          find release-assets/android -name "*.apk" -exec mv {} release-assets/android/ \; 2>/dev/null || true
-          for f in release-assets/android/*.apk; do
-            [ -f "$f" ] || continue
-            FNAME=$(basename "$f")
-            NEWNAME=$(printf '%s' "$FNAME" | sed 's/ /-/g')
-            if [ "$FNAME" != "$NEWNAME" ]; then
-              mv "$f" "release-assets/android/$NEWNAME"
-            fi
-          done
+          # Flatten Android APKs from any artifact directory structure.
+          while IFS= read -r -d '' f; do
+            FNAME="$(basename "$f")"
+            NEWNAME="$(printf '%s' "$FNAME" | sed 's/ /-/g')"
+            cp "$f" "release-assets/android/release/$NEWNAME"
+          done < <(find release-assets/android -type f -name '*.apk' -print0)
+
+          # Use the flat directories for the release upload.
+          find release-assets/windows/release -maxdepth 1 -type f -exec mv {} release-assets/windows/ \;
+          find release-assets/android/release -maxdepth 1 -type f -exec mv {} release-assets/android/ \;
+          rmdir release-assets/windows/release release-assets/android/release
 
       - name: Create or Update GitHub Release
         shell: bash
