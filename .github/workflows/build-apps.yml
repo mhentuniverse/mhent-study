@@ -32,16 +32,27 @@ jobs:
         run: node build-web.js
 
       - name: Build Windows Installer & Portable EXE
-        run: npm run dist -- --publish never
+        shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $logPath = Join-Path $env:RUNNER_TEMP "windows-build.log"
+          $output = & node .\node_modules\electron-builder\cli.js --publish never 2>&1
+          $exitCode = $LASTEXITCODE
+          $output | Tee-Object -FilePath $logPath
+          if ($exitCode -ne 0) {
+            Write-Error "Windows build failed with exit code $exitCode"
+            exit $exitCode
+          }
 
       - name: Upload Windows Executables
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: MHEnt-Study-Windows-Desktop
           path: |
             dist/*.exe
+            ${{ runner.temp }}/windows-build.log
           if-no-files-found: error
 
   # ==========================================
