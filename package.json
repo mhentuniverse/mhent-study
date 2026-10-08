@@ -40,9 +40,8 @@
   "build": {
     "appId": "com.mhentuniverse.study",
     "productName": "MHEnt Study",
-    "copyright": "© 2025 Miyazaki Haruto Entertainment Co., Ltd.",
+    "copyright": "© 2026 Miyazaki Haruto Entertainment Co., Ltd.",
     "buildVersion": "1.0.0",
-    "buildResources": "installer",
     "directories": {
       "output": "dist",
       "buildResources": "installer"
@@ -64,11 +63,15 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "assets/study-logo.png",
@@ -93,7 +96,10 @@
       "menuCategory": "MHEnt Universe",
       "deleteAppDataOnUninstall": false,
       "warningsAsErrors": false,
-      "installerLanguages": ["Vietnamese", "English"],
+      "installerLanguages": [
+        "Vietnamese",
+        "English"
+      ],
       "language": "1066",
       "displayLanguageSelector": false
     },
