@@ -4,8 +4,12 @@
 ; ================================================================
 
 ; ---- Branding ----
-!define PRODUCT_NAME "MHEnt Study"
-!define PRODUCT_VERSION "1.0.0"
+!ifndef PRODUCT_NAME
+  !define PRODUCT_NAME "MHEnt Study"
+!endif
+!ifndef PRODUCT_VERSION
+  !define PRODUCT_VERSION "1.0.0"
+!endif
 !define PRODUCT_PUBLISHER "Miyazaki Haruto Entertainment Co., Ltd."
 !define PRODUCT_WEB_SITE "https://study.mhentuniverse.com"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
@@ -65,10 +69,6 @@
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
 !insertmacro MUI_UNPAGE_FINISH
-
-; ---- Language ----
-!insertmacro MUI_LANGUAGE "Vietnamese"
-!insertmacro MUI_LANGUAGE "English"
 
 ; ================================================================
 ; General Settings
