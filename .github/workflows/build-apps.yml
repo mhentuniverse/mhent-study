@@ -52,6 +52,7 @@ jobs:
           name: MHEnt-Study-Windows-Desktop
           path: |
             dist/*.exe
+            dist/*.nsis.7z
             ${{ runner.temp }}/windows-build.log
           if-no-files-found: error
 
@@ -137,24 +138,29 @@ jobs:
         continue-on-error: true
 
       - name: Rename artifacts for release
+        shell: bash
         run: |
           VERSION="${{ steps.pkg.outputs.version }}"
           ls -la release-assets/windows/ || echo "No windows files"
           ls -la release-assets/android/ || echo "No android files"
-          # Rename Windows files
-          for f in release-assets/windows/*.exe; do
-            [ -f "$f" ] || continue
-            FNAME=$(basename "$f")
-            NEWNAME=$(echo "$FNAME" | sed 's/ /-/g')
-            mv "$f" "release-assets/windows/$NEWNAME"
-          done
+
+          while IFS= read -r -d '' f; do
+            FNAME="$(basename "$f")"
+            NEWNAME="$(printf '%s' "$FNAME" | sed 's/ /-/g')"
+            if [ "$FNAME" != "$NEWNAME" ]; then
+              mv "$f" "release-assets/windows/$NEWNAME"
+            fi
+          done < <(find release-assets/windows -maxdepth 1 -type f \( -name '*.exe' -o -name '*.nsis.7z' \) -print0)
+
           # Flatten android apks
           find release-assets/android -name "*.apk" -exec mv {} release-assets/android/ \; 2>/dev/null || true
           for f in release-assets/android/*.apk; do
             [ -f "$f" ] || continue
             FNAME=$(basename "$f")
-            NEWNAME=$(echo "$FNAME" | sed 's/ /-/g')
-            mv "$f" "release-assets/android/$NEWNAME"
+            NEWNAME=$(printf '%s' "$FNAME" | sed 's/ /-/g')
+            if [ "$FNAME" != "$NEWNAME" ]; then
+              mv "$f" "release-assets/android/$NEWNAME"
+            fi
           done
 
       - name: Create or Update GitHub Release
