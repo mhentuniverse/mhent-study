@@ -1,6 +1,6 @@
 ĐIỀU KHOẢN SỬ DỤNG PHẦN MỀM MHENT STUDY
 Miyazaki Haruto Entertainment Co., Ltd.
-Phiên bản 1.0 — Có hiệu lực từ năm 2025
+Phiên bản 1.0 — Có hiệu lực từ năm 2026
 
 =================================================================
 
@@ -54,7 +54,7 @@ hoàn toàn chính xác hoặc đầy đủ.
 Phần mềm có thể thu thập và lưu trữ dữ liệu học tập cục bộ và
 đồng bộ hóa lên dịch vụ đám mây khi có kết nối Internet. Việc
 sử dụng dịch vụ đám mây tuân theo Chính sách Quyền riêng tư của
-MHEnt tại: https://mhentuniverse.com/privacy
+MHEnt tại: https://docs.mhentuniverse.com/privacy
 
 Chúng tôi cam kết:
   - Không bán dữ liệu cá nhân của bạn cho bên thứ ba
@@ -102,6 +102,6 @@ Study App: https://study.mhentuniverse.com
 Email: support@mhentuniverse.com
 
 =================================================================
-© 2025 Miyazaki Haruto Entertainment Co., Ltd.
+© 2026 Miyazaki Haruto Entertainment Co., Ltd.
 Mọi quyền được bảo lưu.
 =================================================================
