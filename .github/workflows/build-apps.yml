@@ -22,11 +22,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build Web Assets
         run: node build-web.js
@@ -57,7 +57,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
 
       - name: Setup Java (JDK 17)
@@ -68,7 +68,7 @@ jobs:
           cache: 'gradle'
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build Web Assets & Sync Capacitor
         run: |
@@ -144,30 +144,48 @@ jobs:
           done
 
       - name: Create or Update GitHub Release
-        uses: ncipollo/release-action@v1
-        with:
-          tag: v${{ steps.pkg.outputs.version }}
-          name: "MHEnt Study v${{ steps.pkg.outputs.version }}"
-          body: |
-            ## 📦 MHEnt Study v${{ steps.pkg.outputs.version }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.pkg.outputs.version }}
+        run: |
+          TAG="v${VERSION}"
+          NOTES_FILE="$RUNNER_TEMP/release-notes.md"
+          trap 'rm -f "$NOTES_FILE"' EXIT
+          cat > "$NOTES_FILE" <<EOF
+          ## 📦 MHEnt Study v${VERSION}
 
-            ### Tải về / Download
+          ### Tải về / Download
 
-            | Nền tảng | File | Mô tả |
-            |---|---|---|
-            | 🖥️ Windows | `MHEnt-Study-Setup-*.exe` | Bộ cài đặt (NSIS Installer) |
-            | 🖥️ Windows | `MHEnt-Study-*.exe` (Portable) | Không cần cài đặt, chạy thẳng |
-            | 🤖 Android | `app-debug.apk` | APK Debug (cho thử nghiệm) |
+          | Nền tảng | File | Mô tả |
+          |---|---|---|
+          | 🖥️ Windows | `MHEnt-Study-Setup-*.exe` | Bộ cài đặt (NSIS Installer) |
+          | 🖥️ Windows | `MHEnt-Study-*.exe` (Portable) | Không cần cài đặt, chạy thẳng |
+          | 🤖 Android | `app-debug.apk` | APK Debug (cho thử nghiệm) |
 
-            ### Hướng dẫn cài đặt
-            - **Windows**: Tải file `.exe` → Chạy → Làm theo hướng dẫn
-            - **Android**: Tải file `.apk` → Bật "Cài ứng dụng từ nguồn không xác định" → Cài đặt
-            - **iPhone/iPad (iOS)**: Vào [study.mhentuniverse.com](https://study.mhentuniverse.com) bằng Safari → Nhấn **Share** → **Thêm vào Màn hình chính**
+          ### Hướng dẫn cài đặt
+          - **Windows**: Tải file `.exe` → Chạy → Làm theo hướng dẫn
+          - **Android**: Tải file `.apk` → Bật "Cài ứng dụng từ nguồn không xác định" → Cài đặt
+          - **iPhone/iPad (iOS)**: Vào [study.mhentuniverse.com](https://study.mhentuniverse.com) bằng Safari → Nhấn **Share** → **Thêm vào Màn hình chính**
 
-            ---
-            *Build tự động bởi GitHub Actions • ${{ github.sha }}*
-          artifacts: "release-assets/windows/*.exe,release-assets/android/*.apk"
-          allowUpdates: true
-          removeArtifacts: false
-          replacesArtifacts: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ---
+          *Build tự động bởi GitHub Actions • ${GITHUB_SHA}*
+          EOF
+
+          for attempt in 1 2 3 4 5; do
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              gh release edit "$TAG" --target "$GITHUB_SHA" --title "MHEnt Study v${VERSION}" --notes-file "$NOTES_FILE"
+            else
+              gh release create "$TAG" --target "$GITHUB_SHA" --title "MHEnt Study v${VERSION}" --notes-file "$NOTES_FILE"
+            fi
+            if gh release upload "$TAG" release-assets/windows/*.exe release-assets/android/*.apk --clobber; then
+              exit 0
+            fi
+            echo "Release API attempt ${attempt} failed; retrying..."
+            sleep 5
+          done
+          exit 1
+
+      - name: Cleanup release files
+        if: always()
+        run: rm -f "${{ runner.temp }}/release-notes.md"
