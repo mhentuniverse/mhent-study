@@ -198,7 +198,7 @@ jobs:
             else
               gh release create "$TAG" --target "$GITHUB_SHA" --title "MHEnt Study v${VERSION}" --notes-file "$NOTES_FILE"
             fi
-            if gh release upload "$TAG" release-assets/windows/*.exe release-assets/android/*.apk --clobber; then
+            if gh release upload "$TAG" release-assets/windows/*.exe release-assets/windows/*.nsis.7z release-assets/android/*.apk --clobber; then
               exit 0
             fi
             echo "Release API attempt ${attempt} failed; retrying..."
