@@ -155,7 +155,11 @@ jobs:
           # Flatten Android APKs from any artifact directory structure.
           while IFS= read -r -d '' f; do
             FNAME="$(basename "$f")"
-            NEWNAME="$(printf '%s' "$FNAME" | sed 's/ /-/g')"
+            case "$FNAME" in
+              app-debug.apk) NEWNAME="MHEnt-Study-Android-Debug-v${VERSION}.apk" ;;
+              app-release-unsigned.apk) NEWNAME="MHEnt-Study-Android-Release-v${VERSION}.apk" ;;
+              *) NEWNAME="MHEnt-Study-Android-v${VERSION}.apk" ;;
+            esac
             DEST="release-assets/android/release/$NEWNAME"
             [ "$f" != "$DEST" ] && cp "$f" "$DEST"
           done < <(find release-assets/android -type f -name '*.apk' -print0)
@@ -185,7 +189,8 @@ jobs:
           |---|---|---|
           | 🖥️ Windows | `MHEnt-Study-Setup-*.exe` | Bộ cài đặt (NSIS Installer) |
           | 🖥️ Windows | `MHEnt-Study-*.exe` (Portable) | Không cần cài đặt, chạy thẳng |
-          | 🤖 Android | `app-debug.apk` | APK Debug (cho thử nghiệm) |
+          | 🤖 Android | `MHEnt-Study-Android-Debug-v${VERSION}.apk` | APK Debug (cho thử nghiệm) |
+          | 🤖 Android | `MHEnt-Study-Android-Release-v${VERSION}.apk` | APK Release (unsigned) |
 
           ### Hướng dẫn cài đặt
           - **Windows**: Tải file `.exe` → Chạy → Làm theo hướng dẫn
