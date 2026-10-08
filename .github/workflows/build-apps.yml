@@ -32,7 +32,9 @@ jobs:
         run: node build-web.js
 
       - name: Build Windows Installer & Portable EXE
-        run: npm run dist
+        run: npm run dist -- --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Windows Executables
         uses: actions/upload-artifact@v4
@@ -65,9 +67,6 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install Dependencies
         run: npm install
 
@@ -91,7 +90,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MHEnt-Study-Android-APK
-          path: |
-            android/app/build/outputs/apk/debug/*.apk
-            android/app/build/outputs/apk/release/*.apk
-          if-no-files-found: error
+          path: android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: warn
