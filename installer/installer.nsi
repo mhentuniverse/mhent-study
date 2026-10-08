@@ -24,12 +24,24 @@
 !define MUI_TEXTCOLOR "E2E8F0"
 
 ; Sidebar & Header images
-!define MUI_WELCOMEFINISHPAGE_BITMAP "${BUILD_RESOURCES_DIR}\installer-sidebar.jpg"
-!define MUI_UNWELCOMEFINISHPAGE_BITMAP "${BUILD_RESOURCES_DIR}\installer-sidebar.jpg"
-!define MUI_HEADERIMAGE
-!define MUI_HEADERIMAGE_BITMAP "${BUILD_RESOURCES_DIR}\installer-header.jpg"
-!define MUI_HEADERIMAGE_UNBITMAP "${BUILD_RESOURCES_DIR}\installer-header.jpg"
-!define MUI_HEADERIMAGE_RIGHT
+!ifndef MUI_WELCOMEFINISHPAGE_BITMAP
+  !define MUI_WELCOMEFINISHPAGE_BITMAP "${BUILD_RESOURCES_DIR}\installer-sidebar.jpg"
+!endif
+!ifndef MUI_UNWELCOMEFINISHPAGE_BITMAP
+  !define MUI_UNWELCOMEFINISHPAGE_BITMAP "${BUILD_RESOURCES_DIR}\installer-sidebar.jpg"
+!endif
+!ifndef MUI_HEADERIMAGE
+  !define MUI_HEADERIMAGE
+!endif
+!ifndef MUI_HEADERIMAGE_BITMAP
+  !define MUI_HEADERIMAGE_BITMAP "${BUILD_RESOURCES_DIR}\installer-header.jpg"
+!endif
+!ifndef MUI_HEADERIMAGE_UNBITMAP
+  !define MUI_HEADERIMAGE_UNBITMAP "${BUILD_RESOURCES_DIR}\installer-header.jpg"
+!endif
+!ifndef MUI_HEADERIMAGE_RIGHT
+  !define MUI_HEADERIMAGE_RIGHT
+!endif
 
 ; Abort confirm
 !define MUI_ABORTWARNING
