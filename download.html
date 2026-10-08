@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tải về | MHEnt. Study App</title>
+    <meta name="description"
+        content="Tải ứng dụng MHEnt Study cho Windows, Android và iOS. Học ngoại ngữ mọi lúc mọi nơi, kể cả khi không có mạng.">
+    <meta name="theme-color" content="#0b0f19">
+    <link rel="icon" type="image/png" sizes="48x48" href="/assets/study-logo.png">
+    <link rel="apple-touch-icon" href="/assets/study-logo.png">
+    <link rel="manifest" href="/manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* ====== Reset & Base ====== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-dark: #080c16;
+            --bg-card: rgba(255,255,255,0.04);
+            --bg-card-hover: rgba(255,255,255,0.07);
+            --border: rgba(255,255,255,0.08);
+            --border-glow: rgba(139,92,246,0.4);
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --win-color: #0078d4;
+            --android-color: #3ddc84;
+            --ios-color: #98989d;
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', 'Nunito', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ====== Background ====== */
+        .bg-glow {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .bg-glow::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            width: 60%;
+            height: 60%;
+            background: radial-gradient(ellipse, rgba(139,92,246,0.15) 0%, transparent 70%);
+        }
+        .bg-glow::after {
+            content: '';
+            position: absolute;
+            bottom: -10%;
+            right: -10%;
+            width: 50%;
+            height: 50%;
+            background: radial-gradient(ellipse, rgba(236,72,153,0.1) 0%, transparent 70%);
+        }
+
+        /* ====== Nav ====== */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 40px;
+            background: rgba(8,12,22,0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+        }
+        .nav-brand img {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+        }
+        .nav-brand span {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, #a78bfa, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+        .nav-link {
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .nav-link:hover { color: var(--text); background: var(--bg-card); }
+        .nav-link.active { color: white; background: rgba(139,92,246,0.2); }
+
+        /* ====== Hero ====== */
+        .hero {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 80px 24px 40px;
+        }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(139,92,246,0.4);
+            background: rgba(139,92,246,0.1);
+            color: #a78bfa;
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            animation: fadeDown 0.6s ease both;
+        }
+        .hero-badge .dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%,100% { opacity:1; transform:scale(1); }
+            50% { opacity:0.5; transform:scale(1.3); }
+        }
+        .hero h1 {
+            font-family: 'Nunito', sans-serif;
+            font-size: clamp(2.2rem, 5vw, 3.8rem);
+            font-weight: 900;
+            line-height: 1.15;
+            margin-bottom: 20px;
+            animation: fadeDown 0.6s 0.1s ease both;
+        }
+        .hero h1 .gradient {
+            background: linear-gradient(135deg, #a78bfa 0%, #ec4899 50%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 560px;
+            margin: 0 auto 48px;
+            line-height: 1.7;
+            animation: fadeDown 0.6s 0.2s ease both;
+        }
+        @keyframes fadeDown {
+            from { opacity:0; transform:translateY(-16px); }
+            to { opacity:1; transform:translateY(0); }
+        }
+
+        /* ====== Version Tag ====== */
+        .version-info {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 60px;
+            animation: fadeDown 0.6s 0.3s ease both;
+        }
+        .version-info strong { color: var(--text); }
+
+        /* ====== Download Grid ====== */
+        .download-section {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+        }
+        .section-label {
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+        }
+
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .platform-card {
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px 28px;
+            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+            overflow: hidden;
+            animation: fadeUp 0.6s ease both;
+        }
+        .platform-card:nth-child(1) { animation-delay: 0.1s; }
+        .platform-card:nth-child(2) { animation-delay: 0.2s; }
+        .platform-card:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes fadeUp {
+            from { opacity:0; transform:translateY(24px); }
+            to { opacity:1; transform:translateY(0); }
+        }
+
+        .platform-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .platform-card.windows::before {
+            background: linear-gradient(135deg, rgba(0,120,212,0.08) 0%, transparent 60%);
+        }
+        .platform-card.android::before {
+            background: linear-gradient(135deg, rgba(61,220,132,0.08) 0%, transparent 60%);
+        }
+        .platform-card.ios::before {
+            background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 60%);
+        }
+        .platform-card:hover::before { opacity: 1; }
+        .platform-card:hover {
+            border-color: rgba(255,255,255,0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        .platform-card.windows:hover { border-color: rgba(0,120,212,0.4); }
+        .platform-card.android:hover { border-color: rgba(61,220,132,0.4); }
+
+        .platform-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+        }
+        .platform-card.windows .platform-icon { background: rgba(0,120,212,0.15); color: #60a5fa; }
+        .platform-card.android .platform-icon { background: rgba(61,220,132,0.15); color: #3ddc84; }
+        .platform-card.ios .platform-icon { background: rgba(255,255,255,0.06); color: #d1d5db; }
+
+        .platform-name {
+            font-family: 'Nunito', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+        .platform-card.windows .platform-name { color: #93c5fd; }
+        .platform-card.android .platform-name { color: #86efac; }
+        .platform-card.ios .platform-name { color: #d1d5db; }
+
+        .platform-desc {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: rgba(0,0,0,0.25);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+        }
+        .file-item .file-icon { font-size: 1rem; }
+        .file-item .file-name { flex: 1; color: var(--text-muted); font-family: monospace; }
+        .file-item .file-size { color: var(--text-muted); font-size: 0.78rem; }
+
+        /* Buttons */
+        .btn-download {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-family: 'Nunito', sans-serif;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-download::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0);
+            transition: background 0.2s;
+        }
+        .btn-download:hover::after { background: rgba(255,255,255,0.08); }
+        .btn-download:active { transform: scale(0.98); }
+
+        .platform-card.windows .btn-download {
+            background: linear-gradient(135deg, #1d6fb5, #0078d4);
+            color: white;
+            box-shadow: 0 4px 20px rgba(0,120,212,0.3);
+        }
+        .platform-card.windows .btn-download:hover {
+            box-shadow: 0 6px 28px rgba(0,120,212,0.5);
+        }
+        .platform-card.android .btn-download {
+            background: linear-gradient(135deg, #1a7a48, #3ddc84);
+            color: #001a0c;
+            box-shadow: 0 4px 20px rgba(61,220,132,0.25);
+        }
+        .platform-card.android .btn-download:hover {
+            box-shadow: 0 6px 28px rgba(61,220,132,0.4);
+        }
+        .platform-card.ios .btn-download {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: var(--text);
+        }
+        .platform-card.ios .btn-download:hover {
+            background: rgba(255,255,255,0.12);
+        }
+
+        .btn-secondary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 11px 20px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text-muted);
+            background: transparent;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        .btn-secondary:hover {
+            color: var(--text);
+            border-color: rgba(255,255,255,0.2);
+            background: var(--bg-card-hover);
+        }
+
+        .badge-pwa {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: rgba(16,185,129,0.12);
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 999px;
+            color: #34d399;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        /* ====== iOS Steps ====== */
+        .ios-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .ios-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .ios-step-num {
+            min-width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+        .ios-step span { line-height: 1.5; padding-top: 2px; }
+
+        /* ====== Features Strip ====== */
+        .features-strip {
+            position: relative;
+            z-index: 1;
+            background: rgba(255,255,255,0.02);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 40px 24px;
+            margin-bottom: 60px;
+        }
+        .features-inner {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 32px;
+            text-align: center;
+        }
+        .feature-item { }
+        .feature-icon {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        .feature-title {
+            font-weight: 700;
+            font-size: 0.92rem;
+            margin-bottom: 4px;
+            color: var(--text);
+        }
+        .feature-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* ====== Footer ====== */
+        footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 32px 24px;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            border-top: 1px solid var(--border);
+        }
+        footer a { color: #a78bfa; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        /* ====== Changelog Banner ====== */
+        .changelog-banner {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto 48px;
+            padding: 0 24px;
+        }
+        .changelog-card {
+            background: rgba(139,92,246,0.06);
+            border: 1px solid rgba(139,92,246,0.25);
+            border-radius: var(--radius);
+            padding: 24px 28px;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+        }
+        .changelog-icon {
+            font-size: 1.5rem;
+            min-width: 40px;
+            text-align: center;
+        }
+        .changelog-content h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #c4b5fd;
+        }
+        .changelog-list {
+            list-style: none;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .changelog-list li::before { content: '✦  '; color: #7c3aed; }
+
+        /* ====== Responsive ====== */
+        @media (max-width: 640px) {
+            nav { padding: 14px 20px; }
+            .nav-links { display: none; }
+            .hero { padding: 60px 20px 30px; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-glow" aria-hidden="true"></div>
+
+    <!-- Nav -->
+    <nav>
+        <a href="/index.html" class="nav-brand">
+            <img src="/assets/study-logo.png" alt="MHEnt Study Logo">
+            <span>MHEnt. Study</span>
+        </a>
+        <div class="nav-links">
+            <a href="/index.html" class="nav-link">Trang chủ</a>
+            <a href="/download.html" class="nav-link active">Tải về</a>
+            <a href="https://github.com/mhentuniverse/mhent-study" target="_blank" class="nav-link">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-badge">
+            <span class="dot"></span>
+            Phiên bản mới nhất có sẵn
+        </div>
+        <h1>Tải <span class="gradient">MHEnt Study</span><br>về máy của bạn</h1>
+        <p>Học ngoại ngữ mọi lúc mọi nơi. Hỗ trợ học offline, đồng bộ dữ liệu lên mây khi có mạng.</p>
+        <div class="version-info">
+            <i class="fas fa-tag" style="color: #a78bfa;"></i>
+            <strong>v1.0.0</strong>
+            <span>•</span>
+            <span id="releaseDate">Cập nhật mới nhất</span>
+            <span>•</span>
+            <a href="https://github.com/mhentuniverse/mhent-study/releases" target="_blank" style="color:#a78bfa; text-decoration:none;">
+                Xem tất cả phiên bản <i class="fas fa-arrow-right" style="font-size:0.75rem;"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- Changelog -->
+    <div class="changelog-banner">
+        <div class="changelog-card">
+            <div class="changelog-icon">🎉</div>
+            <div class="changelog-content">
+                <h3>Có gì mới trong v1.0.0?</h3>
+                <ul class="changelog-list">
+                    <li>Ra mắt ứng dụng desktop cho Windows (cài đặt & portable)</li>
+                    <li>Ra mắt ứng dụng Android (APK)</li>
+                    <li>Tính năng lưu bộ thẻ offline, học không cần mạng</li>
+                    <li>Đồng bộ tiến trình lên đám mây khi kết nối trở lại</li>
+                    <li>Hỗ trợ 4 ngôn ngữ: Tiếng Hàn, Nhật, Trung, Anh</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <div class="features-strip">
+        <div class="features-inner">
+            <div class="feature-item">
+                <div class="feature-icon">📶</div>
+                <div class="feature-title">Học Offline</div>
+                <div class="feature-desc">Tải bộ thẻ về máy, học bất cứ lúc nào không cần internet</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">☁️</div>
+                <div class="feature-title">Đồng bộ đám mây</div>
+                <div class="feature-desc">Tiến trình tự động lưu lên cloud khi có mạng trở lại</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🎵</div>
+                <div class="feature-title">Học qua lời bài hát</div>
+                <div class="feature-desc">Từ vựng gắn với ca từ thực tế, dễ nhớ hơn 3x</div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🤖</div>
+                <div class="feature-title">AI hỗ trợ</div>
+                <div class="feature-desc">Giải thích ngữ pháp, kiểm tra chính tả bằng AI</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Download Cards -->
+    <section class="download-section">
+        <p class="section-label">Chọn nền tảng của bạn</p>
+        <div class="download-grid">
+
+            <!-- Windows -->
+            <div class="platform-card windows">
+                <div class="platform-icon"><i class="fab fa-windows"></i></div>
+                <div class="platform-name">Windows</div>
+                <div class="platform-desc">
+                    Dành cho máy tính Windows 10/11 (64-bit). Chọn bản cài đặt hoặc bản portable (chạy thẳng, không cần cài).
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <span class="file-icon">📦</span>
+                        <span class="file-name">MHEnt-Study-Setup.exe</span>
+                        <span class="file-size">~100 MB</span>
+                    </div>
+                    <div class="file-item">
+                        <span class="file-icon">💾</span>
+                        <span class="file-name">MHEnt-Study-Portable.exe</span>
+                        <span class="file-size">~100 MB</span>
+                    </div>
+                </div>
+                <a id="btn-win-download"
+                   href="https://github.com/mhentuniverse/mhent-study/releases/latest"
+                   target="_blank"
+                   class="btn-download"
+                   id="btn-windows">
+                    <i class="fas fa-download"></i>
+                    Tải về cho Windows
+                </a>
+                <a href="https://github.com/mhentuniverse/mhent-study/releases/latest" target="_blank" class="btn-secondary">
+                    <i class="fab fa-github"></i> Xem tất cả phiên bản
+                </a>
+            </div>
+
+            <!-- Android -->
+            <div class="platform-card android">
+                <div class="platform-icon"><i class="fab fa-android"></i></div>
+                <div class="platform-name">Android</div>
+                <div class="platform-desc">
+                    Dành cho điện thoại / máy tính bảng Android 6.0+. Cần bật "Cài ứng dụng từ nguồn không xác định" trước khi cài.
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <span class="file-icon">📱</span>
+                        <span class="file-name">app-debug.apk</span>
+                        <span class="file-size">~40 MB</span>
+                    </div>
+                </div>
+                <a href="https://github.com/mhentuniverse/mhent-study/releases/latest"
+                   target="_blank"
+                   class="btn-download"
+                   id="btn-android">
+                    <i class="fas fa-download"></i>
+                    Tải APK cho Android
+                </a>
+                <a href="https://github.com/mhentuniverse/mhent-study/releases/latest" target="_blank" class="btn-secondary">
+                    <i class="fab fa-github"></i> Xem tất cả phiên bản
+                </a>
+                <details style="margin-top:16px;">
+                    <summary style="font-size:0.82rem; color:var(--text-muted); cursor:pointer; user-select:none;">
+                        <i class="fas fa-info-circle"></i> Hướng dẫn cài APK
+                    </summary>
+                    <div style="margin-top:12px; padding:12px; background:rgba(0,0,0,0.2); border-radius:8px; font-size:0.8rem; color:var(--text-muted); line-height:1.7;">
+                        1. Tải file APK về điện thoại<br>
+                        2. Vào <strong>Cài đặt → Bảo mật</strong> (hoặc Ứng dụng)<br>
+                        3. Bật <strong>"Cài ứng dụng từ nguồn không xác định"</strong><br>
+                        4. Mở file APK và nhấn <strong>Cài đặt</strong>
+                    </div>
+                </details>
+            </div>
+
+            <!-- iOS / PWA -->
+            <div class="platform-card ios">
+                <div class="platform-icon"><i class="fab fa-apple"></i></div>
+                <div class="platform-name">iPhone / iPad</div>
+                <div class="badge-pwa"><i class="fas fa-bolt"></i> PWA — Miễn phí, ngay lập tức</div>
+                <div class="platform-desc">
+                    Không cần App Store, không cần cài đặt. Thêm trực tiếp vào màn hình chính qua Safari — trải nghiệm như app thật.
+                </div>
+                <div class="ios-steps">
+                    <div class="ios-step">
+                        <div class="ios-step-num">1</div>
+                        <span>Mở <strong>study.mhentuniverse.com</strong> bằng trình duyệt <strong>Safari</strong></span>
+                    </div>
+                    <div class="ios-step">
+                        <div class="ios-step-num">2</div>
+                        <span>Nhấn biểu tượng <strong>Chia sẻ</strong> <i class="fas fa-share-square" style="font-size:0.8em;"></i> ở thanh dưới</span>
+                    </div>
+                    <div class="ios-step">
+                        <div class="ios-step-num">3</div>
+                        <span>Chọn <strong>"Thêm vào Màn hình chính"</strong> (Add to Home Screen)</span>
+                    </div>
+                    <div class="ios-step">
+                        <div class="ios-step-num">4</div>
+                        <span>Nhấn <strong>Thêm</strong> — xong! Icon app xuất hiện trên màn hình</span>
+                    </div>
+                </div>
+                <a href="https://study.mhentuniverse.com" target="_blank" class="btn-download" id="btn-ios">
+                    <i class="fas fa-globe"></i>
+                    Mở trên Safari ngay
+                </a>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p style="margin-bottom:8px;">
+            <img src="/assets/study-logo.png" alt="" style="width:20px; vertical-align:middle; border-radius:4px; margin-right:6px;">
+            <strong>MHEnt. Study</strong> — Thuộc <a href="https://mhentuniverse.com" target="_blank">Miyazaki Haruto Entertainment Co., Ltd.</a>
+        </p>
+        <p style="margin-bottom:12px; color:#64748b;">
+            Build tự động bởi
+            <a href="https://github.com/mhentuniverse/mhent-study/actions" target="_blank">GitHub Actions</a>
+            •
+            <a href="https://github.com/mhentuniverse/mhent-study" target="_blank">Mã nguồn mở (GitHub)</a>
+        </p>
+        <p style="color:#374151; font-size:0.78rem;">© 2024–2025 Miyazaki Haruto Entertainment Co., Ltd. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Fetch latest release info from GitHub API and update version + date
+        async function loadReleaseInfo() {
+            try {
+                const res = await fetch('https://api.github.com/repos/mhentuniverse/mhent-study/releases/latest');
+                if (!res.ok) return;
+                const data = await res.json();
+
+                // Update version
+                const ver = data.tag_name || 'v1.0.0';
+                document.querySelectorAll('.hero .version-info strong').forEach(el => el.textContent = ver);
+
+                // Update date
+                const date = new Date(data.published_at);
+                const dateStr = date.toLocaleDateString('vi-VN', { year:'numeric', month:'long', day:'numeric' });
+                document.getElementById('releaseDate').textContent = dateStr;
+
+                // Update direct download links for Windows .exe
+                const assets = data.assets || [];
+                const setupExe = assets.find(a => a.name.includes('Setup') && a.name.endsWith('.exe'));
+                const portableExe = assets.find(a => !a.name.includes('Setup') && a.name.endsWith('.exe'));
+                const apk = assets.find(a => a.name.endsWith('.apk'));
+
+                if (setupExe) {
+                    document.getElementById('btn-win-download').href = setupExe.browser_download_url;
+                }
+                if (apk) {
+                    document.getElementById('btn-android').href = apk.browser_download_url;
+                }
+            } catch (e) {
+                // Fallback to releases/latest page — already set
+                console.log('Using fallback release links');
+            }
+        }
+
+        loadReleaseInfo();
+    </script>
+</body>
+</html>

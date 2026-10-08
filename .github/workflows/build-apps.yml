@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22'
           cache: 'npm'
 
       - name: Install Dependencies
@@ -45,7 +45,7 @@ jobs:
           if-no-files-found: error
 
   # ==========================================
-  # 2. ANDROID MOBILE BUILD (.APK & .AAB)
+  # 2. ANDROID MOBILE BUILD (.APK)
   # ==========================================
   build-android:
     name: Build Android App (.apk)
@@ -57,7 +57,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22'
           cache: 'npm'
 
       - name: Setup Java (JDK 17)
@@ -92,3 +92,82 @@ jobs:
           name: MHEnt-Study-Android-APK
           path: android/app/build/outputs/apk/**/*.apk
           if-no-files-found: warn
+
+  # ==========================================
+  # 3. CREATE GITHUB RELEASE (after both builds)
+  # ==========================================
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [ build-windows, build-android ]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Get Version from package.json
+        id: pkg
+        run: echo "version=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
+
+      - name: Download Windows Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: MHEnt-Study-Windows-Desktop
+          path: release-assets/windows/
+
+      - name: Download Android Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: MHEnt-Study-Android-APK
+          path: release-assets/android/
+        continue-on-error: true
+
+      - name: Rename artifacts for release
+        run: |
+          VERSION="${{ steps.pkg.outputs.version }}"
+          ls -la release-assets/windows/ || echo "No windows files"
+          ls -la release-assets/android/ || echo "No android files"
+          # Rename Windows files
+          for f in release-assets/windows/*.exe; do
+            [ -f "$f" ] || continue
+            FNAME=$(basename "$f")
+            NEWNAME=$(echo "$FNAME" | sed 's/ /-/g')
+            mv "$f" "release-assets/windows/$NEWNAME"
+          done
+          # Flatten android apks
+          find release-assets/android -name "*.apk" -exec mv {} release-assets/android/ \; 2>/dev/null || true
+          for f in release-assets/android/*.apk; do
+            [ -f "$f" ] || continue
+            FNAME=$(basename "$f")
+            NEWNAME=$(echo "$FNAME" | sed 's/ /-/g')
+            mv "$f" "release-assets/android/$NEWNAME"
+          done
+
+      - name: Create or Update GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ steps.pkg.outputs.version }}
+          name: "MHEnt Study v${{ steps.pkg.outputs.version }}"
+          body: |
+            ## 📦 MHEnt Study v${{ steps.pkg.outputs.version }}
+
+            ### Tải về / Download
+
+            | Nền tảng | File | Mô tả |
+            |---|---|---|
+            | 🖥️ Windows | `MHEnt-Study-Setup-*.exe` | Bộ cài đặt (NSIS Installer) |
+            | 🖥️ Windows | `MHEnt-Study-*.exe` (Portable) | Không cần cài đặt, chạy thẳng |
+            | 🤖 Android | `app-debug.apk` | APK Debug (cho thử nghiệm) |
+
+            ### Hướng dẫn cài đặt
+            - **Windows**: Tải file `.exe` → Chạy → Làm theo hướng dẫn
+            - **Android**: Tải file `.apk` → Bật "Cài ứng dụng từ nguồn không xác định" → Cài đặt
+            - **iPhone/iPad (iOS)**: Vào [study.mhentuniverse.com](https://study.mhentuniverse.com) bằng Safari → Nhấn **Share** → **Thêm vào Màn hình chính**
+
+            ---
+            *Build tự động bởi GitHub Actions • ${{ github.sha }}*
+          artifacts: "release-assets/windows/*.exe,release-assets/android/*.apk"
+          allowUpdates: true
+          removeArtifacts: false
+          replacesArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}
