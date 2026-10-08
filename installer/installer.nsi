@@ -14,6 +14,7 @@
 !define PRODUCT_WEB_SITE "https://study.mhentuniverse.com"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define INSTALL_DIR "$PROGRAMFILES64\MHEnt\Study"
+!define PRODUCT_BUILD_DIR "${PROJECT_DIR}\dist\win-unpacked"
 
 ; ---- MUI2 Modern UI Settings ----
 !include "MUI2.nsh"
