@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mhent-study-v1.0.0';
+const CACHE_NAME = 'mhent-study-v1.1.0';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -16,7 +16,23 @@ const STATIC_ASSETS = [
   '/js/storage.js',
   '/js/mhent-ui.js',
   '/js/ui-kit.js',
-  '/js/lyrics-hub.js'
+  '/js/speech.js',
+  '/js/offline-manager.js',
+  '/js/vocab-sheet.js',
+  '/js/deck-selector.js',
+  '/js/lyrics-hub.js',
+  '/data/sample-ko.js',
+  '/data/sample-ja.js',
+  '/data/sample-zh.js',
+  '/data/sample-en.js',
+  '/ko/index.html',
+  '/ja/index.html',
+  '/zh/index.html',
+  '/en/index.html',
+  '/ko/practice/vocab.html',
+  '/ja/practice/vocab.html',
+  '/zh/practice/vocab.html',
+  '/en/practice/vocab.html'
 ];
 
 self.addEventListener('install', (event) => {

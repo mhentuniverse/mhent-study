@@ -298,6 +298,232 @@ class StudyStorage {
         const deckDataEncoded = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(deck)))));
         return `${base}/shared/?id=${encodeURIComponent(deck.id)}&lang=${deck.lang || 'ko'}&data=${deckDataEncoded}`;
     }
+
+    /* ==========================================================================
+       OFFLINE STUDY DECKS & CLOUD SYNC ENGINE
+       ========================================================================== */
+
+    /**
+     * Lấy danh sách chỉ mục các bộ bài đã tải về máy
+     */
+    getOfflineDecksIndex() {
+        return this.get('offline_index', []);
+    }
+
+    saveOfflineDecksIndex(indexList) {
+        this.set('offline_index', indexList);
+    }
+
+    /**
+     * Kiểm tra một bộ bài đã được tải về học ngoại tuyến chưa
+     */
+    isDeckOffline(deckId) {
+        if (!deckId) return false;
+        const indexList = this.getOfflineDecksIndex();
+        return indexList.some(item => item.id === deckId);
+    }
+
+    /**
+     * Tải và lưu trữ một bộ bài học vào bộ nhớ ngoại tuyến của thiết bị
+     */
+    saveDeckOffline(deck) {
+        if (!deck || !deck.id) return { success: false, error: 'Dữ liệu bài học không hợp lệ' };
+
+        const offlineDeck = JSON.parse(JSON.stringify(deck));
+        offlineDeck.isOfflineCached = true;
+        offlineDeck.downloadedAt = new Date().toISOString();
+
+        const serialized = JSON.stringify(offlineDeck);
+        const sizeKb = Math.max(1, Math.round(serialized.length / 1024));
+
+        // 1. Lưu nội dung bộ bài vào storage offline riêng biệt
+        this.set(`offline_deck_${deck.id}`, offlineDeck);
+
+        // 2. Cập nhật chỉ mục bài học ngoại tuyến
+        let indexList = this.getOfflineDecksIndex();
+        const existingIdx = indexList.findIndex(item => item.id === deck.id);
+        const meta = {
+            id: deck.id,
+            title: deck.title || 'Bài học ngoại tuyến',
+            lang: deck.lang || 'ko',
+            wordCount: Array.isArray(deck.words) ? deck.words.length : 0,
+            downloadedAt: offlineDeck.downloadedAt,
+            sizeKb: sizeKb
+        };
+
+        if (existingIdx >= 0) {
+            indexList[existingIdx] = meta;
+        } else {
+            indexList.unshift(meta);
+        }
+        this.saveOfflineDecksIndex(indexList);
+
+        // 3. Kích hoạt sự kiện toàn cục để UI cập nhật
+        window.dispatchEvent(new CustomEvent('study:offline_updated', { detail: { action: 'saved', deckId: deck.id, meta } }));
+
+        return { success: true, meta, sizeKb };
+    }
+
+    /**
+     * Xóa một bộ bài khỏi bộ nhớ ngoại tuyến
+     */
+    removeDeckOffline(deckId) {
+        if (!deckId) return false;
+
+        // Xóa data
+        try {
+            localStorage.removeItem(`${this.PREFIX}offline_deck_${deckId}`);
+        } catch (e) {}
+
+        // Xóa khỏi index
+        let indexList = this.getOfflineDecksIndex();
+        indexList = indexList.filter(item => item.id !== deckId);
+        this.saveOfflineDecksIndex(indexList);
+
+        window.dispatchEvent(new CustomEvent('study:offline_updated', { detail: { action: 'removed', deckId } }));
+        return true;
+    }
+
+    /**
+     * Lấy chi tiết bộ bài đã tải offline
+     */
+    getOfflineDeck(deckId) {
+        return this.get(`offline_deck_${deckId}`, null);
+    }
+
+    /**
+     * Lấy toàn bộ danh sách bộ bài offline (có thể lọc theo ngôn ngữ)
+     */
+    getOfflineDecks(lang = null) {
+        const indexList = this.getOfflineDecksIndex();
+        if (lang) {
+            return indexList.filter(item => item.lang === lang);
+        }
+        return indexList;
+    }
+
+    /**
+     * Tính tổng dung lượng dữ liệu offline đã lưu trên thiết bị
+     */
+    getOfflineStorageStats() {
+        const indexList = this.getOfflineDecksIndex();
+        const totalDecks = indexList.length;
+        const totalWords = indexList.reduce((sum, item) => sum + (item.wordCount || 0), 0);
+        const totalKb = indexList.reduce((sum, item) => sum + (item.sizeKb || 0), 0);
+
+        let formattedSize = `${totalKb} KB`;
+        if (totalKb >= 1024) {
+            formattedSize = `${(totalKb / 1024).toFixed(1)} MB`;
+        }
+
+        return { totalDecks, totalWords, totalKb, formattedSize };
+    }
+
+    /**
+     * Thêm hành động học ngoại tuyến vào Hàng đợi đồng bộ (Sync Queue)
+     */
+    queueOfflineProgress(deck) {
+        if (!deck || !deck.id) return;
+        let queue = this.get('sync_queue', []);
+        const idx = queue.findIndex(q => q.deckId === deck.id);
+
+        const record = {
+            deckId: deck.id,
+            lang: deck.lang || 'ko',
+            updatedAt: new Date().toISOString(),
+            deckSnapshot: deck
+        };
+
+        if (idx >= 0) {
+            queue[idx] = record;
+        } else {
+            queue.push(record);
+        }
+        this.set('sync_queue', queue);
+    }
+
+    /**
+     * Tự động đẩy toàn bộ tiến độ học trong hàng đợi lên Supabase Cloud khi có mạng
+     */
+    async syncOfflineQueueToCloud() {
+        if (!navigator.onLine) return { synced: 0 };
+        const queue = this.get('sync_queue', []);
+        if (!queue || queue.length === 0) return { synced: 0 };
+
+        console.log(`[StudyStorage] ☁️ Bắt đầu đồng bộ ${queue.length} bài học ngoại tuyến lên Cloud...`);
+        let syncedCount = 0;
+
+        if (window.studyCloud && typeof window.studyCloud.saveDeck === 'function') {
+            for (const item of queue) {
+                try {
+                    if (item.deckSnapshot) {
+                        await window.studyCloud.saveDeck(item.deckSnapshot);
+                        syncedCount++;
+                    }
+                } catch (err) {
+                    console.warn(`[StudyStorage] Lỗi đồng bộ deck ${item.deckId}:`, err);
+                }
+            }
+        }
+
+        // Xóa hàng đợi sau khi đồng bộ
+        if (syncedCount > 0) {
+            this.set('sync_queue', []);
+            if (window.studyUI) {
+                window.studyUI.showToast(`☁️ Đã đồng bộ ${syncedCount} bài học ngoại tuyến lên Cloud!`, 'success');
+            }
+        }
+
+        return { synced: syncedCount };
+    }
+
+    /**
+     * Khởi tạo giám sát trạng thái mạng (Online / Offline)
+     */
+    initNetworkMonitor() {
+        const updatePill = (isOnline) => {
+            let pill = document.getElementById('offline-network-pill');
+            if (!pill) {
+                pill = document.createElement('div');
+                pill.id = 'offline-network-pill';
+                pill.className = 'offline-network-pill';
+                document.body.appendChild(pill);
+            }
+
+            if (!isOnline) {
+                pill.className = 'offline-network-pill status-offline show';
+                pill.innerHTML = `
+                    <span class="offline-pulse-dot" style="background: #f59e0b; box-shadow: 0 0 8px #f59e0b;"></span>
+                    <span>Đang học Ngoại Tuyến (Offline) • Dữ liệu lưu an toàn trên máy</span>
+                `;
+            } else {
+                pill.className = 'offline-network-pill status-online show';
+                pill.innerHTML = `
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <span>Đã kết nối lại Internet • Tự động đồng bộ lên Mây</span>
+                `;
+                // Kích hoạt đồng bộ hàng đợi
+                this.syncOfflineQueueToCloud();
+                setTimeout(() => {
+                    pill.classList.remove('show');
+                }, 3500);
+            }
+        };
+
+        window.addEventListener('online', () => updatePill(true));
+        window.addEventListener('offline', () => updatePill(false));
+
+        // Kiểm tra ban đầu nếu vừa mở trang mà không có mạng
+        if (!navigator.onLine) {
+            setTimeout(() => updatePill(false), 500);
+        }
+    }
 }
 
 window.studyStorage = new StudyStorage();
+// Khởi chạy giám sát mạng tự động
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => window.studyStorage.initNetworkMonitor());
+} else {
+    window.studyStorage.initNetworkMonitor();
+}

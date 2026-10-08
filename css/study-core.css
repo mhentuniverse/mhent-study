@@ -1753,3 +1753,306 @@ body {
     color: #ec4899;
 }
 
+/* ==========================================================================
+   OFFLINE STUDY & CLOUD SYNC SYSTEM STYLES
+   ========================================================================== */
+
+/* 1. Offline Download Button in Deck Bar */
+.btn-offline-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0.48rem 0.95rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(14, 165, 233, 0.08);
+    color: #0ea5e9;
+    border: 1.5px solid rgba(14, 165, 233, 0.35);
+}
+
+.btn-offline-download:hover {
+    background: rgba(14, 165, 233, 0.18);
+    border-color: #0ea5e9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+}
+
+.btn-offline-download.is-downloaded {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.45);
+}
+
+.btn-offline-download.is-downloaded:hover {
+    background: rgba(16, 185, 129, 0.22);
+    border-color: #10b981;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.btn-offline-download.is-loading {
+    opacity: 0.75;
+    pointer-events: none;
+}
+
+.offline-pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+    display: inline-block;
+    animation: offline-pulse 1.8s infinite;
+}
+
+@keyframes offline-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.35); opacity: 0.65; }
+}
+
+/* 2. Floating Network Connection Indicator */
+.offline-network-pill {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    z-index: 99999;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 22px;
+    border-radius: 50px;
+    font-size: 0.88rem;
+    font-weight: 800;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(16px);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.offline-network-pill.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.offline-network-pill.status-offline {
+    background: rgba(245, 158, 11, 0.95);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.offline-network-pill.status-online {
+    background: rgba(16, 185, 129, 0.95);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* 3. Offline Vault Modal */
+.offline-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(7, 11, 19, 0.75);
+    backdrop-filter: blur(8px);
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.25s ease;
+}
+
+.offline-modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.offline-modal-card {
+    width: 100%;
+    max-width: 620px;
+    background: var(--study-surface);
+    border: 1px solid var(--study-border);
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    transform: scale(0.95);
+    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+}
+
+.offline-modal-overlay.show .offline-modal-card {
+    transform: scale(1);
+}
+
+.offline-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--study-border);
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(16, 185, 129, 0.05));
+}
+
+.offline-modal-title {
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: var(--study-text);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.offline-modal-close {
+    background: transparent;
+    border: none;
+    font-size: 1.25rem;
+    color: var(--study-text-muted);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: 0.2s;
+}
+
+.offline-modal-close:hover {
+    background: var(--study-subtle);
+    color: var(--study-text);
+}
+
+.offline-modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.offline-stat-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    background: var(--study-subtle);
+    padding: 1rem;
+    border-radius: 14px;
+    border: 1px solid var(--study-border);
+}
+
+.offline-stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.offline-stat-item .label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--study-text-muted);
+    text-transform: uppercase;
+}
+
+.offline-stat-item .val {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--study-text);
+}
+
+.offline-decks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.offline-deck-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0.9rem 1.1rem;
+    border-radius: 12px;
+    background: var(--study-surface);
+    border: 1.5px solid var(--study-border);
+    transition: 0.2s;
+}
+
+.offline-deck-item:hover {
+    border-color: rgba(14, 165, 233, 0.4);
+    background: var(--study-subtle);
+}
+
+.offline-deck-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.offline-deck-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--study-text);
+}
+
+.offline-deck-meta {
+    font-size: 0.8rem;
+    color: var(--study-text-muted);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.offline-deck-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.btn-offline-action-sm {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    cursor: pointer;
+    border: 1px solid var(--study-border);
+    background: var(--study-subtle);
+    color: var(--study-text);
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-offline-action-sm:hover {
+    background: var(--study-surface);
+    border-color: #0ea5e9;
+    color: #0ea5e9;
+}
+
+.btn-offline-action-sm.danger:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.offline-modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--study-border);
+    background: var(--study-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+

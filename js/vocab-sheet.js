@@ -241,12 +241,19 @@ class VocabSheetApp {
                 };
                 if (window.studyStorage) window.studyStorage.saveDeck(this.lang, this.currentDeck);
             }
+        if (window.offlineManager && this.currentDeck) {
+            window.offlineManager.setCurrentDeck(this.currentDeck, this.lang);
         }
     }
 
     saveCurrentDeck() {
         if (this.currentDeck && window.studyStorage) {
             window.studyStorage.saveDeck(this.lang, this.currentDeck);
+            // Nếu bài học đã tải offline, cập nhật bản offline và đưa vào hàng đợi đồng bộ
+            if (window.studyStorage.isDeckOffline(this.currentDeck.id)) {
+                window.studyStorage.saveDeckOffline(this.currentDeck);
+                window.studyStorage.queueOfflineProgress(this.currentDeck);
+            }
             this.updateStats();
         }
     }
@@ -361,6 +368,10 @@ class VocabSheetApp {
             }
             select.appendChild(opt);
         });
+
+        if (window.offlineManager && this.currentDeck) {
+            window.offlineManager.setCurrentDeck(this.currentDeck, this.lang);
+        }
     }
 
     switchDeck(deckId) {
@@ -368,6 +379,9 @@ class VocabSheetApp {
         const newDeck = window.studyStorage.getDeckById(this.lang, deckId);
         if (newDeck) {
             this.currentDeck = newDeck;
+            if (window.offlineManager) {
+                window.offlineManager.setCurrentDeck(this.currentDeck, this.lang);
+            }
             const newUrl = `${window.location.pathname}?deck=${encodeURIComponent(deckId)}`;
             window.history.pushState({}, '', newUrl);
 
