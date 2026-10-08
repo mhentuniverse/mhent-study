@@ -40,8 +40,15 @@
   "build": {
     "appId": "com.mhentuniverse.study",
     "productName": "MHEnt Study",
+    "copyright": "© 2025 Miyazaki Haruto Entertainment Co., Ltd.",
+    "buildVersion": "1.0.0",
+    "buildResources": "installer",
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "installer"
+    },
+    "extraMetadata": {
+      "description": "Không Gian Học Ngoại Ngữ Đa Vũ Trụ — Tiếng Hàn, Nhật, Trung, Anh"
     },
     "files": [
       "**/*",
@@ -50,21 +57,49 @@
       "!ios/**",
       "!www/**",
       "!.git/**",
+      "!installer/**",
       "!node_modules/**"
     ],
     "win": {
       "target": [
-        "nsis",
-        "portable"
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
       ],
-      "icon": "assets/study-logo.png"
+      "icon": "assets/study-logo.png",
+      "publisherName": "Miyazaki Haruto Entertainment Co., Ltd.",
+      "legalTrademarks": "MHEnt Study is a trademark of Miyazaki Haruto Entertainment Co., Ltd.",
+      "verifyUpdateCodeSignature": false
     },
     "nsis": {
       "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
       "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/study-logo.png",
+      "uninstallerIcon": "assets/study-logo.png",
+      "installerHeaderIcon": "assets/study-logo.png",
+      "installerSidebar": "installer/sidebar-ins.bmp",
+      "uninstallerSidebar": "installer/sidebar-ins.bmp",
+      "license": "installer/license.txt",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "MHEnt Study"
+      "shortcutName": "MHEnt Study",
+      "menuCategory": "MHEnt Universe",
+      "deleteAppDataOnUninstall": false,
+      "warningsAsErrors": false,
+      "installerLanguages": ["Vietnamese", "English"],
+      "language": "1066",
+      "displayLanguageSelector": false
+    },
+    "portable": {
+      "artifactName": "MHEnt-Study-${version}-Portable.exe",
+      "unicode": true
     }
   }
 }

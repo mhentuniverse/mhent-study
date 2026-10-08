@@ -1,0 +1,107 @@
+ĐIỀU KHOẢN SỬ DỤNG PHẦN MỀM MHENT STUDY
+Miyazaki Haruto Entertainment Co., Ltd.
+Phiên bản 1.0 — Có hiệu lực từ năm 2025
+
+=================================================================
+
+1. CHẤP NHẬN ĐIỀU KHOẢN
+=================================================================
+Bằng việc cài đặt, sao chép, hoặc sử dụng phần mềm MHEnt Study
+("Phần mềm"), bạn đồng ý bị ràng buộc bởi các điều khoản và điều
+kiện của Thỏa thuận Cấp phép Người dùng Cuối này ("EULA"). Nếu bạn
+không đồng ý với các điều khoản này, vui lòng không cài đặt hoặc
+sử dụng Phần mềm.
+
+
+2. CẤP PHÉP SỬ DỤNG
+=================================================================
+Miyazaki Haruto Entertainment Co., Ltd. ("MHEnt") cấp cho bạn
+một giấy phép không độc quyền, không thể chuyển nhượng, giới hạn
+để cài đặt và sử dụng Phần mềm trên thiết bị cá nhân của bạn,
+chỉ cho mục đích học tập phi thương mại.
+
+Bạn ĐƯỢC PHÉP:
+  - Cài đặt và sử dụng Phần mềm trên thiết bị cá nhân
+  - Tạo bản sao lưu cho mục đích cá nhân
+  - Sử dụng Phần mềm để học tập và nâng cao kỹ năng ngôn ngữ
+
+Bạn KHÔNG ĐƯỢC PHÉP:
+  - Sao chép, phân phối hoặc bán lại Phần mềm
+  - Đảo ngược kỹ thuật, dịch ngược hoặc tháo rời Phần mềm
+  - Sử dụng Phần mềm cho mục đích thương mại mà không có sự
+    cho phép bằng văn bản từ MHEnt
+  - Xóa bỏ hoặc thay đổi bất kỳ thông báo bản quyền nào
+
+
+3. QUYỀN SỞ HỮU TRÍ TUỆ
+=================================================================
+Phần mềm và tất cả các bản sao của nó là tài sản trí tuệ và sở
+hữu độc quyền của MHEnt. Phần mềm được bảo vệ bởi luật bản quyền
+và các điều ước quốc tế. Giấy phép này không trao cho bạn bất kỳ
+quyền sở hữu nào đối với Phần mềm.
+
+
+4. NỘI DUNG HỌC TẬP
+=================================================================
+Các tài liệu học tập, từ vựng, và nội dung được cung cấp trong
+Phần mềm chỉ nhằm mục đích học tập cá nhân. MHEnt nỗ lực đảm
+bảo tính chính xác nhưng không đảm bảo rằng tất cả nội dung đều
+hoàn toàn chính xác hoặc đầy đủ.
+
+
+5. QUYỀN RIÊNG TƯ VÀ DỮ LIỆU
+=================================================================
+Phần mềm có thể thu thập và lưu trữ dữ liệu học tập cục bộ và
+đồng bộ hóa lên dịch vụ đám mây khi có kết nối Internet. Việc
+sử dụng dịch vụ đám mây tuân theo Chính sách Quyền riêng tư của
+MHEnt tại: https://mhentuniverse.com/privacy
+
+Chúng tôi cam kết:
+  - Không bán dữ liệu cá nhân của bạn cho bên thứ ba
+  - Bảo vệ thông tin tài khoản bằng mã hóa
+  - Cho phép bạn xuất hoặc xóa dữ liệu của mình
+
+
+6. TUYÊN BỐ MIỄN TRỪ BẢO HÀNH
+=================================================================
+PHẦN MỀM ĐƯỢC CUNG CẤP "NGUYÊN TRẠNG" MÀ KHÔNG CÓ BẢO HÀNH
+DƯỚI BẤT KỲ HÌNH THỨC NÀO, DÙ LÀ RÕ RÀNG HAY NGỤ Ý. MHENT
+TỪ CHỐI MỌI BẢO HÀNH, BAO GỒM NHƯNG KHÔNG GIỚI HẠN Ở CÁC BẢO
+HÀNH NGỤ Ý VỀ KHẢ NĂNG THƯƠNG MẠI VÀ SỰ PHÙ HỢP CHO MỘT MỤC
+ĐÍCH CỤ THỂ.
+
+
+7. GIỚI HẠN TRÁCH NHIỆM
+=================================================================
+TRONG PHẠM VI TỐI ĐA ĐƯỢC PHÁP LUẬT CHO PHÉP, MHENT KHÔNG CHỊU
+TRÁCH NHIỆM VỀ BẤT KỲ THIỆT HẠI GIÁN TIẾP, NGẪU NHIÊN, ĐẶC BIỆT,
+KẾ TIẾP HOẶC TRỪNG PHẠT NÀO PHÁT SINH TỪ VIỆC SỬ DỤNG HOẶC KHÔNG
+THỂ SỬ DỤNG PHẦN MỀM.
+
+
+8. CHẤM DỨT
+=================================================================
+Thỏa thuận này có hiệu lực cho đến khi chấm dứt. Quyền của bạn
+theo Thỏa thuận này sẽ tự động chấm dứt nếu bạn không tuân thủ
+bất kỳ điều khoản nào. Khi chấm dứt, bạn phải hủy tất cả các
+bản sao của Phần mềm trong tay bạn.
+
+
+9. LUẬT ĐIỀU CHỈNH
+=================================================================
+Thỏa thuận này được điều chỉnh bởi pháp luật Việt Nam. Bất kỳ
+tranh chấp nào phát sinh từ Thỏa thuận này sẽ được giải quyết
+tại Tòa án có thẩm quyền tại Việt Nam.
+
+
+10. LIÊN HỆ
+=================================================================
+Miyazaki Haruto Entertainment Co., Ltd.
+Website: https://mhentuniverse.com
+Study App: https://study.mhentuniverse.com
+Email: support@mhentuniverse.com
+
+=================================================================
+© 2025 Miyazaki Haruto Entertainment Co., Ltd.
+Mọi quyền được bảo lưu.
+=================================================================
