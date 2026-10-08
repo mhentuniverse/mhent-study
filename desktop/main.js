@@ -8,6 +8,10 @@ let mainWindow = null;
 let localServer = null;
 let localServerPort = 0;
 
+// User-Agent chuẩn Chrome hiện đại để tránh bị Google OAuth chặn lỗi 'disallowed_useragent'
+const CHROME_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+app.userAgentFallback = CHROME_USER_AGENT;
+
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -87,7 +91,7 @@ function startLocalServer() {
 
     localServer.listen(0, '127.0.0.1', () => {
       localServerPort = localServer.address().port;
-      console.log(`[MHEnt Study Local Server] Listening on http://127.0.0.1:${localServerPort}`);
+      console.log(`[MHEnt Study Local Server] Listening on http://localhost:${localServerPort}`);
       resolve(localServerPort);
     });
 
@@ -123,24 +127,61 @@ async function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
-      webSecurity: false // Enables loading embedded audio, video & cross-origin API assets
+      webSecurity: false // Cho phép tải audio, video và tài nguyên cross-origin
     }
   });
 
-  const startUrl = localServerPort
-    ? `http://127.0.0.1:${localServerPort}/index.html`
-    : `file://${path.join(__dirname, '..', 'index.html')}`;
-
-  mainWindow.loadURL(startUrl);
-
-  // Open external links in default OS browser
-  mainWindow.webContents.setWindowOpenHandler(({ url: targetUrl }) => {
-    if (targetUrl.startsWith('http://127.0.0.1') || targetUrl.startsWith('http://localhost')) {
-      return { action: 'allow' };
+  // Xóa bỏ Referer & Origin đối với avatar Google CDN để tránh lỗi 403 Forbidden
+  mainWindow.webContents.session.webRequest.onBeforeSendHeaders(
+    { urls: ['*://*.googleusercontent.com/*', '*://lh3.googleusercontent.com/*'] },
+    (details, callback) => {
+      delete details.requestHeaders['Referer'];
+      delete details.requestHeaders['Origin'];
+      callback({ requestHeaders: details.requestHeaders });
     }
+  );
+
+  // Xử lý OAuth popups (Firebase & Google Sign-In)
+  mainWindow.webContents.setWindowOpenHandler(({ url: targetUrl }) => {
+    // Cho phép popup xác thực mở trực tiếp trong cửa sổ ứng dụng (kết nối window.opener)
+    if (
+      targetUrl.includes('firebaseapp.com') ||
+      targetUrl.includes('accounts.google.com') ||
+      targetUrl.includes('google.com') ||
+      targetUrl.includes('apis.google.com') ||
+      targetUrl.startsWith('http://localhost') ||
+      targetUrl.startsWith('http://127.0.0.1')
+    ) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          width: 520,
+          height: 650,
+          autoHideMenuBar: true,
+          webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true
+          }
+        }
+      };
+    }
+
+    // Các liên kết ngoại bộ thông thường mở bằng trình duyệt mặc định hệ điều hành
     shell.openExternal(targetUrl);
     return { action: 'deny' };
   });
+
+  // Khi popup đăng nhập Google được tạo, gán User-Agent chuẩn để Google không chặn
+  mainWindow.webContents.on('did-create-window', (childWindow) => {
+    childWindow.webContents.setUserAgent(CHROME_USER_AGENT);
+  });
+
+  // Tải Web App qua 'localhost' (Domain được Firebase Auth whitelist mặc định)
+  const startUrl = localServerPort
+    ? `http://localhost:${localServerPort}/`
+    : `file://${path.join(__dirname, '..', 'index.html')}`;
+
+  mainWindow.loadURL(startUrl);
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -162,11 +203,25 @@ ipcMain.handle('desktop:open-external', (event, targetUrl) => {
   if (targetUrl) shell.openExternal(targetUrl);
 });
 
-app.whenReady().then(createWindow);
+// Đảm bảo chỉ chạy 1 phiên duy nhất (Single instance)
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+
+  app.whenReady().then(createWindow);
+}
 
 app.on('window-all-closed', () => {
   if (localServer) {
-    localServer.close();
+    try { localServer.close(); } catch (e) {}
+    localServer = null;
   }
   if (process.platform !== 'darwin') {
     app.quit();

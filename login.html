@@ -315,6 +315,15 @@
             }
         }
 
+        // Kiểm tra kết quả nếu vừa Redirect từ Google (dành cho Mobile & PWA)
+        getRedirectResult(auth).then(async (result) => {
+            if (result && result.user) {
+                await handleLoginSuccess(result.user);
+            }
+        }).catch((err) => {
+            console.warn('[Study Auth] Lỗi redirect result:', err);
+        });
+
         // Đăng nhập Google
         document.getElementById('btn-login-google').addEventListener('click', async () => {
             showLoading("Đang kết nối Google...");
