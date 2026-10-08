@@ -97,8 +97,8 @@
       "deleteAppDataOnUninstall": false,
       "warningsAsErrors": false,
       "installerLanguages": [
-        "Vietnamese",
-        "English"
+        "vi_VN",
+        "en_US"
       ],
       "language": "1066",
       "displayLanguageSelector": false
