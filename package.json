@@ -6,8 +6,9 @@
   "scripts": {
     "start": "electron .",
     "build:web": "node build-web.js",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder --publish never",
+    "convert:icon": "node convert-icon.js",
+    "pack": "npm run convert:icon && electron-builder --dir",
+    "dist": "npm run convert:icon && electron-builder --publish never",
     "cap:add:android": "cap add android",
     "cap:add:ios": "cap add ios",
     "cap:sync": "node build-web.js && cap sync",
@@ -32,7 +33,9 @@
     "@capacitor/core": "^6.2.0",
     "@capacitor/ios": "^6.2.0",
     "electron": "^30.5.1",
-    "electron-builder": "^24.13.3"
+    "electron-builder": "^24.13.3",
+    "png-to-ico": "^3.0.2",
+    "sharp": "^0.35.5"
   },
   "dependencies": {
     "@capacitor/core": "^6.2.0"
@@ -74,7 +77,7 @@
           ]
         }
       ],
-      "icon": "assets/study-logo.png",
+      "icon": "assets/study-logo.ico",
       "publisherName": "Miyazaki Haruto Entertainment Co., Ltd.",
       "legalTrademarks": "MHEnt Study is a trademark of Miyazaki Haruto Entertainment Co., Ltd.",
       "verifyUpdateCodeSignature": false
@@ -84,9 +87,9 @@
       "perMachine": false,
       "allowElevation": true,
       "allowToChangeInstallationDirectory": true,
-      "installerIcon": "assets/study-logo.png",
-      "uninstallerIcon": "assets/study-logo.png",
-      "installerHeaderIcon": "assets/study-logo.png",
+      "installerIcon": "assets/study-logo.ico",
+      "uninstallerIcon": "assets/study-logo.ico",
+      "installerHeaderIcon": "assets/study-logo.ico",
       "installerSidebar": "installer/sidebar-ins.bmp",
       "uninstallerSidebar": "installer/sidebar-ins.bmp",
       "license": "installer/license.txt",
