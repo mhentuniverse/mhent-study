@@ -148,14 +148,16 @@ jobs:
           while IFS= read -r -d '' f; do
             FNAME="$(basename "$f")"
             NEWNAME="$(printf '%s' "$FNAME" | sed 's/ /-/g')"
-            cp "$f" "release-assets/windows/release/$NEWNAME"
+            DEST="release-assets/windows/release/$NEWNAME"
+            [ "$f" != "$DEST" ] && cp "$f" "$DEST"
           done < <(find release-assets/windows -type f \( -name '*.exe' -o -name '*.nsis.7z' \) -print0)
 
           # Flatten Android APKs from any artifact directory structure.
           while IFS= read -r -d '' f; do
             FNAME="$(basename "$f")"
             NEWNAME="$(printf '%s' "$FNAME" | sed 's/ /-/g')"
-            cp "$f" "release-assets/android/release/$NEWNAME"
+            DEST="release-assets/android/release/$NEWNAME"
+            [ "$f" != "$DEST" ] && cp "$f" "$DEST"
           done < <(find release-assets/android -type f -name '*.apk' -print0)
 
           # Use the flat directories for the release upload.
