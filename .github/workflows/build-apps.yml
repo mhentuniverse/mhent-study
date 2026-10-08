@@ -167,8 +167,10 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
           VERSION: ${{ steps.pkg.outputs.version }}
         run: |
+          set -euo pipefail
           TAG="v${VERSION}"
           NOTES_FILE="$RUNNER_TEMP/release-notes.md"
           trap 'rm -f "$NOTES_FILE"' EXIT
