@@ -7,7 +7,14 @@
     <title>MHEnt. Study | Không Gian Học Ngoại Ngữ Đa Vũ Trụ</title>
     <meta name="description"
         content="Nền tảng học Tiếng Hàn, Tiếng Nhật, Tiếng Trung và Tiếng Anh với sổ từ vựng tương tác, tự kiểm tra chính tả và thi thử AI.">
-    <link rel="icon" type="image/png" sizes="48x48" href="/assets/icon-web.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MHEnt Study">
+    <meta name="theme-color" content="#0b0f19">
+    <link rel="icon" type="image/png" sizes="48x48" href="/assets/study-logo.png">
+    <link rel="apple-touch-icon" href="/assets/study-logo.png">
+    <link rel="manifest" href="/manifest.json">
 
     <link rel="stylesheet" href="/css/study-core.css">
     <link rel="stylesheet" href="/css/mhent-ui.css">
@@ -340,6 +347,12 @@
 
         if (document.documentElement.classList.contains('dark-mode') || localStorage.getItem('mhent_dark_mode') === 'on') {
             document.body.classList.add('dark-mode');
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
         }
     </script>
 </body>

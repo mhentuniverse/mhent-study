@@ -12,6 +12,8 @@
     <title>Học Ngoại Ngữ Qua Lời Bài Hát (Music Lyrics Hub) | MHEnt. Study</title>
     <meta name="description" content="Luyện nghe và học từ vựng tiếng Anh, Hàn, Nhật, Trung qua lời bài hát đồng bộ từng câu (Sentence-by-Sentence Karaoke) với AI và Supabase Cloud.">
     <link rel="icon" type="image/png" sizes="48x48" href="/assets/study-logo.png">
+    <link rel="apple-touch-icon" href="/assets/study-logo.png">
+    <link rel="manifest" href="/manifest.json">
 
     <!-- CSS Core & Modules -->
     <link rel="stylesheet" href="/css/study-core.css">
@@ -849,6 +851,12 @@
 
         if (document.documentElement.classList.contains('dark-mode') || localStorage.getItem('mhent_dark_mode') === 'on') {
             document.body.classList.add('dark-mode');
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
         }
     </script>
 </body>

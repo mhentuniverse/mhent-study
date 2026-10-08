@@ -1,0 +1,8 @@
+{
+  "appId": "com.mhentuniverse.study",
+  "appName": "MHEnt Study",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

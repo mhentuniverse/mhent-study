@@ -76,4 +76,60 @@ mhent-study/
     └── sample-en.js            # Bộ từ vựng tiếng Anh mẫu
 ```
 
+## 📱 Đóng Gói Thành App Đa Nền Tảng (PC, Android, iOS, PWA)
+
+Dự án **MHEnt. Study** đã được thiết lập quy trình đóng gói đa nền tảng hoàn chỉnh tương tự mô hình `mhent-aisa`:
+
+### 1. 💻 Ứng Dụng Máy Tính Windows (Desktop PC - .exe)
+- **Động cơ**: Electron + `electron-builder` với Local Static Server tích hợp (chống lỗi CORS, hỗ trợ đầy đủ YouTube IFrame Player & Web Audio API).
+- **Chạy thử nghiệm trên Desktop**:
+  - Nhấp đúp file: [`start-desktop.bat`](file:///c:/Users/Yorutsuki%20Yurika/Documents/Miyazaki%20Haruto%20Entertainment%20Co.,%20Ltd.%20-%20Project%20MHEnt.%20Universe/mhent-study/start-desktop.bat) hoặc gõ `npm start`.
+- **Đóng gói file cài đặt `.exe`**:
+  - Nhấp đúp file: [`build-desktop.bat`](file:///c:/Users/Yorutsuki%20Yurika/Documents/Miyazaki%20Haruto%20Entertainment%20Co.,%20Ltd.%20-%20Project%20MHEnt.%20Universe/mhent-study/build-desktop.bat) hoặc gõ `npm run dist`.
+  - Kết quả xuất ra thư mục [`dist/`](file:///c:/Users/Yorutsuki%20Yurika/Documents/Miyazaki%20Haruto%20Entertainment%20Co.,%20Ltd.%20-%20Project%20MHEnt.%20Universe/mhent-study/dist):
+    - `MHEnt Study Setup 1.0.0.exe`: Bộ cài đặt chính thức (Installer với shortcut Desktop & Start Menu).
+    - `MHEnt Study 1.0.0.exe`: Bản Portable (chạy ngay không cần cài đặt).
+
+---
+
+### 2. 🤖 Ứng Dụng Android (Google Play & File .apk)
+- **Động cơ**: **Capacitor Android** (`@capacitor/android`) chuẩn hóa với Gradle.
+- **Thư mục Project Native**: [`android/`](file:///c:/Users/Yorutsuki%20Yurika/Documents/Miyazaki%20Haruto%20Entertainment%20Co.,%20Ltd.%20-%20Project%20MHEnt.%20Universe/mhent-study/android).
+- **Đồng bộ mã nguồn Web mới nhất vào Android**:
+  ```bash
+  npm run cap:sync
+  ```
+- **Mở bằng Android Studio để Build / Run trên điện thoại thật hoặc giả lập**:
+  ```bash
+  npm run cap:open:android
+  ```
+- **Build APK thủ công bằng Gradle** (yêu cầu máy có Java 17):
+  ```bash
+  cd android
+  ./gradlew assembleDebug    # Tạo app-debug.apk
+  ./gradlew assembleRelease  # Tạo app-release.apk sẵn sàng phát hành CH Play
+  ```
+- **Tự động Build APK qua GitHub Actions**:
+  - Dự án đã tích hợp sẵn workflow [`.github/workflows/build-apps.yml`](file:///c:/Users/Yorutsuki%20Yurika/Documents/Miyazaki%20Haruto%20Entertainment%20Co.,%20Ltd.%20-%20Project%20MHEnt.%20Universe/mhent-study/.github/workflows/build-apps.yml).
+  - Khi push code lên GitHub, GitHub Actions sẽ tự động biên dịch và tạo link tải trực tiếp file `.apk` và `.exe`.
+
+---
+
+### 3. 🍎 Ứng Dụng iOS (iPhone / iPad - App Store & TestFlight)
+- **Động cơ**: **Capacitor iOS** (`@capacitor/ios`) chuẩn hóa với Xcode Workspace.
+- **Thư mục Project Native**: [`ios/App/`](file:///c:/Users/Yorutsuki%20Yurika/Documents/Miyazaki%20Haruto%20Entertainment%20Co.,%20Ltd.%20-%20Project%20MHEnt.%20Universe/mhent-study/ios/App).
+- **Mở bằng Xcode trên máy macOS**:
+  ```bash
+  npm run cap:open:ios
+  ```
+- Tại Xcode: Chọn Signing & Capabilities, cắm iPhone hoặc chọn Simulator rồi bấm **Run (Cmd + R)** để chạy hoặc **Archive** để phát hành lên Apple App Store / TestFlight.
+
+---
+
+### 4. 🌐 Cài Đặt Trực Tiếp Dạng PWA (Progressive Web App)
+- Đã trang bị đầy đủ [`manifest.json`](file:///c:/Users/Yorutsuki%20Yurika/Documents/Miyazaki%20Haruto%20Entertainment%20Co.,%20Ltd.%20-%20Project%20MHEnt.%20Universe/mhent-study/manifest.json) và [`sw.js`](file:///c:/Users/Yorutsuki%20Yurika/Documents/Miyazaki%20Haruto%20Entertainment%20Co.,%20Ltd.%20-%20Project%20MHEnt.%20Universe/mhent-study/sw.js).
+- Mở web trên Chrome / Safari / Edge, bấm vào biểu tượng **"Cài đặt ứng dụng (Install App)"** trên thanh địa chỉ hoặc menu chia sẻ để ghim app vào màn hình chính điện thoại hoặc thanh Taskbar máy tính mà không cần tải file nặng.
+
+---
+
 © 2026 **Miyazaki Haruto Entertainment Co., Ltd. - Project MHEnt. Universe**. All Rights Reserved.

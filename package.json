@@ -1,0 +1,70 @@
+{
+  "name": "mhent-study",
+  "version": "1.0.0",
+  "description": "MHEnt Study — Music & Language Sanctuary Desktop & Mobile App (MHEnt Universe)",
+  "main": "desktop/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:web": "node build-web.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "cap:add:android": "cap add android",
+    "cap:add:ios": "cap add ios",
+    "cap:sync": "node build-web.js && cap sync",
+    "cap:copy": "node build-web.js && cap copy",
+    "cap:open:android": "cap open android",
+    "cap:open:ios": "cap open ios"
+  },
+  "keywords": [
+    "mhent",
+    "study",
+    "lyrics",
+    "language",
+    "desktop",
+    "mobile",
+    "mhent-universe"
+  ],
+  "author": "Miyazaki Haruto Entertainment Co., Ltd.",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/cli": "^6.2.0",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/ios": "^6.2.0",
+    "electron": "^30.5.1",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.2.0"
+  },
+  "build": {
+    "appId": "com.mhentuniverse.study",
+    "productName": "MHEnt Study",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!dist/**",
+      "!android/**",
+      "!ios/**",
+      "!www/**",
+      "!.git/**",
+      "!node_modules/**"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "assets/study-logo.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MHEnt Study"
+    }
+  }
+}
