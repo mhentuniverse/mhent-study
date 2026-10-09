@@ -87,6 +87,8 @@
       "perMachine": false,
       "allowElevation": true,
       "allowToChangeInstallationDirectory": true,
+      "include": "installer/installer.nsh",
+      "artifactName": "MHEnt-Study-Setup-${version}.${ext}",
       "installerIcon": "assets/study-logo.ico",
       "uninstallerIcon": "assets/study-logo.ico",
       "installerHeaderIcon": "assets/study-logo.ico",
