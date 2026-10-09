@@ -2055,4 +2055,38 @@ body {
     flex-wrap: wrap;
 }
 
+/* ==========================================================================
+   MOBILE TOP NAVBAR RESPONSIVENESS FALLBACK
+   ========================================================================== */
+@media screen and (max-width: 768px) {
+    .study-nav {
+        padding: max(6px, env(safe-area-inset-top, 6px)) 10px 6px 10px !important;
+        gap: 8px !important;
+        overflow: hidden !important;
+    }
+    .study-nav .btn-open-aisa-dict kbd {
+        display: none !important;
+    }
+    .study-nav .btn-open-aisa-dict {
+        padding: 4px 8px !important;
+        font-size: 11.5px !important;
+        height: 28px !important;
+    }
+}
+
+@media screen and (max-width: 520px) {
+    .study-nav .btn-open-aisa-dict span {
+        display: none !important;
+    }
+    .study-nav .btn-open-aisa-dict {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+        padding: 0 !important;
+        justify-content: center !important;
+        border-radius: 50% !important;
+    }
+}
+
+
 

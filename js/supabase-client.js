@@ -213,6 +213,63 @@ class StudyCloudClient {
     }
 
     /**
+     * Lấy danh sách các bộ bài thuộc về CHÍNH NGƯỜI DÙNG HIỆN TẠI (Private/Personal Decks)
+     */
+    async listUserDecks(userId, langFilter = 'all') {
+        if (!userId) userId = this.getUserId();
+        if (!userId || userId.startsWith('guest_')) return [];
+
+        const decks = [];
+
+        // 1. Thử lấy từ bảng study_decks theo user_id
+        try {
+            let url = `${this.url}/rest/v1/study_decks?user_id=eq.${encodeURIComponent(userId)}&order=updated_at.desc`;
+            if (langFilter !== 'all') {
+                url += `&lang=eq.${langFilter}`;
+            }
+            const res = await fetch(url, { headers: this.getHeaders() });
+            if (res.ok) {
+                const rows = await res.json();
+                rows.forEach(r => {
+                    decks.push({
+                        id: r.id,
+                        lang: r.lang,
+                        title: r.title,
+                        description: r.description,
+                        author: r.author,
+                        words: r.words || [],
+                        userId: r.user_id,
+                        updatedAt: r.updated_at
+                    });
+                });
+                if (decks.length > 0) return decks;
+            }
+        } catch (e) {}
+
+        // 2. Fallback từ workspace_notes theo user_id
+        try {
+            let query = `${this.url}/rest/v1/workspace_notes?user_id=eq.${encodeURIComponent(userId)}&id=like.study_deck_*&order=updated_at.desc`;
+            const res = await fetch(query, { headers: this.getHeaders() });
+            if (res.ok) {
+                const rows = await res.json();
+                rows.forEach(r => {
+                    try {
+                        const parsed = JSON.parse(r.content);
+                        if (langFilter === 'all' || parsed.lang === langFilter) {
+                            parsed.userId = r.user_id;
+                            decks.push(parsed);
+                        }
+                    } catch (err) {}
+                });
+            }
+        } catch (err) {
+            console.warn('[Supabase Study] Lỗi lấy danh sách user decks:', err);
+        }
+
+        return decks;
+    }
+
+    /**
      * Lấy danh sách các bộ bài được chia sẻ công khai (Community Decks)
      */
     async listSharedDecks(langFilter = 'all') {

@@ -580,6 +580,36 @@
     transform: translateY(-1px);
 }
 
+/* Responsive Compact Navbar Trigger */
+@media screen and (max-width: 768px) {
+    .btn-open-aisa-dict kbd {
+        display: none !important;
+    }
+    .btn-open-aisa-dict {
+        padding: 4px 10px;
+        font-size: 0.78rem;
+        height: 28px;
+    }
+}
+
+@media screen and (max-width: 540px) {
+    .btn-open-aisa-dict span {
+        display: none !important;
+    }
+    .btn-open-aisa-dict {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        padding: 0 !important;
+        justify-content: center !important;
+        border-radius: 50% !important;
+    }
+    .btn-open-aisa-dict i {
+        margin: 0 !important;
+        font-size: 13px !important;
+    }
+}
+
 /* ==========================================================================
    DECK SELECTOR MODAL STYLES (Chọn Sổ từ vựng / Bộ bài học để lưu)
    ========================================================================== */

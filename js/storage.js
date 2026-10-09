@@ -116,20 +116,53 @@ class StudyStorage {
     }
 
     /**
-     * Tự động đồng bộ các bộ từ vựng từ Cloud Supabase xuống máy (hỗ trợ nhập từ ĐT sang PC)
+     * Tự động đồng bộ các bộ từ vựng cá nhân từ Cloud Supabase xuống máy (hỗ trợ nhập từ ĐT sang PC)
+     * Đảm bảo chỉ đồng bộ bộ bài của CHÍNH TÀI KHOẢN ĐANG ĐĂNG NHẬP, không lấy bài người khác
      */
     async syncDecksFromCloud(lang) {
-        if (!window.studyCloud || typeof window.studyCloud.listSharedDecks !== 'function') {
+        if (!window.studyCloud) {
             return this.getDecks(lang);
         }
+
+        const currentUserId = window.studyCloud.getUserId();
+        const isGuest = !currentUserId || currentUserId.startsWith('guest_');
+
+        // Lấy danh sách bộ bài cục bộ hiện tại
+        let localDecks = this.getDecks(lang);
+
+        // 1. DỌN DẸP DỮ LIỆU LỖI CŨ:
+        // Loại bỏ các bộ bài của tài khoản khác đã vô tình bị tải về máy trước đó
+        if (Array.isArray(localDecks)) {
+            const initialCount = localDecks.length;
+            localDecks = localDecks.filter(d => {
+                if (!d || !d.id) return false;
+                // Giữ lại bộ bài mặc định của hệ thống
+                if (d.id.endsWith('_default_1') || d.id === `${lang}_default_1`) return true;
+                // Nếu bộ bài có đánh dấu userId của người khác -> Loại bỏ
+                if (d.userId && !isGuest && d.userId !== currentUserId) return false;
+                // Nếu chưa đăng nhập (khách) mà bộ bài có userId của tài khoản chính thức khác -> Loại bỏ
+                if (isGuest && d.userId && !d.userId.startsWith('guest_')) return false;
+                return true;
+            });
+
+            if (localDecks.length !== initialCount) {
+                this.saveDecks(lang, localDecks);
+                console.log(`[StudyStorage] 🧹 Đã phân tách dữ liệu: Loại bỏ ${initialCount - localDecks.length} bộ bài của tài khoản khác khỏi ${lang.toUpperCase()}`);
+            }
+        }
+
+        // 2. Nếu là khách (chưa đăng nhập): Chỉ dùng kho bài cục bộ, không kéo từ Cloud
+        if (isGuest || typeof window.studyCloud.listUserDecks !== 'function') {
+            return localDecks;
+        }
+
         try {
-            // Lấy toàn bộ deck thuộc ngôn ngữ này từ Supabase Cloud
-            const cloudDecks = await window.studyCloud.listSharedDecks(lang);
+            // 3. Chỉ lấy các bộ bài do CHÍNH NGƯỜI DÙNG NÀY tạo trên Supabase Cloud
+            const cloudDecks = await window.studyCloud.listUserDecks(currentUserId, lang);
             if (!Array.isArray(cloudDecks) || cloudDecks.length === 0) {
-                return this.getDecks(lang);
+                return localDecks;
             }
 
-            let localDecks = this.getDecks(lang);
             let changed = false;
 
             cloudDecks.forEach(cDeck => {
@@ -148,7 +181,7 @@ class StudyStorage {
                         changed = true;
                     }
                 } else {
-                    // Chưa có trên máy này (ví dụ tạo trên điện thoại) -> Đưa vào danh sách trên máy tính!
+                    // Bài của chính user này được tạo từ thiết bị khác (đồng bộ giữa ĐT và PC)
                     localDecks.push(cDeck);
                     changed = true;
                 }
@@ -163,12 +196,12 @@ class StudyStorage {
 
             if (changed) {
                 this.saveDecks(lang, localDecks);
-                console.log(`[StudyStorage] ☁️ Đã đồng bộ ${localDecks.length} bộ bài (${lang.toUpperCase()}) từ Supabase Cloud!`);
+                console.log(`[StudyStorage] ☁️ Đã đồng bộ ${cloudDecks.length} bộ bài cá nhân (${lang.toUpperCase()}) từ Supabase Cloud!`);
             }
             return localDecks;
         } catch (e) {
             console.warn('[StudyStorage] Không thể đồng bộ từ cloud:', e);
-            return this.getDecks(lang);
+            return localDecks;
         }
     }
 

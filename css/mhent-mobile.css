@@ -30,20 +30,37 @@
    ============================================================== */
 @media screen and (max-width: 768px) {
     .study-nav, .study-navbar {
-        padding: max(6px, env(safe-area-inset-top, 6px)) 12px 6px 12px !important;
+        padding: max(6px, env(safe-area-inset-top, 6px)) 10px 6px 10px !important;
         min-height: 48px !important;
         height: auto !important;
         box-sizing: border-box !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow: hidden !important;
+        gap: 8px !important;
+    }
+
+    .nav-brand-box {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        flex-shrink: 0 !important;
+        min-width: 0 !important;
     }
 
     .brand-avatar, .brand-logo-badge {
         width: 28px !important;
         height: 28px !important;
+        flex-shrink: 0 !important;
     }
 
     .brand-main-title {
         font-size: 15px !important;
         font-weight: 800 !important;
+        white-space: nowrap !important;
     }
 
     .brand-sub-badge, .brand-sub {
@@ -54,11 +71,34 @@
         display: none !important;
     }
 
+    .nav-study-actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Tối ưu nút Từ điển AI trên Mobile Navbar: ẩn phím Ctrl K thừa thãi */
+    .btn-open-aisa-dict kbd {
+        display: none !important;
+    }
+
+    .btn-open-aisa-dict {
+        padding: 4px 8px !important;
+        font-size: 11.5px !important;
+        height: 28px !important;
+        gap: 4px !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+
     .streak-pill-btn, .streak-pill {
         padding: 3px 8px !important;
         font-size: 11px !important;
         gap: 3px !important;
         height: 28px !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
     }
 
     .theme-toggle-btn {
@@ -69,6 +109,8 @@
         padding: 4px 10px !important;
         font-size: 11.5px !important;
         height: 28px !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
     }
 
     .user-chip {
@@ -76,6 +118,7 @@
         background: transparent !important;
         border: none !important;
         cursor: pointer !important;
+        flex-shrink: 0 !important;
     }
     .user-chip img, .user-chip #user-avatar {
         width: 28px !important;
@@ -90,11 +133,71 @@
     /* Nút Hamburger bật Side Drawer trên mobile */
     .mobile-drawer-toggle {
         display: flex !important;
-        align-items: center;
-        justify-content: center;
-        width: 32px;
-        height: 32px;
-        font-size: 13px;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 13px !important;
+        flex-shrink: 0 !important;
+    }
+}
+
+/* Tối ưu màn hình điện thoại vừa & nhỏ (< 520px) */
+@media screen and (max-width: 520px) {
+    .btn-open-aisa-dict span {
+        display: none !important;
+    }
+    .btn-open-aisa-dict {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+        padding: 0 !important;
+        justify-content: center !important;
+        border-radius: 50% !important;
+    }
+    .btn-open-aisa-dict i {
+        margin: 0 !important;
+        font-size: 12.5px !important;
+    }
+}
+
+/* Tối ưu màn hình điện thoại hẹp (< 380px) */
+@media screen and (max-width: 380px) {
+    .study-nav, .study-navbar {
+        padding: max(4px, env(safe-area-inset-top, 4px)) 6px 4px 6px !important;
+        gap: 4px !important;
+    }
+    .nav-brand-box {
+        gap: 5px !important;
+    }
+    .brand-avatar, .brand-logo-badge {
+        width: 24px !important;
+        height: 24px !important;
+    }
+    .brand-main-title {
+        font-size: 13.5px !important;
+    }
+    .nav-study-actions {
+        gap: 4px !important;
+    }
+    .streak-pill-btn, .streak-pill {
+        padding: 2px 5px !important;
+        font-size: 10px !important;
+        height: 26px !important;
+    }
+    .btn-open-aisa-dict {
+        width: 26px !important;
+        height: 26px !important;
+        min-width: 26px !important;
+    }
+    .user-chip img, .user-chip #user-avatar {
+        width: 26px !important;
+        height: 26px !important;
+    }
+    .mobile-drawer-toggle {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 12px !important;
     }
 }
 
