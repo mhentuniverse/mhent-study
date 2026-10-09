@@ -308,6 +308,36 @@
                 }
 
                 const urlParams = new URLSearchParams(window.location.search);
+                const source = urlParams.get('source');
+
+                // Nếu đăng nhập trên trình duyệt từ lời gọi của Mobile APK:
+                // Trả về Deep Link mhentstudy:// để tự động mở lại App!
+                if (source === 'mhentstudy' || source === 'app') {
+                    let token = '';
+                    try { token = await user.getIdToken(); } catch(e) {}
+                    const email = encodeURIComponent(user.email || '');
+                    const name = encodeURIComponent(user.displayName || (user.email ? user.email.split('@')[0] : 'Học viên MHEnt'));
+                    const photo = encodeURIComponent(user.photoURL || '');
+                    const deepLink = `mhentstudy://auth?uid=${user.uid}&email=${email}&name=${name}&photo=${photo}&token=${token}`;
+
+                    document.body.innerHTML = `
+                        <div style="display:flex; justify-content:center; align-items:center; min-height:100vh; background:#070b13; color:#f8fafc; font-family:Nunito, sans-serif; text-align:center; flex-direction:column; padding:24px; box-sizing:border-box;">
+                            <div style="width: 76px; height: 76px; border-radius: 50%; background: rgba(56, 189, 248, 0.15); display: flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 20px; border: 2px solid #38bdf8; box-shadow: 0 0 25px rgba(56, 189, 248, 0.3);">🎓</div>
+                            <h1 style="margin: 0 0 10px 0; font-size: 26px; font-weight: 800; color: #38bdf8;">Đăng Nhập Thành Công!</h1>
+                            <p style="font-size: 15px; color: #94a3b8; max-width: 380px; line-height: 1.6; margin-bottom: 25px;">Hệ thống đang mở lại ứng dụng <strong>MHEnt. Study</strong> trên máy của bạn...</p>
+                            <a href="${deepLink}" style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #0284c7, #38bdf8); color: white; padding: 14px 28px; border-radius: 9999px; font-weight: 800; text-decoration: none; box-shadow: 0 4px 18px rgba(56, 189, 248, 0.4); font-size: 15px;">
+                                🚀 Mở MHEnt. Study ngay
+                            </a>
+                            <p style="opacity: 0.6; font-size: 13px; margin-top: 25px;">(Nếu ứng dụng không tự mở lại, bạn hãy nhấn nút phía trên nhé)</p>
+                        </div>
+                    `;
+
+                    setTimeout(() => {
+                        window.location.href = deepLink;
+                    }, 500);
+                    return;
+                }
+
                 const redirect = urlParams.get('redirect') || '/';
 
                 setTimeout(() => {
@@ -318,6 +348,15 @@
                 window.location.href = '/';
             }
         }
+
+        // Tự động nhận diện nếu đã đăng nhập sẵn trong Chrome từ lời gọi của APK
+        onAuthStateChanged(auth, async (user) => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const source = urlParams.get('source');
+            if (user && (source === 'mhentstudy' || source === 'app')) {
+                await handleLoginSuccess(user);
+            }
+        });
 
         // Kiểm tra kết quả nếu vừa Redirect từ Google (dành cho Mobile & PWA)
         getRedirectResult(auth).then(async (result) => {
@@ -332,9 +371,9 @@
         document.getElementById('btn-login-google').addEventListener('click', async () => {
             const isNative = Boolean(window.Capacitor && (window.Capacitor.isNativePlatform ? window.Capacitor.isNativePlatform() : (window.Capacitor.getPlatform && window.Capacitor.getPlatform() !== 'web')));
             if (isNative) {
-                // Trên ứng dụng di động: Chuyển hướng an toàn qua Cổng MHEnt Universe để không bị treo ở Chrome
-                showLoading("Đang chuyển sang Google xác thực...");
-                window.location.href = "https://www.mhentuniverse.com/login?source=mhentstudy&autoGoogle=1";
+                // Trên ứng dụng di động: Mở trang đăng nhập chính thức của study.mhentuniverse.com trên Chrome
+                showLoading("Đang mở trình duyệt Google...");
+                window.location.href = "https://study.mhentuniverse.com/login?source=mhentstudy";
                 return;
             }
 
@@ -390,8 +429,8 @@
         window.loginWithMHEntUniverse = function() {
             const isNative = Boolean(window.Capacitor && (window.Capacitor.isNativePlatform ? window.Capacitor.isNativePlatform() : (window.Capacitor.getPlatform && window.Capacitor.getPlatform() !== 'web')));
             if (isNative) {
-                showLoading("Đang kết nối Cổng MHEnt Universe...");
-                window.location.href = "https://www.mhentuniverse.com/login?source=mhentstudy";
+                showLoading("Đang mở cổng đăng nhập...");
+                window.location.href = "https://study.mhentuniverse.com/login?source=mhentstudy";
             } else {
                 const currentUrl = encodeURIComponent(window.location.origin + '/');
                 window.location.href = `https://www.mhentuniverse.com/login?redirect=${currentUrl}`;
