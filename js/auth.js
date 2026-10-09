@@ -32,7 +32,19 @@ window.studyAuth = auth;
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-export { auth, db, provider, signInWithPopup, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail };
+export { 
+    auth, 
+    db, 
+    provider, 
+    onAuthStateChanged,
+    signOut,
+    signInWithPopup, 
+    signInWithRedirect, 
+    getRedirectResult, 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword, 
+    sendPasswordResetEmail 
+};
 
 // Tự động đồng bộ UI Navbar theo trạng thái đăng nhập
 export function initNavbarAuth() {
@@ -150,8 +162,21 @@ export function initNavbarAuth() {
                 console.warn('[Study Auth] Lỗi đồng bộ streak Firestore:', e);
             }
         } else {
-            if (btnLogin) btnLogin.style.display = 'inline-flex';
-            if (userProfile) userProfile.style.display = 'none';
+            // Không có phiên Firebase trực tiếp, kiểm tra nếu còn lưu session trong LocalStorage
+            const cachedProfileStr = localStorage.getItem('mhent_user_profile');
+            let hasValidCache = false;
+            if (cachedProfileStr) {
+                try {
+                    const cached = JSON.parse(cachedProfileStr);
+                    if (cached && cached.uid && (cached.email || cached.displayName)) {
+                        hasValidCache = true;
+                    }
+                } catch(e) {}
+            }
+            if (!hasValidCache) {
+                if (btnLogin) btnLogin.style.display = 'inline-flex';
+                if (userProfile) userProfile.style.display = 'none';
+            }
         }
     });
 }
@@ -252,6 +277,13 @@ if (window.__pendingDeepLink) {
     const pending = window.__pendingDeepLink;
     window.__pendingDeepLink = null;
     window.handleMHEntDeepLink(pending);
+} else if (window.MHEntNative && typeof window.MHEntNative.getPendingDeepLink === 'function') {
+    try {
+        const nativeLink = window.MHEntNative.getPendingDeepLink();
+        if (nativeLink) {
+            window.handleMHEntDeepLink(nativeLink);
+        }
+    } catch(e) {}
 }
 
 // Chạy tự động khi DOM sẵn sàng

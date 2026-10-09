@@ -270,6 +270,7 @@
             auth, 
             db, 
             provider, 
+            onAuthStateChanged,
             signInWithPopup, 
             signInWithRedirect, 
             getRedirectResult,
@@ -288,6 +289,21 @@
         }
         function hideLoading() {
             loadingOverlay.style.display = 'none';
+        }
+
+        // Hàm mở trình duyệt hệ thống ngoài (Chrome/Safari) trên thiết bị di động
+        function openSystemBrowser(url) {
+            if (window.MHEntNative && typeof window.MHEntNative.openExternal === 'function') {
+                window.MHEntNative.openExternal(url);
+                return;
+            }
+            try {
+                const noProto = url.replace(/^https?:\/\//, '');
+                const intentUrl = `intent://${noProto}#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end`;
+                window.location.href = intentUrl;
+            } catch (e) {
+                window.open(url, '_system');
+            }
         }
 
         // Xử lý chuyển hướng sau khi đăng nhập thành công
@@ -369,22 +385,45 @@
 
         // Đăng nhập Google
         document.getElementById('btn-login-google').addEventListener('click', async () => {
-            const isNative = Boolean(window.Capacitor && (window.Capacitor.isNativePlatform ? window.Capacitor.isNativePlatform() : (window.Capacitor.getPlatform && window.Capacitor.getPlatform() !== 'web')));
-            if (isNative) {
-                // Trên ứng dụng di động: Mở trang đăng nhập chính thức của study.mhentuniverse.com trên Chrome
+            const isNativeApp = Boolean(
+                window.MHEntNative || 
+                (window.Capacitor && (
+                    (window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) || 
+                    (window.Capacitor.getPlatform && window.Capacitor.getPlatform() !== 'web')
+                ))
+            );
+            const isLocal = window.location.hostname === 'localhost' || window.location.protocol === 'capacitor:' || window.location.protocol === 'file:';
+
+            // Nếu đang chạy trong App APK cục bộ: Mở Google Chrome để đăng nhập an toàn
+            if (isNativeApp && isLocal) {
                 showLoading("Đang mở trình duyệt Google...");
-                window.location.href = "https://study.mhentuniverse.com/login?source=mhentstudy";
+                openSystemBrowser("https://study.mhentuniverse.com/login?source=mhentstudy");
+                setTimeout(() => hideLoading(), 2000);
                 return;
             }
 
+            // Nếu đang chạy trên Trình duyệt web (study.mhentuniverse.com trên PC hoặc Mobile Chrome)
             showLoading("Đang kết nối Google...");
             try {
                 const result = await signInWithPopup(auth, provider);
                 await handleLoginSuccess(result.user);
             } catch (error) {
+                console.warn('[Auth] signInWithPopup error:', error);
+                // Nếu bị chặn popup trên điện thoại: Tự động chuyển sang signInWithRedirect
+                if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-popup-request') {
+                    showLoading("Đang chuyển hướng sang Google...");
+                    try {
+                        await signInWithRedirect(auth, provider);
+                        return;
+                    } catch (redirectErr) {
+                        hideLoading();
+                        alert('Lỗi chuyển hướng Google: ' + redirectErr.message);
+                        return;
+                    }
+                }
                 hideLoading();
                 if (error.code !== 'auth/popup-closed-by-user') {
-                    alert('Lỗi đăng nhập Google: ' + error.message);
+                    alert('Lỗi đăng nhập Google: ' + (error.message || error.code));
                 }
             }
         });
@@ -427,10 +466,19 @@
 
         // SSO từ MHEnt Universe
         window.loginWithMHEntUniverse = function() {
-            const isNative = Boolean(window.Capacitor && (window.Capacitor.isNativePlatform ? window.Capacitor.isNativePlatform() : (window.Capacitor.getPlatform && window.Capacitor.getPlatform() !== 'web')));
-            if (isNative) {
+            const isNativeApp = Boolean(
+                window.MHEntNative || 
+                (window.Capacitor && (
+                    (window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) || 
+                    (window.Capacitor.getPlatform && window.Capacitor.getPlatform() !== 'web')
+                ))
+            );
+            const isLocal = window.location.hostname === 'localhost' || window.location.protocol === 'capacitor:' || window.location.protocol === 'file:';
+
+            if (isNativeApp && isLocal) {
                 showLoading("Đang mở cổng đăng nhập...");
-                window.location.href = "https://study.mhentuniverse.com/login?source=mhentstudy";
+                openSystemBrowser("https://study.mhentuniverse.com/login?source=mhentstudy");
+                setTimeout(() => hideLoading(), 2000);
             } else {
                 const currentUrl = encodeURIComponent(window.location.origin + '/');
                 window.location.href = `https://www.mhentuniverse.com/login?redirect=${currentUrl}`;
