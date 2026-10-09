@@ -51,7 +51,7 @@ class AIDeckCreator {
                 phonetic: '[Furigana/Kana - Romaji] (Ví dụ: [にほん - Nihon])',
                 placeholderTitle: 'VD: Minna no Nihongo Bài 1 - Chào hỏi & Quốc tịch',
                 placeholderText: 'Dán danh sách từ hoặc bài đọc tiếng Nhật vào đây...\nVí dụ: 先生, 学生, 会社員, 日本, ベトナム, 食べる, 勉強する...\nHoặc dán cả đoạn văn tiếng Nhật từ sách giáo khoa.',
-                vocabPageUrl: '/ja/practice/vocab.html'
+                vocabPageUrl: '/ja/practice/vocab'
             },
             ko: {
                 name: 'Tiếng Hàn',
@@ -61,7 +61,7 @@ class AIDeckCreator {
                 phonetic: '[Phát âm chuẩn Hangeul] (Ví dụ: [나라], [항국])',
                 placeholderTitle: 'VD: Tiếng Hàn Nhập Môn - Gia đình & Bạn bè',
                 placeholderText: 'Dán danh sách từ hoặc bài đọc tiếng Hàn vào đây...\nVí dụ: 친구, 가족, 학교, 선생님, 한국어, 사랑하다, 예쁘다...\nHoặc dán đoạn hội thoại trong giáo trình.',
-                vocabPageUrl: '/ko/practice/vocab.html'
+                vocabPageUrl: '/ko/practice/vocab'
             },
             zh: {
                 name: 'Tiếng Trung',
@@ -71,7 +71,7 @@ class AIDeckCreator {
                 phonetic: '[Pinyin có thanh điệu] (Ví dụ: [nǐ hǎo], [xuéxí])',
                 placeholderTitle: 'VD: Từ vựng HSK 1 - Giao tiếp hàng ngày',
                 placeholderText: 'Dán danh sách chữ Hán hoặc đoạn văn tiếng Trung vào đây...\nVí dụ: 你好, 谢谢, 老师, 学生, 中国, 喜欢, 喝茶...\nHoặc bài đọc ngắn trong sách giáo khoa.',
-                vocabPageUrl: '/zh/practice/vocab.html'
+                vocabPageUrl: '/zh/practice/vocab'
             },
             en: {
                 name: 'Tiếng Anh',
@@ -81,7 +81,7 @@ class AIDeckCreator {
                 phonetic: '[Phiên âm quốc tế IPA] (Ví dụ: [/həˈloʊ/], [/ˈvəʊ.kæb/])',
                 placeholderTitle: 'VD: 3000 Oxford Words - Daily Communication',
                 placeholderText: 'Paste English vocabulary words or paragraph here...\nExample: opportunity, resilient, accomplish, dedicate, versatile...\nOr paste a reading passage or article.',
-                vocabPageUrl: '/en/practice/vocab.html'
+                vocabPageUrl: '/en/practice/vocab'
             }
         };
         return configs[lang] || configs.ja;

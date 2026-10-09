@@ -241,6 +241,8 @@ class VocabSheetApp {
                 };
                 if (window.studyStorage) window.studyStorage.saveDeck(this.lang, this.currentDeck);
             }
+        }
+
         if (window.offlineManager && this.currentDeck) {
             window.offlineManager.setCurrentDeck(this.currentDeck, this.lang);
         }

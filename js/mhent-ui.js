@@ -708,35 +708,35 @@ window.openSideDrawer = function() {
 
             <div class="drawer-menu-list">
                 <div class="drawer-group-title">Khám Phá Ngôn Ngữ</div>
-                <a href="/ko/index.html" class="drawer-item">
+                <a href="/ko" class="drawer-item">
                     <div class="drawer-item-left">
                         <span style="font-size: 18px;">🇰🇷</span>
                         <span>Tiếng Hàn (Korean)</span>
                     </div>
                     <span style="font-size: 12px; color: var(--study-text-muted);">Mở ➔</span>
                 </a>
-                <a href="/ja/index.html" class="drawer-item">
+                <a href="/ja" class="drawer-item">
                     <div class="drawer-item-left">
                         <span style="font-size: 18px;">🇯🇵</span>
                         <span>Tiếng Nhật (Japanese)</span>
                     </div>
                     <span style="font-size: 12px; color: var(--study-text-muted);">Mở ➔</span>
                 </a>
-                <a href="/zh/index.html" class="drawer-item">
+                <a href="/zh" class="drawer-item">
                     <div class="drawer-item-left">
                         <span style="font-size: 18px;">🇨🇳</span>
                         <span>Tiếng Trung (Chinese)</span>
                     </div>
                     <span style="font-size: 12px; color: var(--study-text-muted);">Mở ➔</span>
                 </a>
-                <a href="/en/index.html" class="drawer-item">
+                <a href="/en" class="drawer-item">
                     <div class="drawer-item-left">
                         <span style="font-size: 18px;">🇬🇧</span>
                         <span>Tiếng Anh (English)</span>
                     </div>
                     <span style="font-size: 12px; color: var(--study-text-muted);">Mở ➔</span>
                 </a>
-                <a href="/shared/index.html" class="drawer-item">
+                <a href="/shared" class="drawer-item">
                     <div class="drawer-item-left">
                         <i class="fa-solid fa-share-nodes"></i>
                         <span>Kho Bài Học Chia Sẻ</span>
@@ -752,7 +752,7 @@ window.openSideDrawer = function() {
                     </div>
                     <span style="font-size: 11px; padding: 2px 6px; border-radius: 6px; background: rgba(236,72,153,0.15); color: #ec4899; font-weight: 800;">AI</span>
                 </div>
-                <a href="/ko/practice/vocab.html" class="drawer-item">
+                <a href="/ko/practice/vocab" class="drawer-item">
                     <div class="drawer-item-left">
                         <i class="fa-solid fa-book-open"></i>
                         <span>Sổ Từ Vựng Tương Tác</span>
@@ -777,7 +777,7 @@ window.openSideDrawer = function() {
 
             <div class="drawer-footer">
                 ${isLoggedOut ? `
-                    <button class="auth-btn-pill" style="width: 100%; justify-content: center; min-height: 42px;" onclick="window.location.href='/login.html'">
+                    <button class="auth-btn-pill" style="width: 100%; justify-content: center; min-height: 42px;" onclick="window.location.href='/login'">
                         <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập
                     </button>
                 ` : `
