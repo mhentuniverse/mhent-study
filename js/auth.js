@@ -171,6 +171,89 @@ window.syncStudyStreakToCloud = async function(newStreak) {
     } catch(e) {}
 };
 
+// ================================================================
+// XỬ LÝ DEEP LINK TỰ ĐỘNG ĐĂNG NHẬP (MHENTSTUDY:// TỪ MHENT UNIVERSE SSO & GOOGLE)
+// ================================================================
+window.handleMHEntDeepLink = async function(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') return;
+    console.log('[MHEnt Study] Nhận Deep Link xác thực:', rawUrl);
+
+    try {
+        const queryString = rawUrl.includes('?') ? rawUrl.substring(rawUrl.indexOf('?') + 1) : '';
+        const params = new URLSearchParams(queryString);
+        const uid = params.get('uid');
+        const email = params.get('email') ? decodeURIComponent(params.get('email')) : '';
+        const name = params.get('name') ? decodeURIComponent(params.get('name')) : '';
+        const photo = params.get('photo') ? decodeURIComponent(params.get('photo')) : '';
+        const token = params.get('token');
+
+        if (uid) {
+            const profile = {
+                uid: uid,
+                email: email || `${uid}@mhentuniverse.com`,
+                displayName: name || (email ? email.split('@')[0] : 'Học viên MHEnt'),
+                photoURL: photo || '/assets/avt-web.jpg',
+                role: 'user',
+                source: 'sso_deep_link'
+            };
+
+            // Lưu thông tin phiên đăng nhập vào LocalStorage
+            localStorage.setItem('mhent_user_profile', JSON.stringify(profile));
+            localStorage.setItem('mhent_user_role', 'user');
+            if (token) {
+                localStorage.setItem('mhent_app_token', token);
+            }
+
+            // Đồng bộ nhanh với Firestore nếu có thể
+            try {
+                const userRef = doc(db, "users", uid);
+                const snap = await getDoc(userRef);
+                if (!snap.exists()) {
+                    await setDoc(userRef, {
+                        email: profile.email,
+                        displayName: profile.displayName,
+                        photoURL: profile.photoURL,
+                        role: "user",
+                        createdAt: new Date().toISOString()
+                    }, { merge: true });
+                } else {
+                    const data = snap.data();
+                    profile.streak = data.streak || 1;
+                    profile.role = data.role || 'user';
+                    localStorage.setItem('mhent_user_profile', JSON.stringify(profile));
+                }
+            } catch (fsErr) {
+                console.warn('[Study Auth] Lỗi đồng bộ Firestore khi nhận Deep Link:', fsErr);
+            }
+
+            // Cập nhật ngay giao diện Navbar nếu đang mở
+            if (typeof initNavbarAuth === 'function') {
+                initNavbarAuth();
+            }
+
+            // Chuyển hướng người dùng về trang chủ Study Hub
+            if (window.location.pathname.includes('login') || window.location.pathname.endsWith('login.html')) {
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 400);
+            } else {
+                setTimeout(() => {
+                    window.location.reload();
+                }, 400);
+            }
+        }
+    } catch (e) {
+        console.error('[Study Auth] Lỗi xử lý Deep Link:', e);
+    }
+};
+
+// Kiểm tra Deep Link đang chờ xử lý từ Native Android Bridge
+if (window.__pendingDeepLink) {
+    const pending = window.__pendingDeepLink;
+    window.__pendingDeepLink = null;
+    window.handleMHEntDeepLink(pending);
+}
+
 // Chạy tự động khi DOM sẵn sàng
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initNavbarAuth);

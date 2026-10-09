@@ -119,6 +119,10 @@
 
             <div class="auth-divider" style="margin: 15px 0;">Hoặc dùng tài khoản</div>
 
+            <p style="font-size: 13px; color: var(--text-secondary); margin: -5px 0 15px 0; line-height: 1.5; text-align: center;">
+                💡 <i>Bạn có thể đăng nhập hoặc tạo tài khoản Email trực tiếp ngay trong app bên dưới.</i>
+            </p>
+
             <div class="auth-tabs">
                 <button id="btn-tab-login" class="auth-tab-btn active" onclick="switchTab('login')">Đăng Nhập</button>
                 <button id="btn-tab-register" class="auth-tab-btn" onclick="switchTab('register')">Đăng Ký</button>
@@ -326,6 +330,14 @@
 
         // Đăng nhập Google
         document.getElementById('btn-login-google').addEventListener('click', async () => {
+            const isNative = Boolean(window.Capacitor && (window.Capacitor.isNativePlatform ? window.Capacitor.isNativePlatform() : (window.Capacitor.getPlatform && window.Capacitor.getPlatform() !== 'web')));
+            if (isNative) {
+                // Trên ứng dụng di động: Chuyển hướng an toàn qua Cổng MHEnt Universe để không bị treo ở Chrome
+                showLoading("Đang chuyển sang Google xác thực...");
+                window.location.href = "https://www.mhentuniverse.com/login?source=mhentstudy&autoGoogle=1";
+                return;
+            }
+
             showLoading("Đang kết nối Google...");
             try {
                 const result = await signInWithPopup(auth, provider);
@@ -376,9 +388,14 @@
 
         // SSO từ MHEnt Universe
         window.loginWithMHEntUniverse = function() {
-            const currentUrl = encodeURIComponent(window.location.origin + '/');
-            // Chuyển hướng sang trang đăng nhập chính của MHEnt Universe kèm redirect URL
-            window.location.href = `https://www.mhentuniverse.com/login?redirect=${currentUrl}`;
+            const isNative = Boolean(window.Capacitor && (window.Capacitor.isNativePlatform ? window.Capacitor.isNativePlatform() : (window.Capacitor.getPlatform && window.Capacitor.getPlatform() !== 'web')));
+            if (isNative) {
+                showLoading("Đang kết nối Cổng MHEnt Universe...");
+                window.location.href = "https://www.mhentuniverse.com/login?source=mhentstudy";
+            } else {
+                const currentUrl = encodeURIComponent(window.location.origin + '/');
+                window.location.href = `https://www.mhentuniverse.com/login?redirect=${currentUrl}`;
+            }
         };
 
         // Quên mật khẩu
