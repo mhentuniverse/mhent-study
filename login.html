@@ -351,44 +351,37 @@
             console.warn('[Study Auth] Lỗi redirect result:', err);
         });
 
-        // Đăng nhập Google
-        const isMobileOrApp = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                              Boolean(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
-                              ('ontouchstart' in window && window.innerWidth <= 800);
+        // Đăng nhập Google & SSO Cổng Định Danh MHEnt Universe
+        const isNativeApp = Boolean(window.AndroidAuth) || 
+                            Boolean(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 
         document.getElementById('btn-login-google').addEventListener('click', async () => {
-            showLoading("Đang kết nối Google...");
+            // Trên ứng dụng Android Native: Mở Chrome hệ thống với accounts.mhentuniverse.com để hiện danh sách tài khoản Google
+            if (isNativeApp) {
+                showLoading("Đang mở trình duyệt xác thực Google...");
+                const ssoUrl = 'https://accounts.mhentuniverse.com/login?source=mhentstudy&autoGoogle=1';
+                setTimeout(() => {
+                    hideLoading();
+                }, 4000);
 
-            // Tự động tắt loading sau 6 giây để không bao giờ bị quay vô tận
+                if (window.AndroidAuth && window.AndroidAuth.openExternalUrl) {
+                    window.AndroidAuth.openExternalUrl(ssoUrl);
+                } else {
+                    window.location.href = ssoUrl;
+                }
+                return;
+            }
+
+            // Trên Web Desktop / Mobile Browser:
+            showLoading("Đang kết nối Google...");
             let loadingTimer = setTimeout(() => {
                 hideLoading();
             }, 6000);
 
-            // Trên di động hoặc WebView App: Dùng signInWithRedirect để không bị kẹt popup
-            if (isMobileOrApp) {
-                try {
-                    await signInWithRedirect(auth, provider);
-                    return;
-                } catch (rErr) {
-                    clearTimeout(loadingTimer);
-                    hideLoading();
-                    console.warn('[Google Auth] Redirect error:', rErr);
-                    if (rErr.code === 'auth/operation-not-supported-in-this-environment' || 
-                        (rErr.message && rErr.message.includes('disallowed_useragent'))) {
-                        alert('Thiết bị yêu cầu đăng nhập qua Cổng MHEnt Universe. Đang mở cổng...');
-                        window.location.href = 'https://www.mhentuniverse.com/login?source=mhentstudy';
-                    } else {
-                        alert('Không thể mở Google: ' + rErr.message);
-                    }
-                    return;
-                }
-            }
-
-            // Trên máy tính / Desktop: Dùng signInWithPopup có cơ chế chống treo
             try {
                 const popupPromise = signInWithPopup(auth, provider);
                 const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('POPUP_TIMEOUT')), 4000)
+                    setTimeout(() => reject(new Error('POPUP_TIMEOUT')), 5000)
                 );
                 const result = await Promise.race([popupPromise, timeoutPromise]);
                 clearTimeout(loadingTimer);
@@ -401,15 +394,9 @@
                 if (error.message === 'POPUP_TIMEOUT' || 
                     error.code === 'auth/popup-blocked' || 
                     error.code === 'auth/cancelled-popup-request') {
-                    showLoading("Đang chuyển hướng sang Google...");
-                    try {
-                        await signInWithRedirect(auth, provider);
-                        return;
-                    } catch (rErr) {
-                        hideLoading();
-                        alert('Lỗi chuyển hướng Google: ' + rErr.message);
-                        return;
-                    }
+                    showLoading("Đang chuyển hướng sang Cổng Định Danh MHEnt...");
+                    window.location.href = 'https://accounts.mhentuniverse.com/login?source=mhentstudy&autoGoogle=1';
+                    return;
                 }
 
                 if (error.code !== 'auth/popup-closed-by-user') {
@@ -454,9 +441,14 @@
             }
         });
 
-        // SSO từ MHEnt Universe
+        // SSO từ Cổng Định Danh MHEnt Universe
         window.loginWithMHEntUniverse = function() {
-            window.location.href = 'https://www.mhentuniverse.com/login?source=mhentstudy';
+            const ssoUrl = 'https://accounts.mhentuniverse.com/login?source=mhentstudy';
+            if (window.AndroidAuth && window.AndroidAuth.openExternalUrl) {
+                window.AndroidAuth.openExternalUrl(ssoUrl);
+            } else {
+                window.location.href = ssoUrl;
+            }
         };
 
         // Quên mật khẩu
