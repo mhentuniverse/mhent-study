@@ -272,18 +272,11 @@ window.handleMHEntDeepLink = async function(rawUrl) {
     }
 };
 
-// Kiểm tra Deep Link đang chờ xử lý từ Native Android Bridge
+// Kiểm tra Deep Link đang chờ xử lý
 if (window.__pendingDeepLink) {
     const pending = window.__pendingDeepLink;
     window.__pendingDeepLink = null;
     window.handleMHEntDeepLink(pending);
-} else if (window.MHEntNative && typeof window.MHEntNative.getPendingDeepLink === 'function') {
-    try {
-        const nativeLink = window.MHEntNative.getPendingDeepLink();
-        if (nativeLink) {
-            window.handleMHEntDeepLink(nativeLink);
-        }
-    } catch(e) {}
 }
 
 // Chạy tự động khi DOM sẵn sàng
