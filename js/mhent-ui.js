@@ -683,10 +683,24 @@ window.openSideDrawer = function() {
     let avtEl = document.getElementById('user-avatar');
     let streak = window.studyStorage ? window.studyStorage.getStreak() : (document.getElementById('streakNum')?.innerText || '1');
 
-    let userName = (nameEl && nameEl.innerText !== "Đang tải...") ? nameEl.innerText : (cachedProfile.displayName || "Học Viên MHEnt");
-    let userAvt = (avtEl && avtEl.src) ? avtEl.src : (cachedProfile.photoURL || "/assets/avt-web.jpg");
+    // Xác thực thực tế: Người dùng chỉ được coi là đã đăng nhập nếu có auth.currentUser HOẶC có cached profile hợp lệ với uid & email
+    let currentUser = (window.studyAuth && window.studyAuth.currentUser) || null;
+    let hasValidSession = Boolean(currentUser || (cachedProfile && cachedProfile.uid && cachedProfile.email && cachedProfile.role !== 'guest'));
+    let isLoggedOut = !hasValidSession;
 
-    let isLoggedOut = !nameEl || window.getComputedStyle(nameEl.closest('#user-profile') || document.body).display === 'none';
+    let userName = "";
+    let userAvt = "";
+    let userBadgeHTML = "";
+
+    if (!isLoggedOut) {
+        userName = (currentUser && currentUser.displayName) || (nameEl && nameEl.innerText !== "Đang tải..." && nameEl.innerText.trim()) || cachedProfile.displayName || (cachedProfile.email ? cachedProfile.email.split('@')[0] : "Thành viên MHEnt");
+        userAvt = (currentUser && currentUser.photoURL) || (avtEl && avtEl.src && !avtEl.src.includes('avt-web.jpg') ? avtEl.src : (cachedProfile.photoURL || "/assets/avt-web.jpg"));
+        userBadgeHTML = `<div class="drawer-streak-badge">🔥 Chuỗi học: ${streak} Ngày</div>`;
+    } else {
+        userName = "Khách Thăm Quan";
+        userAvt = "/assets/avt-web.jpg";
+        userBadgeHTML = `<div class="drawer-streak-badge" style="background: rgba(14,165,233,0.12); color: var(--theme-accent, #0ea5e9); border: 1px solid rgba(14,165,233,0.25);">✨ Chưa đăng nhập</div>`;
+    }
 
     let overlay = document.createElement('div');
     overlay.id = 'mhent-study-drawer-overlay';
@@ -703,7 +717,7 @@ window.openSideDrawer = function() {
                 <button class="drawer-close-btn" onclick="window.closeSideDrawer();" aria-label="Đóng menu">&times;</button>
                 <img src="${userAvt}" class="drawer-avt" alt="Avatar" onerror="this.src='/assets/avt-web.jpg'">
                 <h4 class="drawer-name">${userName}</h4>
-                <div class="drawer-streak-badge">🔥 Chuỗi học: ${streak} Ngày</div>
+                ${userBadgeHTML}
             </div>
 
             <div class="drawer-menu-list">
@@ -777,11 +791,11 @@ window.openSideDrawer = function() {
 
             <div class="drawer-footer">
                 ${isLoggedOut ? `
-                    <button class="auth-btn-pill" style="width: 100%; justify-content: center; min-height: 42px;" onclick="window.location.href='/login'">
-                        <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập
+                    <button class="auth-btn-pill" style="width: 100%; justify-content: center; min-height: 42px; font-weight: 800; font-size: 14px;" onclick="window.closeSideDrawer(); window.location.href='/login'">
+                        <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập / Đăng Ký
                     </button>
                 ` : `
-                    <button class="drawer-btn-logout" onclick="if(document.getElementById('btn-logout')) document.getElementById('btn-logout').click();">
+                    <button class="drawer-btn-logout" onclick="window.closeSideDrawer(); let btn = document.getElementById('btn-logout'); if(btn) btn.click(); else { localStorage.removeItem('mhent_user_profile'); localStorage.setItem('mhent_user_role', 'guest'); window.location.reload(); }">
                         <i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất
                     </button>
                 `}

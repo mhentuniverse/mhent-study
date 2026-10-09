@@ -42,7 +42,7 @@
   },
   "build": {
     "appId": "com.mhentuniverse.study",
-    "productName": "MHEnt Study",
+    "productName": "MHEnt. Study",
     "copyright": "© 2026 Miyazaki Haruto Entertainment Co., Ltd.",
     "buildVersion": "1.0.0",
     "directories": {
@@ -79,7 +79,7 @@
       ],
       "icon": "assets/study-logo.ico",
       "publisherName": "Miyazaki Haruto Entertainment Co., Ltd.",
-      "legalTrademarks": "MHEnt Study is a trademark of Miyazaki Haruto Entertainment Co., Ltd.",
+      "legalTrademarks": "MHEnt. Study is a trademark of Miyazaki Haruto Entertainment Co., Ltd.",
       "verifyUpdateCodeSignature": false
     },
     "nsis": {
@@ -97,7 +97,7 @@
       "license": "installer/license.txt",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "MHEnt Study",
+      "shortcutName": "MHEnt. Study",
       "menuCategory": "MHEnt Universe",
       "deleteAppDataOnUninstall": false,
       "warningsAsErrors": false,

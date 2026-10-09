@@ -94,9 +94,9 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug --stacktrace
 
-      - name: Build Android Release APK (Unsigned)
+      - name: Build Android Release APK (Signed)
         working-directory: android
-        run: ./gradlew assembleRelease --stacktrace || true
+        run: ./gradlew assembleRelease --stacktrace
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
@@ -157,7 +157,7 @@ jobs:
             FNAME="$(basename "$f")"
             case "$FNAME" in
               app-debug.apk) NEWNAME="MHEnt-Study-Android-Debug-v${VERSION}.apk" ;;
-              app-release-unsigned.apk) NEWNAME="MHEnt-Study-Android-Release-v${VERSION}.apk" ;;
+              app-release.apk|app-release-unsigned.apk) NEWNAME="MHEnt-Study-Android-Release-v${VERSION}.apk" ;;
               *) NEWNAME="MHEnt-Study-Android-v${VERSION}.apk" ;;
             esac
             DEST="release-assets/android/release/$NEWNAME"

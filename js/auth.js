@@ -5,6 +5,8 @@
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { 
     getAuth, 
+    setPersistence,
+    browserLocalPersistence,
     onAuthStateChanged, 
     signOut, 
     signInWithPopup, 
@@ -20,6 +22,13 @@ import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/fireb
 const firebaseConfig = window.firebaseConfig || (window.MHENT_CONFIG && window.MHENT_CONFIG.FIREBASE);
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
+
+// Đảm bảo phiên đăng nhập được lưu vĩnh viễn trên thiết bị (LocalStorage / IndexedDB)
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+    console.warn('[Study Auth] Could not set persistence:', err);
+});
+window.studyAuth = auth;
+
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
@@ -33,6 +42,30 @@ export function initNavbarAuth() {
     const userName = document.getElementById('user-name');
     const btnLogout = document.getElementById('btn-logout');
 
+    // Khôi phục UI ngay lập tức từ bộ nhớ đệm để tránh giật lag khi mở app
+    const cachedProfileStr = localStorage.getItem('mhent_user_profile');
+    if (cachedProfileStr) {
+        try {
+            const cachedUser = JSON.parse(cachedProfileStr);
+            if (cachedUser && cachedUser.uid && cachedUser.email) {
+                if (btnLogin) btnLogin.style.display = 'none';
+                if (userProfile) {
+                    userProfile.style.display = 'inline-flex';
+                    userProfile.title = 'Xem thông tin cá nhân & Tiện ích (MHEnt Drawer)';
+                    userProfile.onclick = (e) => {
+                        e.preventDefault();
+                        if (typeof window.openSideDrawer === 'function') window.openSideDrawer();
+                    };
+                    if (userAvatar) userAvatar.src = cachedUser.photoURL || '/assets/avt-web.jpg';
+                    if (userName) userName.textContent = cachedUser.displayName || cachedUser.email.split('@')[0];
+                }
+                if (cachedUser.streak) {
+                    document.querySelectorAll('#streakNum').forEach(el => el.textContent = cachedUser.streak);
+                }
+            }
+        } catch (e) {}
+    }
+
     if (btnLogin) {
         btnLogin.onclick = () => {
             const redirectUrl = encodeURIComponent(window.location.href);
@@ -44,6 +77,7 @@ export function initNavbarAuth() {
         btnLogout.onclick = async () => {
             await signOut(auth);
             localStorage.removeItem('mhent_user_profile');
+            localStorage.setItem('mhent_user_role', 'guest');
             if (typeof showToast === 'function') {
                 showToast('Thông báo', 'Đã đăng xuất khỏi MHEnt Universe!', 'info');
             }

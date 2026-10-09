@@ -89,16 +89,31 @@ function startLocalServer() {
       }
     });
 
-    localServer.listen(0, '127.0.0.1', () => {
-      localServerPort = localServer.address().port;
-      console.log(`[MHEnt Study Local Server] Listening on http://localhost:${localServerPort}`);
-      resolve(localServerPort);
-    });
+    const PREFERRED_PORT = 14128;
 
-    localServer.on('error', (err) => {
-      console.warn('[MHEnt Study Local Server Error]:', err);
-      reject(err);
-    });
+    function tryListen(port, attemptsLeft = 10) {
+      const onError = (err) => {
+        if (err.code === 'EADDRINUSE' && attemptsLeft > 0) {
+          console.warn(`[MHEnt. Study] Port ${port} is in use, attempting ${port + 1}...`);
+          localServer.removeListener('error', onError);
+          tryListen(port + 1, attemptsLeft - 1);
+        } else {
+          console.warn('[MHEnt. Study Local Server Error]:', err);
+          reject(err);
+        }
+      };
+
+      localServer.once('error', onError);
+
+      localServer.listen(port, '127.0.0.1', () => {
+        localServer.removeListener('error', onError);
+        localServerPort = localServer.address().port;
+        console.log(`[MHEnt. Study Local Server] Listening on http://localhost:${localServerPort}`);
+        resolve(localServerPort);
+      });
+    }
+
+    tryListen(PREFERRED_PORT);
   });
 }
 
@@ -119,11 +134,12 @@ async function createWindow() {
     minWidth: 480,
     minHeight: 640,
     backgroundColor: '#070b13',
-    title: 'MHEnt Study — Music & Language Sanctuary',
+    title: 'MHEnt. Study — Không Gian Học Ngoại Ngữ Đa Vũ Trụ',
     icon: fs.existsSync(iconPath) ? iconPath : undefined,
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      partition: 'persist:mhent_study', // Đảm bảo toàn bộ localStorage, IndexedDB, Firebase Auth được lưu vĩnh viễn trên máy
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,

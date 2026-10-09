@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">MHEnt Study</string>
-    <string name="title_activity_main">MHEnt Study</string>
+    <string name="app_name">MHEnt. Study</string>
+    <string name="title_activity_main">MHEnt. Study</string>
     <string name="package_name">com.mhentuniverse.study</string>
     <string name="custom_url_scheme">com.mhentuniverse.study</string>
 </resources>
