@@ -3,6 +3,7 @@ package com.mhentuniverse.study;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.webkit.CookieManager;
 import android.webkit.WebSettings;
 import com.getcapacitor.BridgeActivity;
 
@@ -37,7 +38,15 @@ public class MainActivity extends BridgeActivity {
             WebSettings settings = getBridge().getWebView().getSettings();
             settings.setJavaScriptCanOpenWindowsAutomatically(true);
             settings.setSupportMultipleWindows(true);
+            settings.setDomStorageEnabled(true);
+            settings.setDatabaseEnabled(true);
 
+            // Cho phép Cookie bên thứ ba để xác thực Google / Firebase hoạt động hoàn hảo
+            CookieManager cookieManager = CookieManager.getInstance();
+            cookieManager.setAcceptCookie(true);
+            cookieManager.setAcceptThirdPartyCookies(getBridge().getWebView(), true);
+
+            // Tinh chỉnh User-Agent: Loại bỏ "; wv" để Google Auth không chặn disallowed_useragent
             String defaultUa = settings.getUserAgentString();
             if (defaultUa != null && defaultUa.contains("; wv")) {
                 String cleanUa = defaultUa.replace("; wv", "");

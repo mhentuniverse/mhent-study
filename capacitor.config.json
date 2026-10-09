@@ -3,6 +3,15 @@
   "appName": "MHEnt. Study",
   "webDir": "www",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "allowNavigation": [
+      "accounts.google.com",
+      "*.google.com",
+      "*.google.com.vn",
+      "*.googleusercontent.com",
+      "*.firebaseapp.com",
+      "mhentuniverse.com",
+      "*.mhentuniverse.com"
+    ]
   }
 }
