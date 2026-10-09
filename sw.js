@@ -1,9 +1,10 @@
-const CACHE_NAME = 'mhent-study-v1.1.0';
+const CACHE_NAME = 'mhent-study-v1.2.0';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/lyrics.html',
   '/login.html',
+  '/download.html',
   '/manifest.json',
   '/assets/study-logo.png',
   '/assets/icon-logo.png',
@@ -37,10 +38,17 @@ const STATIC_ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS).catch((err) => {
-        console.warn('[ServiceWorker] Caching warning:', err);
-      });
+    caches.open(CACHE_NAME).then(async (cache) => {
+      for (const asset of STATIC_ASSETS) {
+        try {
+          const res = await fetch(asset);
+          if (res && res.status === 200 && !res.redirected) {
+            await cache.put(asset, res);
+          }
+        } catch (err) {
+          console.warn('[ServiceWorker] Could not pre-cache:', asset, err);
+        }
+      }
     })
   );
   self.skipWaiting();
@@ -65,23 +73,57 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
 
-  // Let cloud/API/external requests go to network
+  // Let cloud/API/external requests go directly to network
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) {
     return;
   }
 
+  // Navigation requests (HTML pages)
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      (async () => {
+        try {
+          const networkRes = await fetch(req);
+          // If server responded with a redirect, hand it to the browser properly
+          if (networkRes.redirected) {
+            return Response.redirect(networkRes.url, 302);
+          }
+          if (networkRes && networkRes.status === 200) {
+            const clone = networkRes.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+          }
+          return networkRes;
+        } catch (err) {
+          // Offline fallback
+          const cached = await caches.match(req);
+          if (cached && !cached.redirected) {
+            return cached;
+          }
+          const fallback = (await caches.match('/')) || (await caches.match('/index.html'));
+          if (fallback && !fallback.redirected) {
+            return fallback;
+          }
+          throw err;
+        }
+      })()
+    );
+    return;
+  }
+
+  // Static assets (CSS, JS, images, audio, data): Cache-first
   event.respondWith(
     caches.match(req).then((cached) => {
-      const fetchPromise = fetch(req).then((networkRes) => {
-        if (networkRes && networkRes.status === 200) {
+      if (cached && !cached.redirected) {
+        return cached;
+      }
+      return fetch(req).then((networkRes) => {
+        if (networkRes && networkRes.status === 200 && !networkRes.redirected) {
           const clone = networkRes.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
         }
         return networkRes;
-      }).catch(() => cached);
-
-      return cached || fetchPromise;
+      });
     })
   );
 });
