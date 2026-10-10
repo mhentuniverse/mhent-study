@@ -286,6 +286,24 @@
         const loadingOverlay = document.getElementById('loading-overlay');
         const loadingText = document.getElementById('loading-text');
 
+        // Nếu đã có phiên đăng nhập hợp lệ và không yêu cầu đổi tài khoản (force), chuyển hướng ngay về trang đích
+        (function checkExistingSession() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('force') || urlParams.get('logout')) return;
+            const cookieMatch = document.cookie.match(/(^|;\s*)mhent_auth_session=([^;]*)/);
+            const cached = localStorage.getItem('mhent_user_profile');
+            let sessionUser = null;
+            if (cookieMatch) {
+                try { sessionUser = JSON.parse(decodeURIComponent(cookieMatch[2])); } catch(e){}
+            } else if (cached) {
+                try { sessionUser = JSON.parse(cached); } catch(e){}
+            }
+            if (sessionUser && sessionUser.uid) {
+                const redirect = urlParams.get('redirect') || '/index.html';
+                window.location.replace(redirect);
+            }
+        })();
+
         function showLoading(text) {
             loadingText.textContent = text || 'Đang xử lý...';
             loadingOverlay.style.display = 'flex';
@@ -330,6 +348,15 @@
                 localStorage.setItem('mhent_user_profile', JSON.stringify(profile));
                 localStorage.setItem('mhent_user_role', profile.role);
 
+                // 🌐 Đồng bộ Cookie phiên đăng nhập liên tên miền (*.mhentuniverse.com)
+                try {
+                    const cookieVal = encodeURIComponent(JSON.stringify(profile));
+                    const secureFlag = window.location.protocol === 'https:' ? '; Secure' : '';
+                    document.cookie = `mhent_auth_session=${cookieVal}; domain=.mhentuniverse.com; path=/; max-age=2592000; SameSite=Lax${secureFlag}`;
+                } catch(cookieErr) {
+                    console.warn('[Study Auth] Lỗi lưu cookie:', cookieErr);
+                }
+
                 const urlParams = new URLSearchParams(window.location.search);
                 const redirect = urlParams.get('redirect') || '/index.html';
 
@@ -359,7 +386,7 @@
             // Trên ứng dụng Android Native: Mở Chrome hệ thống với accounts.mhentuniverse.com để hiện danh sách tài khoản Google
             if (isNativeApp) {
                 showLoading("Đang mở trình duyệt xác thực Google...");
-                const ssoUrl = 'https://accounts.mhentuniverse.com/login?source=mhentstudy';
+                const ssoUrl = 'https://accounts.mhentuniverse.com/login?source=mhentstudy&platform=app&autoGoogle=1';
                 setTimeout(() => {
                     hideLoading();
                 }, 4000);
@@ -395,7 +422,8 @@
                     error.code === 'auth/popup-blocked' || 
                     error.code === 'auth/cancelled-popup-request') {
                     showLoading("Đang chuyển hướng sang Cổng Định Danh MHEnt...");
-                    window.location.href = 'https://accounts.mhentuniverse.com/login?source=mhentstudy&autoGoogle=1';
+                    const redirectUrl = encodeURIComponent(window.location.origin || 'https://study.mhentuniverse.com');
+                    window.location.href = `https://accounts.mhentuniverse.com/login?source=mhentstudy&platform=web&autoGoogle=1&redirect=${redirectUrl}`;
                     return;
                 }
 
@@ -443,8 +471,10 @@
 
         // SSO từ Cổng Định Danh MHEnt Universe
         window.loginWithMHEntUniverse = function() {
-            const ssoUrl = 'https://accounts.mhentuniverse.com/login?source=mhentstudy';
-            if (window.AndroidAuth && window.AndroidAuth.openExternalUrl) {
+            const platform = isNativeApp ? 'app' : 'web';
+            const redirectUrl = encodeURIComponent(window.location.origin || 'https://study.mhentuniverse.com');
+            const ssoUrl = `https://accounts.mhentuniverse.com/login?source=mhentstudy&platform=${platform}&redirect=${redirectUrl}`;
+            if (isNativeApp && window.AndroidAuth && window.AndroidAuth.openExternalUrl) {
                 window.AndroidAuth.openExternalUrl(ssoUrl);
             } else {
                 window.location.href = ssoUrl;

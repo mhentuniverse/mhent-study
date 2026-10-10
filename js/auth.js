@@ -57,12 +57,29 @@ export function initNavbarAuth() {
     const userName = document.getElementById('user-name');
     const btnLogout = document.getElementById('btn-logout');
 
-    // Khôi phục UI ngay lập tức từ bộ nhớ đệm để tránh giật lag khi mở app
+    // 🌐 1. Kiểm tra Cookie phiên đăng nhập dùng chung toàn miền (*.mhentuniverse.com)
+    function getSharedSessionCookie() {
+        const match = document.cookie.match(/(^|;\s*)mhent_auth_session=([^;]*)/);
+        if (!match) return null;
+        try {
+            return JSON.parse(decodeURIComponent(match[2]));
+        } catch(e) {
+            return null;
+        }
+    }
+
+    const sharedUser = getSharedSessionCookie();
+    if (sharedUser && sharedUser.uid) {
+        localStorage.setItem('mhent_user_profile', JSON.stringify(sharedUser));
+        localStorage.setItem('mhent_user_role', sharedUser.role || 'user');
+    }
+
+    // 2. Khôi phục UI ngay lập tức từ bộ nhớ đệm để tránh giật lag khi mở app
     const cachedProfileStr = localStorage.getItem('mhent_user_profile');
     if (cachedProfileStr) {
         try {
             const cachedUser = JSON.parse(cachedProfileStr);
-            if (cachedUser && cachedUser.uid && cachedUser.email) {
+            if (cachedUser && cachedUser.uid && (cachedUser.email || cachedUser.displayName)) {
                 if (btnLogin) btnLogin.style.display = 'none';
                 if (userProfile) {
                     userProfile.style.display = 'inline-flex';
@@ -72,7 +89,7 @@ export function initNavbarAuth() {
                         if (typeof window.openSideDrawer === 'function') window.openSideDrawer();
                     };
                     if (userAvatar) userAvatar.src = cachedUser.photoURL || '/assets/avt-web.jpg';
-                    if (userName) userName.textContent = cachedUser.displayName || cachedUser.email.split('@')[0];
+                    if (userName) userName.textContent = cachedUser.displayName || (cachedUser.email ? cachedUser.email.split('@')[0] : 'Học viên MHEnt');
                 }
                 if (cachedUser.streak) {
                     document.querySelectorAll('#streakNum').forEach(el => el.textContent = cachedUser.streak);
@@ -93,6 +110,9 @@ export function initNavbarAuth() {
             await signOut(auth);
             localStorage.removeItem('mhent_user_profile');
             localStorage.setItem('mhent_user_role', 'guest');
+            // Xóa cookie liên tên miền trên toàn bộ hệ thống
+            document.cookie = "mhent_auth_session=; domain=.mhentuniverse.com; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax; Secure";
+            document.cookie = "mhent_auth_token=; domain=.mhentuniverse.com; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax; Secure";
             if (typeof showToast === 'function') {
                 showToast('Thông báo', 'Đã đăng xuất khỏi MHEnt Universe!', 'info');
             }
@@ -165,17 +185,31 @@ export function initNavbarAuth() {
                 console.warn('[Study Auth] Lỗi đồng bộ streak Firestore:', e);
             }
         } else {
-            // Không có phiên Firebase trực tiếp, kiểm tra nếu còn lưu session trong LocalStorage
+            // Không có phiên Firebase trực tiếp, kiểm tra nếu còn lưu session trong LocalStorage hoặc Cookie liên miền
+            const cookieUser = getSharedSessionCookie();
             const cachedProfileStr = localStorage.getItem('mhent_user_profile');
             let hasValidCache = false;
-            if (cachedProfileStr) {
+            let activeUser = cookieUser;
+
+            if (!activeUser && cachedProfileStr) {
                 try {
-                    const cached = JSON.parse(cachedProfileStr);
-                    if (cached && cached.uid && (cached.email || cached.displayName)) {
-                        hasValidCache = true;
+                    const parsed = JSON.parse(cachedProfileStr);
+                    if (parsed && parsed.uid && (parsed.email || parsed.displayName)) {
+                        activeUser = parsed;
                     }
                 } catch(e) {}
             }
+
+            if (activeUser && activeUser.uid) {
+                hasValidCache = true;
+                if (btnLogin) btnLogin.style.display = 'none';
+                if (userProfile) {
+                    userProfile.style.display = 'inline-flex';
+                    if (userAvatar) userAvatar.src = activeUser.photoURL || '/assets/avt-web.jpg';
+                    if (userName) userName.textContent = activeUser.displayName || (activeUser.email ? activeUser.email.split('@')[0] : 'Học viên MHEnt');
+                }
+            }
+
             if (!hasValidCache) {
                 if (btnLogin) btnLogin.style.display = 'inline-flex';
                 if (userProfile) userProfile.style.display = 'none';
