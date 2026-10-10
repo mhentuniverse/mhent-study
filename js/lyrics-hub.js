@@ -2447,7 +2447,6 @@ QUY TẮC ĐẦU RA:
             }
         }
     }
-    }
 
     updatePlayerProgress() {
         const progressBar = document.getElementById('playback-progress');
