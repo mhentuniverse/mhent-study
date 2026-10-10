@@ -15,6 +15,13 @@
             } else {
                 document.documentElement.classList.remove('dark-mode');
             }
+            // Đồng bộ phiên đăng nhập từ cookie liên miền sang localStorage nếu chưa có
+            try {
+                const sessionCookie = getCookie('mhent_auth_session');
+                if (sessionCookie && !localStorage.getItem('mhent_user_profile')) {
+                    localStorage.setItem('mhent_user_profile', sessionCookie);
+                }
+            } catch(e) {}
         })();
     </script>
     <meta charset="UTF-8">

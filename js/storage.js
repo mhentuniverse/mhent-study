@@ -104,8 +104,27 @@ class StudyStorage {
     }
 
     /**
+     * Nhận diện bộ bài mẫu mặc định của hệ thống
+     */
+    isSampleDeck(deckOrId, lang) {
+        if (!deckOrId) return false;
+        const id = typeof deckOrId === 'string' ? deckOrId : deckOrId.id;
+        if (!id) return false;
+        const sampleIds = [
+            'ko_deck_basic_countries',
+            'en_deck_essential_vocab',
+            'ja_deck_basic_n5',
+            'zh_deck_basic_hsk1'
+        ];
+        if (sampleIds.includes(id)) return true;
+        if (id.includes('_default_') || id.includes('_sample_') || id.endsWith('_default_1')) return true;
+        if (lang && (id === `${lang}_default_1` || id === `${lang}_sample_1` || id === `${lang}_deck_sample`)) return true;
+        return false;
+    }
+
+    /**
      * Lấy danh sách bộ từ vựng theo ngôn ngữ (ko, ja, zh, en)
-     * Đảm bảo tính riêng tư tuyệt đối: Chỉ trả về bài mặc định và bài của chính tài khoản hiện tại
+     * Bảo toàn dữ liệu cá nhân & bài mẫu, loại bỏ bài của tài khoản lạ khác
      */
     getDecks(lang) {
         let decks = this.get(`decks_${lang}`, []);
@@ -124,25 +143,40 @@ class StudyStorage {
             }
         }
 
-        // BẢO VỆ QUYỀN RIÊNG TƯ: Lọc sạch các bộ bài của tài khoản khác
+        // Đảm bảo bài mẫu mặc định luôn có trong danh sách
+        if (defaultDeck && !decks.some(d => this.isSampleDeck(d, lang))) {
+            decks.push(JSON.parse(JSON.stringify(defaultDeck)));
+            this.saveDecks(lang, decks);
+        }
+
+        // BẢO VỆ DỮ LIỆU & QUYỀN RIÊNG TƯ:
         if (Array.isArray(decks) && window.studyCloud) {
             const currentUserId = window.studyCloud.getUserId();
             const isGuest = !currentUserId || currentUserId.startsWith('guest_');
 
-            const filtered = decks.filter(d => {
-                if (!d || !d.id) return false;
-                // Giữ lại bộ bài mẫu mặc định của hệ thống
-                if (d.id.endsWith('_default_1') || d.id === `${lang}_default_1`) return true;
-                // Nếu đã đăng nhập: CHỈ HIỂN THỊ bài do chính tài khoản này tạo
-                if (!isGuest && d.userId) return d.userId === currentUserId;
-                // Nếu là khách: CHỈ HIỂN THỊ bài nháp do khách tạo trên máy này
-                if (isGuest && d.userId) return d.userId.startsWith('guest_');
-                return false;
-            });
+            if (!isGuest) {
+                // Người dùng đã đăng nhập:
+                // Nếu trên máy có bài chưa gán userId hoặc bài tạo lúc làm khách -> Tự động chuyển quyền sở hữu sang tài khoản hiện tại
+                let changed = false;
+                decks.forEach(d => {
+                    if (d && d.id && !this.isSampleDeck(d, lang)) {
+                        if (!d.userId || d.userId.startsWith('guest_')) {
+                            d.userId = currentUserId;
+                            changed = true;
+                        }
+                    }
+                });
+                if (changed) {
+                    this.saveDecks(lang, decks);
+                }
 
-            if (filtered.length !== decks.length) {
-                this.saveDecks(lang, filtered);
-                decks = filtered;
+                // Trả về: Bài mẫu + Bài của chính user này + Bài do máy này tạo (không trả về bài của user đăng nhập khác)
+                return decks.filter(d => {
+                    if (!d || !d.id) return false;
+                    if (this.isSampleDeck(d, lang)) return true;
+                    if (!d.userId || d.userId === currentUserId || d.userId.startsWith('guest_')) return true;
+                    return false;
+                });
             }
         }
 
@@ -153,6 +187,11 @@ class StudyStorage {
      * Lưu danh sách bộ từ vựng
      */
     saveDecks(lang, decks) {
+        if (Array.isArray(lang) && typeof decks === 'string') {
+            const temp = lang;
+            lang = decks;
+            decks = temp;
+        }
         this.set(`decks_${lang}`, decks);
     }
 
@@ -166,32 +205,18 @@ class StudyStorage {
         }
 
         const currentUserId = window.studyCloud.getUserId();
-        const isGuest = !currentUserId || currentUserId.startsWith('guest_');
-
         let localDecks = this.getDecks(lang);
 
-        // 1. Nếu là khách (chưa đăng nhập): Tuyệt đối không kéo bài người khác về, không gộp bài cộng đồng
-        if (isGuest || typeof window.studyCloud.listUserDecks !== 'function') {
-            return localDecks;
-        }
-
         try {
-            // 2. Người dùng đã đăng nhập: Kéo toàn bộ bài của CHÍNH TÀI KHOẢN NÀY từ Supabase Cloud
+            // Kéo toàn bộ bài của CHÍNH TÀI KHOẢN NÀY từ Supabase Cloud (theo user_id)
             const cloudDecks = await window.studyCloud.listUserDecks(currentUserId, lang);
             if (!Array.isArray(cloudDecks)) return localDecks;
-
-            // Lọc giữ lại bài mặc định và bài của chính user này
-            localDecks = localDecks.filter(d => {
-                if (!d || !d.id) return false;
-                if (d.id.endsWith('_default_1') || d.id === `${lang}_default_1`) return true;
-                return d.userId === currentUserId;
-            });
 
             let changed = false;
 
             cloudDecks.forEach(cDeck => {
                 if (!cDeck || !cDeck.id) return;
-                cDeck.userId = currentUserId; // Gán đúng định danh
+                cDeck.userId = currentUserId;
                 const idx = localDecks.findIndex(d => d.id === cDeck.id);
                 if (idx >= 0) {
                     const local = localDecks[idx];
@@ -200,30 +225,44 @@ class StudyStorage {
                     const cloudTime = new Date(cDeck.updatedAt || 0).getTime();
                     const localTime = new Date(local.updatedAt || 0).getTime();
 
-                    // Ưu tiên cập nhật nếu Cloud có nhiều từ hơn hoặc mới hơn
+                    // Ưu tiên bản có nhiều từ hơn hoặc mới hơn
                     if (cloudWordsLen > localWordsLen || cloudTime > localTime) {
                         localDecks[idx] = cDeck;
                         changed = true;
                     }
                 } else {
-                    localDecks.push(cDeck);
+                    localDecks.unshift(cDeck);
                     changed = true;
                 }
             });
 
-            // Sắp xếp: Đưa các bộ bài cá nhân của người dùng lên đầu danh sách
+            // Đảm bảo bài mẫu mặc định luôn có mặt trong danh sách
+            const defaultDeckMap = {
+                ko: window.DEFAULT_KO_DECK,
+                ja: window.DEFAULT_JA_DECK,
+                zh: window.DEFAULT_ZH_DECK,
+                en: window.DEFAULT_EN_DECK
+            };
+            const defaultDeck = defaultDeckMap[lang];
+            if (defaultDeck && !localDecks.some(d => this.isSampleDeck(d, lang))) {
+                localDecks.push(JSON.parse(JSON.stringify(defaultDeck)));
+                changed = true;
+            }
+
+            // Sắp xếp: Các bài học cá nhân của người dùng lên đầu (mới nhất trước), bài mẫu ở sau
             localDecks.sort((a, b) => {
-                const aIsUser = a.userId === currentUserId ? 1 : 0;
-                const bIsUser = b.userId === currentUserId ? 1 : 0;
-                if (aIsUser !== bIsUser) return bIsUser - aIsUser;
+                const aIsSample = this.isSampleDeck(a, lang) ? 1 : 0;
+                const bIsSample = this.isSampleDeck(b, lang) ? 1 : 0;
+                if (aIsSample !== bIsSample) return aIsSample - bIsSample; // 0 first (user decks), 1 last (sample)
+
                 const tA = new Date(a.updatedAt || a.createdAt || 0).getTime();
                 const tB = new Date(b.updatedAt || b.createdAt || 0).getTime();
                 return tB - tA;
             });
 
-            if (changed || localDecks.length > 0) {
+            if (changed || cloudDecks.length > 0) {
                 this.saveDecks(lang, localDecks);
-                console.log(`[StudyStorage] ☁️ Đã đồng bộ ${cloudDecks.length} bộ bài cá nhân của ${currentUserId} (${lang.toUpperCase()}) từ Supabase Cloud!`);
+                console.log(`[StudyStorage] ☁️ Đã đồng bộ ${cloudDecks.length} bộ bài cá nhân (${lang.toUpperCase()}) từ Supabase Cloud!`);
             }
             return localDecks;
         } catch (e) {
@@ -244,15 +283,18 @@ class StudyStorage {
      * Tạo một bộ từ vựng mới
      */
     createDeck(lang, { title, description = '', words = [] }) {
+        const currentUserId = window.studyCloud ? window.studyCloud.getUserId() : 'guest';
+        const authorName = window.studyCloud ? window.studyCloud.getUserName() : 'Người học MHEnt';
         const newDeck = {
             id: `${lang}_deck_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
             lang: lang,
+            userId: currentUserId,
             title: title || `Bài học mới (${lang.toUpperCase()})`,
             description: description || 'Bộ từ vựng do người học tạo',
-            author: 'Người học MHEnt',
+            author: authorName,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            words: words
+            words: words || []
         };
 
         const decks = this.getDecks(lang);
@@ -294,6 +336,9 @@ class StudyStorage {
      * Lưu hoặc cập nhật 1 bộ từ vựng (Lưu Local + Đồng bộ Supabase Cloud)
      */
     saveDeck(lang, deck) {
+        if (!deck.userId && window.studyCloud) {
+            deck.userId = window.studyCloud.getUserId();
+        }
         const decks = this.getDecks(lang);
         const idx = decks.findIndex(d => d.id === deck.id);
         deck.updatedAt = new Date().toISOString();
@@ -323,8 +368,10 @@ class StudyStorage {
      * Clone một bộ bài được chia sẻ vào kho cá nhân của người dùng
      */
     cloneDeck(deck) {
+        const currentUserId = window.studyCloud ? window.studyCloud.getUserId() : 'guest';
         const newDeck = JSON.parse(JSON.stringify(deck));
         newDeck.id = 'deck_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+        newDeck.userId = currentUserId;
         newDeck.title = `${deck.title} (Bản sao)`;
         newDeck.isCloned = true;
         newDeck.originalAuthor = deck.author || 'Bạn bè MHEnt';

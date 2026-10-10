@@ -299,6 +299,7 @@ class StudyDeckSelector {
                 targetDeck = {
                     id: `${lang}_deck_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
                     lang: lang,
+                    userId: (window.studyCloud && window.studyCloud.getUserId()) || 'guest',
                     title: title,
                     description: 'Tạo từ AISA AI & Học qua Bài hát',
                     author: (window.studyCloud && window.studyCloud.getUserName()) || 'Học viên MHEnt',
@@ -334,7 +335,7 @@ class StudyDeckSelector {
 
             // 1. Lưu vào LocalStorage
             if (window.studyStorage) {
-                window.studyStorage.saveDecks(decks, lang);
+                window.studyStorage.saveDecks(lang, decks);
             }
 
             // 2. Đồng bộ lên Supabase Cloud (bảng study_decks trên ctzkgchjheirxwejctvl)

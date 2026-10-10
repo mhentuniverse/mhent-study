@@ -196,8 +196,9 @@ class VocabSheetApp {
                 } 
                 // 2. Nếu người dùng không chỉ định deck trên URL và bài hiện tại đang là bài mẫu mặc định
                 // trong khi Cloud có bài học cá nhân của chính người dùng (ví dụ: Bài 7, 8, 9, 10...)
-                const userPersonalDeck = updatedDecks.find(d => !d.id.endsWith('_default_1') && d.id !== `${this.lang}_default_1`);
-                const isCurrentSample = !currentDeckIdBefore || currentDeckIdBefore.endsWith('_default_1') || currentDeckIdBefore === `${this.lang}_default_1`;
+                const isSample = (d) => window.studyStorage ? window.studyStorage.isSampleDeck(d, this.lang) : false;
+                const userPersonalDeck = updatedDecks.find(d => !isSample(d));
+                const isCurrentSample = !currentDeckIdBefore || isSample(currentDeckIdBefore);
 
                 if (!hasExplicitDeckParam && isCurrentSample && userPersonalDeck) {
                     this.switchDeck(userPersonalDeck.id);
@@ -220,7 +221,9 @@ class VocabSheetApp {
         if (deckId && savedDecks.length > 0) {
             this.currentDeck = savedDecks.find(d => d.id === deckId) || savedDecks[0];
         } else if (savedDecks.length > 0) {
-            this.currentDeck = savedDecks[0];
+            const isSample = (d) => window.studyStorage ? window.studyStorage.isSampleDeck(d, this.lang) : false;
+            const userPersonalDeck = savedDecks.find(d => !isSample(d));
+            this.currentDeck = userPersonalDeck || savedDecks[0];
         } else {
             const defaultDeckMap = {
                 ko: window.DEFAULT_KO_DECK,

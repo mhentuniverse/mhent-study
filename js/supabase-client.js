@@ -49,12 +49,34 @@ class StudyCloudClient {
         };
     }
 
+    getSharedSessionUser() {
+        try {
+            const match = document.cookie.match(/(?:^|;\s*)mhent_auth_session=([^;]*)/);
+            if (match && match[1]) {
+                const user = JSON.parse(decodeURIComponent(match[1]));
+                if (user && (user.uid || user.id)) {
+                    try {
+                        localStorage.setItem('mhent_user_profile', JSON.stringify(user));
+                        if (user.role) localStorage.setItem('mhent_user_role', user.role);
+                    } catch(e) {}
+                    return user;
+                }
+            }
+        } catch (e) {}
+        return null;
+    }
+
     getUserId() {
         // 1. Ưu tiên Firebase Auth instance nếu có
         if (window.studyAuth && window.studyAuth.currentUser) {
             return window.studyAuth.currentUser.uid;
         }
-        // 2. Profile đã đăng nhập lưu trong localStorage (đồng bộ qua toàn hệ thống MHEnt Universe)
+        // 2. Cookie phiên đăng nhập dùng chung toàn miền (*.mhentuniverse.com)
+        const sessionUser = this.getSharedSessionUser();
+        if (sessionUser && (sessionUser.uid || sessionUser.id)) {
+            return sessionUser.uid || sessionUser.id;
+        }
+        // 3. Profile đã đăng nhập lưu trong localStorage (đồng bộ qua toàn hệ thống MHEnt Universe)
         try {
             const cached = JSON.parse(localStorage.getItem('mhent_user_profile') || '{}');
             if (cached && (cached.uid || cached.id)) {
@@ -62,7 +84,7 @@ class StudyCloudClient {
             }
         } catch (e) {}
 
-        // 3. Hoặc guest ID duy nhất trên trình duyệt
+        // 4. Hoặc guest ID duy nhất trên trình duyệt
         let guestId = localStorage.getItem('mhent_study_guest_id');
         if (!guestId) {
             guestId = 'guest_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
@@ -74,6 +96,10 @@ class StudyCloudClient {
     getUserName() {
         if (window.studyAuth && window.studyAuth.currentUser) {
             return window.studyAuth.currentUser.displayName || window.studyAuth.currentUser.email || 'Thành viên MHEnt';
+        }
+        const sessionUser = this.getSharedSessionUser();
+        if (sessionUser && (sessionUser.displayName || sessionUser.email)) {
+            return sessionUser.displayName || sessionUser.email;
         }
         try {
             const cached = JSON.parse(localStorage.getItem('mhent_user_profile') || '{}');
@@ -217,7 +243,7 @@ class StudyCloudClient {
      */
     async listUserDecks(userId, langFilter = 'all') {
         if (!userId) userId = this.getUserId();
-        if (!userId || userId.startsWith('guest_')) return [];
+        if (!userId) return [];
 
         const decks = [];
 
