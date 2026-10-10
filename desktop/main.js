@@ -12,6 +12,15 @@ let localServerPort = 0;
 const CHROME_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 app.userAgentFallback = CHROME_USER_AGENT;
 
+// Đăng ký custom protocol mhentstudy:// cho Desktop để nhận đăng nhập từ Cổng Định Danh MHEnt ID
+if (process.defaultApp) {
+  if (process.argv.length >= 2) {
+    app.setAsDefaultProtocolClient('mhentstudy', process.execPath, [path.resolve(process.argv[1])]);
+  }
+} else {
+  app.setAsDefaultProtocolClient('mhentstudy');
+}
+
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -39,6 +48,29 @@ function startLocalServer() {
       try {
         const parsedUrl = url.parse(req.url);
         let pathname = decodeURIComponent(parsedUrl.pathname);
+
+        // Xử lý Auth Callback từ Trình duyệt (accounts.mhentuniverse.com)
+        if (pathname === '/auth-callback') {
+          res.writeHead(200, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Access-Control-Allow-Origin': '*'
+          });
+          res.end(JSON.stringify({ success: true, message: 'Đăng nhập MHEnt Study Desktop thành công!' }));
+
+          const fullCallbackUrl = 'mhentstudy://auth' + (parsedUrl.search || '');
+          if (mainWindow && mainWindow.webContents) {
+            mainWindow.webContents.executeJavaScript(`
+              if (typeof window.handleMHEntDeepLink === 'function') {
+                window.handleMHEntDeepLink(${JSON.stringify(fullCallbackUrl)});
+              } else {
+                window.__pendingDeepLink = ${JSON.stringify(fullCallbackUrl)};
+              }
+            `).catch(console.warn);
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.focus();
+          }
+          return;
+        }
 
         // Default root
         if (pathname === '/' || pathname === '') {
@@ -157,7 +189,7 @@ async function createWindow() {
     }
   );
 
-  // Xử lý OAuth popups (Firebase & Google Sign-In)
+  // Xử lý OAuth popups (Firebase, Google Sign-In & Cổng MHEnt ID)
   mainWindow.webContents.setWindowOpenHandler(({ url: targetUrl }) => {
     // Cho phép popup xác thực mở trực tiếp trong cửa sổ ứng dụng (kết nối window.opener)
     if (
@@ -165,6 +197,7 @@ async function createWindow() {
       targetUrl.includes('accounts.google.com') ||
       targetUrl.includes('google.com') ||
       targetUrl.includes('apis.google.com') ||
+      targetUrl.includes('accounts.mhentuniverse.com') ||
       targetUrl.startsWith('http://localhost') ||
       targetUrl.startsWith('http://127.0.0.1')
     ) {
@@ -219,13 +252,40 @@ ipcMain.handle('desktop:open-external', (event, targetUrl) => {
   if (targetUrl) shell.openExternal(targetUrl);
 });
 
-// Đảm bảo chỉ chạy 1 phiên duy nhất (Single instance)
+// Đảm bảo chỉ chạy 1 phiên duy nhất (Single instance) và xử lý Deep Link
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   app.quit();
 } else {
-  app.on('second-instance', () => {
+  app.on('second-instance', (event, commandLine) => {
     if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+
+      // Kiểm tra URL deep link trong commandLine khi gọi lại từ bên ngoài
+      const deepLinkUrl = (commandLine || []).find(arg => typeof arg === 'string' && arg.startsWith('mhentstudy://'));
+      if (deepLinkUrl && mainWindow.webContents) {
+        mainWindow.webContents.executeJavaScript(`
+          if (typeof window.handleMHEntDeepLink === 'function') {
+            window.handleMHEntDeepLink(${JSON.stringify(deepLinkUrl)});
+          } else {
+            window.__pendingDeepLink = ${JSON.stringify(deepLinkUrl)};
+          }
+        `).catch(console.warn);
+      }
+    }
+  });
+
+  app.on('open-url', (event, rawUrl) => {
+    event.preventDefault();
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.executeJavaScript(`
+        if (typeof window.handleMHEntDeepLink === 'function') {
+          window.handleMHEntDeepLink(${JSON.stringify(rawUrl)});
+        } else {
+          window.__pendingDeepLink = ${JSON.stringify(rawUrl)};
+        }
+      `).catch(console.warn);
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
     }

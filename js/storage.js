@@ -130,18 +130,15 @@ class StudyStorage {
         // Lấy danh sách bộ bài cục bộ hiện tại
         let localDecks = this.getDecks(lang);
 
-        // 1. DỌN DẸP DỮ LIỆU LỖI CŨ:
-        // Loại bỏ các bộ bài của tài khoản khác đã vô tình bị tải về máy trước đó
-        if (Array.isArray(localDecks)) {
+        // 1. DỌN DẸP DỮ LIỆU CỦA TÀI KHOẢN KHÁC (chỉ khi đăng nhập tài khoản thực sự khác):
+        if (Array.isArray(localDecks) && !isGuest) {
             const initialCount = localDecks.length;
             localDecks = localDecks.filter(d => {
                 if (!d || !d.id) return false;
                 // Giữ lại bộ bài mặc định của hệ thống
                 if (d.id.endsWith('_default_1') || d.id === `${lang}_default_1`) return true;
-                // Nếu bộ bài có đánh dấu userId của người khác -> Loại bỏ
-                if (d.userId && !isGuest && d.userId !== currentUserId) return false;
-                // Nếu chưa đăng nhập (khách) mà bộ bài có userId của tài khoản chính thức khác -> Loại bỏ
-                if (isGuest && d.userId && !d.userId.startsWith('guest_')) return false;
+                // Nếu bộ bài đánh dấu userId của một tài khoản khác hẳn -> Loại bỏ
+                if (d.userId && !d.userId.startsWith('guest_') && d.userId !== currentUserId) return false;
                 return true;
             });
 
@@ -151,13 +148,28 @@ class StudyStorage {
             }
         }
 
-        // 2. Nếu là khách (chưa đăng nhập): Chỉ dùng kho bài cục bộ, không kéo từ Cloud
-        if (isGuest || typeof window.studyCloud.listUserDecks !== 'function') {
+        // 2. Nếu là khách (chưa đăng nhập):
+        // Nếu đã có bài lưu trên máy (kể cả bài từ phiên trước) thì giữ nguyên
+        // Nếu chưa có bài nào ngoài bài mẫu, kéo thêm bài chia sẻ cộng đồng từ Cloud
+        if (isGuest) {
+            if (localDecks.length <= 1 && window.studyCloud && typeof window.studyCloud.listSharedDecks === 'function') {
+                try {
+                    const sharedDecks = await window.studyCloud.listSharedDecks(lang);
+                    if (Array.isArray(sharedDecks) && sharedDecks.length > 0) {
+                        let merged = [...localDecks];
+                        sharedDecks.forEach(s => {
+                            if (!merged.some(m => m.id === s.id)) merged.push(s);
+                        });
+                        this.saveDecks(lang, merged);
+                        return merged;
+                    }
+                } catch(e) {}
+            }
             return localDecks;
         }
 
         try {
-            // 3. Chỉ lấy các bộ bài do CHÍNH NGƯỜI DÙNG NÀY tạo trên Supabase Cloud
+            // 3. Người dùng đã đăng nhập: Kéo toàn bộ bài của CHÍNH TÀI KHOẢN NÀY từ Supabase Cloud
             const cloudDecks = await window.studyCloud.listUserDecks(currentUserId, lang);
             if (!Array.isArray(cloudDecks) || cloudDecks.length === 0) {
                 return localDecks;

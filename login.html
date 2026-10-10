@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<!-- Kiểm tra Dark Mode ngay lập tức trước khi Render để tránh chớp trắng (Anti-FOUC) -->
+    <!-- Kiểm tra Dark Mode & Tự động chuyển tiếp sang Cổng Định Danh MHEnt ID -->
     <script>
         (function() {
             function getCookie(name) {
@@ -14,6 +14,37 @@
                 document.documentElement.classList.add('dark-mode');
             } else {
                 document.documentElement.classList.remove('dark-mode');
+            }
+
+            // Kiểm tra nếu đã có phiên đăng nhập hợp lệ -> Trở về trang đích
+            const session = getCookie('mhent_auth_session') || localStorage.getItem('mhent_user_profile');
+            const search = window.location.search || '';
+            const params = new URLSearchParams(search);
+            const redirect = params.get('redirect') || '/index.html';
+
+            if (session) {
+                try {
+                    const parsed = typeof session === 'string' && session.startsWith('{') ? JSON.parse(session) : session;
+                    if (parsed && (parsed.uid || parsed.id)) {
+                        window.location.replace(redirect);
+                        return;
+                    }
+                } catch(e) {}
+            }
+
+            // Chuyển hướng trực tiếp 1-chạm sang Cổng Định Danh Trung Tâm MHEnt ID
+            const isDesktop = Boolean(window.MHEntDesktop && window.MHEntDesktop.isDesktop);
+            const isNativeApp = Boolean(window.AndroidAuth) || Boolean(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+            const platform = isDesktop ? 'desktop' : (isNativeApp ? 'app' : 'web');
+            const targetRedirect = redirect.startsWith('http') ? redirect : (window.location.origin + redirect);
+            const ssoUrl = 'https://accounts.mhentuniverse.com/login?source=mhentstudy&platform=' + platform + '&redirect=' + encodeURIComponent(targetRedirect);
+
+            if (isDesktop && window.MHEntDesktop && window.MHEntDesktop.openExternal) {
+                window.MHEntDesktop.openExternal(ssoUrl);
+            } else if (isNativeApp && window.AndroidAuth && window.AndroidAuth.openExternalUrl) {
+                window.AndroidAuth.openExternalUrl(ssoUrl);
+            } else {
+                window.location.replace(ssoUrl);
             }
         })();
     </script>

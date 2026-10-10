@@ -99,9 +99,21 @@ export function initNavbarAuth() {
     }
 
     if (btnLogin) {
-        btnLogin.onclick = () => {
-            const redirectUrl = encodeURIComponent(window.location.href);
-            window.location.href = `/login.html?redirect=${redirectUrl}`;
+        btnLogin.onclick = (e) => {
+            if (e && e.preventDefault) e.preventDefault();
+            const isDesktop = Boolean(window.MHEntDesktop && window.MHEntDesktop.isDesktop);
+            const isNativeApp = Boolean(window.AndroidAuth) || Boolean(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+            const platform = isDesktop ? 'desktop' : (isNativeApp ? 'app' : 'web');
+            const targetRedirect = window.location.href;
+            const ssoUrl = `https://accounts.mhentuniverse.com/login?source=mhentstudy&platform=${platform}&redirect=${encodeURIComponent(targetRedirect)}`;
+
+            if (isDesktop && window.MHEntDesktop && window.MHEntDesktop.openExternal) {
+                window.MHEntDesktop.openExternal(ssoUrl);
+            } else if (isNativeApp && window.AndroidAuth && window.AndroidAuth.openExternalUrl) {
+                window.AndroidAuth.openExternalUrl(ssoUrl);
+            } else {
+                window.location.href = ssoUrl;
+            }
         };
     }
 
@@ -288,13 +300,33 @@ window.handleMHEntDeepLink = async function(rawUrl) {
                 console.warn('[Study Auth] Lỗi đồng bộ Firestore khi nhận Deep Link:', fsErr);
             }
 
+            // Kích hoạt đồng bộ toàn bộ dữ liệu Supabase Cloud cho tất cả các ngôn ngữ
+            if (window.studyStorage && typeof window.studyStorage.syncDecksFromCloud === 'function') {
+                try {
+                    await Promise.all(['ko', 'ja', 'en', 'zh'].map(l => window.studyStorage.syncDecksFromCloud(l)));
+                    console.log('[Study Auth] ☁️ Đã đồng bộ kho bài học Supabase Cloud cho tài khoản:', uid);
+                } catch(syncErr) {
+                    console.warn('[Study Auth] Lỗi đồng bộ Supabase Cloud:', syncErr);
+                }
+            }
+
+            // Nếu đang mở trang bài học VocabSheetApp thì đồng bộ và làm mới ngay
+            if (window.sheetApp && typeof window.sheetApp.syncCloudDecks === 'function') {
+                try { await window.sheetApp.syncCloudDecks(); } catch(e) {}
+            }
+
             // Cập nhật ngay giao diện Navbar nếu đang mở
             if (typeof initNavbarAuth === 'function') {
                 initNavbarAuth();
             }
 
-            // Chuyển hướng người dùng về trang chủ Study Hub
-            if (window.location.pathname.includes('login') || window.location.pathname.endsWith('login.html')) {
+            // Chuyển hướng người dùng về trang ban đầu hoặc trang chủ Study Hub
+            const redirectTarget = params.get('redirect') ? decodeURIComponent(params.get('redirect')) : '';
+            if (redirectTarget && !redirectTarget.includes('login')) {
+                setTimeout(() => {
+                    window.location.href = redirectTarget;
+                }, 400);
+            } else if (window.location.pathname.includes('login') || window.location.pathname.endsWith('login.html')) {
                 setTimeout(() => {
                     window.location.href = '/index.html';
                 }, 400);
