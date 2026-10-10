@@ -44,6 +44,37 @@ function copyRecursive(src, dest) {
   }
 }
 
+// Chuyển đổi toàn bộ liên kết Clean URL sang file .html cụ thể trong thư mục www/
+function rewriteHtmlLinks(dir) {
+  const entries = fs.readdirSync(dir);
+  for (const entry of entries) {
+    const full = path.join(dir, entry);
+    const stat = fs.statSync(full);
+    if (stat.isDirectory()) {
+      rewriteHtmlLinks(full);
+    } else if (entry.endsWith('.html')) {
+      let content = fs.readFileSync(full, 'utf8');
+
+      // Ánh xạ các đường dẫn href và onclick
+      content = content
+        .replace(/href="\/lyrics(?:\/|)"/g, 'href="/lyrics.html"')
+        .replace(/href="\/login(?:\/|)"/g, 'href="/login.html"')
+        .replace(/href="\/download(?:\/|)"/g, 'href="/download.html"')
+        .replace(/href="\/(ko|ja|zh|en)(?:\/|)"/g, 'href="/$1/index.html"')
+        .replace(/href="\/shared(?:\/|)"/g, 'href="/shared/index.html"')
+        .replace(/href="\/(ko|ja|zh|en)\/(alphabet|exam)(?:\/|)"/g, 'href="/$1/$2.html"')
+        .replace(/href="\/(ko|ja|zh|en)\/practice(?:\/|)"/g, 'href="/$1/practice/index.html"')
+        .replace(/href="\/(ko|ja|zh|en)\/practice\/([a-zA-Z0-9\-_]+)(?<!\.html)"/g, 'href="/$1/practice/$2.html"')
+        .replace(/window\.location\.href\s*=\s*['"]\/login['"]/g, "window.location.href='/login.html'")
+        .replace(/window\.location\.href\s*=\s*['"]\/lyrics['"]/g, "window.location.href='/lyrics.html'")
+        .replace(/window\.location\.href\s*=\s*['"]\/(ko|ja|zh|en)['"]/g, "window.location.href='/$1/index.html'")
+        .replace(/window\.location\.href\s*=\s*['"]\/shared['"]/g, "window.location.href='/shared/index.html'");
+
+      fs.writeFileSync(full, content, 'utf8');
+    }
+  }
+}
+
 // Function to generate clean URL directory aliases (e.g., /lyrics -> /lyrics/index.html)
 function createCleanUrlAliases(dir) {
   const entries = fs.readdirSync(dir);
@@ -76,6 +107,9 @@ for (const item of includeItems) {
     console.log(`✓ Đã sao chép: ${item}`);
   }
 }
+
+rewriteHtmlLinks(outDir);
+console.log('✓ Đã chuẩn hóa liên kết HTML nội bộ sang .html file paths');
 
 createCleanUrlAliases(outDir);
 console.log('✓ Đã tạo các thư mục Clean URLs tương thích Mobile/Offline');

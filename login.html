@@ -80,14 +80,14 @@
     <!-- NAVBAR CHUẨN MHENT UNIVERSE -->
     <nav class="navbar">
         <div class="nav-left">
-            <a onclick="window.location.href='/'" style="cursor: pointer;">
+            <a onclick="window.location.href='/index.html'" style="cursor: pointer;">
                 <img src="/assets/avt-web.jpg" alt="Avatar Web" class="avt-img">
                 <span class="logo-name">MHEnt. Universe</span>
             </a>
         </div>
 
         <ul class="nav-links" id="nav-links">
-            <li><a onclick="window.location.href='/'" style="cursor: pointer; color: var(--theme-accent);">Study Hub</a></li>
+            <li><a onclick="window.location.href='/index.html'" style="cursor: pointer; color: var(--theme-accent);">Study Hub</a></li>
             <li><a onclick="window.open('https://www.mhentuniverse.com', '_blank')" style="cursor: pointer;">Đại Sảnh MHEnt</a></li>
         </ul>
 
@@ -180,7 +180,7 @@
             </button>
 
             <div style="text-align: center; margin-top: 20px;">
-                <a onclick="window.location.href='/'" class="btn-back-login" style="cursor: pointer;">
+                <a onclick="window.location.href='/index.html'" class="btn-back-login" style="cursor: pointer;">
                     <i class="fa-solid fa-arrow-left"></i> Quay lại Study Hub
                 </a>
             </div>
@@ -193,7 +193,7 @@
             <div class="footer-grid">
                 <!-- Cột 1: Thương hiệu MHEnt Study -->
                 <div class="footer-brand-col">
-                    <a onclick="window.location.href='/'" class="footer-brand-title" style="cursor: pointer;">
+                    <a onclick="window.location.href='/index.html'" class="footer-brand-title" style="cursor: pointer;">
                         <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="footer-brand-logo">
                         <span class="footer-brand-name">MHEnt. Study</span>
                     </a>
@@ -214,11 +214,11 @@
                 <div class="footer-col">
                     <h3 class="footer-col-heading">📚 Không Gian Học Tập</h3>
                     <ul class="footer-links-list">
-                        <li><a onclick="window.location.href='/ja'" class="footer-nav-link">🇯🇵 Tiếng Nhật (JLPT N5-N1)</a></li>
-                        <li><a onclick="window.location.href='/ko'" class="footer-nav-link">🇰🇷 Tiếng Hàn (Hangeul & TOPIK)</a></li>
-                        <li><a onclick="window.location.href='/zh'" class="footer-nav-link">🇨🇳 Tiếng Trung (HSK & Pinyin)</a></li>
-                        <li><a onclick="window.location.href='/en'" class="footer-nav-link">🇬🇧 Tiếng Anh (44 Âm IPA)</a></li>
-                        <li><a onclick="window.location.href='/shared'" class="footer-nav-link">📂 Kho Bộ Thẻ Chia Sẻ</a></li>
+                        <li><a onclick="window.location.href='/ja/index.html'" class="footer-nav-link">🇯🇵 Tiếng Nhật (JLPT N5-N1)</a></li>
+                        <li><a onclick="window.location.href='/ko/index.html'" class="footer-nav-link">🇰🇷 Tiếng Hàn (Hangeul & TOPIK)</a></li>
+                        <li><a onclick="window.location.href='/zh/index.html'" class="footer-nav-link">🇨🇳 Tiếng Trung (HSK & Pinyin)</a></li>
+                        <li><a onclick="window.location.href='/en/index.html'" class="footer-nav-link">🇬🇧 Tiếng Anh (44 Âm IPA)</a></li>
+                        <li><a onclick="window.location.href='/shared/index.html'" class="footer-nav-link">📂 Kho Bộ Thẻ Chia Sẻ</a></li>
                     </ul>
                 </div>
 
@@ -230,7 +230,7 @@
                         <li><a onclick="window.open('https://www.mhentuniverse.com/cinema', '_blank')" class="footer-nav-link">MHEnt Cinema (Anime & Movie)</a></li>
                         <li><a onclick="window.open('https://www.mhentuniverse.com/arena', '_blank')" class="footer-nav-link">Arena (Đấu Trí Trực Tuyến)</a></li>
                         <li><a onclick="window.open('https://www.mhentuniverse.com/game', '_blank')" class="footer-nav-link">Game Center (Cờ Tướng, Cờ Vua)</a></li>
-                        <li><a onclick="window.location.href='/login'" class="footer-nav-link">Cổng Định Danh Học Viên</a></li>
+                        <li><a onclick="window.location.href='/login.html'" class="footer-nav-link">Cổng Định Danh Học Viên</a></li>
                     </ul>
                 </div>
 
@@ -331,14 +331,14 @@
                 localStorage.setItem('mhent_user_role', profile.role);
 
                 const urlParams = new URLSearchParams(window.location.search);
-                const redirect = urlParams.get('redirect') || '/';
+                const redirect = urlParams.get('redirect') || '/index.html';
 
                 setTimeout(() => {
                     window.location.href = redirect;
                 }, 600);
             } catch (err) {
                 console.error("Lỗi cập nhật profile:", err);
-                window.location.href = '/';
+                window.location.href = '/index.html';
             }
         }
 

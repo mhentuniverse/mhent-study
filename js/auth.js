@@ -262,7 +262,7 @@ window.handleMHEntDeepLink = async function(rawUrl) {
             // Chuyển hướng người dùng về trang chủ Study Hub
             if (window.location.pathname.includes('login') || window.location.pathname.endsWith('login.html')) {
                 setTimeout(() => {
-                    window.location.href = '/';
+                    window.location.href = '/index.html';
                 }, 400);
             } else {
                 setTimeout(() => {

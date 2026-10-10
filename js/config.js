@@ -27,3 +27,104 @@ window.supabaseUrl = window.MHENT_CONFIG.SUPABASE.URL;
 window.supabaseKey = window.MHENT_CONFIG.SUPABASE.KEY;
 window.aisaEndpoint = window.MHENT_CONFIG.AISA_API_ENDPOINT;
 window.aisaModel = window.MHENT_CONFIG.AISA_MODEL;
+
+// ==========================================
+// CƠ CHẾ ĐIỀU HƯỚNG VÀ DỌN DẸP BỘ NHỚ TRÊN CAPACITOR ANDROID APK
+// ==========================================
+window.resolveAppUrl = function(urlStr) {
+    try {
+        if (!urlStr || typeof urlStr !== 'string') return urlStr;
+        if (urlStr.startsWith('#') || urlStr.startsWith('javascript:') || urlStr.startsWith('mailto:') || urlStr.startsWith('tel:') || urlStr.startsWith('mhentstudy:')) {
+            return urlStr;
+        }
+
+        const u = new URL(urlStr, window.location.href);
+        if (u.origin !== window.location.origin) return urlStr;
+
+        let p = u.pathname;
+        if (!p || p === '/' || p === '') {
+            u.pathname = '/index.html';
+            return u.href;
+        }
+
+        // Nếu đã có đuôi mở rộng (.html, .js, .css, .png, etc.) thì giữ nguyên
+        if (/\.[a-zA-Z0-9]+$/.test(p)) return u.href;
+
+        const clean = p.replace(/\/$/, '');
+
+        // 1. Các trang gốc
+        if (['/lyrics', '/login', '/download'].includes(clean)) {
+            u.pathname = clean + '.html';
+            return u.href;
+        }
+
+        // 2. Các phân khu ngôn ngữ chính & kho chia sẻ: /ko, /ja, /zh, /en, /shared
+        if (['/ko', '/ja', '/zh', '/en', '/shared'].includes(clean)) {
+            u.pathname = clean + '/index.html';
+            return u.href;
+        }
+
+        // 3. Các trang alphabet & exam: /{lang}/alphabet, /{lang}/exam
+        if (/\/(ko|ja|zh|en)\/(alphabet|exam)$/.test(clean)) {
+            u.pathname = clean + '.html';
+            return u.href;
+        }
+
+        // 4. Trang practice chủ: /{lang}/practice
+        if (/\/(ko|ja|zh|en)\/practice$/.test(clean)) {
+            u.pathname = clean + '/index.html';
+            return u.href;
+        }
+
+        // 5. Các chế độ practice cụ thể: /{lang}/practice/{mode}
+        if (/\/(ko|ja|zh|en)\/practice\/[^\/]+$/.test(clean)) {
+            u.pathname = clean + '.html';
+            return u.href;
+        }
+
+        // Mặc định thêm .html để không bị 404 về index.html trên Android WebView
+        u.pathname = clean + '.html';
+        return u.href;
+    } catch(e) {
+        return urlStr;
+    }
+};
+
+(function() {
+    const isNativeApp = Boolean(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
+                        (typeof window !== 'undefined' && window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
+
+    if (isNativeApp) {
+        // 1. Tự động hủy ServiceWorker và xóa sạch cache cũ (tránh lỗi sw.js tự cache index.html đè lên mọi trang)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs) {
+                for (let reg of regs) {
+                    reg.unregister();
+                }
+            }).catch(function() {});
+        }
+        if (window.caches) {
+            caches.keys().then(function(keys) {
+                keys.forEach(function(k) { caches.delete(k); });
+            }).catch(function() {});
+        }
+
+        // 2. Tự động can thiệp mọi cú nhấp thẻ <a> hoặc nút điều hướng để tránh 404 về index
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a');
+            if (link) {
+                const targetUrl = link.getAttribute('href');
+                if (targetUrl && !targetUrl.startsWith('#') && !targetUrl.startsWith('javascript:')) {
+                    const resolved = window.resolveAppUrl(link.href);
+                    if (resolved && resolved !== link.href) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.location.href = resolved;
+                        return;
+                    }
+                }
+            }
+        }, true);
+    }
+})();
+

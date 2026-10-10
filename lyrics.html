@@ -61,13 +61,13 @@
         </a>
 
         <div class="nav-study-links">
-            <a href="/" class="study-link"><i class="fa-solid fa-house"></i> Tổng quan</a>
-            <a href="/ko" class="study-link">🇰🇷 Tiếng Hàn</a>
-            <a href="/ja" class="study-link">🇯🇵 Tiếng Nhật</a>
-            <a href="/zh" class="study-link">🇨🇳 Tiếng Trung</a>
-            <a href="/en" class="study-link">🇬🇧 Tiếng Anh</a>
-            <a href="/lyrics" class="study-link active"><i class="fa-solid fa-music"></i> Học qua Bài hát</a>
-            <a href="/shared" class="study-link"><i class="fa-solid fa-share-nodes"></i> Kho chia sẻ</a>
+            <a href="/index.html" class="study-link"><i class="fa-solid fa-house"></i> Tổng quan</a>
+            <a href="/ko/index.html" class="study-link">🇰🇷 Tiếng Hàn</a>
+            <a href="/ja/index.html" class="study-link">🇯🇵 Tiếng Nhật</a>
+            <a href="/zh/index.html" class="study-link">🇨🇳 Tiếng Trung</a>
+            <a href="/en/index.html" class="study-link">🇬🇧 Tiếng Anh</a>
+            <a href="/lyrics.html" class="study-link active"><i class="fa-solid fa-music"></i> Học qua Bài hát</a>
+            <a href="/shared/index.html" class="study-link"><i class="fa-solid fa-share-nodes"></i> Kho chia sẻ</a>
         </div>
 
         <div class="nav-study-actions">
@@ -91,7 +91,7 @@
             </button>
 
             <!-- Nút đăng nhập -->
-            <button id="btn-login" class="auth-btn-pill" onclick="window.location.href='/login'">
+            <button id="btn-login" class="auth-btn-pill" onclick="window.location.href='/login.html'">
                 <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập
             </button>
 
@@ -853,7 +853,8 @@
             document.body.classList.add('dark-mode');
         }
 
-        if ('serviceWorker' in navigator) {
+        // Chỉ đăng ký Service Worker trên Web Online, tuyệt đối không đăng ký trên App Native (localhost)
+        if ('serviceWorker' in navigator && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js').catch(() => {});
             });
