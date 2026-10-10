@@ -422,8 +422,11 @@
                     error.code === 'auth/popup-blocked' || 
                     error.code === 'auth/cancelled-popup-request') {
                     showLoading("Đang chuyển hướng sang Cổng Định Danh MHEnt...");
-                    const redirectUrl = encodeURIComponent(window.location.origin || 'https://study.mhentuniverse.com');
-                    window.location.href = `https://accounts.mhentuniverse.com/login?source=mhentstudy&platform=web&autoGoogle=1&redirect=${redirectUrl}`;
+                    const queryParams = new URLSearchParams(window.location.search);
+                    const originalRedirect = queryParams.get('redirect') || '/index.html';
+                    const targetRedirect = originalRedirect.startsWith('http') ? originalRedirect : (window.location.origin + originalRedirect);
+                    const redirectUrl = encodeURIComponent(targetRedirect);
+                    window.location.href = `https://accounts.mhentuniverse.com/login?source=mhentstudy&platform=web&redirect=${redirectUrl}`;
                     return;
                 }
 
@@ -472,7 +475,10 @@
         // SSO từ Cổng Định Danh MHEnt Universe
         window.loginWithMHEntUniverse = function() {
             const platform = isNativeApp ? 'app' : 'web';
-            const redirectUrl = encodeURIComponent(window.location.origin || 'https://study.mhentuniverse.com');
+            const queryParams = new URLSearchParams(window.location.search);
+            const originalRedirect = queryParams.get('redirect') || '/index.html';
+            const targetRedirect = originalRedirect.startsWith('http') ? originalRedirect : (window.location.origin + originalRedirect);
+            const redirectUrl = encodeURIComponent(targetRedirect);
             const ssoUrl = `https://accounts.mhentuniverse.com/login?source=mhentstudy&platform=${platform}&redirect=${redirectUrl}`;
             if (isNativeApp && window.AndroidAuth && window.AndroidAuth.openExternalUrl) {
                 window.AndroidAuth.openExternalUrl(ssoUrl);
