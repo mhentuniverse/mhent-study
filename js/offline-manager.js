@@ -298,13 +298,19 @@ class StudyOfflineManager {
 
     deleteOfflineDeck(deckId) {
         if (!window.studyStorage) return;
-        if (confirm('Cậu có chắc chắn muốn xóa bản ngoại tuyến của bài học này để giải phóng bộ nhớ không?')) {
+        const performDelete = () => {
             window.studyStorage.removeDeckOffline(deckId);
             if (window.studyUI) {
                 window.studyUI.showToast('🗑️ Đã xóa bản ngoại tuyến khỏi thiết bị.', 'info');
             }
             this.renderModalContent();
             this.updateButtonState();
+        };
+
+        if (typeof window.showConfirmPopup === 'function') {
+            window.showConfirmPopup('Xóa bản ngoại tuyến', 'Cậu có chắc chắn muốn xóa bản ngoại tuyến của bài học này để giải phóng bộ nhớ không?', performDelete);
+        } else if (confirm('Cậu có chắc chắn muốn xóa bản ngoại tuyến của bài học này để giải phóng bộ nhớ không?')) {
+            performDelete();
         }
     }
 

@@ -25,6 +25,15 @@ class StudyStorage {
         const yesterday = this.getLocalDateStr(-1);
         let streakData = this.get('streak_info', { current: 1, lastDate: today, lastStudiedDate: today });
 
+        // Đồng bộ với streak trong profile tài khoản nếu có giá trị cao hơn
+        try {
+            const cachedProfile = JSON.parse(localStorage.getItem('mhent_user_profile') || '{}');
+            if (cachedProfile && typeof cachedProfile.streak === 'number' && cachedProfile.streak > streakData.current) {
+                streakData.current = cachedProfile.streak;
+                this.set('streak_info', streakData);
+            }
+        } catch(e) {}
+
         // Nếu ngày học gần nhất trước ngày hôm qua (đã đứt chuỗi hơn 1 ngày) -> reset về 1
         if (streakData.lastStudiedDate && streakData.lastStudiedDate !== today && streakData.lastStudiedDate !== yesterday) {
             streakData.current = 1;
@@ -55,12 +64,19 @@ class StudyStorage {
         }
         this.set('streak_info', streakData);
 
+        // Cập nhật ngược lại vào profile tài khoản
+        try {
+            let cachedProfile = JSON.parse(localStorage.getItem('mhent_user_profile') || '{}');
+            cachedProfile.streak = streakData.current;
+            localStorage.setItem('mhent_user_profile', JSON.stringify(cachedProfile));
+        } catch(e) {}
+
         // Tự động cập nhật số ngày streak trên toàn bộ DOM nếu có
         document.querySelectorAll('#streakNum').forEach(el => el.textContent = streakData.current);
         document.querySelectorAll('.drawer-streak-badge').forEach(el => el.innerHTML = `🔥 Chuỗi học: ${streakData.current} Ngày`);
         document.querySelectorAll('.streak-pill-btn').forEach(el => el.classList.add('lit'));
 
-        // Đồng bộ lên Firebase Firestore nếu đang đăng nhập
+        // Đồng bộ lên Cloud
         if (typeof window.syncStudyStreakToCloud === 'function') {
             window.syncStudyStreakToCloud(streakData.current);
         }
@@ -89,22 +105,47 @@ class StudyStorage {
 
     /**
      * Lấy danh sách bộ từ vựng theo ngôn ngữ (ko, ja, zh, en)
+     * Đảm bảo tính riêng tư tuyệt đối: Chỉ trả về bài mặc định và bài của chính tài khoản hiện tại
      */
     getDecks(lang) {
         let decks = this.get(`decks_${lang}`, []);
+        const defaultDeckMap = {
+            ko: window.DEFAULT_KO_DECK,
+            ja: window.DEFAULT_JA_DECK,
+            zh: window.DEFAULT_ZH_DECK,
+            en: window.DEFAULT_EN_DECK
+        };
+        const defaultDeck = defaultDeckMap[lang];
+
         if (!decks || decks.length === 0) {
-            const defaultDeckMap = {
-                ko: window.DEFAULT_KO_DECK,
-                ja: window.DEFAULT_JA_DECK,
-                zh: window.DEFAULT_ZH_DECK,
-                en: window.DEFAULT_EN_DECK
-            };
-            const defaultDeck = defaultDeckMap[lang];
             if (defaultDeck) {
                 decks = [JSON.parse(JSON.stringify(defaultDeck))];
                 this.saveDecks(lang, decks);
             }
         }
+
+        // BẢO VỆ QUYỀN RIÊNG TƯ: Lọc sạch các bộ bài của tài khoản khác
+        if (Array.isArray(decks) && window.studyCloud) {
+            const currentUserId = window.studyCloud.getUserId();
+            const isGuest = !currentUserId || currentUserId.startsWith('guest_');
+
+            const filtered = decks.filter(d => {
+                if (!d || !d.id) return false;
+                // Giữ lại bộ bài mẫu mặc định của hệ thống
+                if (d.id.endsWith('_default_1') || d.id === `${lang}_default_1`) return true;
+                // Nếu đã đăng nhập: CHỈ HIỂN THỊ bài do chính tài khoản này tạo
+                if (!isGuest && d.userId) return d.userId === currentUserId;
+                // Nếu là khách: CHỈ HIỂN THỊ bài nháp do khách tạo trên máy này
+                if (isGuest && d.userId) return d.userId.startsWith('guest_');
+                return false;
+            });
+
+            if (filtered.length !== decks.length) {
+                this.saveDecks(lang, filtered);
+                decks = filtered;
+            }
+        }
+
         return decks || [];
     }
 
@@ -127,58 +168,30 @@ class StudyStorage {
         const currentUserId = window.studyCloud.getUserId();
         const isGuest = !currentUserId || currentUserId.startsWith('guest_');
 
-        // Lấy danh sách bộ bài cục bộ hiện tại
         let localDecks = this.getDecks(lang);
 
-        // 1. DỌN DẸP DỮ LIỆU CỦA TÀI KHOẢN KHÁC (chỉ khi đăng nhập tài khoản thực sự khác):
-        if (Array.isArray(localDecks) && !isGuest) {
-            const initialCount = localDecks.length;
-            localDecks = localDecks.filter(d => {
-                if (!d || !d.id) return false;
-                // Giữ lại bộ bài mặc định của hệ thống
-                if (d.id.endsWith('_default_1') || d.id === `${lang}_default_1`) return true;
-                // Nếu bộ bài đánh dấu userId của một tài khoản khác hẳn -> Loại bỏ
-                if (d.userId && !d.userId.startsWith('guest_') && d.userId !== currentUserId) return false;
-                return true;
-            });
-
-            if (localDecks.length !== initialCount) {
-                this.saveDecks(lang, localDecks);
-                console.log(`[StudyStorage] 🧹 Đã phân tách dữ liệu: Loại bỏ ${initialCount - localDecks.length} bộ bài của tài khoản khác khỏi ${lang.toUpperCase()}`);
-            }
-        }
-
-        // 2. Nếu là khách (chưa đăng nhập):
-        // Nếu đã có bài lưu trên máy (kể cả bài từ phiên trước) thì giữ nguyên
-        // Nếu chưa có bài nào ngoài bài mẫu, kéo thêm bài chia sẻ cộng đồng từ Cloud
-        if (isGuest) {
-            if (localDecks.length <= 1 && window.studyCloud && typeof window.studyCloud.listSharedDecks === 'function') {
-                try {
-                    const sharedDecks = await window.studyCloud.listSharedDecks(lang);
-                    if (Array.isArray(sharedDecks) && sharedDecks.length > 0) {
-                        let merged = [...localDecks];
-                        sharedDecks.forEach(s => {
-                            if (!merged.some(m => m.id === s.id)) merged.push(s);
-                        });
-                        this.saveDecks(lang, merged);
-                        return merged;
-                    }
-                } catch(e) {}
-            }
+        // 1. Nếu là khách (chưa đăng nhập): Tuyệt đối không kéo bài người khác về, không gộp bài cộng đồng
+        if (isGuest || typeof window.studyCloud.listUserDecks !== 'function') {
             return localDecks;
         }
 
         try {
-            // 3. Người dùng đã đăng nhập: Kéo toàn bộ bài của CHÍNH TÀI KHOẢN NÀY từ Supabase Cloud
+            // 2. Người dùng đã đăng nhập: Kéo toàn bộ bài của CHÍNH TÀI KHOẢN NÀY từ Supabase Cloud
             const cloudDecks = await window.studyCloud.listUserDecks(currentUserId, lang);
-            if (!Array.isArray(cloudDecks) || cloudDecks.length === 0) {
-                return localDecks;
-            }
+            if (!Array.isArray(cloudDecks)) return localDecks;
+
+            // Lọc giữ lại bài mặc định và bài của chính user này
+            localDecks = localDecks.filter(d => {
+                if (!d || !d.id) return false;
+                if (d.id.endsWith('_default_1') || d.id === `${lang}_default_1`) return true;
+                return d.userId === currentUserId;
+            });
 
             let changed = false;
 
             cloudDecks.forEach(cDeck => {
                 if (!cDeck || !cDeck.id) return;
+                cDeck.userId = currentUserId; // Gán đúng định danh
                 const idx = localDecks.findIndex(d => d.id === cDeck.id);
                 if (idx >= 0) {
                     const local = localDecks[idx];
@@ -193,22 +206,24 @@ class StudyStorage {
                         changed = true;
                     }
                 } else {
-                    // Bài của chính user này được tạo từ thiết bị khác (đồng bộ giữa ĐT và PC)
                     localDecks.push(cDeck);
                     changed = true;
                 }
             });
 
-            // Sắp xếp các bộ bài: bài có cập nhật mới nhất lên trước
+            // Sắp xếp: Đưa các bộ bài cá nhân của người dùng lên đầu danh sách
             localDecks.sort((a, b) => {
+                const aIsUser = a.userId === currentUserId ? 1 : 0;
+                const bIsUser = b.userId === currentUserId ? 1 : 0;
+                if (aIsUser !== bIsUser) return bIsUser - aIsUser;
                 const tA = new Date(a.updatedAt || a.createdAt || 0).getTime();
                 const tB = new Date(b.updatedAt || b.createdAt || 0).getTime();
                 return tB - tA;
             });
 
-            if (changed) {
+            if (changed || localDecks.length > 0) {
                 this.saveDecks(lang, localDecks);
-                console.log(`[StudyStorage] ☁️ Đã đồng bộ ${cloudDecks.length} bộ bài cá nhân (${lang.toUpperCase()}) từ Supabase Cloud!`);
+                console.log(`[StudyStorage] ☁️ Đã đồng bộ ${cloudDecks.length} bộ bài cá nhân của ${currentUserId} (${lang.toUpperCase()}) từ Supabase Cloud!`);
             }
             return localDecks;
         } catch (e) {

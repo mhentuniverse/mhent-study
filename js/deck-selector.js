@@ -271,7 +271,13 @@ class StudyDeckSelector {
         const selectedRadio = document.querySelector('input[name="target_deck"]:checked');
 
         if (!selectedRadio) {
-            alert('Vui lòng chọn một bộ bài học hoặc tạo bài mới!');
+            if (typeof window.showPopup === 'function') {
+                window.showPopup('Vui lòng chọn một bộ bài học hoặc tạo bài mới!', true);
+            } else if (typeof showToast === 'function') {
+                showToast('Thông báo', 'Vui lòng chọn một bộ bài học hoặc tạo bài mới!', 'info');
+            } else {
+                alert('Vui lòng chọn một bộ bài học hoặc tạo bài mới!');
+            }
             return;
         }
 
@@ -349,7 +355,9 @@ class StudyDeckSelector {
             }
 
             if (typeof showToast === 'function') {
-                showToast(`Đã lưu "${this.currentWordObj.word}" vào "${targetDeck.title}"!`, 'success');
+                showToast('Thành công', `Đã lưu "${this.currentWordObj.word}" vào "${targetDeck.title}"!`, 'success');
+            } else if (typeof window.showPopup === 'function') {
+                window.showPopup(`Đã lưu từ vựng "${this.currentWordObj.word}" vào bộ bài "${targetDeck.title}" thành công!`, false);
             } else {
                 alert(`Đã lưu từ vựng "${this.currentWordObj.word}" vào bộ bài "${targetDeck.title}" thành công!`);
             }
@@ -358,7 +366,11 @@ class StudyDeckSelector {
 
         } catch (err) {
             console.error('[DeckSelector] Save error:', err);
-            alert(`Lỗi khi lưu từ: ${err.message}`);
+            if (typeof window.showPopup === 'function') {
+                window.showPopup(`Lỗi khi lưu từ: ${err.message}`, true);
+            } else {
+                alert(`Lỗi khi lưu từ: ${err.message}`);
+            }
         } finally {
             if (confirmBtn) {
                 confirmBtn.disabled = false;

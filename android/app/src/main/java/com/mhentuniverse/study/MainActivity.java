@@ -84,8 +84,9 @@ public class MainActivity extends BridgeActivity {
             getBridge().getWebView().post(new Runnable() {
                 @Override
                 public void run() {
+                    String safeUrl = url.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "").replace("\r", "");
                     getBridge().getWebView().evaluateJavascript(
-                        "if (typeof window.handleMHEntDeepLink === 'function') { window.handleMHEntDeepLink('" + url + "'); } else { window.__pendingDeepLink = '" + url + "'; }",
+                        "if (typeof window.handleMHEntDeepLink === 'function') { window.handleMHEntDeepLink('" + safeUrl + "'); } else { window.__pendingDeepLink = '" + safeUrl + "'; }",
                         null
                     );
                 }

@@ -230,17 +230,73 @@ export function initNavbarAuth() {
     });
 }
 
-// Hàm đẩy streak lên Cloud Firestore khi học xong 1 bài
+// Hàm đẩy streak lên Cloud (Supabase REST + Firestore) khi học xong 1 bài
 window.syncStudyStreakToCloud = async function(newStreak) {
     try {
-        const user = auth.currentUser;
-        if (user) {
-            const today = window.studyStorage ? window.studyStorage.getLocalDateStr() : new Date().toISOString().slice(0, 10);
-            await setDoc(doc(db, "users", user.uid), {
-                streak: newStreak,
-                lastStudiedDate: today,
-                lastStreakDate: today
-            }, { merge: true });
+        const uid = (auth.currentUser && auth.currentUser.uid) || (window.studyCloud && window.studyCloud.getUserId());
+        if (!uid || uid.startsWith('guest_')) return;
+
+        const today = window.studyStorage ? window.studyStorage.getLocalDateStr() : new Date().toISOString().slice(0, 10);
+
+        // 1. Cập nhật Firestore nếu đang có phiên Firebase Auth
+        if (auth.currentUser) {
+            try {
+                await setDoc(doc(db, "users", auth.currentUser.uid), {
+                    streak: newStreak,
+                    lastStudiedDate: today,
+                    lastStreakDate: today
+                }, { merge: true });
+            } catch(fsErr) {}
+        }
+
+        // 2. Đồng bộ bền vững qua Supabase Cloud (bảng workspace_notes)
+        if (window.studyCloud) {
+            const noteId = `study_streak_${uid}`;
+            const payload = {
+                id: noteId,
+                user_id: uid,
+                title: `[STREAK] ${newStreak}`,
+                content: JSON.stringify({ streak: newStreak, lastStudiedDate: today, updatedAt: new Date().toISOString() }),
+                updated_at: new Date().toISOString()
+            };
+            fetch(`${window.studyCloud.url}/rest/v1/workspace_notes?on_conflict=id`, {
+                method: 'POST',
+                headers: {
+                    ...window.studyCloud.getHeaders(),
+                    'Prefer': 'resolution=merge-duplicates,return=representation'
+                },
+                body: JSON.stringify(payload)
+            }).catch(() => {});
+        }
+    } catch(e) {}
+};
+
+// Hàm tải chuỗi Streak từ Supabase Cloud khi mở app
+window.loadStreakFromCloud = async function() {
+    try {
+        const uid = window.studyCloud ? window.studyCloud.getUserId() : null;
+        if (!uid || uid.startsWith('guest_')) return;
+
+        const res = await fetch(`${window.studyCloud.url}/rest/v1/workspace_notes?id=eq.study_streak_${encodeURIComponent(uid)}&select=content`, {
+            headers: window.studyCloud.getHeaders()
+        });
+        if (res.ok) {
+            const rows = await res.json();
+            if (rows && rows.length > 0) {
+                const data = JSON.parse(rows[0].content);
+                if (data && typeof data.streak === 'number' && data.streak > 0) {
+                    if (window.studyStorage) {
+                        let sInfo = window.studyStorage.get('streak_info', { current: 1 });
+                        if (data.streak > sInfo.current) {
+                            sInfo.current = data.streak;
+                            sInfo.lastStudiedDate = data.lastStudiedDate;
+                            window.studyStorage.set('streak_info', sInfo);
+                            document.querySelectorAll('#streakNum').forEach(el => el.textContent = data.streak);
+                            document.querySelectorAll('.drawer-streak-badge').forEach(el => el.innerHTML = `🔥 Chuỗi học: ${data.streak} Ngày`);
+                        }
+                    }
+                }
+            }
         }
     } catch(e) {}
 };
@@ -310,7 +366,12 @@ window.handleMHEntDeepLink = async function(rawUrl) {
                 }
             }
 
-            // Nếu đang mở trang bài học VocabSheetApp thì đồng bộ và làm mới ngay
+            // Đồng bộ chuỗi ngày học Streak từ Cloud
+            if (typeof window.loadStreakFromCloud === 'function') {
+                try { await window.loadStreakFromCloud(); } catch(e) {}
+            }
+
+            // Nếu đang mở trang bài học VocabSheetApp thì làm mới danh sách bài học ngay
             if (window.sheetApp && typeof window.sheetApp.syncCloudDecks === 'function') {
                 try { await window.sheetApp.syncCloudDecks(); } catch(e) {}
             }
@@ -320,20 +381,20 @@ window.handleMHEntDeepLink = async function(rawUrl) {
                 initNavbarAuth();
             }
 
-            // Chuyển hướng người dùng về trang ban đầu hoặc trang chủ Study Hub
+            // Chuyển hướng hợp lý
             const redirectTarget = params.get('redirect') ? decodeURIComponent(params.get('redirect')) : '';
-            if (redirectTarget && !redirectTarget.includes('login')) {
+            if (window.location.pathname.includes('login') || window.location.pathname.endsWith('login.html')) {
+                setTimeout(() => {
+                    window.location.href = (redirectTarget && !redirectTarget.includes('login')) ? redirectTarget : '/index.html';
+                }, 300);
+            } else if (redirectTarget && !redirectTarget.includes('login') && redirectTarget !== window.location.href) {
                 setTimeout(() => {
                     window.location.href = redirectTarget;
-                }, 400);
-            } else if (window.location.pathname.includes('login') || window.location.pathname.endsWith('login.html')) {
-                setTimeout(() => {
-                    window.location.href = '/index.html';
-                }, 400);
+                }, 300);
             } else {
-                setTimeout(() => {
-                    window.location.reload();
-                }, 400);
+                if (window.studyUI && typeof window.studyUI.showToast === 'function') {
+                    window.studyUI.showToast('✅ Đã đồng bộ tài khoản và bài học từ MHEnt Cloud!', 'success');
+                }
             }
         }
     } catch (e) {

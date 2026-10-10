@@ -194,12 +194,15 @@ class VocabSheetApp {
                         window.studyUI.showToast(`☁️ Đã đồng bộ thêm ${freshCurrent.words.length - currentWordsLen} từ từ Cloud!`, 'success');
                     }
                 } 
-                // 2. Nếu người dùng không chỉ định deck trên URL và bài hiện tại là bài test/nháp (<= 2 từ)
-                // trong khi Cloud có bài học chính thức nhiều từ hơn (ví dụ bài vừa tạo từ điện thoại)
-                else if (!hasExplicitDeckParam && currentWordsLen <= 2 && updatedDecks[0] && updatedDecks[0].id !== currentDeckIdBefore && (updatedDecks[0].words || []).length > 2) {
-                    this.switchDeck(updatedDecks[0].id);
+                // 2. Nếu người dùng không chỉ định deck trên URL và bài hiện tại đang là bài mẫu mặc định
+                // trong khi Cloud có bài học cá nhân của chính người dùng (ví dụ: Bài 7, 8, 9, 10...)
+                const userPersonalDeck = updatedDecks.find(d => !d.id.endsWith('_default_1') && d.id !== `${this.lang}_default_1`);
+                const isCurrentSample = !currentDeckIdBefore || currentDeckIdBefore.endsWith('_default_1') || currentDeckIdBefore === `${this.lang}_default_1`;
+
+                if (!hasExplicitDeckParam && isCurrentSample && userPersonalDeck) {
+                    this.switchDeck(userPersonalDeck.id);
                     if (window.studyUI) {
-                        window.studyUI.showToast(`☁️ Đã tự động tải bài học "${updatedDecks[0].title}" từ điện thoại!`, 'success');
+                        window.studyUI.showToast(`☁️ Đã tự động mở bài học "${userPersonalDeck.title}" của bạn!`, 'success');
                     }
                 }
             }
@@ -1852,11 +1855,17 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
         const wordObj = this.currentDeck.words.find(w => w.id === wordId);
         if (!wordObj) return;
 
-        if (confirm(`Cậu có chắc muốn xóa từ "${wordObj.word}" khỏi bài học không?`)) {
+        const performDelete = () => {
             this.currentDeck.words = this.currentDeck.words.filter(w => w.id !== wordId);
             this.saveCurrentDeck();
             this.renderAll();
             if (window.studyUI) window.studyUI.showToast(`🗑️ Đã xóa từ "${wordObj.word}" thành công!`, 'info');
+        };
+
+        if (typeof window.showConfirmPopup === 'function') {
+            window.showConfirmPopup('Xác nhận xóa từ', `Cậu có chắc muốn xóa từ "${wordObj.word}" khỏi bài học không?`, performDelete);
+        } else if (confirm(`Cậu có chắc muốn xóa từ "${wordObj.word}" khỏi bài học không?`)) {
+            performDelete();
         }
     }
 

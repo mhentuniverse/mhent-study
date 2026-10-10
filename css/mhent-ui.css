@@ -182,3 +182,72 @@ body.dark-mode .mhent-btn-cancel { background: #334155; color: #cbd5e1; }
 body.dark-mode .mhent-btn-cancel:hover { background: #475569; }
 .mhent-btn-confirm { background: var(--hub-color, #6366f1); color: #ffffff; }
 .mhent-btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 4px 10px var(--hub-bg, rgba(99,102,241,0.3)); }
+
+/* ==========================================
+   7. CUSTOM SELECT & DROPDOWNS (MHEnt Glass/Dark Theme)
+   ========================================== */
+select, .mhent-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #ffffff;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 16px;
+    padding: 10px 40px 10px 16px;
+    border-radius: 14px;
+    border: 1.5px solid #e2e8f0;
+    color: #1e293b;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14.5px;
+    font-weight: 700;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+select:hover, .mhent-select:hover {
+    border-color: var(--hub-color, #6366f1);
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.15);
+}
+
+select:focus, .mhent-select:focus {
+    border-color: var(--hub-color, #6366f1);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+select option {
+    background-color: #ffffff;
+    color: #1e293b;
+    padding: 12px;
+    font-weight: 600;
+}
+
+body.dark-mode select, body.dark-mode .mhent-select,
+.dark-theme select, .dark-theme .mhent-select {
+    background-color: #1e293b;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23818cf8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    border-color: #334155;
+    color: #f8fafc;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+body.dark-mode select:hover, body.dark-mode .mhent-select:hover,
+.dark-theme select:hover, .dark-theme .mhent-select:hover {
+    border-color: #818cf8;
+    box-shadow: 0 0 16px rgba(129, 140, 248, 0.25);
+}
+
+body.dark-mode select:focus, body.dark-mode .mhent-select:focus,
+.dark-theme select:focus, .dark-theme .mhent-select:focus {
+    border-color: #818cf8;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.3);
+}
+
+body.dark-mode select option,
+.dark-theme select option {
+    background-color: #0f172a;
+    color: #f8fafc;
+}

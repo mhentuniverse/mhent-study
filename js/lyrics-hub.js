@@ -2280,7 +2280,7 @@ QUY TẮC ĐẦU RA:
             this.updatePlayerProgress();
             this.syncActiveSentence(this.currentTime);
             this.checkSentenceLoop();
-        }, 150);
+        }, 35);
     }
 
     stopPlaybackTracker() {
@@ -2413,15 +2413,23 @@ QUY TẮC ĐẦU RA:
                 return;
             }
 
-            document.querySelectorAll('.lyrics-sentence-row').forEach((row, i) => {
-                if (i === activeIdx) {
-                    row.classList.add('active');
-                    // Chỉ tự động cuộn bên trong khung lời bài hát (không cuộn cả trang window)
+            // O(1) DOM class toggle: gỡ class active của câu trước
+            if (prevIdx >= 0) {
+                const prevRow = document.getElementById(`sentence-row-${prevIdx}`);
+                if (prevRow) prevRow.classList.remove('active');
+            }
+
+            // Gán class active cho câu hiện tại và cuộn mượt mà
+            if (activeIdx >= 0) {
+                const currentRow = document.getElementById(`sentence-row-${activeIdx}`);
+                if (currentRow) {
+                    currentRow.classList.add('active');
+
                     if (this.isAutoScrollEnabled || forceScroll) {
                         const container = document.getElementById('lyrics-stream-container');
                         if (container) {
-                            const rowTop = row.offsetTop;
-                            const rowHeight = row.offsetHeight;
+                            const rowTop = currentRow.offsetTop;
+                            const rowHeight = currentRow.offsetHeight;
                             const containerHeight = container.clientHeight;
                             const targetTop = rowTop - (containerHeight / 2) + (rowHeight / 2);
                             container.scrollTo({
@@ -2431,10 +2439,14 @@ QUY TẮC ĐẦU RA:
                         }
                     }
                 } else {
-                    row.classList.remove('active');
+                    // Fallback an toàn nếu chưa render xong
+                    document.querySelectorAll('.lyrics-sentence-row').forEach((row, i) => {
+                        row.classList.toggle('active', i === activeIdx);
+                    });
                 }
-            });
+            }
         }
+    }
     }
 
     updatePlayerProgress() {
@@ -4068,37 +4080,43 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
         }
 
         const versionTitle = versionToDelete.title || 'Bản dịch này';
-        if (!confirm(`Bạn có chắc chắn muốn xóa bản dịch "${versionTitle}" không? Hành động này không thể hoàn tác.`)) {
+        const performDelete = async () => {
+            // Xóa khỏi danh sách hiện tại
+            this.currentSong.community_versions.splice(versionIdx, 1);
+
+            // Lưu cập nhật vào localStorage
+            this.saveStoredCommunityVersions(this.currentSong.id, this.currentSong.community_versions);
+
+            // Xóa trên Supabase Cloud
+            if (window.studyCloud && typeof window.studyCloud.deleteCommunityVersion === 'function') {
+                try {
+                    await window.studyCloud.deleteCommunityVersion(this.currentSong.id, versionId);
+                } catch (e) {
+                    console.warn('Lỗi xóa trên Supabase Cloud:', e);
+                }
+            }
+
+            // Điều chỉnh currentVersionIndex nếu bản vừa xóa đang được chọn
+            if (this.currentVersionIndex === versionIdx) {
+                this.currentVersionIndex = -1; // Quay về bản chuẩn Web/AI
+                this.renderLyrics();
+                if (this.isPlainMode) this.renderPlainLyrics();
+            } else if (this.currentVersionIndex > versionIdx) {
+                this.currentVersionIndex--;
+            }
+
+            this.renderVersionTabs();
+            this.renderVersionsDrawerList();
+            this.showToast(`Đã xóa bản dịch "${versionTitle}" thành công!`, 'success');
+        };
+
+        if (typeof window.showConfirmPopup === 'function') {
+            window.showConfirmPopup('Xóa bản dịch', `Bạn có chắc chắn muốn xóa bản dịch "${versionTitle}" không? Hành động này không thể hoàn tác.`, performDelete);
+            return;
+        } else if (!confirm(`Bạn có chắc chắn muốn xóa bản dịch "${versionTitle}" không? Hành động này không thể hoàn tác.`)) {
             return;
         }
-
-        // Xóa khỏi danh sách hiện tại
-        this.currentSong.community_versions.splice(versionIdx, 1);
-
-        // Lưu cập nhật vào localStorage
-        this.saveStoredCommunityVersions(this.currentSong.id, this.currentSong.community_versions);
-
-        // Xóa trên Supabase Cloud
-        if (window.studyCloud && typeof window.studyCloud.deleteCommunityVersion === 'function') {
-            try {
-                await window.studyCloud.deleteCommunityVersion(this.currentSong.id, versionId);
-            } catch (e) {
-                console.warn('Lỗi xóa trên Supabase Cloud:', e);
-            }
-        }
-
-        // Điều chỉnh currentVersionIndex nếu bản vừa xóa đang được chọn
-        if (this.currentVersionIndex === versionIdx) {
-            this.currentVersionIndex = -1; // Quay về bản chuẩn Web/AI
-            this.renderLyrics();
-            if (this.isPlainMode) this.renderPlainLyrics();
-        } else if (this.currentVersionIndex > versionIdx) {
-            this.currentVersionIndex--;
-        }
-
-        this.renderVersionTabs();
-        this.renderVersionsDrawerList();
-        this.showToast(`Đã xóa bản dịch "${versionTitle}" thành công!`, 'success');
+        await performDelete();
     }
 
     // =========================================================================
