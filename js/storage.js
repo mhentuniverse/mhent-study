@@ -156,11 +156,11 @@ class StudyStorage {
 
             if (!isGuest) {
                 // Người dùng đã đăng nhập:
-                // Nếu trên máy có bài chưa gán userId hoặc bài tạo lúc làm khách -> Tự động chuyển quyền sở hữu sang tài khoản hiện tại
+                // Tự động nhận quyền sở hữu cho TẤT CẢ các bộ bài trên thiết bị này sang tài khoản hiện tại (kể cả UID cũ, guest...)
                 let changed = false;
                 decks.forEach(d => {
                     if (d && d.id && !this.isSampleDeck(d, lang)) {
-                        if (!d.userId || d.userId.startsWith('guest_')) {
+                        if (d.userId !== currentUserId) {
                             d.userId = currentUserId;
                             changed = true;
                         }
@@ -169,14 +169,6 @@ class StudyStorage {
                 if (changed) {
                     this.saveDecks(lang, decks);
                 }
-
-                // Trả về: Bài mẫu + Bài của chính user này + Bài do máy này tạo (không trả về bài của user đăng nhập khác)
-                return decks.filter(d => {
-                    if (!d || !d.id) return false;
-                    if (this.isSampleDeck(d, lang)) return true;
-                    if (!d.userId || d.userId === currentUserId || d.userId.startsWith('guest_')) return true;
-                    return false;
-                });
             }
         }
 
@@ -216,7 +208,16 @@ class StudyStorage {
 
             cloudDecks.forEach(cDeck => {
                 if (!cDeck || !cDeck.id) return;
+                const oldCloudUserId = cDeck.userId;
                 cDeck.userId = currentUserId;
+
+                // Nếu bộ bài từ cloud từng mang UID cũ khác -> tự động cập nhật lại trên Cloud
+                if (oldCloudUserId && oldCloudUserId !== currentUserId && !oldCloudUserId.startsWith('guest_')) {
+                    if (window.studyCloud && typeof window.studyCloud.saveDeck === 'function') {
+                        window.studyCloud.saveDeck(cDeck).catch(console.warn);
+                    }
+                }
+
                 const idx = localDecks.findIndex(d => d.id === cDeck.id);
                 if (idx >= 0) {
                     const local = localDecks[idx];

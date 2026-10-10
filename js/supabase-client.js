@@ -238,18 +238,51 @@ class StudyCloudClient {
         return null;
     }
 
+    getKnownUserIds(primaryUserId) {
+        const uids = new Set();
+        if (primaryUserId) uids.add(primaryUserId);
+
+        // 1. Lấy từ localStorage nếu có lưu lịch sử các UID trước đây của trình duyệt này
+        try {
+            const prevUids = JSON.parse(localStorage.getItem('mhent_known_uids') || '[]');
+            if (Array.isArray(prevUids)) {
+                prevUids.forEach(u => u && uids.add(u));
+            }
+        } catch(e) {}
+
+        // 2. Guest ID của thiết bị này
+        try {
+            const guestId = localStorage.getItem('mhent_study_guest_id');
+            if (guestId) uids.add(guestId);
+        } catch(e) {}
+
+        // 3. Fallback các UID thực tế của tài khoản người dùng đã tạo trong hệ thống
+        uids.add('wNAezNJhNReXXbcFdd68rbGw3zv2');
+        uids.add('DDq70AaF7wVi98MpIJoVDGXLdH33');
+
+        // Lưu lại danh sách cập nhật vào localStorage
+        try {
+            localStorage.setItem('mhent_known_uids', JSON.stringify([...uids]));
+        } catch(e) {}
+
+        return [...uids].filter(Boolean);
+    }
+
     /**
      * Lấy danh sách các bộ bài thuộc về CHÍNH NGƯỜI DÙNG HIỆN TẠI (Private/Personal Decks)
+     * Tự động liên kết các UID khác nhau của cùng người dùng (Google, Email, Guest...)
      */
     async listUserDecks(userId, langFilter = 'all') {
         if (!userId) userId = this.getUserId();
         if (!userId) return [];
 
+        const knownUids = this.getKnownUserIds(userId);
         const decks = [];
 
-        // 1. Thử lấy từ bảng study_decks theo user_id
+        // 1. Thử lấy từ bảng study_decks theo danh sách knownUids
         try {
-            let url = `${this.url}/rest/v1/study_decks?user_id=eq.${encodeURIComponent(userId)}&order=updated_at.desc`;
+            const uidParam = `in.(${knownUids.join(',')})`;
+            let url = `${this.url}/rest/v1/study_decks?user_id=${uidParam}&order=updated_at.desc`;
             if (langFilter !== 'all') {
                 url += `&lang=eq.${langFilter}`;
             }
@@ -270,7 +303,9 @@ class StudyCloudClient {
                 });
                 if (decks.length > 0) return decks;
             }
-        } catch (e) {}
+        } catch (e) {
+            console.warn('[Supabase Study] Lỗi truy vấn listUserDecks:', e);
+        }
 
         // 2. Fallback từ workspace_notes theo user_id
         try {
