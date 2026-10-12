@@ -1867,7 +1867,11 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ:
 
         if (typeof window.showConfirmPopup === 'function') {
             window.showConfirmPopup('Xác nhận xóa từ', `Cậu có chắc muốn xóa từ "${wordObj.word}" khỏi bài học không?`, performDelete);
-        } else if (confirm(`Cậu có chắc muốn xóa từ "${wordObj.word}" khỏi bài học không?`)) {
+        } else if (typeof window.mhentConfirm === 'function') {
+            window.mhentConfirm('Xác nhận xóa từ', `Cậu có chắc muốn xóa từ "${wordObj.word}" khỏi bài học không?`).then(ok => {
+                if (ok) performDelete();
+            });
+        } else {
             performDelete();
         }
     }

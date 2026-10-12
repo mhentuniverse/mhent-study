@@ -298,6 +298,9 @@
         </div>
     </footer>
 
+    <!-- MHENT UI SYSTEM -->
+    <script src="/js/mhent-ui.js"></script>
+
     <!-- SCRIPT XỬ LÝ AUTH -->
     <script type="module">
         import { 
@@ -462,7 +465,11 @@
                 }
 
                 if (error.code !== 'auth/popup-closed-by-user') {
-                    alert('Lỗi đăng nhập Google: ' + (error.message || error.code));
+                    if (typeof window.showPopup === 'function') {
+                        window.showPopup('Lỗi đăng nhập Google: ' + (error.message || error.code), true);
+                    } else if (typeof window.showToast === 'function') {
+                        window.showToast('Đăng nhập thất bại', error.message || error.code, 'error');
+                    }
                 }
             }
         });
@@ -471,7 +478,14 @@
         document.getElementById('btn-login-email').addEventListener('click', async () => {
             const email = document.getElementById('login-email').value.trim();
             const pass = document.getElementById('login-password').value.trim();
-            if (!email || !pass) return alert('Vui lòng điền đủ Email và Mật khẩu!');
+            if (!email || !pass) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Thiếu thông tin', 'Vui lòng điền đủ Email và Mật khẩu!', 'error');
+                } else if (typeof window.showPopup === 'function') {
+                    window.showPopup('Vui lòng điền đủ Email và Mật khẩu!', true);
+                }
+                return;
+            }
 
             showLoading("Đang xác thực thông tin...");
             try {
@@ -479,7 +493,11 @@
                 await handleLoginSuccess(cred.user);
             } catch (err) {
                 hideLoading();
-                alert('Sai email hoặc mật khẩu rùi!');
+                if (typeof window.showPopup === 'function') {
+                    window.showPopup('Sai email hoặc mật khẩu rùi! Cậu hãy kiểm tra lại nhé.', true);
+                } else if (typeof window.showToast === 'function') {
+                    window.showToast('Đăng nhập thất bại', 'Sai email hoặc mật khẩu rùi!', 'error');
+                }
             }
         });
 
@@ -489,9 +507,30 @@
             const pass = document.getElementById('reg-password').value.trim();
             const confirmPass = document.getElementById('reg-confirm-password').value.trim();
 
-            if (!email || !pass || !confirmPass) return alert('Vui lòng điền đủ thông tin!');
-            if (pass.length < 6) return alert('Mật khẩu ít nhất 6 ký tự nhé!');
-            if (pass !== confirmPass) return alert('Hai mật khẩu không khớp nhau!');
+            if (!email || !pass || !confirmPass) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Thiếu thông tin', 'Vui lòng điền đủ thông tin!', 'error');
+                } else if (typeof window.showPopup === 'function') {
+                    window.showPopup('Vui lòng điền đủ thông tin!', true);
+                }
+                return;
+            }
+            if (pass.length < 6) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Mật khẩu quá ngắn', 'Mật khẩu ít nhất 6 ký tự nhé!', 'error');
+                } else if (typeof window.showPopup === 'function') {
+                    window.showPopup('Mật khẩu ít nhất 6 ký tự nhé!', true);
+                }
+                return;
+            }
+            if (pass !== confirmPass) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Không khớp', 'Hai mật khẩu không khớp nhau!', 'error');
+                } else if (typeof window.showPopup === 'function') {
+                    window.showPopup('Hai mật khẩu không khớp nhau!', true);
+                }
+                return;
+            }
 
             showLoading("Đang tạo tài khoản mới...");
             try {
@@ -499,7 +538,11 @@
                 await handleLoginSuccess(cred.user);
             } catch (err) {
                 hideLoading();
-                alert('Lỗi: ' + (err.message || 'Không thể tạo tài khoản'));
+                if (typeof window.showPopup === 'function') {
+                    window.showPopup('Lỗi: ' + (err.message || 'Không thể tạo tài khoản'), true);
+                } else if (typeof window.showToast === 'function') {
+                    window.showToast('Lỗi tạo tài khoản', err.message || 'Không thể tạo tài khoản', 'error');
+                }
             }
         });
 
@@ -520,16 +563,40 @@
 
         // Quên mật khẩu
         window.forgotPassword = async function() {
-            const email = prompt("Nhập địa chỉ Email của bạn để nhận liên kết đổi mật khẩu:");
-            if (email && email.includes('@')) {
-                showLoading("Đang gửi email đặt lại mật khẩu...");
-                try {
-                    await sendPasswordResetEmail(auth, email.trim());
-                    hideLoading();
-                    alert(`Đã gửi thư đặt lại mật khẩu đến ${email}!`);
-                } catch (e) {
-                    hideLoading();
-                    alert('Lỗi: ' + e.message);
+            const currentEmail = document.getElementById('login-email')?.value?.trim() || '';
+            let email = '';
+            if (typeof window.mhentPrompt === 'function') {
+                email = await window.mhentPrompt('Quên Mật Khẩu', 'Nhập địa chỉ Email của bạn...', currentEmail);
+            } else if (typeof window.showInputPopup === 'function') {
+                email = await new Promise(res => window.showInputPopup('Quên Mật Khẩu', 'Nhập địa chỉ Email của bạn...', 'Xác nhận', res, () => res(null)));
+            }
+
+            if (!email) return;
+
+            if (!email.includes('@')) {
+                if (typeof window.showPopup === 'function') {
+                    window.showPopup('Địa chỉ email không hợp lệ! Vui lòng kiểm tra lại.', true);
+                } else if (typeof window.showToast === 'function') {
+                    window.showToast('Lỗi', 'Địa chỉ email không hợp lệ!', 'error');
+                }
+                return;
+            }
+
+            showLoading("Đang gửi email đặt lại mật khẩu...");
+            try {
+                await sendPasswordResetEmail(auth, email.trim());
+                hideLoading();
+                if (typeof window.showPopup === 'function') {
+                    window.showPopup(`Đã gửi thư đặt lại mật khẩu đến ${email}! Cậu nhớ kiểm tra hòm thư nhé!`, false);
+                } else if (typeof window.showToast === 'function') {
+                    window.showToast('Thành công', `Đã gửi thư đặt lại mật khẩu đến ${email}!`, 'success');
+                }
+            } catch (e) {
+                hideLoading();
+                if (typeof window.showPopup === 'function') {
+                    window.showPopup('Lỗi: ' + e.message, true);
+                } else if (typeof window.showToast === 'function') {
+                    window.showToast('Lỗi', e.message, 'error');
                 }
             }
         };

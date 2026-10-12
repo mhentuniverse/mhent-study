@@ -309,7 +309,11 @@ class StudyOfflineManager {
 
         if (typeof window.showConfirmPopup === 'function') {
             window.showConfirmPopup('Xóa bản ngoại tuyến', 'Cậu có chắc chắn muốn xóa bản ngoại tuyến của bài học này để giải phóng bộ nhớ không?', performDelete);
-        } else if (confirm('Cậu có chắc chắn muốn xóa bản ngoại tuyến của bài học này để giải phóng bộ nhớ không?')) {
+        } else if (typeof window.mhentConfirm === 'function') {
+            window.mhentConfirm('Xóa bản ngoại tuyến', 'Cậu có chắc chắn muốn xóa bản ngoại tuyến của bài học này để giải phóng bộ nhớ không?').then(ok => {
+                if (ok) performDelete();
+            });
+        } else {
             performDelete();
         }
     }

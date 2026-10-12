@@ -77,23 +77,23 @@ window.mhentConfirm = function(titleOrMsg, msg) {
 
 window.mhentPrompt = function(title, placeholder = '', defaultVal = '') {
     return new Promise((resolve) => {
-        window.showInputPopup(title, placeholder, 'Xác nhận', (val) => {
-            resolve(val);
-        });
+        window.showInputPopup(
+            title, 
+            placeholder, 
+            'Xác nhận', 
+            (val) => resolve(val), 
+            () => resolve(null)
+        );
         const inputField = document.getElementById('mhent-custom-input');
-        if (inputField && defaultVal) inputField.value = defaultVal;
-        const cancelBtn = document.querySelector('#mhent-input-overlay .mhent-btn-cancel');
-        if (cancelBtn) {
-            cancelBtn.onclick = () => {
-                window.closeInputPopup();
-                resolve(null);
-            };
+        if (inputField && defaultVal) {
+            inputField.value = defaultVal;
+            inputField.select();
         }
     });
 };
 
 // ==========================================
-// 🚀 GHI ĐÈ TOÀN CỤC WINDOW.ALERT BẰNG MHENT POPUP
+// 🚀 GHI ĐÈ TOÀN CỤC WINDOW.ALERT & WINDOW.PROMPT BẰNG MHENT POPUP
 // ==========================================
 if (typeof window !== 'undefined') {
     const _nativeAlert = window.alert;
@@ -102,10 +102,22 @@ if (typeof window !== 'undefined') {
         const isErr = /lỗi|error|thất bại|không thể|sai|chưa chọn|ít nhất|vui lòng/i.test(text);
         if (typeof window.showPopup === 'function') {
             window.showPopup(text, isErr);
+        } else if (typeof window.showToast === 'function') {
+            window.showToast(isErr ? 'Lỗi' : 'Thông báo', text, isErr ? 'error' : 'info');
         } else {
             _nativeAlert(text);
         }
     };
+
+    if (typeof window.prompt === 'function') {
+        window.prompt = function(message, defaultVal) {
+            console.warn('[MHEnt UI] Trình duyệt đang gọi prompt() nguyên bản. Vui lòng dùng window.mhentPrompt hoặc window.showInputPopup thay thế.');
+            if (typeof window.showInputPopup === 'function') {
+                window.showInputPopup('Nhập thông tin', message || '', 'Xác nhận', () => {});
+            }
+            return defaultVal || null;
+        };
+    }
 }
 
 // ==========================================
@@ -264,17 +276,17 @@ window.hideTypingPopup = function() {
 // ==========================================
 // 5. HIỆU ỨNG POPUP NHẬP LIỆU (INPUT DIALOG)
 // ==========================================
-window.showInputPopup = function(title, placeholder, confirmText, callback) {
+window.showInputPopup = function(title, placeholder, confirmText, callback, onCancel) {
     if (document.getElementById('mhent-input-overlay')) return;
     const overlay = document.createElement('div');
     overlay.id = 'mhent-input-overlay';
     overlay.innerHTML = `
         <div class="mhent-input-box">
             <div class="mhent-input-title">${title}</div>
-            <input type="text" id="mhent-custom-input" class="mhent-input-field" placeholder="${placeholder}" autocomplete="off">
+            <input type="text" id="mhent-custom-input" class="mhent-input-field" placeholder="${placeholder || ''}" autocomplete="off">
             <div class="mhent-input-actions">
-                <button class="mhent-btn-cancel" onclick="closeInputPopup()">Hủy</button>
-                <button class="mhent-btn-confirm" id="mhent-btn-confirm-input">${confirmText}</button>
+                <button class="mhent-btn-cancel" id="mhent-btn-cancel-input">Hủy</button>
+                <button class="mhent-btn-confirm" id="mhent-btn-confirm-input">${confirmText || 'Xác nhận'}</button>
             </div>
         </div>
     `;
@@ -282,14 +294,35 @@ window.showInputPopup = function(title, placeholder, confirmText, callback) {
     setTimeout(() => { overlay.classList.add('show'); }, 10);
 
     const inputField = document.getElementById('mhent-custom-input');
-    inputField.focus();
-    inputField.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') document.getElementById('mhent-btn-confirm-input').click();
-    });
+    if (inputField) inputField.focus();
+
+    const doCancel = () => {
+        window.closeInputPopup();
+        if (typeof onCancel === 'function') onCancel();
+    };
+
+    overlay.onclick = (e) => {
+        if (e.target === overlay) doCancel();
+    };
+
+    const cancelBtn = document.getElementById('mhent-btn-cancel-input');
+    if (cancelBtn) cancelBtn.onclick = doCancel;
+
+    if (inputField) {
+        inputField.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('mhent-btn-confirm-input')?.click();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                doCancel();
+            }
+        });
+    }
 
     document.getElementById('mhent-btn-confirm-input').addEventListener('click', () => {
-        const val = inputField.value.trim();
-        closeInputPopup();
+        const val = inputField ? inputField.value.trim() : '';
+        window.closeInputPopup();
         if (callback) callback(val);
     });
 };

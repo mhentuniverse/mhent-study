@@ -4110,12 +4110,19 @@ Nhiệm vụ: Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc 
         };
 
         if (typeof window.showConfirmPopup === 'function') {
-            window.showConfirmPopup('Xóa bản dịch', `Bạn có chắc chắn muốn xóa bản dịch "${versionTitle}" không? Hành động này không thể hoàn tác.`, performDelete);
+            window.showConfirmPopup('Xóa bản dịch', `Bạn có chắc chắn muốn xóa bản dịch "${versionTitle}" không? Hành động này không thể hoàn tác.`, () => {
+                performDelete();
+            });
             return;
-        } else if (!confirm(`Bạn có chắc chắn muốn xóa bản dịch "${versionTitle}" không? Hành động này không thể hoàn tác.`)) {
+        } else if (typeof window.mhentConfirm === 'function') {
+            window.mhentConfirm('Xóa bản dịch', `Bạn có chắc chắn muốn xóa bản dịch "${versionTitle}" không? Hành động này không thể hoàn tác.`).then(async (ok) => {
+                if (ok) await performDelete();
+            });
+            return;
+        } else {
+            await performDelete();
             return;
         }
-        await performDelete();
     }
 
     // =========================================================================

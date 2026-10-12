@@ -275,8 +275,8 @@ class StudyDeckSelector {
                 window.showPopup('Vui lòng chọn một bộ bài học hoặc tạo bài mới!', true);
             } else if (typeof showToast === 'function') {
                 showToast('Thông báo', 'Vui lòng chọn một bộ bài học hoặc tạo bài mới!', 'info');
-            } else {
-                alert('Vui lòng chọn một bộ bài học hoặc tạo bài mới!');
+            } else if (window.studyUI && typeof window.studyUI.showToast === 'function') {
+                window.studyUI.showToast('Vui lòng chọn một bộ bài học hoặc tạo bài mới!', 'info');
             }
             return;
         }
@@ -359,8 +359,8 @@ class StudyDeckSelector {
                 showToast('Thành công', `Đã lưu "${this.currentWordObj.word}" vào "${targetDeck.title}"!`, 'success');
             } else if (typeof window.showPopup === 'function') {
                 window.showPopup(`Đã lưu từ vựng "${this.currentWordObj.word}" vào bộ bài "${targetDeck.title}" thành công!`, false);
-            } else {
-                alert(`Đã lưu từ vựng "${this.currentWordObj.word}" vào bộ bài "${targetDeck.title}" thành công!`);
+            } else if (window.studyUI && typeof window.studyUI.showToast === 'function') {
+                window.studyUI.showToast(`✨ Đã lưu từ vựng "${this.currentWordObj.word}" vào bộ bài "${targetDeck.title}" thành công!`, 'success');
             }
 
             this.close();
@@ -369,8 +369,10 @@ class StudyDeckSelector {
             console.error('[DeckSelector] Save error:', err);
             if (typeof window.showPopup === 'function') {
                 window.showPopup(`Lỗi khi lưu từ: ${err.message}`, true);
-            } else {
-                alert(`Lỗi khi lưu từ: ${err.message}`);
+            } else if (typeof showToast === 'function') {
+                showToast('Lỗi', `Lỗi khi lưu từ: ${err.message}`, 'error');
+            } else if (window.studyUI && typeof window.studyUI.showToast === 'function') {
+                window.studyUI.showToast(`Lỗi khi lưu từ: ${err.message}`, 'error');
             }
         } finally {
             if (confirmBtn) {
