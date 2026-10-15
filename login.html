@@ -582,21 +582,40 @@
                 return;
             }
 
-            showLoading("Đang gửi email đặt lại mật khẩu...");
+            showLoading("Đang đúc chìa khóa dự phòng...");
             try {
-                await sendPasswordResetEmail(auth, email.trim());
+                const res = await fetch('https://mhentuniverse.com/api/auth-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email.trim(), type: 'resetPassword' })
+                });
+                const data = await res.json();
                 hideLoading();
-                if (typeof window.showPopup === 'function') {
-                    window.showPopup(`Đã gửi thư đặt lại mật khẩu đến ${email}! Cậu nhớ kiểm tra hòm thư nhé!`, false);
-                } else if (typeof window.showToast === 'function') {
-                    window.showToast('Thành công', `Đã gửi thư đặt lại mật khẩu đến ${email}!`, 'success');
+                if (res.ok && data.status === 'success') {
+                    if (typeof window.showPopup === 'function') {
+                        window.showPopup(`Chiếc chìa khóa dự phòng đã được gửi tới ${email.trim()}! Cậu nhớ kiểm tra hòm thư nha!`, false);
+                    } else if (typeof window.showToast === 'function') {
+                        window.showToast('Thành công', `Đã gửi chìa khóa dự phòng tới ${email.trim()}!`, 'success');
+                    }
+                } else {
+                    throw new Error(data.message || "Không thể gửi thư qua máy chủ.");
                 }
             } catch (e) {
-                hideLoading();
-                if (typeof window.showPopup === 'function') {
-                    window.showPopup('Lỗi: ' + e.message, true);
-                } else if (typeof window.showToast === 'function') {
-                    window.showToast('Lỗi', e.message, 'error');
+                try {
+                    await sendPasswordResetEmail(auth, email.trim());
+                    hideLoading();
+                    if (typeof window.showPopup === 'function') {
+                        window.showPopup(`Đã gửi thư đặt lại mật khẩu đến ${email}! Cậu nhớ kiểm tra hòm thư nhé!`, false);
+                    } else if (typeof window.showToast === 'function') {
+                        window.showToast('Thành công', `Đã gửi thư đặt lại mật khẩu đến ${email}!`, 'success');
+                    }
+                } catch(fallbackErr) {
+                    hideLoading();
+                    if (typeof window.showPopup === 'function') {
+                        window.showPopup('Lỗi: ' + (e.message || fallbackErr.message), true);
+                    } else if (typeof window.showToast === 'function') {
+                        window.showToast('Lỗi', e.message || fallbackErr.message, 'error');
+                    }
                 }
             }
         };
