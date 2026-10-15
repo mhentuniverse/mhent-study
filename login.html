@@ -584,7 +584,7 @@
 
             showLoading("Đang đúc chìa khóa dự phòng...");
             try {
-                const res = await fetch('https://mhentuniverse.com/api/auth-email', {
+                const res = await fetch('https://www.mhentuniverse.com/api/auth-email', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: email.trim(), type: 'resetPassword' })
