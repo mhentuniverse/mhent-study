@@ -118,14 +118,14 @@
 /* ==========================================
    5. HỖ TRỢ CHẾ ĐỘ TỐI (DARK MODE)
    ========================================== */
-body.dark-mode .mhent-toast { background: rgba(30, 41, 59, 0.95); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
-body.dark-mode .mhent-toast-title { color: #f8fafc; }
-body.dark-mode .mhent-toast-desc { color: #94a3b8; }
-body.dark-mode .mhent-ui-box { background: #1e293b; border-color: #334155; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4); }
-body.dark-mode .mhent-ui-title { color: #f8fafc; }
-body.dark-mode .mhent-ui-msg { color: #cbd5e1; }
-body.dark-mode .mhent-ui-btn-outline { background: #334155; color: #cbd5e1; }
-body.dark-mode .mhent-ui-btn-outline:hover { background: #475569; color: #f8fafc; }
+html.dark-mode .mhent-toast, body.dark-mode .mhent-toast, .dark-mode .mhent-toast, [data-theme="dark"] .mhent-toast { background: rgba(30, 41, 59, 0.95); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
+html.dark-mode .mhent-toast-title, body.dark-mode .mhent-toast-title, .dark-mode .mhent-toast-title, [data-theme="dark"] .mhent-toast-title { color: #f8fafc; }
+html.dark-mode .mhent-toast-desc, body.dark-mode .mhent-toast-desc, .dark-mode .mhent-toast-desc, [data-theme="dark"] .mhent-toast-desc { color: #94a3b8; }
+html.dark-mode .mhent-ui-box, body.dark-mode .mhent-ui-box, .dark-mode .mhent-ui-box, [data-theme="dark"] .mhent-ui-box { background: #1e293b; border-color: #334155; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4); }
+html.dark-mode .mhent-ui-title, body.dark-mode .mhent-ui-title, .dark-mode .mhent-ui-title, [data-theme="dark"] .mhent-ui-title { color: #f8fafc; }
+html.dark-mode .mhent-ui-msg, body.dark-mode .mhent-ui-msg, .dark-mode .mhent-ui-msg, [data-theme="dark"] .mhent-ui-msg { color: #cbd5e1; }
+html.dark-mode .mhent-ui-btn-outline, body.dark-mode .mhent-ui-btn-outline, .dark-mode .mhent-ui-btn-outline, [data-theme="dark"] .mhent-ui-btn-outline { background: #334155; color: #cbd5e1; }
+html.dark-mode .mhent-ui-btn-outline:hover, body.dark-mode .mhent-ui-btn-outline:hover, .dark-mode .mhent-ui-btn-outline:hover, [data-theme="dark"] .mhent-ui-btn-outline:hover { background: #475569; color: #f8fafc; }
 
 /* ==========================================
    6. RESPONSIVE (MÀN HÌNH ĐIỆN THOẠI)
@@ -183,71 +183,290 @@ body.dark-mode .mhent-btn-cancel:hover { background: #475569; }
 .mhent-btn-confirm { background: var(--hub-color, #6366f1); color: #ffffff; }
 .mhent-btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 4px 10px var(--hub-bg, rgba(99,102,241,0.3)); }
 
-/* ==========================================
-   7. CUSTOM SELECT & DROPDOWNS (MHEnt Glass/Dark Theme)
-   ========================================== */
-select, .mhent-select {
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-color: #ffffff;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    background-size: 16px;
-    padding: 10px 40px 10px 16px;
-    border-radius: 14px;
-    border: 1.5px solid #e2e8f0;
-    color: #1e293b;
-    font-family: 'Nunito', sans-serif;
-    font-size: 14.5px;
-    font-weight: 700;
-    outline: none;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+/* ==========================================================================
+   7. CUSTOM SELECT & DROPDOWNS (MHEnt Modern Glass/Tech Theme)
+   ========================================================================== */
+select, .mhent-select, .form-select, .filter-select, .admin-select, .setting-select, .tool-select, .lookup-select, .question-type-select, select.admin-input, select.form-control {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-color: var(--card-bg, #ffffff) !important;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 14px center !important;
+    background-size: 16px !important;
+    padding: 9px 38px 9px 14px !important;
+    border-radius: 12px !important;
+    border: 1.5px solid var(--border-soft, #e2e8f0) !important;
+    color: var(--text-main, #1e293b) !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.4 !important;
+    outline: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+    box-sizing: border-box !important;
 }
 
-select:hover, .mhent-select:hover {
-    border-color: var(--hub-color, #6366f1);
-    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.15);
+select:hover, .mhent-select:hover, .form-select:hover, .filter-select:hover, .admin-select:hover, .setting-select:hover, .tool-select:hover, .lookup-select:hover, .question-type-select:hover, select.admin-input:hover, select.form-control:hover {
+    border-color: var(--hub-color, #6366f1) !important;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.16) !important;
 }
 
-select:focus, .mhent-select:focus {
-    border-color: var(--hub-color, #6366f1);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+select:focus, .mhent-select:focus, .form-select:focus, .filter-select:focus, .admin-select:focus, .setting-select:focus, .tool-select:focus, .lookup-select:focus, .question-type-select:focus, select.admin-input:focus, select.form-control:focus {
+    border-color: var(--hub-color, #6366f1) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.22) !important;
 }
 
-select option {
-    background-color: #ffffff;
-    color: #1e293b;
-    padding: 12px;
-    font-weight: 600;
+select:disabled, .form-select:disabled, .filter-select:disabled, select.admin-input:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    background-color: #f1f5f9 !important;
 }
 
-body.dark-mode select, body.dark-mode .mhent-select,
-.dark-theme select, .dark-theme .mhent-select {
-    background-color: #1e293b;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23818cf8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    border-color: #334155;
-    color: #f8fafc;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+select option, .mhent-select option, .form-select option, .filter-select option, .admin-select option, .setting-select option, .lookup-select option, .question-type-select option {
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+    padding: 10px 14px !important;
+    font-weight: 600 !important;
 }
 
-body.dark-mode select:hover, body.dark-mode .mhent-select:hover,
-.dark-theme select:hover, .dark-theme .mhent-select:hover {
-    border-color: #818cf8;
-    box-shadow: 0 0 16px rgba(129, 140, 248, 0.25);
+/* DARK MODE SELECT */
+html.dark-mode select, body.dark-mode select, .dark-mode select, [data-theme="dark"] select, .dark-theme select,
+html.dark-mode .mhent-select, body.dark-mode .mhent-select, .dark-mode .mhent-select,
+html.dark-mode .form-select, body.dark-mode .form-select, .dark-mode .form-select,
+html.dark-mode .filter-select, body.dark-mode .filter-select, .dark-mode .filter-select,
+html.dark-mode .admin-select, body.dark-mode .admin-select, .dark-mode .admin-select,
+html.dark-mode .setting-select, body.dark-mode .setting-select, .dark-mode .setting-select,
+html.dark-mode .tool-select, body.dark-mode .tool-select, .dark-mode .tool-select,
+html.dark-mode .lookup-select, body.dark-mode .lookup-select, .dark-mode .lookup-select,
+html.dark-mode .question-type-select, body.dark-mode .question-type-select, .dark-mode .question-type-select,
+html.dark-mode select.admin-input, body.dark-mode select.admin-input, .dark-mode select.admin-input,
+html.dark-mode select.form-control, body.dark-mode select.form-control, .dark-mode select.form-control {
+    background-color: var(--card-bg, #1e293b) !important;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23818cf8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+    border-color: var(--border-soft, #334155) !important;
+    color: var(--text-main, #f8fafc) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
 }
 
-body.dark-mode select:focus, body.dark-mode .mhent-select:focus,
-.dark-theme select:focus, .dark-theme .mhent-select:focus {
-    border-color: #818cf8;
-    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.3);
+html.dark-mode select:hover, body.dark-mode select:hover, .dark-mode select:hover, [data-theme="dark"] select:hover,
+html.dark-mode .form-select:hover, .dark-mode .form-select:hover,
+html.dark-mode .filter-select:hover, .dark-mode .filter-select:hover {
+    border-color: #818cf8 !important;
+    box-shadow: 0 0 16px rgba(129, 140, 248, 0.25) !important;
 }
 
-body.dark-mode select option,
+html.dark-mode select:focus, body.dark-mode select:focus, .dark-mode select:focus, [data-theme="dark"] select:focus,
+html.dark-mode .form-select:focus, .dark-mode .form-select:focus,
+html.dark-mode .filter-select:focus, .dark-mode .filter-select:focus {
+    border-color: #818cf8 !important;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.3) !important;
+}
+
+html.dark-mode select:disabled, body.dark-mode select:disabled, .dark-mode select:disabled {
+    background-color: #0f172a !important;
+    opacity: 0.55 !important;
+}
+
+html.dark-mode select option, body.dark-mode select option,
+.dark-mode select option, [data-theme="dark"] select option,
 .dark-theme select option {
-    background-color: #0f172a;
-    color: #f8fafc;
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
 }
+
+
+/* ==========================================================================
+   7. CUSTOM SELECT & DROPDOWNS (MHEnt Modern Glass/Tech Theme)
+   ========================================================================== */
+select, .mhent-select, .form-select, .filter-select, .admin-select, .setting-select, .tool-select, .lookup-select, .question-type-select, select.admin-input, select.form-control {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-color: var(--card-bg, #ffffff) !important;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 14px center !important;
+    background-size: 16px !important;
+    padding: 9px 38px 9px 14px !important;
+    border-radius: 12px !important;
+    border: 1.5px solid var(--border-soft, #e2e8f0) !important;
+    color: var(--text-main, #1e293b) !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.4 !important;
+    outline: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+    box-sizing: border-box !important;
+}
+
+select:hover, .mhent-select:hover, .form-select:hover, .filter-select:hover, .admin-select:hover, .setting-select:hover, .tool-select:hover, .lookup-select:hover, .question-type-select:hover, select.admin-input:hover, select.form-control:hover {
+    border-color: var(--hub-color, #6366f1) !important;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.16) !important;
+}
+
+select:focus, .mhent-select:focus, .form-select:focus, .filter-select:focus, .admin-select:focus, .setting-select:focus, .tool-select:focus, .lookup-select:focus, .question-type-select:focus, select.admin-input:focus, select.form-control:focus {
+    border-color: var(--hub-color, #6366f1) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.22) !important;
+}
+
+select:disabled, .form-select:disabled, .filter-select:disabled, select.admin-input:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    background-color: #f1f5f9 !important;
+}
+
+select option, .mhent-select option, .form-select option, .filter-select option, .admin-select option, .setting-select option, .lookup-select option, .question-type-select option {
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+    padding: 10px 14px !important;
+    font-weight: 600 !important;
+}
+
+/* DARK MODE SELECT */
+html.dark-mode select, body.dark-mode select, .dark-mode select, [data-theme="dark"] select, .dark-theme select,
+html.dark-mode .mhent-select, body.dark-mode .mhent-select, .dark-mode .mhent-select,
+html.dark-mode .form-select, body.dark-mode .form-select, .dark-mode .form-select,
+html.dark-mode .filter-select, body.dark-mode .filter-select, .dark-mode .filter-select,
+html.dark-mode .admin-select, body.dark-mode .admin-select, .dark-mode .admin-select,
+html.dark-mode .setting-select, body.dark-mode .setting-select, .dark-mode .setting-select,
+html.dark-mode .tool-select, body.dark-mode .tool-select, .dark-mode .tool-select,
+html.dark-mode .lookup-select, body.dark-mode .lookup-select, .dark-mode .lookup-select,
+html.dark-mode .question-type-select, body.dark-mode .question-type-select, .dark-mode .question-type-select,
+html.dark-mode select.admin-input, body.dark-mode select.admin-input, .dark-mode select.admin-input,
+html.dark-mode select.form-control, body.dark-mode select.form-control, .dark-mode select.form-control {
+    background-color: var(--card-bg, #1e293b) !important;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23818cf8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+    border-color: var(--border-soft, #334155) !important;
+    color: var(--text-main, #f8fafc) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+}
+
+html.dark-mode select:hover, body.dark-mode select:hover, .dark-mode select:hover, [data-theme="dark"] select:hover,
+html.dark-mode .form-select:hover, .dark-mode .form-select:hover,
+html.dark-mode .filter-select:hover, .dark-mode .filter-select:hover {
+    border-color: #818cf8 !important;
+    box-shadow: 0 0 16px rgba(129, 140, 248, 0.25) !important;
+}
+
+html.dark-mode select:focus, body.dark-mode select:focus, .dark-mode select:focus, [data-theme="dark"] select:focus,
+html.dark-mode .form-select:focus, .dark-mode .form-select:focus,
+html.dark-mode .filter-select:focus, .dark-mode .filter-select:focus {
+    border-color: #818cf8 !important;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.3) !important;
+}
+
+html.dark-mode select:disabled, body.dark-mode select:disabled, .dark-mode select:disabled {
+    background-color: #0f172a !important;
+    opacity: 0.55 !important;
+}
+
+html.dark-mode select option, body.dark-mode select option,
+.dark-mode select option, [data-theme="dark"] select option,
+.dark-theme select option {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+}
+
+
+/* ==========================================================================
+   7. CUSTOM SELECT & DROPDOWNS (MHEnt Modern Glass/Tech Theme)
+   ========================================================================== */
+select, .mhent-select, .form-select, .filter-select, .admin-select, .setting-select, .tool-select, .lookup-select, .question-type-select, select.admin-input, select.form-control {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-color: var(--card-bg, #ffffff) !important;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 14px center !important;
+    background-size: 16px !important;
+    padding: 9px 38px 9px 14px !important;
+    border-radius: 12px !important;
+    border: 1.5px solid var(--border-soft, #e2e8f0) !important;
+    color: var(--text-main, #1e293b) !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.4 !important;
+    outline: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+    box-sizing: border-box !important;
+}
+
+select:hover, .mhent-select:hover, .form-select:hover, .filter-select:hover, .admin-select:hover, .setting-select:hover, .tool-select:hover, .lookup-select:hover, .question-type-select:hover, select.admin-input:hover, select.form-control:hover {
+    border-color: var(--hub-color, #6366f1) !important;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.16) !important;
+}
+
+select:focus, .mhent-select:focus, .form-select:focus, .filter-select:focus, .admin-select:focus, .setting-select:focus, .tool-select:focus, .lookup-select:focus, .question-type-select:focus, select.admin-input:focus, select.form-control:focus {
+    border-color: var(--hub-color, #6366f1) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.22) !important;
+}
+
+select:disabled, .form-select:disabled, .filter-select:disabled, select.admin-input:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    background-color: #f1f5f9 !important;
+}
+
+select option, .mhent-select option, .form-select option, .filter-select option, .admin-select option, .setting-select option, .lookup-select option, .question-type-select option {
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+    padding: 10px 14px !important;
+    font-weight: 600 !important;
+}
+
+/* DARK MODE SELECT */
+html.dark-mode select, body.dark-mode select, .dark-mode select, [data-theme="dark"] select, .dark-theme select,
+html.dark-mode .mhent-select, body.dark-mode .mhent-select, .dark-mode .mhent-select,
+html.dark-mode .form-select, body.dark-mode .form-select, .dark-mode .form-select,
+html.dark-mode .filter-select, body.dark-mode .filter-select, .dark-mode .filter-select,
+html.dark-mode .admin-select, body.dark-mode .admin-select, .dark-mode .admin-select,
+html.dark-mode .setting-select, body.dark-mode .setting-select, .dark-mode .setting-select,
+html.dark-mode .tool-select, body.dark-mode .tool-select, .dark-mode .tool-select,
+html.dark-mode .lookup-select, body.dark-mode .lookup-select, .dark-mode .lookup-select,
+html.dark-mode .question-type-select, body.dark-mode .question-type-select, .dark-mode .question-type-select,
+html.dark-mode select.admin-input, body.dark-mode select.admin-input, .dark-mode select.admin-input,
+html.dark-mode select.form-control, body.dark-mode select.form-control, .dark-mode select.form-control {
+    background-color: var(--card-bg, #1e293b) !important;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23818cf8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+    border-color: var(--border-soft, #334155) !important;
+    color: var(--text-main, #f8fafc) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+}
+
+html.dark-mode select:hover, body.dark-mode select:hover, .dark-mode select:hover, [data-theme="dark"] select:hover,
+html.dark-mode .form-select:hover, .dark-mode .form-select:hover,
+html.dark-mode .filter-select:hover, .dark-mode .filter-select:hover {
+    border-color: #818cf8 !important;
+    box-shadow: 0 0 16px rgba(129, 140, 248, 0.25) !important;
+}
+
+html.dark-mode select:focus, body.dark-mode select:focus, .dark-mode select:focus, [data-theme="dark"] select:focus,
+html.dark-mode .form-select:focus, .dark-mode .form-select:focus,
+html.dark-mode .filter-select:focus, .dark-mode .filter-select:focus {
+    border-color: #818cf8 !important;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.3) !important;
+}
+
+html.dark-mode select:disabled, body.dark-mode select:disabled, .dark-mode select:disabled {
+    background-color: #0f172a !important;
+    opacity: 0.55 !important;
+}
+
+html.dark-mode select option, body.dark-mode select option,
+.dark-mode select option, [data-theme="dark"] select option,
+.dark-theme select option {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+}
+
