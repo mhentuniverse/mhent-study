@@ -37,6 +37,9 @@ class LyricsHubApp {
         this.isAutoScrollEnabled = true; // Bật/Tắt tính năng tự cuộn câu theo bài hát
         this.isPlainMode = false; // true: Chế độ đọc toàn văn, false: Chế độ Karaoke từng câu
         this.isAnalyzingAi = false; // Trạng thái đang phân tích AI (Direct Gemini 3.5 Flash Lite)
+        this.isStudioRecording = false; // Trạng thái đang quay video bài hát chuẩn Studio
+        this.mediaRecorder = null;
+        this.recordedChunks = [];
 
         // Modal Search & Song Picker states
         this.modalCandidates = [];
@@ -96,6 +99,11 @@ class LyricsHubApp {
             if (defaultSong) {
                 this.loadSong(defaultSong);
             }
+        }
+
+        // Tự động bật Studio Mode nếu URL có tham số ?mode=studio
+        if (urlParams.get('mode') === 'studio' || urlParams.get('studio') === '1') {
+            setTimeout(() => this.toggleStudioMode(true), 400);
         }
     }
 
@@ -203,14 +211,29 @@ class LyricsHubApp {
             }
         });
 
-        // 11. Escape Key Handler
+        // 11. Escape & Shortcut Key Handler
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
+                if (document.body.classList.contains('is-studio-mode')) {
+                    this.toggleStudioMode(false);
+                    return;
+                }
                 this.closeSongSelectModal();
                 this.closeChangeVideoModal();
                 this.closeVersionsDrawer();
                 this.closeContribModal();
                 this.hideAllPopovers();
+                return;
+            }
+
+            // Phím S: Bật/Tắt Studio Mode 16:9 nhanh (khi không gõ trong ô text)
+            if ((e.key === 's' || e.key === 'S') && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                const tag = (e.target && e.target.tagName ? e.target.tagName : '').toLowerCase();
+                if (tag !== 'input' && tag !== 'textarea' && !e.target.isContentEditable) {
+                    e.preventDefault();
+                    this.toggleStudioMode();
+                    return;
+                }
             }
         });
 
@@ -1402,6 +1425,9 @@ class LyricsHubApp {
                 }
             }, 60);
         }
+
+        // Cập nhật ngay nội dung khung Từ Vựng Highlight cho câu hiện tại
+        this.updateVocabSpotlight(this.activeSentenceIndex);
     }
 
     toggleAutoScroll() {
@@ -2430,6 +2456,9 @@ QUY TẮC ĐẦU RA:
             const prevIdx = this.activeSentenceIndex;
             this.activeSentenceIndex = activeIdx;
 
+            // Cập nhật ngay Khung Từ Vựng Đang Hát (Word Highlight Box)
+            this.updateVocabSpotlight(activeIdx);
+
             // Nếu đang trong chế độ Luyện Chép, tự động chuyển vòng lặp và dời ô nhập
             if (this.isDictationMode && activeIdx !== prevIdx && activeIdx >= 0) {
                 this.loopSentenceIndex = activeIdx;
@@ -2475,6 +2504,190 @@ QUY TẮC ĐẦU RA:
                     });
                 }
             }
+        }
+    }
+
+    // =========================================================================
+    // 5. REAL-TIME WORD HIGHLIGHT BOX (KHUNG TỪ VỰNG CÂU ĐANG HÁT)
+    // =========================================================================
+    updateVocabSpotlight(sentenceIdx) {
+        const body = document.getElementById('vocab-spotlight-body');
+        const countBadge = document.getElementById('spotlight-word-count');
+        if (!body) return;
+
+        const lines = this.getActiveLyrics();
+        if (!lines || sentenceIdx < 0 || sentenceIdx >= lines.length) {
+            if (countBadge) countBadge.textContent = '0 từ';
+            body.innerHTML = `
+                <div class="spotlight-empty-state">
+                    <i class="fa-solid fa-music" style="color: #38bdf8; opacity: 0.6; font-size: 1.2rem;"></i>
+                    <span>Phát bài hát để xem giải nghĩa từ vựng của câu đang hát</span>
+                </div>
+            `;
+            return;
+        }
+
+        const currentLine = lines[sentenceIdx];
+        const words = Array.isArray(currentLine.words) ? currentLine.words : [];
+
+        // Lọc các từ hợp lệ có nghĩa
+        const validWords = words.filter(w => w && (w.word || w.kanji) && (w.meaning || w.vietnamese || w.trans));
+
+        if (countBadge) countBadge.textContent = `${validWords.length} từ`;
+
+        if (validWords.length === 0) {
+            body.innerHTML = `
+                <div class="spotlight-no-words">
+                    <div class="spotlight-current-text">${this.escapeHtml(currentLine.text || '')}</div>
+                    ${currentLine.translation ? `<div class="spotlight-current-trans">${this.escapeHtml(currentLine.translation)}</div>` : ''}
+                    <div class="spotlight-hint">Câu này không có từ vựng riêng, bạn có thể nhấp đúp từ bất kỳ để tra từ điển AISA!</div>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '<div class="spotlight-words-list">';
+        validWords.forEach((item, wIdx) => {
+            const wordText = item.word || item.kanji || '';
+            const phonetic = item.phonetic || item.furigana || item.pinyin || item.romaji || '';
+            const pos = item.pos || item.type || item.partOfSpeech || 'từ vựng';
+            const meaning = item.meaning || item.vietnamese || item.trans || '';
+
+            html += `
+                <div class="spotlight-word-card" style="animation-delay: ${wIdx * 0.04}s">
+                    <div class="spotlight-word-top">
+                        <div class="spotlight-word-term">
+                            <span class="spotlight-term-main">${this.escapeHtml(wordText)}</span>
+                            ${phonetic ? `<span class="spotlight-term-phonetic">【${this.escapeHtml(phonetic)}】</span>` : ''}
+                        </div>
+                        <span class="spotlight-term-pos">${this.escapeHtml(pos)}</span>
+                    </div>
+                    <div class="spotlight-word-meaning">${this.escapeHtml(meaning)}</div>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        body.innerHTML = html;
+    }
+
+    // =========================================================================
+    // 6. STUDIO 16:9 VIEW MODE & VIDEO CONVERTER (RECORDING)
+    // =========================================================================
+    toggleStudioMode(forceState) {
+        const isStudio = typeof forceState === 'boolean' 
+            ? forceState 
+            : !document.body.classList.contains('is-studio-mode');
+
+        document.body.classList.toggle('is-studio-mode', isStudio);
+
+        const btn = document.getElementById('btn-toggle-studio');
+        if (btn) btn.classList.toggle('active', isStudio);
+
+        if (isStudio) {
+            this.showToast('Đã vào Chế độ Studio 16:9 (Nhấn Esc hoặc nút góc phải để thoát)', 'info', 3000);
+            if (this.activeSentenceIndex >= 0) {
+                this.syncActiveSentence(this.currentTime, true);
+            }
+        } else {
+            if (this.isStudioRecording) {
+                this.stopStudioRecording();
+            }
+        }
+    }
+
+    async toggleStudioRecording() {
+        if (this.isStudioRecording) {
+            this.stopStudioRecording();
+        } else {
+            await this.startStudioRecording();
+        }
+    }
+
+    async startStudioRecording() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+            this.showToast('Trình duyệt của bạn chưa hỗ trợ tính năng xuất video trực tiếp', 'error', 3000);
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getDisplayMedia({
+                video: {
+                    displaySurface: 'browser',
+                    frameRate: 60
+                },
+                audio: true,
+                preferCurrentTab: true
+            });
+
+            const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')
+                ? 'video/mp4'
+                : (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ? 'video/webm;codecs=vp9,opus' : 'video/webm');
+
+            this.mediaRecorder = new MediaRecorder(stream, { mimeType });
+            this.recordedChunks = [];
+
+            this.mediaRecorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) this.recordedChunks.push(e.data);
+            };
+
+            this.mediaRecorder.onstop = () => {
+                const blob = new Blob(this.recordedChunks, { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const songName = this.currentSong ? `${this.currentSong.title} - ${this.currentSong.artist}` : 'mhent-study-video';
+                const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+                a.href = url;
+                a.download = `${songName} (Study Lyrics 16-9).${ext}`;
+                a.click();
+                URL.revokeObjectURL(url);
+                this.showToast('Đã xuất video bài hát thành công!', 'success', 3500);
+                this.isStudioRecording = false;
+                this.updateStudioRecordButton();
+            };
+
+            this.mediaRecorder.start();
+            this.isStudioRecording = true;
+            this.updateStudioRecordButton();
+            this.showToast('Đang quay video bài hát... Bấm lại nút này khi muốn dừng và tải về!', 'info', 4000);
+
+            const videoTrack = stream.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.onended = () => {
+                    if (this.isStudioRecording) {
+                        this.stopStudioRecording();
+                    }
+                };
+            }
+        } catch (err) {
+            console.warn('Lỗi bắt đầu ghi hình:', err);
+            if (err.name !== 'NotAllowedError') {
+                this.showToast('Không thể kích hoạt quay video: ' + err.message, 'error', 3000);
+            }
+        }
+    }
+
+    stopStudioRecording() {
+        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+            this.mediaRecorder.stop();
+            if (this.mediaRecorder.stream) {
+                this.mediaRecorder.stream.getTracks().forEach(t => t.stop());
+            }
+        }
+        this.isStudioRecording = false;
+        this.updateStudioRecordButton();
+    }
+
+    updateStudioRecordButton() {
+        const btn = document.getElementById('btn-studio-record');
+        if (!btn) return;
+
+        if (this.isStudioRecording) {
+            btn.classList.add('is-recording');
+            btn.innerHTML = `<i class="fa-solid fa-stop" style="color: #ffffff;"></i> <span id="studio-record-label">Dừng & Tải Video</span>`;
+        } else {
+            btn.classList.remove('is-recording');
+            btn.innerHTML = `<i class="fa-solid fa-circle-dot" style="color: #ef4444;"></i> <span id="studio-record-label">Xuất Video (Record)</span>`;
         }
     }
 

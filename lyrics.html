@@ -155,8 +155,9 @@
         <!-- MAIN 2-COLUMN WORKSPACE -->
         <section class="lyrics-workspace">
 
-            <!-- LEFT: Track Art & Audio Player Controls -->
-            <div class="lyrics-player-card">
+            <!-- LEFT COLUMN: Media Player & Real-time Word Highlight Card -->
+            <div class="lyrics-left-column">
+                <div class="lyrics-player-card">
                 <div class="track-media-container" id="track-media-container">
                     <div class="track-art-wrap" id="track-art-wrap">
                         <img id="track-art-img" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=60" alt="Track Art" class="track-art-img">
@@ -263,7 +264,25 @@
                 </div>
             </div>
 
-            <!-- RIGHT: Synced Karaoke Viewport & Community Switcher -->
+            <!-- WORD HIGHLIGHT BOX (Khung từ vựng câu đang hát theo thời gian thực) -->
+            <div class="lyrics-vocab-spotlight-card" id="lyrics-vocab-spotlight-card">
+                <div class="vocab-spotlight-header">
+                    <div class="vocab-spotlight-title">
+                        <i class="fa-solid fa-highlighter" style="color: #38bdf8;"></i>
+                        <span>Từ vựng câu đang hát</span>
+                    </div>
+                    <span class="vocab-spotlight-count" id="spotlight-word-count">0 từ</span>
+                </div>
+                <div class="vocab-spotlight-body" id="vocab-spotlight-body">
+                    <div class="spotlight-empty-state">
+                        <i class="fa-solid fa-music" style="color: #38bdf8; opacity: 0.6; font-size: 1.2rem;"></i>
+                        <span>Phát bài hát để xem giải nghĩa từ vựng của câu đang hát</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Synced Karaoke Viewport & Community Switcher -->
             <div class="lyrics-viewport-card">
                 <!-- Header with Version Tabs & Toggles -->
                 <div class="lyrics-viewport-header">
@@ -277,6 +296,9 @@
                     </div>
 
                     <div class="viewport-header-tools">
+                        <button type="button" id="btn-toggle-studio" class="btn-tool-action btn-studio-view" onclick="window.lyricsApp.toggleStudioMode()" title="Chế độ Phòng thu / Quay Video 16:9 Không Râu Ria (Studio Mode)">
+                            <i class="fa-solid fa-clapperboard" style="color: #38bdf8;"></i> <span class="btn-tool-label">Studio 16:9</span>
+                        </button>
                         <button type="button" id="btn-reanalyze-ai" class="btn-tool-action btn-ai-gradient" title="Dùng AISA AI phân tích & dịch lời bài hát, phiên âm và trích xuất từ vựng" onclick="window.lyricsApp.triggerAiAnalysis(true)">
                             <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="reanalyze-label">Phân tích AI</span>
                         </button>
@@ -860,8 +882,20 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js').catch(() => {});
             });
-        }
     </script>
+
+    <!-- Studio Mode 16:9 Floating Control Dock (Xuất hiện khi bật Studio Mode) -->
+    <div id="studio-floating-dock" class="studio-floating-dock">
+        <button type="button" id="btn-studio-record" class="btn-studio-dock-action btn-record" onclick="window.lyricsApp.toggleStudioRecording()" title="Bắt đầu quay/xuất video bài hát chuẩn 16:9">
+            <i class="fa-solid fa-circle-dot" style="color: #ef4444;"></i> <span id="studio-record-label">Xuất Video (Record)</span>
+        </button>
+        <button type="button" class="btn-studio-dock-action" onclick="window.lyricsApp.seekToSentence(0); window.lyricsApp.play();" title="Phát lại từ đầu bài hát">
+            <i class="fa-solid fa-rotate-left"></i> <span>Phát từ đầu</span>
+        </button>
+        <button type="button" class="btn-studio-dock-action btn-exit" onclick="window.lyricsApp.toggleStudioMode(false)" title="Thoát Chế độ Studio (Phím Esc)">
+            <i class="fa-solid fa-xmark"></i> <span>Thoát Studio (Esc)</span>
+        </button>
+    </div>
 </body>
 
 </html>
