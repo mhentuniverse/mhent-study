@@ -158,35 +158,37 @@
             <!-- LEFT COLUMN: Media Player & Real-time Word Highlight Card -->
             <div class="lyrics-left-column">
                 <div class="lyrics-player-card">
-                <div class="track-media-container" id="track-media-container">
-                    <div class="track-art-wrap" id="track-art-wrap">
-                        <img id="track-art-img" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=60" alt="Track Art" class="track-art-img">
-                    </div>
-                    <div id="youtube-player-wrapper" class="youtube-player-wrapper" style="display: none;">
-                        <div id="youtube-player-frame" class="youtube-player-frame"></div>
-                    </div>
-                </div>
-
-                <!-- Clean Media Toolbar: Nằm dưới video, không che màn hình phát nhạc -->
-                <div class="track-media-toolbar">
-                    <button type="button" id="btn-toggle-media" class="media-toolbar-btn btn-toggle-media-mode" title="Chuyển đổi Xem MV YouTube / Xem Ảnh Bìa">
-                        <i class="fa-brands fa-youtube"></i> <span>Xem MV</span>
-                    </button>
-                    <button type="button" id="btn-change-video" class="media-toolbar-btn btn-change-video" onclick="window.lyricsApp.openChangeVideoModal()" title="Đổi video MV khác hoặc dán link Full Version">
-                        <i class="fa-solid fa-arrows-rotate"></i> <span>Đổi Video</span>
-                    </button>
-                    <div id="tv-size-warning-badge" class="tv-size-warning-badge" style="display: none;" onclick="window.lyricsApp.openChangeVideoModal()" title="Nhấp để đổi sang bản Full Version">
-                        <i class="fa-solid fa-triangle-exclamation"></i> <span>Bản TV Size • Đổi bản Full</span>
-                    </div>
-                </div>
-
-                <div class="track-info-box">
-                    <h2 id="track-title" class="track-title">Đang tải bài hát...</h2>
-                    <div class="track-meta-row">
-                        <span id="track-artist" class="track-artist">Nghệ sĩ</span>
+                    <!-- 1. Track Info Header on Top (Name, Author & Lang Badge) -->
+                    <div class="track-info-box">
+                        <div class="track-info-main">
+                            <h2 id="track-title" class="track-title">Đang tải bài hát...</h2>
+                            <span id="track-artist" class="track-artist">Nghệ sĩ</span>
+                        </div>
                         <span id="track-lang-badge" class="track-lang-badge">Tiếng Anh</span>
                     </div>
-                </div>
+
+                    <!-- 2. 16:9 Media Player Container in the Middle -->
+                    <div class="track-media-container" id="track-media-container">
+                        <div class="track-art-wrap" id="track-art-wrap">
+                            <img id="track-art-img" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=60" alt="Track Art" class="track-art-img">
+                        </div>
+                        <div id="youtube-player-wrapper" class="youtube-player-wrapper" style="display: none;">
+                            <div id="youtube-player-frame" class="youtube-player-frame"></div>
+                        </div>
+                    </div>
+
+                    <!-- Clean Media Toolbar: Nằm dưới video, không che màn hình phát nhạc -->
+                    <div class="track-media-toolbar">
+                        <button type="button" id="btn-toggle-media" class="media-toolbar-btn btn-toggle-media-mode" title="Chuyển đổi Xem MV YouTube / Xem Ảnh Bìa">
+                            <i class="fa-brands fa-youtube"></i> <span>Xem MV</span>
+                        </button>
+                        <button type="button" id="btn-change-video" class="media-toolbar-btn btn-change-video" onclick="window.lyricsApp.openChangeVideoModal()" title="Đổi video MV khác hoặc dán link Full Version">
+                            <i class="fa-solid fa-arrows-rotate"></i> <span>Đổi Video</span>
+                        </button>
+                        <div id="tv-size-warning-badge" class="tv-size-warning-badge" style="display: none;" onclick="window.lyricsApp.openChangeVideoModal()" title="Nhấp để đổi sang bản Full Version">
+                            <i class="fa-solid fa-triangle-exclamation"></i> <span>Bản TV Size • Đổi bản Full</span>
+                        </div>
+                    </div>
 
                 <!-- Lyric-Video Sync Calibrator (Bù trừ độ trễ intro video) -->
                 <div class="lyrics-calibrator-card">
@@ -882,20 +884,8 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js').catch(() => {});
             });
+        }
     </script>
-
-    <!-- Studio Mode 16:9 Floating Control Dock (Xuất hiện khi bật Studio Mode) -->
-    <div id="studio-floating-dock" class="studio-floating-dock">
-        <button type="button" id="btn-studio-record" class="btn-studio-dock-action btn-record" onclick="window.lyricsApp.toggleStudioRecording()" title="Bắt đầu quay/xuất video bài hát chuẩn 16:9">
-            <i class="fa-solid fa-circle-dot" style="color: #ef4444;"></i> <span id="studio-record-label">Xuất Video (Record)</span>
-        </button>
-        <button type="button" class="btn-studio-dock-action" onclick="window.lyricsApp.seekToSentence(0); window.lyricsApp.play();" title="Phát lại từ đầu bài hát">
-            <i class="fa-solid fa-rotate-left"></i> <span>Phát từ đầu</span>
-        </button>
-        <button type="button" class="btn-studio-dock-action btn-exit" onclick="window.lyricsApp.toggleStudioMode(false)" title="Thoát Chế độ Studio (Phím Esc)">
-            <i class="fa-solid fa-xmark"></i> <span>Thoát Studio (Esc)</span>
-        </button>
-    </div>
 </body>
 
 </html>

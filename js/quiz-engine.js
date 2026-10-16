@@ -15,133 +15,133 @@
  * }
  */
 (function () {
-'use strict';
+  'use strict';
 
-/* ── Config ─────────────────────────────────────────────────────── */
-const C          = window.QUIZ_CONFIG || {};
-const LANG       = C.lang       || 'ko';
-const ACCENT     = C.accent     || '#ec4899';
-const ACCENT_RGB = C.accentRgb  || '236,72,153';
-const LANG_NAME  = C.langName   || '';
-const BACK_URL   = C.backUrl    || `/${LANG}/practice/index.html`;
-const MODE_TITLE = C.modeTitle  || 'Quiz Tổng Hợp';
-const MODE_ICON  = C.modeIcon   || '🎯';
+  /* ── Config ─────────────────────────────────────────────────────── */
+  const C = window.QUIZ_CONFIG || {};
+  const LANG = C.lang || 'ko';
+  const ACCENT = C.accent || '#ec4899';
+  const ACCENT_RGB = C.accentRgb || '236,72,153';
+  const LANG_NAME = C.langName || '';
+  const BACK_URL = C.backUrl || `/${LANG}/practice/index.html`;
+  const MODE_TITLE = C.modeTitle || 'Quiz Tổng Hợp';
+  const MODE_ICON = C.modeIcon || '🎯';
 
-const ALL_TYPES = [
-  'mcq_meaning_word', 'mcq_word_meaning',
-  'mcq_listening', 'mcq_fill',
-  'mcq_word_form',
-  'type_meaning', 'type_listening', 'scramble'
-];
-const USE_TYPES = (C.types && C.types.length) ? C.types : ALL_TYPES;
+  const ALL_TYPES = [
+    'mcq_meaning_word', 'mcq_word_meaning',
+    'mcq_listening', 'mcq_fill',
+    'mcq_word_form',
+    'type_meaning', 'type_listening', 'scramble'
+  ];
+  const USE_TYPES = (C.types && C.types.length) ? C.types : ALL_TYPES;
 
-const TYPE_LABELS = {
-  mcq_meaning_word: '🎯 Nghĩa→Từ',
-  mcq_word_meaning: '🎯 Từ→Nghĩa',
-  mcq_listening:    '🔊 Nghe→Chọn',
-  mcq_fill:         '📝 Điền từ',
-  mcq_word_form:    '👨‍👩‍👧 Dạng từ (Word Form)',
-  type_meaning:     '✍️ Nghĩa→Gõ',
-  type_listening:   '🔊 Nghe→Gõ',
-  scramble:         '🔀 Scramble',
-};
-
-/* ── POS & Word Family Helpers ───────────────────────────────────── */
-function getPosLabel(pos) {
-  const map = {
-    noun: 'Danh từ (Noun)',
-    verb: 'Động từ (Verb)',
-    adj: 'Tính từ (Adjective)',
-    adv: 'Trạng từ (Adverb)',
-    phrase: 'Cụm từ',
-    phrasal_verb: 'Cụm động từ (Phrasal Verb)',
-    collocation: 'Cụm từ cố định (Collocation)',
-    idiom: 'Thành ngữ (Idiom)',
-    other: 'Khác'
+  const TYPE_LABELS = {
+    mcq_meaning_word: '🎯 Nghĩa→Từ',
+    mcq_word_meaning: '🎯 Từ→Nghĩa',
+    mcq_listening: '🔊 Nghe→Chọn',
+    mcq_fill: '📝 Điền từ',
+    mcq_word_form: '👨‍👩‍👧 Dạng từ (Word Form)',
+    type_meaning: '✍️ Nghĩa→Gõ',
+    type_listening: '🔊 Nghe→Gõ',
+    scramble: '🔀 Scramble',
   };
-  return map[pos] || pos || '';
-}
 
-function getPosBadgeLabel(word) {
-  if (!word) return '';
-  if (word.posLabel && word.posLabel.trim()) return word.posLabel.trim();
-  if (word.pos) return getPosLabel(word.pos);
-  return '';
-}
-
-function getShortPos(pos) {
-  if (!pos) return '';
-  const map = {
-    noun: 'Noun',
-    verb: 'Verb',
-    adj: 'Adj',
-    adv: 'Adv',
-    phrase: 'Phrase',
-    phrasal_verb: 'Phrasal Verb',
-    collocation: 'Collocation',
-    idiom: 'Idiom'
-  };
-  return map[pos] || pos;
-}
-
-function getCatName(cat) {
-  const map = {
-    noun: 'Danh từ (Noun)',
-    verb: 'Động từ (Verb)',
-    adj: 'Tính từ (Adjective)',
-    adv: 'Trạng từ (Adverb)'
-  };
-  return map[cat] || cat;
-}
-
-function getCatShort(cat) {
-  const map = {
-    noun: 'N',
-    verb: 'V',
-    adj: 'Adj',
-    adv: 'Adv'
-  };
-  return map[cat] || cat;
-}
-
-function getValidWordFamily(word) {
-  if (!word || !word.wordFamily || typeof word.wordFamily !== 'object') return null;
-  const wf = word.wordFamily;
-  const cats = ['noun', 'verb', 'adj', 'adv'];
-  const entries = [];
-  cats.forEach(cat => {
-    if (wf[cat] && typeof wf[cat] === 'string' && wf[cat].trim()) {
-      const tokens = wf[cat].split(/[,/]/).map(s => s.trim()).filter(Boolean);
-      tokens.forEach(token => {
-        entries.push({ cat, val: token, full: wf[cat].trim() });
-      });
-    }
-  });
-  if (entries.length >= 2 || (entries.length === 1 && norm(entries[0].val) !== norm(word.word))) {
-    return entries;
+  /* ── POS & Word Family Helpers ───────────────────────────────────── */
+  function getPosLabel(pos) {
+    const map = {
+      noun: 'Danh từ (Noun)',
+      verb: 'Động từ (Verb)',
+      adj: 'Tính từ (Adjective)',
+      adv: 'Trạng từ (Adverb)',
+      phrase: 'Cụm từ',
+      phrasal_verb: 'Cụm động từ (Phrasal Verb)',
+      collocation: 'Cụm từ cố định (Collocation)',
+      idiom: 'Thành ngữ (Idiom)',
+      other: 'Khác'
+    };
+    return map[pos] || pos || '';
   }
-  return null;
-}
+
+  function getPosBadgeLabel(word) {
+    if (!word) return '';
+    if (word.posLabel && word.posLabel.trim()) return word.posLabel.trim();
+    if (word.pos) return getPosLabel(word.pos);
+    return '';
+  }
+
+  function getShortPos(pos) {
+    if (!pos) return '';
+    const map = {
+      noun: 'Noun',
+      verb: 'Verb',
+      adj: 'Adj',
+      adv: 'Adv',
+      phrase: 'Phrase',
+      phrasal_verb: 'Phrasal Verb',
+      collocation: 'Collocation',
+      idiom: 'Idiom'
+    };
+    return map[pos] || pos;
+  }
+
+  function getCatName(cat) {
+    const map = {
+      noun: 'Danh từ (Noun)',
+      verb: 'Động từ (Verb)',
+      adj: 'Tính từ (Adjective)',
+      adv: 'Trạng từ (Adverb)'
+    };
+    return map[cat] || cat;
+  }
+
+  function getCatShort(cat) {
+    const map = {
+      noun: 'N',
+      verb: 'V',
+      adj: 'Adj',
+      adv: 'Adv'
+    };
+    return map[cat] || cat;
+  }
+
+  function getValidWordFamily(word) {
+    if (!word || !word.wordFamily || typeof word.wordFamily !== 'object') return null;
+    const wf = word.wordFamily;
+    const cats = ['noun', 'verb', 'adj', 'adv'];
+    const entries = [];
+    cats.forEach(cat => {
+      if (wf[cat] && typeof wf[cat] === 'string' && wf[cat].trim()) {
+        const tokens = wf[cat].split(/[,/]/).map(s => s.trim()).filter(Boolean);
+        tokens.forEach(token => {
+          entries.push({ cat, val: token, full: wf[cat].trim() });
+        });
+      }
+    });
+    if (entries.length >= 2 || (entries.length === 1 && norm(entries[0].val) !== norm(word.word))) {
+      return entries;
+    }
+    return null;
+  }
 
 
-/* ── State ──────────────────────────────────────────────────────── */
-let allWords = [], questions = [], sessionLog = [];
-let currentIdx = 0, score = 0, combo = 0, maxCombo = 0;
-let correctCount = 0, wrongCount = 0, answered = false;
-let timerRemaining = 15, timerMaxSec = 15, timerInterval = null, timerEnabled = true;
-let hintTier = 0; // 0: chưa dùng, 1: câu ví dụ ẩn từ, 2: gạch dưới độ dài, 3: mở 1/3 ký tự
-let currentHintMask = null;
-let scrambleAnswer = [], scrambleTileMap = [];
-let activeFilter = 'all';
+  /* ── State ──────────────────────────────────────────────────────── */
+  let allWords = [], questions = [], sessionLog = [];
+  let currentIdx = 0, score = 0, combo = 0, maxCombo = 0;
+  let correctCount = 0, wrongCount = 0, answered = false;
+  let timerRemaining = 15, timerMaxSec = 15, timerInterval = null, timerEnabled = true;
+  let hintTier = 0; // 0: chưa dùng, 1: câu ví dụ ẩn từ, 2: gạch dưới độ dài, 3: mở 1/3 ký tự
+  let currentHintMask = null;
+  let scrambleAnswer = [], scrambleTileMap = [];
+  let activeFilter = 'all';
 
-/* ── CSS Injection ───────────────────────────────────────────────── */
-function injectCSS() {
-  if (document.getElementById('qe-css')) return;
-  document.documentElement.style.setProperty('--qa', ACCENT);
-  document.documentElement.style.setProperty('--qa-rgb', ACCENT_RGB);
-  const el = document.createElement('style');
-  el.id = 'qe-css';
-  el.textContent = `
+  /* ── CSS Injection ───────────────────────────────────────────────── */
+  function injectCSS() {
+    if (document.getElementById('qe-css')) return;
+    document.documentElement.style.setProperty('--qa', ACCENT);
+    document.documentElement.style.setProperty('--qa-rgb', ACCENT_RGB);
+    const el = document.createElement('style');
+    el.id = 'qe-css';
+    el.textContent = `
     :root { --qa:${ACCENT}; --qa-rgb:${ACCENT_RGB}; --qc:#10b981; --qw:#ef4444; --qwarn:#f59e0b; }
 
     /* HUD */
@@ -334,18 +334,18 @@ function injectCSS() {
       .qe-settings-grid { grid-template-columns:1fr; }
     }
   `;
-  document.head.appendChild(el);
-}
+    document.head.appendChild(el);
+  }
 
-/* ── HTML Rendering ──────────────────────────────────────────────── */
-function renderApp() {
-  const root = document.getElementById('quiz-app');
-  if (!root) return;
+  /* ── HTML Rendering ──────────────────────────────────────────────── */
+  function renderApp() {
+    const root = document.getElementById('quiz-app');
+    if (!root) return;
 
-  // Detect which types are active for display
-  const modeChips = USE_TYPES.map(t => `<div class="qe-mode-chip">${TYPE_LABELS[t] || t}</div>`).join('');
+    // Detect which types are active for display
+    const modeChips = USE_TYPES.map(t => `<div class="qe-mode-chip">${TYPE_LABELS[t] || t}</div>`).join('');
 
-  root.innerHTML = `
+    root.innerHTML = `
   <!-- HUD -->
   <div class="qe-hud" id="qeHud" style="display:none;">
     <div class="qe-hud-stat"><i class="fa-solid fa-circle-question" style="color:var(--qa)"></i><span class="v" id="qeHudQ">1/20</span></div>
@@ -539,255 +539,255 @@ function renderApp() {
   <!-- Bonus pop -->
   <div class="qe-bonus" id="qeBonus">⚡ x2 BONUS!</div>
   `;
-}
-
-/* ── Deck Loading ────────────────────────────────────────────────── */
-function loadDecks() {
-  const decks = window.studyStorage?.getDecks(LANG) || [];
-  const sel = document.getElementById('qeDeckSel');
-  if (!sel) return;
-  sel.innerHTML = '';
-  if (!decks.length) {
-    sel.innerHTML = '<option value="">— Chưa có bộ từ vựng —</option>';
-    return;
   }
-  decks.forEach(d => {
-    const o = document.createElement('option');
-    o.value = d.id;
-    o.textContent = `${d.title} (${d.words.length} từ)`;
-    sel.appendChild(o);
-  });
 
-  // Tự động khôi phục cài đặt thời gian trước đó người dùng đã chọn
-  try {
-    const savedTimer = localStorage.getItem('mhent_quiz_timer');
-    const timerSel = document.getElementById('qeTimerSel');
-    if (timerSel && savedTimer !== null && timerSel.querySelector(`option[value="${savedTimer}"]`)) {
-      timerSel.value = savedTimer;
+  /* ── Deck Loading ────────────────────────────────────────────────── */
+  function loadDecks() {
+    const decks = window.studyStorage?.getDecks(LANG) || [];
+    const sel = document.getElementById('qeDeckSel');
+    if (!sel) return;
+    sel.innerHTML = '';
+    if (!decks.length) {
+      sel.innerHTML = '<option value="">— Chưa có bộ từ vựng —</option>';
+      return;
     }
-    if (timerSel) {
-      timerSel.onchange = function() {
-        try { localStorage.setItem('mhent_quiz_timer', this.value); } catch(e) {}
-      };
-    }
-  } catch(e) {}
-}
-
-/* ── Start Quiz ──────────────────────────────────────────────────── */
-function startQuiz(wordsOverride) {
-  let src = wordsOverride;
-  if (!src) {
-    const deckId = document.getElementById('qeDeckSel')?.value;
-    const deck = (deckId && window.studyStorage?.getDeckById(LANG, deckId))
-               || window.studyStorage?.getDecks(LANG)?.[0];
-    if (!deck?.words?.length) {
-      window.studyUI?.showToast('Bộ từ vựng trống!', 'error'); return;
-    }
-    src = deck.words.filter(w => w.word && w.meaning);
-  }
-  if (src.length < 2) {
-    window.studyUI?.showToast('Cần ít nhất 2 từ để tạo quiz!', 'error'); return;
-  }
-  allWords = src;
-  const countSel = document.getElementById('qeCountSel')?.value || '20';
-  const total = countSel === 'all' ? allWords.length : Math.min(parseInt(countSel), allWords.length);
-  
-  const timerSel = document.getElementById('qeTimerSel');
-  const rawTimer = timerSel ? timerSel.value : (localStorage.getItem('mhent_quiz_timer') || '15');
-  const parsedTimer = parseInt(rawTimer, 10);
-  timerMaxSec = isNaN(parsedTimer) ? 15 : parsedTimer;
-  timerEnabled = timerMaxSec > 0;
-  try { localStorage.setItem('mhent_quiz_timer', String(timerMaxSec)); } catch(e) {}
-
-  questions = buildQuestions(allWords, total);
-  sessionLog = [];
-  currentIdx = 0; score = 0; combo = 0; maxCombo = 0;
-  correctCount = 0; wrongCount = 0; answered = false;
-  hintTier = 0;
-  currentHintMask = null;
-  updateToolsUI();
-
-  $('qeStart').style.display = 'none';
-  $('qeResult').style.display = 'none';
-  $('qeQuestion').style.display = 'block';
-  $('qeHud').style.display = 'flex';
-  $('qeFeedback').className = 'qe-feedback';
-  updateHUD();
-  loadQuestion();
-}
-
-/* ── Build Questions ─────────────────────────────────────────────── */
-function buildQuestions(words, total) {
-  const shuffled = shuffle([...words]).slice(0, total);
-  return shuffled.map(word => {
-    const wfEntries = getValidWordFamily(word);
-    const pool = USE_TYPES.slice();
-    // Filter out invalid types for this word
-    const valid = pool.filter(t => {
-      if (t === 'scramble' && word.word.length < 2) return false;
-      if (t === 'mcq_fill' && !word.example && USE_TYPES.length > 1) return false;
-      if (t === 'mcq_word_form' && !wfEntries) return false;
-      return true;
+    decks.forEach(d => {
+      const o = document.createElement('option');
+      o.value = d.id;
+      o.textContent = `${d.title} (${d.words.length} từ)`;
+      sel.appendChild(o);
     });
-    if (!valid.length) {
-      const fallback = (USE_TYPES[0] && USE_TYPES[0] !== 'mcq_word_form') ? USE_TYPES[0] : 'mcq_meaning_word';
-      valid.push(fallback);
-    }
-    let type = valid[Math.floor(Math.random() * valid.length)];
-    if (type === 'mcq_word_form' && !wfEntries) {
-      type = 'mcq_meaning_word';
-    }
 
-    if (type === 'mcq_word_form' && wfEntries) {
-      // Pick a target entry whose value preferably differs from word.word
-      const diffEntries = wfEntries.filter(e => norm(e.val) !== norm(word.word));
-      const target = diffEntries.length
-        ? diffEntries[Math.floor(Math.random() * diffEntries.length)]
-        : wfEntries[Math.floor(Math.random() * wfEntries.length)];
-      
-      const correctAns = target.val;
-      const seenNorm = new Set([norm(correctAns)]);
-      const distractorArr = [];
-      const addDistractor = (str) => {
-        if (!str || typeof str !== 'string') return;
-        const n = norm(str);
-        if (!n || seenNorm.has(n)) return;
-        seenNorm.add(n);
-        distractorArr.push(str.trim());
-      };
-
-      // 1. Add other forms from word family
-      wfEntries.forEach(e => addDistractor(e.val));
-      // 2. Add root word if different
-      addDistractor(word.word);
-      // 3. If still less than 3, add other words from deck
-      const otherWords = shuffle(words.filter(w => w.id !== word.id));
-      for (const ow of otherWords) {
-        if (distractorArr.length >= 3) break;
-        addDistractor(ow.word);
+    // Tự động khôi phục cài đặt thời gian trước đó người dùng đã chọn
+    try {
+      const savedTimer = localStorage.getItem('mhent_quiz_timer');
+      const timerSel = document.getElementById('qeTimerSel');
+      if (timerSel && savedTimer !== null && timerSel.querySelector(`option[value="${savedTimer}"]`)) {
+        timerSel.value = savedTimer;
       }
-      const finalDistractors = distractorArr.slice(0, 3);
-      const options = shuffle([correctAns, ...finalDistractors]);
-
-      return {
-        word,
-        type: 'mcq_word_form',
-        targetCat: target.cat,
-        targetCatLabel: getCatName(target.cat),
-        correctAns,
-        options,
-        distractors: finalDistractors.map(d => ({ word: d }))
-      };
-    }
-
-    const distractors = shuffle(words.filter(w => w.id !== word.id)).slice(0, 3);
-    return { word, type, distractors };
-  });
-}
-
-/* ── Load Question ───────────────────────────────────────────────── */
-function loadQuestion() {
-  if (currentIdx >= questions.length) { showResult(); return; }
-  answered = false;
-  hintTier = 0;
-  currentHintMask = null;
-  const hintBox = $('qeHintBox');
-  if (hintBox) { hintBox.style.display = 'none'; hintBox.innerHTML = ''; }
-  updateToolsUI();
-  hideFeedback();
-  const q = questions[currentIdx];
-  renderQuestion(q);
-  updateHUD();
-  startTimer();
-  if (q.type === 'mcq_listening' || q.type === 'type_listening') {
-    setTimeout(() => speak(q.word.word), 450);
+      if (timerSel) {
+        timerSel.onchange = function () {
+          try { localStorage.setItem('mhent_quiz_timer', this.value); } catch (e) { }
+        };
+      }
+    } catch (e) { }
   }
-}
 
-/* ── Render Question ─────────────────────────────────────────────── */
-function renderQuestion(q) {
-  const { word, type, distractors } = q;
-  // Reset panels
-  $('qeOptions').style.display = 'grid';
-  $('qeTyping').style.display = 'none';
-  $('qeScramble').style.display = 'none';
-  $('qePhonetic').textContent = '';
-  $('qeContext').textContent = '';
-  // Re-animate card
-  const card = $('qeCard');
-  card.style.animation = 'none'; void card.offsetHeight; card.style.animation = '';
-
-  const badge = $('qeBadge');
-  const display = $('qeDisplay');
-  display.className = 'qe-word-display';
-
-  switch (type) {
-    case 'mcq_meaning_word': {
-      if (word.pos === 'phrasal_verb') badge.textContent = '🔗 Nghĩa → Cụm Động Từ (ABCD)';
-      else if (word.pos === 'collocation') badge.textContent = '🤝 Nghĩa → Collocation (ABCD)';
-      else badge.textContent = '🎯 Nghĩa → Từ (ABCD)';
-      display.style.fontSize = '1.7rem'; display.textContent = word.meaning;
-      const posBadge = getPosBadgeLabel(word);
-      if (posBadge) {
-        $('qeContext').innerHTML = `<span class="qe-pos-pill">🏷️ Loại từ: <strong>${esc(posBadge)}</strong></span>`;
+  /* ── Start Quiz ──────────────────────────────────────────────────── */
+  function startQuiz(wordsOverride) {
+    let src = wordsOverride;
+    if (!src) {
+      const deckId = document.getElementById('qeDeckSel')?.value;
+      const deck = (deckId && window.studyStorage?.getDeckById(LANG, deckId))
+        || window.studyStorage?.getDecks(LANG)?.[0];
+      if (!deck?.words?.length) {
+        window.studyUI?.showToast('Bộ từ vựng trống!', 'error'); return;
       }
-      renderOpts(shuffle([word.word, ...distractors.map(d => d.word)]), word.word);
-      $('qeKbdHint').style.display = 'flex';
-      break;
+      src = deck.words.filter(w => w.word && w.meaning);
     }
-
-    case 'mcq_word_meaning': {
-      if (word.pos === 'phrasal_verb') badge.textContent = '🔗 Cụm Động Từ → Nghĩa (ABCD)';
-      else if (word.pos === 'collocation') badge.textContent = '🤝 Collocation → Nghĩa (ABCD)';
-      else badge.textContent = '🎯 Từ → Nghĩa (ABCD)';
-      display.style.fontSize = '2.8rem';
-      display.innerHTML = `${esc(word.word)} <button class="qe-listen-btn" onclick="QE.speakPulse(this,'${ea(word.word)}')" title="Nghe">🔊</button>`;
-      $('qePhonetic').textContent = word.phonetic || '';
-      const posBadge = getPosBadgeLabel(word);
-      if (posBadge) {
-        $('qeContext').innerHTML = `<span class="qe-pos-pill">🏷️ Loại từ: <strong>${esc(posBadge)}</strong></span>`;
-      }
-      renderOpts(shuffle([word.meaning, ...distractors.map(d => d.meaning)]), word.meaning);
-      $('qeKbdHint').style.display = 'flex';
-      break;
+    if (src.length < 2) {
+      window.studyUI?.showToast('Cần ít nhất 2 từ để tạo quiz!', 'error'); return;
     }
+    allWords = src;
+    const countSel = document.getElementById('qeCountSel')?.value || '20';
+    const total = countSel === 'all' ? allWords.length : Math.min(parseInt(countSel), allWords.length);
 
-    case 'mcq_listening':
-      badge.textContent = '🔊 Nghe → Chọn Từ (ABCD)';
-      display.style.fontSize = '1rem';
-      display.innerHTML = `<button class="qe-listen-btn" id="qeBigListen" onclick="QE.speakPulse(this,'${ea(word.word)}')" style="font-size:1rem;padding:14px 28px;">🔊 Nhấn để nghe lại</button>`;
-      renderOpts(shuffle([word.word, ...distractors.map(d => d.word)]), word.word);
-      $('qeKbdHint').style.display = 'flex'; break;
+    const timerSel = document.getElementById('qeTimerSel');
+    const rawTimer = timerSel ? timerSel.value : (localStorage.getItem('mhent_quiz_timer') || '15');
+    const parsedTimer = parseInt(rawTimer, 10);
+    timerMaxSec = isNaN(parsedTimer) ? 15 : parsedTimer;
+    timerEnabled = timerMaxSec > 0;
+    try { localStorage.setItem('mhent_quiz_timer', String(timerMaxSec)); } catch (e) { }
 
-    case 'mcq_fill': {
-      const posBadge = getPosBadgeLabel(word);
-      if (word.pos === 'phrasal_verb') {
-        badge.textContent = '🔗 Điền Cụm Động Từ (Phrasal Verb)';
-      } else if (word.pos === 'collocation') {
-        badge.textContent = '🤝 Điền Collocation (Cụm Cố Định)';
-      } else {
-        badge.textContent = '📝 Điền Từ Vào Câu (ABCD)';
-      }
-      display.classList.add('is-sentence');
-      const blankObj = makeFillBlank(word.example, word);
-      display.innerHTML = blankObj.html;
+    questions = buildQuestions(allWords, total);
+    sessionLog = [];
+    currentIdx = 0; score = 0; combo = 0; maxCombo = 0;
+    correctCount = 0; wrongCount = 0; answered = false;
+    hintTier = 0;
+    currentHintMask = null;
+    updateToolsUI();
 
-      let ctx = '';
-      if (posBadge) {
-        ctx += `<div style="margin-bottom:6px;"><span class="qe-pos-pill">🏷️ Loại từ cần điền: <strong>${esc(posBadge)}</strong></span></div>`;
+    $('qeStart').style.display = 'none';
+    $('qeResult').style.display = 'none';
+    $('qeQuestion').style.display = 'block';
+    $('qeHud').style.display = 'flex';
+    $('qeFeedback').className = 'qe-feedback';
+    updateHUD();
+    loadQuestion();
+  }
+
+  /* ── Build Questions ─────────────────────────────────────────────── */
+  function buildQuestions(words, total) {
+    const shuffled = shuffle([...words]).slice(0, total);
+    return shuffled.map(word => {
+      const wfEntries = getValidWordFamily(word);
+      const pool = USE_TYPES.slice();
+      // Filter out invalid types for this word
+      const valid = pool.filter(t => {
+        if (t === 'scramble' && word.word.length < 2) return false;
+        if (t === 'mcq_fill' && !word.example && USE_TYPES.length > 1) return false;
+        if (t === 'mcq_word_form' && !wfEntries) return false;
+        return true;
+      });
+      if (!valid.length) {
+        const fallback = (USE_TYPES[0] && USE_TYPES[0] !== 'mcq_word_form') ? USE_TYPES[0] : 'mcq_meaning_word';
+        valid.push(fallback);
       }
-      if (word.exampleTrans) {
-        ctx += `<div style="font-size:14px;color:var(--study-text-muted);font-weight:600;">${esc(word.exampleTrans)}</div>`;
+      let type = valid[Math.floor(Math.random() * valid.length)];
+      if (type === 'mcq_word_form' && !wfEntries) {
+        type = 'mcq_meaning_word';
       }
-      $('qeContext').innerHTML = ctx;
-      renderOpts(shuffle([word.word, ...distractors.map(d => d.word)]), word.word);
-      $('qeKbdHint').style.display = 'flex'; break;
+
+      if (type === 'mcq_word_form' && wfEntries) {
+        // Pick a target entry whose value preferably differs from word.word
+        const diffEntries = wfEntries.filter(e => norm(e.val) !== norm(word.word));
+        const target = diffEntries.length
+          ? diffEntries[Math.floor(Math.random() * diffEntries.length)]
+          : wfEntries[Math.floor(Math.random() * wfEntries.length)];
+
+        const correctAns = target.val;
+        const seenNorm = new Set([norm(correctAns)]);
+        const distractorArr = [];
+        const addDistractor = (str) => {
+          if (!str || typeof str !== 'string') return;
+          const n = norm(str);
+          if (!n || seenNorm.has(n)) return;
+          seenNorm.add(n);
+          distractorArr.push(str.trim());
+        };
+
+        // 1. Add other forms from word family
+        wfEntries.forEach(e => addDistractor(e.val));
+        // 2. Add root word if different
+        addDistractor(word.word);
+        // 3. If still less than 3, add other words from deck
+        const otherWords = shuffle(words.filter(w => w.id !== word.id));
+        for (const ow of otherWords) {
+          if (distractorArr.length >= 3) break;
+          addDistractor(ow.word);
+        }
+        const finalDistractors = distractorArr.slice(0, 3);
+        const options = shuffle([correctAns, ...finalDistractors]);
+
+        return {
+          word,
+          type: 'mcq_word_form',
+          targetCat: target.cat,
+          targetCatLabel: getCatName(target.cat),
+          correctAns,
+          options,
+          distractors: finalDistractors.map(d => ({ word: d }))
+        };
+      }
+
+      const distractors = shuffle(words.filter(w => w.id !== word.id)).slice(0, 3);
+      return { word, type, distractors };
+    });
+  }
+
+  /* ── Load Question ───────────────────────────────────────────────── */
+  function loadQuestion() {
+    if (currentIdx >= questions.length) { showResult(); return; }
+    answered = false;
+    hintTier = 0;
+    currentHintMask = null;
+    const hintBox = $('qeHintBox');
+    if (hintBox) { hintBox.style.display = 'none'; hintBox.innerHTML = ''; }
+    updateToolsUI();
+    hideFeedback();
+    const q = questions[currentIdx];
+    renderQuestion(q);
+    updateHUD();
+    startTimer();
+    if (q.type === 'mcq_listening' || q.type === 'type_listening') {
+      setTimeout(() => speak(q.word.word), 450);
     }
+  }
 
-    case 'mcq_word_form': {
-      badge.textContent = '👨‍👩‍👧 Biến Đổi Dạng Từ (Word Form)';
-      display.style.fontSize = '2.4rem';
-      display.innerHTML = `
+  /* ── Render Question ─────────────────────────────────────────────── */
+  function renderQuestion(q) {
+    const { word, type, distractors } = q;
+    // Reset panels
+    $('qeOptions').style.display = 'grid';
+    $('qeTyping').style.display = 'none';
+    $('qeScramble').style.display = 'none';
+    $('qePhonetic').textContent = '';
+    $('qeContext').textContent = '';
+    // Re-animate card
+    const card = $('qeCard');
+    card.style.animation = 'none'; void card.offsetHeight; card.style.animation = '';
+
+    const badge = $('qeBadge');
+    const display = $('qeDisplay');
+    display.className = 'qe-word-display';
+
+    switch (type) {
+      case 'mcq_meaning_word': {
+        if (word.pos === 'phrasal_verb') badge.textContent = '🔗 Nghĩa → Cụm Động Từ (ABCD)';
+        else if (word.pos === 'collocation') badge.textContent = '🤝 Nghĩa → Collocation (ABCD)';
+        else badge.textContent = '🎯 Nghĩa → Từ (ABCD)';
+        display.style.fontSize = '1.7rem'; display.textContent = word.meaning;
+        const posBadge = getPosBadgeLabel(word);
+        if (posBadge) {
+          $('qeContext').innerHTML = `<span class="qe-pos-pill">🏷️ Loại từ: <strong>${esc(posBadge)}</strong></span>`;
+        }
+        renderOpts(shuffle([word.word, ...distractors.map(d => d.word)]), word.word);
+        $('qeKbdHint').style.display = 'flex';
+        break;
+      }
+
+      case 'mcq_word_meaning': {
+        if (word.pos === 'phrasal_verb') badge.textContent = '🔗 Cụm Động Từ → Nghĩa (ABCD)';
+        else if (word.pos === 'collocation') badge.textContent = '🤝 Collocation → Nghĩa (ABCD)';
+        else badge.textContent = '🎯 Từ → Nghĩa (ABCD)';
+        display.style.fontSize = '2.8rem';
+        display.innerHTML = `${esc(word.word)} <button class="qe-listen-btn" onclick="QE.speakPulse(this,'${ea(word.word)}')" title="Nghe">🔊</button>`;
+        $('qePhonetic').textContent = word.phonetic || '';
+        const posBadge = getPosBadgeLabel(word);
+        if (posBadge) {
+          $('qeContext').innerHTML = `<span class="qe-pos-pill">🏷️ Loại từ: <strong>${esc(posBadge)}</strong></span>`;
+        }
+        renderOpts(shuffle([word.meaning, ...distractors.map(d => d.meaning)]), word.meaning);
+        $('qeKbdHint').style.display = 'flex';
+        break;
+      }
+
+      case 'mcq_listening':
+        badge.textContent = '🔊 Nghe → Chọn Từ (ABCD)';
+        display.style.fontSize = '1rem';
+        display.innerHTML = `<button class="qe-listen-btn" id="qeBigListen" onclick="QE.speakPulse(this,'${ea(word.word)}')" style="font-size:1rem;padding:14px 28px;">🔊 Nhấn để nghe lại</button>`;
+        renderOpts(shuffle([word.word, ...distractors.map(d => d.word)]), word.word);
+        $('qeKbdHint').style.display = 'flex'; break;
+
+      case 'mcq_fill': {
+        const posBadge = getPosBadgeLabel(word);
+        if (word.pos === 'phrasal_verb') {
+          badge.textContent = '🔗 Điền Cụm Động Từ (Phrasal Verb)';
+        } else if (word.pos === 'collocation') {
+          badge.textContent = '🤝 Điền Collocation (Cụm Cố Định)';
+        } else {
+          badge.textContent = '📝 Điền Từ Vào Câu (ABCD)';
+        }
+        display.classList.add('is-sentence');
+        const blankObj = makeFillBlank(word.example, word);
+        display.innerHTML = blankObj.html;
+
+        let ctx = '';
+        if (posBadge) {
+          ctx += `<div style="margin-bottom:6px;"><span class="qe-pos-pill">🏷️ Loại từ cần điền: <strong>${esc(posBadge)}</strong></span></div>`;
+        }
+        if (word.exampleTrans) {
+          ctx += `<div style="font-size:14px;color:var(--study-text-muted);font-weight:600;">${esc(word.exampleTrans)}</div>`;
+        }
+        $('qeContext').innerHTML = ctx;
+        renderOpts(shuffle([word.word, ...distractors.map(d => d.word)]), word.word);
+        $('qeKbdHint').style.display = 'flex'; break;
+      }
+
+      case 'mcq_word_form': {
+        badge.textContent = '👨‍👩‍👧 Biến Đổi Dạng Từ (Word Form)';
+        display.style.fontSize = '2.4rem';
+        display.innerHTML = `
         <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
           <div style="display:flex;align-items:center;gap:10px;">
             <span>${esc(word.word)}</span>
@@ -796,601 +796,601 @@ function renderQuestion(q) {
           <div style="font-size:14px;color:var(--study-text-muted);font-weight:700;">Từ gốc nghĩa là: <em>"${esc(word.meaning)}"</em></div>
         </div>
       `;
-      if (word.phonetic) $('qePhonetic').textContent = word.phonetic;
-      $('qeContext').innerHTML = `
+        if (word.phonetic) $('qePhonetic').textContent = word.phonetic;
+        $('qeContext').innerHTML = `
         <div style="font-size:15px;font-weight:800;color:var(--study-text);margin-bottom:6px;">
           Hãy chọn dạng <span class="qe-pos-pill" style="font-size:13px;">${esc(q.targetCatLabel)}</span> của từ trên:
         </div>
       `;
-      renderOpts(q.options, q.correctAns);
-      $('qeKbdHint').style.display = 'flex';
-      break;
-    }
-
-    case 'type_meaning': {
-      if (word.pos === 'phrasal_verb') badge.textContent = '🔗 Nghĩa → Gõ Cụm Động Từ';
-      else if (word.pos === 'collocation') badge.textContent = '🤝 Nghĩa → Gõ Collocation';
-      else badge.textContent = '✍️ Nghĩa → Gõ Từ';
-      display.style.fontSize = '1.8rem'; display.textContent = word.meaning;
-      const posBadge = getPosBadgeLabel(word);
-      if (posBadge) {
-        $('qeContext').innerHTML = `<span class="qe-pos-pill">🏷️ Loại từ: <strong>${esc(posBadge)}</strong></span>`;
+        renderOpts(q.options, q.correctAns);
+        $('qeKbdHint').style.display = 'flex';
+        break;
       }
-      showTyping(); $('qeKbdHint').style.display = 'none'; break;
-    }
 
-    case 'type_listening':
-      badge.textContent = '🔊 Nghe → Gõ Từ';
-      display.style.fontSize = '1rem';
-      display.innerHTML = `<button class="qe-listen-btn" onclick="QE.speakPulse(this,'${ea(word.word)}')" style="font-size:1rem;padding:14px 28px;">🔊 Nhấn để nghe lại</button>`;
-      showTyping(); $('qeKbdHint').style.display = 'none'; break;
+      case 'type_meaning': {
+        if (word.pos === 'phrasal_verb') badge.textContent = '🔗 Nghĩa → Gõ Cụm Động Từ';
+        else if (word.pos === 'collocation') badge.textContent = '🤝 Nghĩa → Gõ Collocation';
+        else badge.textContent = '✍️ Nghĩa → Gõ Từ';
+        display.style.fontSize = '1.8rem'; display.textContent = word.meaning;
+        const posBadge = getPosBadgeLabel(word);
+        if (posBadge) {
+          $('qeContext').innerHTML = `<span class="qe-pos-pill">🏷️ Loại từ: <strong>${esc(posBadge)}</strong></span>`;
+        }
+        showTyping(); $('qeKbdHint').style.display = 'none'; break;
+      }
 
-    case 'scramble':
-      badge.textContent = '🔀 Sắp Xếp Chữ Cái';
-      display.style.fontSize = '1.7rem'; display.textContent = word.meaning;
-      $('qeOptions').style.display = 'none';
-      $('qeScramble').style.display = 'block';
-      $('qeKbdHint').style.display = 'none';
-      buildScramble(word.word); break;
-  }
-}
+      case 'type_listening':
+        badge.textContent = '🔊 Nghe → Gõ Từ';
+        display.style.fontSize = '1rem';
+        display.innerHTML = `<button class="qe-listen-btn" onclick="QE.speakPulse(this,'${ea(word.word)}')" style="font-size:1rem;padding:14px 28px;">🔊 Nhấn để nghe lại</button>`;
+        showTyping(); $('qeKbdHint').style.display = 'none'; break;
 
-function showTyping() {
-  $('qeOptions').style.display = 'none';
-  $('qeTyping').style.display = 'block';
-  const inp = $('qeTypeInput');
-  inp.value = ''; inp.className = 'qe-type-input'; inp.disabled = false;
-  $('qeTypeHint').textContent = '';
-  setTimeout(() => inp.focus(), 100);
-}
-
-/* ── ABCD Options ────────────────────────────────────────────────── */
-function renderOpts(options, correctAns) {
-  for (let i = 0; i < 4; i++) {
-    const btn = $(`qeOpt${i}`);
-    btn.className = 'qe-opt'; btn.disabled = false;
-    btn.dataset.correct = options[i] === correctAns ? '1' : '0';
-    $(`qeOpt${i}T`).textContent = options[i] || '';
-  }
-}
-
-function selectOpt(idx) {
-  if (answered) return;
-  answered = true; stopTimer();
-  const btn = $(`qeOpt${idx}`);
-  const ok = btn.dataset.correct === '1';
-  for (let i = 0; i < 4; i++) {
-    const b = $(`qeOpt${i}`); b.disabled = true;
-    if (b.dataset.correct === '1') b.classList.add('correct');
-    else if (i === idx && !ok) b.classList.add('wrong');
-  }
-  const q = questions[currentIdx];
-  if (q.type === 'mcq_word_form') {
-    handleResult(
-      ok,
-      q.word,
-      ok
-        ? `Chính xác! Dạng ${q.targetCatLabel} của "${q.word.word}" là "${q.correctAns}"`
-        : `Đáp án đúng: ${q.correctAns} (${q.targetCatLabel})`
-    );
-  } else {
-    handleResult(ok, q.word);
-  }
-}
-
-/* ── Typing ──────────────────────────────────────────────────────── */
-function typeKeydown(e) {
-  if (e.key === 'Enter') { e.preventDefault(); if (!answered) submitTyping(); else next(); }
-}
-
-function submitTyping() {
-  if (answered) return;
-  const inp = $('qeTypeInput');
-  const val = inp.value.trim();
-  if (!val) return;
-  answered = true; stopTimer();
-  const word = questions[currentIdx].word;
-
-  let ok = norm(val) === norm(word.word);
-  if (!ok && word.phonetic) {
-    const cleanPhon = norm(word.phonetic.replace(/[\[\]\/\(\)\-–—]/g, ' '));
-    const phonParts = word.phonetic.replace(/[\[\]\/\(\)]/g, ' ').split(/[\s\-–—]+/).map(p => norm(p)).filter(p => p.length >= 1);
-    if (norm(val) === cleanPhon || phonParts.includes(norm(val))) {
-      ok = true;
+      case 'scramble':
+        badge.textContent = '🔀 Sắp Xếp Chữ Cái';
+        display.style.fontSize = '1.7rem'; display.textContent = word.meaning;
+        $('qeOptions').style.display = 'none';
+        $('qeScramble').style.display = 'block';
+        $('qeKbdHint').style.display = 'none';
+        buildScramble(word.word); break;
     }
   }
 
-  inp.disabled = true;
-  inp.className = 'qe-type-input ' + (ok ? 'correct' : 'wrong');
-  const feedbackMsg = ok
-    ? (norm(val) === norm(word.word) ? '' : `Chính xác! (${word.word} — ${word.phonetic || ''})`)
-    : `Đáp án đúng: ${word.word}${word.phonetic ? ' ' + word.phonetic : ''}`;
-  handleResult(ok, word, feedbackMsg);
-}
-
-/* ── Scramble ────────────────────────────────────────────────────── */
-function renderScramblePlaceholder() {
-  const ansEl = $('qeScrAnswer');
-  if (!ansEl) return;
-  if (!scrambleAnswer.length) {
-    if (!ansEl.querySelector('.qe-scr-placeholder')) {
-      ansEl.innerHTML = '<span class="qe-scr-placeholder">Gõ từ bàn phím hoặc bấm các ô chữ bên dưới...</span>';
-    }
-  } else {
-    const ph = ansEl.querySelector('.qe-scr-placeholder');
-    if (ph) ph.remove();
+  function showTyping() {
+    $('qeOptions').style.display = 'none';
+    $('qeTyping').style.display = 'block';
+    const inp = $('qeTypeInput');
+    inp.value = ''; inp.className = 'qe-type-input'; inp.disabled = false;
+    $('qeTypeHint').textContent = '';
+    setTimeout(() => inp.focus(), 100);
   }
-}
 
-function buildScramble(wordStr) {
-  const cleanChars = (wordStr || '').split('').filter(ch => ch.trim() !== '' && !/[.,!?;:\/\\()\[\]]/.test(ch));
-  scrambleTileMap = shuffle(cleanChars).map((ch, i) => ({ ch, idx: i, used: false }));
-  scrambleAnswer = [];
-  const ansEl = $('qeScrAnswer');
-  if (ansEl) {
-    ansEl.innerHTML = '';
-    ansEl.className = 'qe-scr-answer';
-  }
-  renderScramblePlaceholder();
-  const tilesEl = $('qeScrTiles');
-  if (tilesEl) {
-    tilesEl.innerHTML = '';
-    scrambleTileMap.forEach((t, i) => {
-      const el = document.createElement('div');
-      el.className = 'qe-tile'; el.textContent = t.ch;
-      el.dataset.ti = i;
-      el.addEventListener('click', () => addTile(i, el));
-      tilesEl.appendChild(el);
-    });
-  }
-}
-
-function removeLastTile() {
-  if (answered || !scrambleAnswer.length) return;
-  const last = scrambleAnswer.pop();
-  scrambleTileMap[last.ti].used = false;
-  document.querySelector(`#qeScrTiles [data-ti="${last.ti}"]`)?.classList.remove('used');
-  const ansEl = $('qeScrAnswer');
-  if (ansEl) {
-    const lastTileEl = ansEl.querySelector(`.qe-tile.ans[data-ti="${last.ti}"]`) || ansEl.lastElementChild;
-    if (lastTileEl && !lastTileEl.classList.contains('qe-scr-placeholder')) {
-      lastTileEl.remove();
+  /* ── ABCD Options ────────────────────────────────────────────────── */
+  function renderOpts(options, correctAns) {
+    for (let i = 0; i < 4; i++) {
+      const btn = $(`qeOpt${i}`);
+      btn.className = 'qe-opt'; btn.disabled = false;
+      btn.dataset.correct = options[i] === correctAns ? '1' : '0';
+      $(`qeOpt${i}T`).textContent = options[i] || '';
     }
   }
-  renderScramblePlaceholder();
-}
 
-function addTile(ti, el) {
-  if (answered || scrambleTileMap[ti].used) return;
-  const ansEl = $('qeScrAnswer');
-  if (ansEl) {
-    const ph = ansEl.querySelector('.qe-scr-placeholder');
-    if (ph) ph.remove();
-  }
-
-  scrambleTileMap[ti].used = true;
-  const tileDom = el || document.querySelector(`#qeScrTiles [data-ti="${ti}"]`);
-  if (tileDom) tileDom.classList.add('used');
-  scrambleAnswer.push({ ch: scrambleTileMap[ti].ch, ti });
-
-  const tile = document.createElement('div');
-  tile.className = 'qe-tile ans';
-  tile.textContent = scrambleTileMap[ti].ch;
-  tile.dataset.ti = ti;
-  tile.addEventListener('click', () => {
+  function selectOpt(idx) {
     if (answered) return;
-    scrambleTileMap[ti].used = false;
-    document.querySelector(`#qeScrTiles [data-ti="${ti}"]`)?.classList.remove('used');
-    const idx = scrambleAnswer.findIndex(a => a.ti === ti);
-    if (idx !== -1) scrambleAnswer.splice(idx, 1);
-    tile.remove();
-    renderScramblePlaceholder();
-  });
-  if (ansEl) ansEl.appendChild(tile);
-}
+    answered = true; stopTimer();
+    const btn = $(`qeOpt${idx}`);
+    const ok = btn.dataset.correct === '1';
+    for (let i = 0; i < 4; i++) {
+      const b = $(`qeOpt${i}`); b.disabled = true;
+      if (b.dataset.correct === '1') b.classList.add('correct');
+      else if (i === idx && !ok) b.classList.add('wrong');
+    }
+    const q = questions[currentIdx];
+    if (q.type === 'mcq_word_form') {
+      handleResult(
+        ok,
+        q.word,
+        ok
+          ? `Chính xác! Dạng ${q.targetCatLabel} của "${q.word.word}" là "${q.correctAns}"`
+          : `Đáp án đúng: ${q.correctAns} (${q.targetCatLabel})`
+      );
+    } else {
+      handleResult(ok, q.word);
+    }
+  }
 
-function clearScramble() {
-  if (answered) return;
-  scrambleAnswer = [];
-  scrambleTileMap.forEach(t => t.used = false);
-  document.querySelectorAll('#qeScrTiles .qe-tile').forEach(t => t.classList.remove('used'));
-  const ansEl = $('qeScrAnswer');
-  if (ansEl) ansEl.innerHTML = '';
-  renderScramblePlaceholder();
-}
+  /* ── Typing ──────────────────────────────────────────────────────── */
+  function typeKeydown(e) {
+    if (e.key === 'Enter') { e.preventDefault(); if (!answered) submitTyping(); else next(); }
+  }
 
-function handleScrambleKey(keyChar) {
-  if (answered) return false;
-  if (!keyChar || typeof keyChar !== 'string') return false;
-  const target = keyChar.toLowerCase();
-  
-  // Find first unused tile with matching character (case-insensitive)
-  const matchIdx = scrambleTileMap.findIndex(t => !t.used && t.ch.toLowerCase() === target);
-  if (matchIdx !== -1) {
-    const el = document.querySelector(`#qeScrTiles [data-ti="${matchIdx}"]`);
-    addTile(matchIdx, el);
-    return true;
-  } else {
-    // Shake answer box as feedback that letter doesn't match available unused tiles
+  function submitTyping() {
+    if (answered) return;
+    const inp = $('qeTypeInput');
+    const val = inp.value.trim();
+    if (!val) return;
+    answered = true; stopTimer();
+    const word = questions[currentIdx].word;
+
+    let ok = norm(val) === norm(word.word);
+    if (!ok && word.phonetic) {
+      const cleanPhon = norm(word.phonetic.replace(/[\[\]\/\(\)\-–—]/g, ' '));
+      const phonParts = word.phonetic.replace(/[\[\]\/\(\)]/g, ' ').split(/[\s\-–—]+/).map(p => norm(p)).filter(p => p.length >= 1);
+      if (norm(val) === cleanPhon || phonParts.includes(norm(val))) {
+        ok = true;
+      }
+    }
+
+    inp.disabled = true;
+    inp.className = 'qe-type-input ' + (ok ? 'correct' : 'wrong');
+    const feedbackMsg = ok
+      ? (norm(val) === norm(word.word) ? '' : `Chính xác! (${word.word} — ${word.phonetic || ''})`)
+      : `Đáp án đúng: ${word.word}${word.phonetic ? ' ' + word.phonetic : ''}`;
+    handleResult(ok, word, feedbackMsg);
+  }
+
+  /* ── Scramble ────────────────────────────────────────────────────── */
+  function renderScramblePlaceholder() {
+    const ansEl = $('qeScrAnswer');
+    if (!ansEl) return;
+    if (!scrambleAnswer.length) {
+      if (!ansEl.querySelector('.qe-scr-placeholder')) {
+        ansEl.innerHTML = '<span class="qe-scr-placeholder">Gõ từ bàn phím hoặc bấm các ô chữ bên dưới...</span>';
+      }
+    } else {
+      const ph = ansEl.querySelector('.qe-scr-placeholder');
+      if (ph) ph.remove();
+    }
+  }
+
+  function buildScramble(wordStr) {
+    const cleanChars = (wordStr || '').split('').filter(ch => ch.trim() !== '' && !/[.,!?;:\/\\()\[\]]/.test(ch));
+    scrambleTileMap = shuffle(cleanChars).map((ch, i) => ({ ch, idx: i, used: false }));
+    scrambleAnswer = [];
     const ansEl = $('qeScrAnswer');
     if (ansEl) {
-      ansEl.classList.remove('shake');
-      void ansEl.offsetWidth; // force reflow
-      ansEl.classList.add('shake');
-      setTimeout(() => ansEl.classList.remove('shake'), 350);
+      ansEl.innerHTML = '';
+      ansEl.className = 'qe-scr-answer';
     }
-    return false;
+    renderScramblePlaceholder();
+    const tilesEl = $('qeScrTiles');
+    if (tilesEl) {
+      tilesEl.innerHTML = '';
+      scrambleTileMap.forEach((t, i) => {
+        const el = document.createElement('div');
+        el.className = 'qe-tile'; el.textContent = t.ch;
+        el.dataset.ti = i;
+        el.addEventListener('click', () => addTile(i, el));
+        tilesEl.appendChild(el);
+      });
+    }
   }
-}
 
-function submitScramble() {
-  if (answered) return;
-  if (!scrambleAnswer.length) { window.studyUI?.showToast('Hãy chọn ít nhất một ô chữ!', 'error'); return; }
-  answered = true; stopTimer();
-  const userWord = scrambleAnswer.map(t => t.ch).join('');
-  const word = questions[currentIdx].word;
-  const ok = norm(userWord) === norm(word.word);
-  $('qeScrAnswer').className = 'qe-scr-answer ' + (ok ? 'correct' : 'wrong');
-  handleResult(ok, word, ok ? '' : `Đáp án đúng: ${word.word}`);
-}
-
-/* ── Result Handler ──────────────────────────────────────────────── */
-function handleResult(ok, word, msg) {
-  let pts = 0, resultTag;
-  if (ok) {
-    correctCount++; combo++; if (combo > maxCombo) maxCombo = combo;
-    pts = (timerEnabled && timerRemaining > timerMaxSec * 0.5) ? 20 : 10;
-    if (pts === 20) showBonus();
-    score += pts; resultTag = 'correct';
-    window.studyUI?.playDing();
-    showFeedback(true, word, msg || `${word.word} — ${word.meaning}`);
-  } else {
-    wrongCount++; combo = 0; pts = 0;
-    resultTag = msg?.includes('Hết giờ') ? 'timeout' : msg?.includes('Bỏ qua') ? 'skip' : 'wrong';
-    window.studyUI?.playWrong();
-    showFeedback(false, word, msg || `Đáp án đúng: ${word.word}`);
-  }
-  updateCombo(); updateHUD();
-  sessionLog.push({ word, type: questions[currentIdx].type, result: resultTag, pts });
-}
-
-/* ── Feedback ────────────────────────────────────────────────────── */
-function showFeedback(ok, word, msg) {
-  const bar = $('qeFeedback');
-  bar.className = 'qe-feedback show ' + (ok ? 'ok' : 'ng');
-  $('qeFbIcon').textContent = ok ? '✅' : '❌';
-  $('qeFbLbl').textContent = ok ? '🎉 Chính xác!' : '😢 Chưa đúng rồi';
-  $('qeFbAns').textContent = msg;
-}
-function hideFeedback() { $('qeFeedback').className = 'qe-feedback'; }
-
-function next() {
-  if (!answered) return;
-  currentIdx++;
-  loadQuestion();
-}
-
-/* ── Timer ───────────────────────────────────────────────────────── */
-function startTimer() {
-  stopTimer();
-  const timerBox = $('qeTimer');
-  if (!timerEnabled || timerMaxSec <= 0) {
-    if (timerBox) timerBox.style.display = 'none';
-    return;
-  }
-  if (timerBox) timerBox.style.display = 'block';
-
-  timerRemaining = timerMaxSec;
-  const num = $('qeTimerNum');
-  const arc = $('qeTimerArc');
-  const circ = 113.1;
-
-  const updateDisplay = () => {
-    try {
-      const rem = Math.max(0, timerRemaining);
-      if (num) num.textContent = rem;
-      if (arc) {
-        const offset = circ - (rem / timerMaxSec) * circ;
-        arc.style.strokeDashoffset = `${offset}px`;
-        arc.setAttribute('stroke-dashoffset', String(offset));
-        const cls = 'qe-timer-arc' + (rem <= 5 ? ' danger' : rem <= timerMaxSec * 0.4 ? ' warn' : '');
-        arc.setAttribute('class', cls);
+  function removeLastTile() {
+    if (answered || !scrambleAnswer.length) return;
+    const last = scrambleAnswer.pop();
+    scrambleTileMap[last.ti].used = false;
+    document.querySelector(`#qeScrTiles [data-ti="${last.ti}"]`)?.classList.remove('used');
+    const ansEl = $('qeScrAnswer');
+    if (ansEl) {
+      const lastTileEl = ansEl.querySelector(`.qe-tile.ans[data-ti="${last.ti}"]`) || ansEl.lastElementChild;
+      if (lastTileEl && !lastTileEl.classList.contains('qe-scr-placeholder')) {
+        lastTileEl.remove();
       }
-    } catch (err) {
-      console.warn('Timer display update error:', err);
     }
-  };
+    renderScramblePlaceholder();
+  }
 
-  updateDisplay();
+  function addTile(ti, el) {
+    if (answered || scrambleTileMap[ti].used) return;
+    const ansEl = $('qeScrAnswer');
+    if (ansEl) {
+      const ph = ansEl.querySelector('.qe-scr-placeholder');
+      if (ph) ph.remove();
+    }
 
-  timerInterval = setInterval(() => {
-    if (answered) {
-      stopTimer();
+    scrambleTileMap[ti].used = true;
+    const tileDom = el || document.querySelector(`#qeScrTiles [data-ti="${ti}"]`);
+    if (tileDom) tileDom.classList.add('used');
+    scrambleAnswer.push({ ch: scrambleTileMap[ti].ch, ti });
+
+    const tile = document.createElement('div');
+    tile.className = 'qe-tile ans';
+    tile.textContent = scrambleTileMap[ti].ch;
+    tile.dataset.ti = ti;
+    tile.addEventListener('click', () => {
+      if (answered) return;
+      scrambleTileMap[ti].used = false;
+      document.querySelector(`#qeScrTiles [data-ti="${ti}"]`)?.classList.remove('used');
+      const idx = scrambleAnswer.findIndex(a => a.ti === ti);
+      if (idx !== -1) scrambleAnswer.splice(idx, 1);
+      tile.remove();
+      renderScramblePlaceholder();
+    });
+    if (ansEl) ansEl.appendChild(tile);
+  }
+
+  function clearScramble() {
+    if (answered) return;
+    scrambleAnswer = [];
+    scrambleTileMap.forEach(t => t.used = false);
+    document.querySelectorAll('#qeScrTiles .qe-tile').forEach(t => t.classList.remove('used'));
+    const ansEl = $('qeScrAnswer');
+    if (ansEl) ansEl.innerHTML = '';
+    renderScramblePlaceholder();
+  }
+
+  function handleScrambleKey(keyChar) {
+    if (answered) return false;
+    if (!keyChar || typeof keyChar !== 'string') return false;
+    const target = keyChar.toLowerCase();
+
+    // Find first unused tile with matching character (case-insensitive)
+    const matchIdx = scrambleTileMap.findIndex(t => !t.used && t.ch.toLowerCase() === target);
+    if (matchIdx !== -1) {
+      const el = document.querySelector(`#qeScrTiles [data-ti="${matchIdx}"]`);
+      addTile(matchIdx, el);
+      return true;
+    } else {
+      // Shake answer box as feedback that letter doesn't match available unused tiles
+      const ansEl = $('qeScrAnswer');
+      if (ansEl) {
+        ansEl.classList.remove('shake');
+        void ansEl.offsetWidth; // force reflow
+        ansEl.classList.add('shake');
+        setTimeout(() => ansEl.classList.remove('shake'), 350);
+      }
+      return false;
+    }
+  }
+
+  function submitScramble() {
+    if (answered) return;
+    if (!scrambleAnswer.length) { window.studyUI?.showToast('Hãy chọn ít nhất một ô chữ!', 'error'); return; }
+    answered = true; stopTimer();
+    const userWord = scrambleAnswer.map(t => t.ch).join('');
+    const word = questions[currentIdx].word;
+    const ok = norm(userWord) === norm(word.word);
+    $('qeScrAnswer').className = 'qe-scr-answer ' + (ok ? 'correct' : 'wrong');
+    handleResult(ok, word, ok ? '' : `Đáp án đúng: ${word.word}`);
+  }
+
+  /* ── Result Handler ──────────────────────────────────────────────── */
+  function handleResult(ok, word, msg) {
+    let pts = 0, resultTag;
+    if (ok) {
+      correctCount++; combo++; if (combo > maxCombo) maxCombo = combo;
+      pts = (timerEnabled && timerRemaining > timerMaxSec * 0.5) ? 20 : 10;
+      if (pts === 20) showBonus();
+      score += pts; resultTag = 'correct';
+      window.studyUI?.playDing();
+      showFeedback(true, word, msg || `${word.word} — ${word.meaning}`);
+    } else {
+      wrongCount++; combo = 0; pts = 0;
+      resultTag = msg?.includes('Hết giờ') ? 'timeout' : msg?.includes('Bỏ qua') ? 'skip' : 'wrong';
+      window.studyUI?.playWrong();
+      showFeedback(false, word, msg || `Đáp án đúng: ${word.word}`);
+    }
+    updateCombo(); updateHUD();
+    sessionLog.push({ word, type: questions[currentIdx].type, result: resultTag, pts });
+  }
+
+  /* ── Feedback ────────────────────────────────────────────────────── */
+  function showFeedback(ok, word, msg) {
+    const bar = $('qeFeedback');
+    bar.className = 'qe-feedback show ' + (ok ? 'ok' : 'ng');
+    $('qeFbIcon').textContent = ok ? '✅' : '❌';
+    $('qeFbLbl').textContent = ok ? '🎉 Chính xác!' : '😢 Chưa đúng rồi';
+    $('qeFbAns').textContent = msg;
+  }
+  function hideFeedback() { $('qeFeedback').className = 'qe-feedback'; }
+
+  function next() {
+    if (!answered) return;
+    currentIdx++;
+    loadQuestion();
+  }
+
+  /* ── Timer ───────────────────────────────────────────────────────── */
+  function startTimer() {
+    stopTimer();
+    const timerBox = $('qeTimer');
+    if (!timerEnabled || timerMaxSec <= 0) {
+      if (timerBox) timerBox.style.display = 'none';
       return;
     }
-    timerRemaining--;
+    if (timerBox) timerBox.style.display = 'block';
+
+    timerRemaining = timerMaxSec;
+    const num = $('qeTimerNum');
+    const arc = $('qeTimerArc');
+    const circ = 113.1;
+
+    const updateDisplay = () => {
+      try {
+        const rem = Math.max(0, timerRemaining);
+        if (num) num.textContent = rem;
+        if (arc) {
+          const offset = circ - (rem / timerMaxSec) * circ;
+          arc.style.strokeDashoffset = `${offset}px`;
+          arc.setAttribute('stroke-dashoffset', String(offset));
+          const cls = 'qe-timer-arc' + (rem <= 5 ? ' danger' : rem <= timerMaxSec * 0.4 ? ' warn' : '');
+          arc.setAttribute('class', cls);
+        }
+      } catch (err) {
+        console.warn('Timer display update error:', err);
+      }
+    };
+
     updateDisplay();
 
-    if (timerRemaining <= 0) {
-      stopTimer();
-      if (!answered) {
-        answered = true;
-        wrongCount++; combo = 0; updateCombo();
-        window.studyUI?.playWrong();
-        const word = questions[currentIdx].word;
-        for (let i = 0; i < 4; i++) {
-          const b = $(`qeOpt${i}`);
-          if (b) {
-            b.disabled = true;
-            if (b.dataset.correct === '1') b.classList.add('correct');
+    timerInterval = setInterval(() => {
+      if (answered) {
+        stopTimer();
+        return;
+      }
+      timerRemaining--;
+      updateDisplay();
+
+      if (timerRemaining <= 0) {
+        stopTimer();
+        if (!answered) {
+          answered = true;
+          wrongCount++; combo = 0; updateCombo();
+          window.studyUI?.playWrong();
+          const word = questions[currentIdx].word;
+          for (let i = 0; i < 4; i++) {
+            const b = $(`qeOpt${i}`);
+            if (b) {
+              b.disabled = true;
+              if (b.dataset.correct === '1') b.classList.add('correct');
+            }
           }
+          const inp = $('qeTypeInput'); if (inp) inp.disabled = true;
+          const q = questions[currentIdx];
+          const correctMsg = q.type === 'mcq_word_form'
+            ? `⏰ Hết giờ! Đáp án đúng: ${q.correctAns} (${q.targetCatLabel})`
+            : `⏰ Hết giờ! Đáp án đúng: ${word.word}`;
+          showFeedback(false, word, correctMsg);
+          sessionLog.push({ word, type: q.type, result: 'timeout', pts: 0 });
+          updateToolsUI();
+          updateHUD();
         }
-        const inp = $('qeTypeInput'); if (inp) inp.disabled = true;
-        const q = questions[currentIdx];
-        const correctMsg = q.type === 'mcq_word_form'
-          ? `⏰ Hết giờ! Đáp án đúng: ${q.correctAns} (${q.targetCatLabel})`
-          : `⏰ Hết giờ! Đáp án đúng: ${word.word}`;
-        showFeedback(false, word, correctMsg);
-        sessionLog.push({ word, type: q.type, result: 'timeout', pts: 0 });
-        updateToolsUI();
-        updateHUD();
+      }
+    }, 1000);
+  }
+
+  function stopTimer() {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+  }
+
+  /* ── HUD ─────────────────────────────────────────────────────────── */
+  function updateHUD() {
+    const total = questions.length;
+    $('qeHudQ').textContent = `${Math.min(currentIdx + 1, total)}/${total}`;
+    $('qeHudFill').style.width = `${(currentIdx / total) * 100}%`;
+    $('qeHudScore').textContent = score;
+  }
+  function updateCombo() {
+    $('qeComboN').textContent = combo;
+    $('qeCombo').className = 'qe-combo' + (combo >= 3 ? ' hot' : '');
+  }
+  function showBonus() {
+    const pop = $('qeBonus'); pop.classList.add('show');
+    setTimeout(() => pop.classList.remove('show'), 1500);
+  }
+
+  /* ── Tools (Skip, Hint 3-tier, Listen) ────────────────────────────── */
+  function updateToolsUI() {
+    const skipBtn = $('qeBtnSkip');
+    const hintBtn = $('qeBtnHint');
+    const listenBtn = $('qeBtnListen');
+    const hintBadge = $('qeHintBadge');
+
+    if (skipBtn) skipBtn.disabled = answered;
+    if (listenBtn) listenBtn.disabled = false;
+    if (hintBadge) hintBadge.textContent = `${hintTier}/3`;
+    if (hintBtn) {
+      hintBtn.disabled = answered || hintTier >= 3;
+      hintBtn.title = hintTier >= 3 ? 'Đã dùng tối đa 3 gợi ý' : `Gợi ý cấp ${hintTier + 1}/3 (Phím H)`;
+    }
+  }
+
+  function useSkip() {
+    const q = questions[currentIdx];
+    if (!q || answered) return;
+    answered = true;
+    stopTimer();
+    wrongCount++; combo = 0; updateCombo();
+    window.studyUI?.playWrong();
+
+    // Highlight correct answer
+    for (let i = 0; i < 4; i++) {
+      const b = $(`qeOpt${i}`);
+      if (b) {
+        b.disabled = true;
+        if (b.dataset.correct === '1') b.classList.add('correct');
       }
     }
-  }, 1000);
-}
+    const inp = $('qeTypeInput'); if (inp) inp.disabled = true;
 
-function stopTimer() {
-  if (timerInterval) {
-    clearInterval(timerInterval);
-    timerInterval = null;
+    const correctMsg = q.type === 'mcq_word_form'
+      ? `⏭️ Đã bỏ qua — Đáp án đúng: ${q.correctAns} (${q.targetCatLabel})`
+      : `⏭️ Đã bỏ qua — Đáp án đúng: ${q.word.word}`;
+    showFeedback(false, q.word, correctMsg);
+    sessionLog.push({ word: q.word, type: q.type, result: 'skip', pts: 0 });
+    updateToolsUI();
+    updateHUD();
   }
-}
 
-/* ── HUD ─────────────────────────────────────────────────────────── */
-function updateHUD() {
-  const total = questions.length;
-  $('qeHudQ').textContent = `${Math.min(currentIdx + 1, total)}/${total}`;
-  $('qeHudFill').style.width = `${(currentIdx / total) * 100}%`;
-  $('qeHudScore').textContent = score;
-}
-function updateCombo() {
-  $('qeComboN').textContent = combo;
-  $('qeCombo').className = 'qe-combo' + (combo >= 3 ? ' hot' : '');
-}
-function showBonus() {
-  const pop = $('qeBonus'); pop.classList.add('show');
-  setTimeout(() => pop.classList.remove('show'), 1500);
-}
-
-/* ── Tools (Skip, Hint 3-tier, Listen) ────────────────────────────── */
-function updateToolsUI() {
-  const skipBtn = $('qeBtnSkip');
-  const hintBtn = $('qeBtnHint');
-  const listenBtn = $('qeBtnListen');
-  const hintBadge = $('qeHintBadge');
-
-  if (skipBtn) skipBtn.disabled = answered;
-  if (listenBtn) listenBtn.disabled = false;
-  if (hintBadge) hintBadge.textContent = `${hintTier}/3`;
-  if (hintBtn) {
-    hintBtn.disabled = answered || hintTier >= 3;
-    hintBtn.title = hintTier >= 3 ? 'Đã dùng tối đa 3 gợi ý' : `Gợi ý cấp ${hintTier + 1}/3 (Phím H)`;
-  }
-}
-
-function useSkip() {
-  const q = questions[currentIdx];
-  if (!q || answered) return;
-  answered = true;
-  stopTimer();
-  wrongCount++; combo = 0; updateCombo();
-  window.studyUI?.playWrong();
-
-  // Highlight correct answer
-  for (let i = 0; i < 4; i++) {
-    const b = $(`qeOpt${i}`);
-    if (b) {
-      b.disabled = true;
-      if (b.dataset.correct === '1') b.classList.add('correct');
+  function useListen() {
+    const q = questions[currentIdx];
+    if (!q) return;
+    const btn = $('qeBtnListen');
+    if (btn) {
+      btn.classList.add('pulsing');
+      setTimeout(() => btn.classList.remove('pulsing'), 600);
     }
-  }
-  const inp = $('qeTypeInput'); if (inp) inp.disabled = true;
-
-  const correctMsg = q.type === 'mcq_word_form'
-    ? `⏭️ Đã bỏ qua — Đáp án đúng: ${q.correctAns} (${q.targetCatLabel})`
-    : `⏭️ Đã bỏ qua — Đáp án đúng: ${q.word.word}`;
-  showFeedback(false, q.word, correctMsg);
-  sessionLog.push({ word: q.word, type: q.type, result: 'skip', pts: 0 });
-  updateToolsUI();
-  updateHUD();
-}
-
-function useListen() {
-  const q = questions[currentIdx];
-  if (!q) return;
-  const btn = $('qeBtnListen');
-  if (btn) {
-    btn.classList.add('pulsing');
-    setTimeout(() => btn.classList.remove('pulsing'), 600);
-  }
-  speak(q.word.word);
-}
-
-function useHint() {
-  const q = questions[currentIdx];
-  if (!q || answered) return;
-  if (hintTier >= 3) {
-    window.studyUI?.showToast('Đã mở tối đa 3 gợi ý cho câu này!', 'info', 2000);
-    return;
+    speak(q.word.word);
   }
 
-  hintTier++;
-  window.studyUI?.playDing();
-  updateToolsUI();
+  function useHint() {
+    const q = questions[currentIdx];
+    if (!q || answered) return;
+    if (hintTier >= 3) {
+      window.studyUI?.showToast('Đã mở tối đa 3 gợi ý cho câu này!', 'info', 2000);
+      return;
+    }
 
-  const hintBox = $('qeHintBox');
-  if (!hintBox) return;
-  hintBox.style.display = 'block';
+    hintTier++;
+    window.studyUI?.playDing();
+    updateToolsUI();
 
-  const rawWord = (q.type === 'mcq_word_form' ? q.correctAns : q.word.word) || '';
-  let hintHdr = '';
-  let hintBody = '';
+    const hintBox = $('qeHintBox');
+    if (!hintBox) return;
+    hintBox.style.display = 'block';
 
-  if (hintTier === 1) {
-    if (q.type === 'mcq_word_form') {
-      hintHdr = '💡 Gợi Ý 1/3: Dạng Từ & Ngữ Cảnh';
-      hintBody = `
+    const rawWord = (q.type === 'mcq_word_form' ? q.correctAns : q.word.word) || '';
+    let hintHdr = '';
+    let hintBody = '';
+
+    if (hintTier === 1) {
+      if (q.type === 'mcq_word_form') {
+        hintHdr = '💡 Gợi Ý 1/3: Dạng Từ & Ngữ Cảnh';
+        hintBody = `
         <div class="qe-hint-content">Cần tìm dạng: <span class="qe-pos-pill">${esc(q.targetCatLabel)}</span> của từ <strong>"${esc(q.word.word)}"</strong></div>
         <div style="font-size:13px;color:var(--study-text-muted);margin-top:6px;">Từ gốc nghĩa là: "${esc(q.word.meaning)}"</div>
       `;
-    } else {
-      hintHdr = '💡 Gợi Ý 1/3: Ngữ Cảnh & Loại Từ (Part of Speech)';
-      const posLabel = getPosBadgeLabel(q.word);
-      const wfEntries = getValidWordFamily(q.word);
-      let extraHint = '';
-      if (posLabel) {
-        extraHint += `<div style="margin-top:6px;"><span class="qe-pos-pill">🏷️ Loại từ: <strong>${esc(posLabel)}</strong></span></div>`;
-      }
-      if (wfEntries && wfEntries.length) {
-        const familyStr = wfEntries.map(e => `${getCatShort(e.cat)}: <strong>${esc(e.val)}</strong>`).join(' · ');
-        extraHint += `<div style="margin-top:5px;font-size:12px;color:var(--study-text-muted);">👨‍👩‍👧 Gia đình từ: ${familyStr}</div>`;
-      }
+      } else {
+        hintHdr = '💡 Gợi Ý 1/3: Ngữ Cảnh & Loại Từ (Part of Speech)';
+        const posLabel = getPosBadgeLabel(q.word);
+        const wfEntries = getValidWordFamily(q.word);
+        let extraHint = '';
+        if (posLabel) {
+          extraHint += `<div style="margin-top:6px;"><span class="qe-pos-pill">🏷️ Loại từ: <strong>${esc(posLabel)}</strong></span></div>`;
+        }
+        if (wfEntries && wfEntries.length) {
+          const familyStr = wfEntries.map(e => `${getCatShort(e.cat)}: <strong>${esc(e.val)}</strong>`).join(' · ');
+          extraHint += `<div style="margin-top:5px;font-size:12px;color:var(--study-text-muted);">👨‍👩‍👧 Gia đình từ: ${familyStr}</div>`;
+        }
 
-      if (q.word.example) {
-        const blankObj = makeFillBlank(q.word.example, q.word);
-        hintBody = `
+        if (q.word.example) {
+          const blankObj = makeFillBlank(q.word.example, q.word);
+          hintBody = `
           <div class="qe-hint-content">${blankObj.html}</div>
           ${q.word.exampleTrans ? `<div style="font-size:13px;color:var(--study-text-muted);margin-top:4px;">${esc(q.word.exampleTrans)}</div>` : ''}
           ${extraHint}
         `;
-      } else {
-        hintBody = `
+        } else {
+          hintBody = `
           <div class="qe-hint-content">Từ này mang ý nghĩa: <strong>"${esc(q.word.meaning)}"</strong></div>
           <div style="font-size:12.5px;color:var(--study-text-muted);margin-top:4px;">Độ dài từ: <strong>${rawWord.length}</strong> ký tự</div>
           ${extraHint}
         `;
+        }
       }
-    }
-  } else if (hintTier === 2) {
-    // Lần 2: Blank word mà mỗi ký tự là một dấu gạch dưới _
-    hintHdr = '💡 Gợi Ý 2/3: Cấu Trúc Ký Tự (Mỗi _ Là Một Chữ Cái)';
-    const blankWord = rawWord.split('').map(c => {
-      if (c.trim() === '') return '&nbsp;&nbsp;';
-      return '_';
-    }).join(' ');
+    } else if (hintTier === 2) {
+      // Lần 2: Blank word mà mỗi ký tự là một dấu gạch dưới _
+      hintHdr = '💡 Gợi Ý 2/3: Cấu Trúc Ký Tự (Mỗi _ Là Một Chữ Cái)';
+      const blankWord = rawWord.split('').map(c => {
+        if (c.trim() === '') return '&nbsp;&nbsp;';
+        return '_';
+      }).join(' ');
 
-    hintBody = `
+      hintBody = `
       <div class="qe-hint-dashes">${blankWord}</div>
       <div style="font-size:12.5px;color:var(--study-text-muted);">Từ có <strong>${rawWord.trim().length}</strong> ký tự</div>
     `;
-  } else if (hintTier === 3) {
-    // Lần 3: Mở ngẫu nhiên 1/3 ký tự tại vị trí bất kỳ
-    hintHdr = '💡 Gợi Ý 3/3: Mở Ngẫu Nhiên Ký Tự Gợi Ý';
-    const chars = rawWord.split('');
-    const nonSpaceIndices = [];
-    chars.forEach((c, idx) => { if (c.trim() !== '') nonSpaceIndices.push(idx); });
+    } else if (hintTier === 3) {
+      // Lần 3: Mở ngẫu nhiên 1/3 ký tự tại vị trí bất kỳ
+      hintHdr = '💡 Gợi Ý 3/3: Mở Ngẫu Nhiên Ký Tự Gợi Ý';
+      const chars = rawWord.split('');
+      const nonSpaceIndices = [];
+      chars.forEach((c, idx) => { if (c.trim() !== '') nonSpaceIndices.push(idx); });
 
-    if (!currentHintMask) {
-      const revealCount = Math.max(1, Math.ceil(nonSpaceIndices.length / 3));
-      const shuffled = shuffle([...nonSpaceIndices]);
-      currentHintMask = new Set(shuffled.slice(0, revealCount));
-    }
+      if (!currentHintMask) {
+        const revealCount = Math.max(1, Math.ceil(nonSpaceIndices.length / 3));
+        const shuffled = shuffle([...nonSpaceIndices]);
+        currentHintMask = new Set(shuffled.slice(0, revealCount));
+      }
 
-    const revealedWord = chars.map((c, idx) => {
-      if (c.trim() === '') return '&nbsp;&nbsp;';
-      return currentHintMask.has(idx) ? `<span style="color:var(--qa);text-decoration:underline;">${esc(c)}</span>` : '_';
-    }).join(' ');
+      const revealedWord = chars.map((c, idx) => {
+        if (c.trim() === '') return '&nbsp;&nbsp;';
+        return currentHintMask.has(idx) ? `<span style="color:var(--qa);text-decoration:underline;">${esc(c)}</span>` : '_';
+      }).join(' ');
 
-    hintBody = `
+      hintBody = `
       <div class="qe-hint-dashes">${revealedWord}</div>
       <div style="font-size:12.5px;color:var(--study-text-muted);">Đã mở sẵn ${currentHintMask.size} chữ cái vị trí ngẫu nhiên!</div>
     `;
-  }
+    }
 
-  hintBox.innerHTML = `
+    hintBox.innerHTML = `
     <div class="qe-hint-badge-hdr">${hintHdr}</div>
     ${hintBody}
   `;
-}
-
-/* ── Show Results ────────────────────────────────────────────────── */
-function showResult() {
-  stopTimer(); hideFeedback();
-  $('qeQuestion').style.display = 'none';
-  $('qeHud').style.display = 'none';
-
-  const total = correctCount + wrongCount;
-  const pct = total > 0 ? Math.round((correctCount / total) * 100) : 0;
-  const wrongList = sessionLog.filter(r => r.result !== 'correct');
-
-  $('qeResPct').textContent = `${pct}%`;
-  $('qeResC').textContent = correctCount;
-  $('qeResW').textContent = wrongCount;
-  $('qeResS').textContent = score;
-  $('qeResCB').textContent = maxCombo;
-
-  // Score ring
-  setTimeout(() => {
-    const ring = $('qeRingFill');
-    ring.style.strokeDashoffset = 377 - (pct / 100) * 377;
-    ring.style.stroke = pct >= 80 ? '#10b981' : pct >= 50 ? '#f59e0b' : '#ef4444';
-  }, 100);
-
-  // Emoji/message
-  let emoji, title, desc;
-  if (pct >= 90) { emoji = '🏆'; title = 'Xuất sắc!'; desc = 'Cậu đã làm chủ tất cả từ này rồi!'; }
-  else if (pct >= 70) { emoji = '🌟'; title = 'Tốt lắm!'; desc = 'Tiếp tục ôn để đạt hoàn hảo nhé!'; }
-  else if (pct >= 50) { emoji = '💪'; title = 'Cố lên!'; desc = 'Còn vài từ cần ôn thêm chút nữa!'; }
-  else { emoji = '📚'; title = 'Cần ôn thêm'; desc = 'Luyện đều đặn mỗi ngày sẽ tốt hơn!'; }
-  $('qeResEmoji').textContent = emoji;
-  $('qeResTitle').textContent = title;
-  $('qeResDesc').textContent = desc;
-
-  // Retry wrong button
-  const retryBtn = $('qeRetryWrongBtn');
-  if (wrongList.length > 0) {
-    $('qeWrongN').textContent = `(${wrongList.length} từ)`;
-    retryBtn.style.display = 'inline-flex';
-    retryBtn._wrongWords = wrongList.map(r => r.word);
-  } else {
-    retryBtn.style.display = 'none';
   }
 
-  // Build table
-  buildResultTable();
-  activeFilter = 'all';
-  setFilterTab('all');
+  /* ── Show Results ────────────────────────────────────────────────── */
+  function showResult() {
+    stopTimer(); hideFeedback();
+    $('qeQuestion').style.display = 'none';
+    $('qeHud').style.display = 'none';
 
-  $('qeResult').style.display = 'block';
-  window.studyUI?.showToast(`🎯 Kết quả: ${pct}% — ${score} điểm!`, 'success', 4000);
+    const total = correctCount + wrongCount;
+    const pct = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+    const wrongList = sessionLog.filter(r => r.result !== 'correct');
 
-  // Ghi nhận phiên học thực tế để duy trì/tăng chuỗi Streak
-  if (window.studyStorage && typeof window.studyStorage.recordStudy === 'function') {
-    window.studyStorage.recordStudy();
-  }
-}
+    $('qeResPct').textContent = `${pct}%`;
+    $('qeResC').textContent = correctCount;
+    $('qeResW').textContent = wrongCount;
+    $('qeResS').textContent = score;
+    $('qeResCB').textContent = maxCombo;
 
-function buildResultTable() {
-  const tbody = $('qeTableBody');
-  tbody.innerHTML = '';
-  sessionLog.forEach((entry, i) => {
-    const { word, type, result, pts } = entry;
-    const isOk = result === 'correct';
-    const badge =
-      result === 'correct'  ? '<span class="qe-badge ok">✅ Đã thuộc</span>' :
-      result === 'timeout'  ? '<span class="qe-badge tm">⏰ Hết giờ</span>' :
-      result === 'skip'     ? '<span class="qe-badge sk">⏭️ Bỏ qua</span>' :
-                              '<span class="qe-badge ng">❌ Chưa thuộc</span>';
-    const posLabel = getPosBadgeLabel(word);
-    const wfEntries = getValidWordFamily(word);
-    let wfSummary = '';
-    if (wfEntries && wfEntries.length) {
-      wfSummary = `<div class="qe-table-wf">👨‍👩‍👧 ${wfEntries.map(e => `${getCatShort(e.cat)}: ${esc(e.val)}`).join(' · ')}</div>`;
+    // Score ring
+    setTimeout(() => {
+      const ring = $('qeRingFill');
+      ring.style.strokeDashoffset = 377 - (pct / 100) * 377;
+      ring.style.stroke = pct >= 80 ? '#10b981' : pct >= 50 ? '#f59e0b' : '#ef4444';
+    }, 100);
+
+    // Emoji/message
+    let emoji, title, desc;
+    if (pct >= 90) { emoji = '🏆'; title = 'Xuất sắc!'; desc = 'Cậu đã làm chủ tất cả từ này rồi!'; }
+    else if (pct >= 70) { emoji = '🌟'; title = 'Tốt lắm!'; desc = 'Tiếp tục ôn để đạt hoàn hảo nhé!'; }
+    else if (pct >= 50) { emoji = '💪'; title = 'Cố lên!'; desc = 'Còn vài từ cần ôn thêm chút nữa!'; }
+    else { emoji = '📚'; title = 'Cần ôn thêm'; desc = 'Luyện đều đặn mỗi ngày sẽ tốt hơn!'; }
+    $('qeResEmoji').textContent = emoji;
+    $('qeResTitle').textContent = title;
+    $('qeResDesc').textContent = desc;
+
+    // Retry wrong button
+    const retryBtn = $('qeRetryWrongBtn');
+    if (wrongList.length > 0) {
+      $('qeWrongN').textContent = `(${wrongList.length} từ)`;
+      retryBtn.style.display = 'inline-flex';
+      retryBtn._wrongWords = wrongList.map(r => r.word);
+    } else {
+      retryBtn.style.display = 'none';
     }
-    const tr = document.createElement('tr');
-    tr.className = isOk ? 'row-correct' : 'row-wrong';
-    tr.dataset.result = result;
-    tr.innerHTML = `
+
+    // Build table
+    buildResultTable();
+    activeFilter = 'all';
+    setFilterTab('all');
+
+    $('qeResult').style.display = 'block';
+    window.studyUI?.showToast(`🎯 Kết quả: ${pct}% — ${score} điểm!`, 'success', 4000);
+
+    // Ghi nhận phiên học thực tế để duy trì/tăng chuỗi Streak
+    if (window.studyStorage && typeof window.studyStorage.recordStudy === 'function') {
+      window.studyStorage.recordStudy();
+    }
+  }
+
+  function buildResultTable() {
+    const tbody = $('qeTableBody');
+    tbody.innerHTML = '';
+    sessionLog.forEach((entry, i) => {
+      const { word, type, result, pts } = entry;
+      const isOk = result === 'correct';
+      const badge =
+        result === 'correct' ? '<span class="qe-badge ok">✅ Đã thuộc</span>' :
+          result === 'timeout' ? '<span class="qe-badge tm">⏰ Hết giờ</span>' :
+            result === 'skip' ? '<span class="qe-badge sk">⏭️ Bỏ qua</span>' :
+              '<span class="qe-badge ng">❌ Chưa thuộc</span>';
+      const posLabel = getPosBadgeLabel(word);
+      const wfEntries = getValidWordFamily(word);
+      let wfSummary = '';
+      if (wfEntries && wfEntries.length) {
+        wfSummary = `<div class="qe-table-wf">👨‍👩‍👧 ${wfEntries.map(e => `${getCatShort(e.cat)}: ${esc(e.val)}`).join(' · ')}</div>`;
+      }
+      const tr = document.createElement('tr');
+      tr.className = isOk ? 'row-correct' : 'row-wrong';
+      tr.dataset.result = result;
+      tr.innerHTML = `
       <td style="color:var(--study-text-muted);font-weight:700;">${i + 1}</td>
       <td>
         <div class="qe-word-cell">${esc(word.word)}<button class="qe-mini-listen" onclick="QE.speak('${ea(word.word)}')" title="Nghe">🔊</button></div>
@@ -1403,231 +1403,231 @@ function buildResultTable() {
       <td>${badge}</td>
       <td style="font-weight:900;color:${isOk ? '#10b981' : 'var(--study-text-muted)'};">${pts > 0 ? '+' + pts : '—'}</td>
     `;
-    tbody.appendChild(tr);
-  });
-  updateFilterCounts();
-}
-
-function filterResult(filter) {
-  activeFilter = filter;
-  setFilterTab(filter);
-  document.querySelectorAll('#qeTableBody tr').forEach(tr => {
-    const r = tr.dataset.result;
-    if (filter === 'all') tr.classList.remove('hidden');
-    else if (filter === 'correct') tr.classList.toggle('hidden', r !== 'correct');
-    else tr.classList.toggle('hidden', r === 'correct');
-  });
-}
-
-function setFilterTab(filter) {
-  ['qeFAll', 'qeFC', 'qeFW'].forEach(id => $(`${id}`)?.classList.remove('active'));
-  const map = { all: 'qeFAll', correct: 'qeFC', wrong: 'qeFW' };
-  $(map[filter])?.classList.add('active');
-}
-
-function updateFilterCounts() {
-  const total = sessionLog.length;
-  const ok = sessionLog.filter(r => r.result === 'correct').length;
-  const ng = total - ok;
-  $('qeFAll').textContent = `Tất cả (${total})`;
-  $('qeFC').textContent = `✅ Đã thuộc (${ok})`;
-  $('qeFW').textContent = `❌ Chưa thuộc (${ng})`;
-}
-
-function retryWrong() {
-  const wrongWords = $('qeRetryWrongBtn')._wrongWords;
-  if (!wrongWords?.length) return;
-  // Reset to start screen settings but pass wrong words directly
-  startQuiz(wrongWords);
-}
-
-/* ── Keyboard ────────────────────────────────────────────────────── */
-function setupKeyboard() {
-  document.addEventListener('keydown', e => {
-    const tag = document.activeElement ? document.activeElement.tagName : '';
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-
-    const isScrambleActive = $('qeScramble') && $('qeScramble').style.display !== 'none';
-    const isOptionsActive = $('qeOptions') && $('qeOptions').style.display !== 'none';
-
-    // When question is answered, Space or Enter goes to next question
-    if (answered) {
-      if (e.code === 'Space' || e.code === 'Enter') {
-        e.preventDefault();
-        next();
-      }
-      return;
-    }
-
-    // ── SCRAMBLE MODE KEYBOARD ──────────────────────────────────────
-    if (isScrambleActive) {
-      if (e.code === 'Enter') {
-        e.preventDefault();
-        submitScramble();
-        return;
-      }
-      if (e.code === 'Backspace') {
-        e.preventDefault();
-        removeLastTile();
-        return;
-      }
-      if (e.code === 'Escape') {
-        e.preventDefault();
-        clearScramble();
-        return;
-      }
-      // Alt shortcuts for tools during scramble (so S/H/L can be typed as letters)
-      if (e.altKey) {
-        if (e.code === 'KeyS') { e.preventDefault(); useSkip(); return; }
-        if (e.code === 'KeyH') { e.preventDefault(); useHint(); return; }
-        if (e.code === 'KeyL') { e.preventDefault(); useListen(); return; }
-      }
-      // Single character key pressed (A-Z, numbers, accents, etc.)
-      if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key && e.key.length === 1 && e.key !== ' ') {
-        e.preventDefault();
-        handleScrambleKey(e.key);
-        return;
-      }
-      return;
-    }
-
-    // ── OTHER MODES KEYBOARD ────────────────────────────────────────
-    if (e.code === 'Space') {
-      e.preventDefault();
-    }
-    else if (['Digit1','Digit2','Digit3','Digit4'].includes(e.code)) {
-      const idx = +e.code.slice(-1) - 1;
-      if (!answered && isOptionsActive) selectOpt(idx);
-    }
-    else if (e.code === 'Enter') {
-      // Handled when answered or inside input
-    }
-    else if (e.code === 'KeyL') useListen();
-    else if (e.code === 'KeyH' && !answered) useHint();
-    else if (e.code === 'KeyS' && !answered) useSkip();
-  });
-}
-
-/* ── Smart Blank Generator for mcq_fill ──────────────────────────── */
-function makeFillBlank(example, wordObj) {
-  const shortPos = getShortPos(wordObj.pos);
-  const posBadgeHtml = shortPos ? ` <span class="qe-blank-pos" title="Loại từ cần điền">[${esc(shortPos)}]</span>` : '';
-  const blankHtml = `<span class="qe-blank-fill">___________</span>${posBadgeHtml}`;
-  if (!example) return { html: `${blankHtml} <span style="font-size:0.9em;opacity:0.85;">(${esc(wordObj.meaning || '')})</span>`, raw: `___________ (${wordObj.meaning || ''})` };
-
-  const rawWord = (wordObj.word || '').trim();
-  const phonetic = (wordObj.phonetic || '').replace(/[\[\]\/\-–—]/g, ' ').trim();
-  const rxEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-  // Check if string is predominantly Latin (English, Romaji, Pinyin, etc.)
-  const isLatin = /^[a-zA-Z\s'-]+$/.test(rawWord);
-
-  if (isLatin) {
-    // 1. Exact English word match with word boundary
-    const rxExact = new RegExp('\\b' + rxEsc(rawWord) + '\\b', 'i');
-    if (rxExact.test(example)) {
-      return {
-        html: esc(example).replace(rxExact, blankHtml),
-        raw: example.replace(rxExact, '___________')
-      };
-    }
-
-    // 2. English inflected form (stem + suffixes like s, es, ed, ing, er, d)
-    let stem = rawWord.toLowerCase();
-    stem = stem.replace(/e$/, '').replace(/(?:ing|ies|es|ed|er|ly|s)$/, '');
-    if (stem.length >= 3) {
-      const rxInflected = new RegExp('\\b' + rxEsc(stem) + '[a-zA-Z]*\\b', 'i');
-      if (rxInflected.test(example)) {
-        return {
-          html: esc(example).replace(rxInflected, blankHtml),
-          raw: example.replace(rxInflected, '___________')
-        };
-      }
-    }
-
-    // 3. Fallback for Latin: match the entire word containing rawWord
-    const rxWordContaining = new RegExp('\\b[a-zA-Z]*' + rxEsc(rawWord) + '[a-zA-Z]*\\b', 'i');
-    if (rxWordContaining.test(example)) {
-      return {
-        html: esc(example).replace(rxWordContaining, blankHtml),
-        raw: example.replace(rxWordContaining, '___________')
-      };
-    }
-  } else {
-    // CJK (Japanese, Korean, Chinese)
-    // 1. Exact match of rawWord in example
-    const rxExactCJK = new RegExp(rxEsc(rawWord));
-    if (rxExactCJK.test(example)) {
-      return {
-        html: esc(example).replace(rxExactCJK, blankHtml),
-        raw: example.replace(rxExactCJK, '___________')
-      };
-    }
-
-    // 2. CJK Verb/Adjective root stripping (e.g. 食べる -> 食べ, 사랑하다 -> 사랑)
-    const cjkRoot = rawWord.replace(/(?:하다|다|[うくぐすつぬぶむるい])$/, '');
-    if (cjkRoot.length >= 1) {
-      const rxCjkRoot = new RegExp(rxEsc(cjkRoot) + '[\u3040-\u309F\uAC00-\uD7AF]*');
-      if (rxCjkRoot.test(example)) {
-        return {
-          html: esc(example).replace(rxCjkRoot, blankHtml),
-          raw: example.replace(rxCjkRoot, '___________')
-        };
-      }
-    }
-
-    // 3. Phonetic/Furigana tokens (e.g. Kanji word with Hiragana reading in example)
-    const phoneticTokens = phonetic.split(/\s+/).filter(t => t.length >= 2);
-    for (const token of phoneticTokens) {
-      const tokenRoot = token.replace(/(?:하다|다|[うくぐすつぬぶむるい])$/, '');
-      const rxToken = new RegExp(rxEsc(tokenRoot.length >= 2 ? tokenRoot : token) + '[\u3040-\u309F\uAC00-\uD7AF]*');
-      if (rxToken.test(example)) {
-        return {
-          html: esc(example).replace(rxToken, blankHtml),
-          raw: example.replace(rxToken, '___________')
-        };
-      }
-    }
+      tbody.appendChild(tr);
+    });
+    updateFilterCounts();
   }
 
-  // 4. Safe fallback: Prepend blank to example sentence
-  return {
-    html: `${blankHtml} ${esc(example)}`,
-    raw: `___________ ${example}`
+  function filterResult(filter) {
+    activeFilter = filter;
+    setFilterTab(filter);
+    document.querySelectorAll('#qeTableBody tr').forEach(tr => {
+      const r = tr.dataset.result;
+      if (filter === 'all') tr.classList.remove('hidden');
+      else if (filter === 'correct') tr.classList.toggle('hidden', r !== 'correct');
+      else tr.classList.toggle('hidden', r === 'correct');
+    });
+  }
+
+  function setFilterTab(filter) {
+    ['qeFAll', 'qeFC', 'qeFW'].forEach(id => $(`${id}`)?.classList.remove('active'));
+    const map = { all: 'qeFAll', correct: 'qeFC', wrong: 'qeFW' };
+    $(map[filter])?.classList.add('active');
+  }
+
+  function updateFilterCounts() {
+    const total = sessionLog.length;
+    const ok = sessionLog.filter(r => r.result === 'correct').length;
+    const ng = total - ok;
+    $('qeFAll').textContent = `Tất cả (${total})`;
+    $('qeFC').textContent = `✅ Đã thuộc (${ok})`;
+    $('qeFW').textContent = `❌ Chưa thuộc (${ng})`;
+  }
+
+  function retryWrong() {
+    const wrongWords = $('qeRetryWrongBtn')._wrongWords;
+    if (!wrongWords?.length) return;
+    // Reset to start screen settings but pass wrong words directly
+    startQuiz(wrongWords);
+  }
+
+  /* ── Keyboard ────────────────────────────────────────────────────── */
+  function setupKeyboard() {
+    document.addEventListener('keydown', e => {
+      const tag = document.activeElement ? document.activeElement.tagName : '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      const isScrambleActive = $('qeScramble') && $('qeScramble').style.display !== 'none';
+      const isOptionsActive = $('qeOptions') && $('qeOptions').style.display !== 'none';
+
+      // When question is answered, Space or Enter goes to next question
+      if (answered) {
+        if (e.code === 'Space' || e.code === 'Enter') {
+          e.preventDefault();
+          next();
+        }
+        return;
+      }
+
+      // ── SCRAMBLE MODE KEYBOARD ──────────────────────────────────────
+      if (isScrambleActive) {
+        if (e.code === 'Enter') {
+          e.preventDefault();
+          submitScramble();
+          return;
+        }
+        if (e.code === 'Backspace') {
+          e.preventDefault();
+          removeLastTile();
+          return;
+        }
+        if (e.code === 'Escape') {
+          e.preventDefault();
+          clearScramble();
+          return;
+        }
+        // Alt shortcuts for tools during scramble (so S/H/L can be typed as letters)
+        if (e.altKey) {
+          if (e.code === 'KeyS') { e.preventDefault(); useSkip(); return; }
+          if (e.code === 'KeyH') { e.preventDefault(); useHint(); return; }
+          if (e.code === 'KeyL') { e.preventDefault(); useListen(); return; }
+        }
+        // Single character key pressed (A-Z, numbers, accents, etc.)
+        if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key && e.key.length === 1 && e.key !== ' ') {
+          e.preventDefault();
+          handleScrambleKey(e.key);
+          return;
+        }
+        return;
+      }
+
+      // ── OTHER MODES KEYBOARD ────────────────────────────────────────
+      if (e.code === 'Space') {
+        e.preventDefault();
+      }
+      else if (['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(e.code)) {
+        const idx = +e.code.slice(-1) - 1;
+        if (!answered && isOptionsActive) selectOpt(idx);
+      }
+      else if (e.code === 'Enter') {
+        // Handled when answered or inside input
+      }
+      else if (e.code === 'KeyL') useListen();
+      else if (e.code === 'KeyH' && !answered) useHint();
+      else if (e.code === 'KeyS' && !answered) useSkip();
+    });
+  }
+
+  /* ── Smart Blank Generator for mcq_fill ──────────────────────────── */
+  function makeFillBlank(example, wordObj) {
+    const shortPos = getShortPos(wordObj.pos);
+    const posBadgeHtml = shortPos ? ` <span class="qe-blank-pos" title="Loại từ cần điền">[${esc(shortPos)}]</span>` : '';
+    const blankHtml = `<span class="qe-blank-fill">___________</span>${posBadgeHtml}`;
+    if (!example) return { html: `${blankHtml} <span style="font-size:0.9em;opacity:0.85;">(${esc(wordObj.meaning || '')})</span>`, raw: `___________ (${wordObj.meaning || ''})` };
+
+    const rawWord = (wordObj.word || '').trim();
+    const phonetic = (wordObj.phonetic || '').replace(/[\[\]\/\-–—]/g, ' ').trim();
+    const rxEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // Check if string is predominantly Latin (English, Romaji, Pinyin, etc.)
+    const isLatin = /^[a-zA-Z\s'-]+$/.test(rawWord);
+
+    if (isLatin) {
+      // 1. Exact English word match with word boundary
+      const rxExact = new RegExp('\\b' + rxEsc(rawWord) + '\\b', 'i');
+      if (rxExact.test(example)) {
+        return {
+          html: esc(example).replace(rxExact, blankHtml),
+          raw: example.replace(rxExact, '___________')
+        };
+      }
+
+      // 2. English inflected form (stem + suffixes like s, es, ed, ing, er, d)
+      let stem = rawWord.toLowerCase();
+      stem = stem.replace(/e$/, '').replace(/(?:ing|ies|es|ed|er|ly|s)$/, '');
+      if (stem.length >= 3) {
+        const rxInflected = new RegExp('\\b' + rxEsc(stem) + '[a-zA-Z]*\\b', 'i');
+        if (rxInflected.test(example)) {
+          return {
+            html: esc(example).replace(rxInflected, blankHtml),
+            raw: example.replace(rxInflected, '___________')
+          };
+        }
+      }
+
+      // 3. Fallback for Latin: match the entire word containing rawWord
+      const rxWordContaining = new RegExp('\\b[a-zA-Z]*' + rxEsc(rawWord) + '[a-zA-Z]*\\b', 'i');
+      if (rxWordContaining.test(example)) {
+        return {
+          html: esc(example).replace(rxWordContaining, blankHtml),
+          raw: example.replace(rxWordContaining, '___________')
+        };
+      }
+    } else {
+      // CJK (Japanese, Korean, Chinese)
+      // 1. Exact match of rawWord in example
+      const rxExactCJK = new RegExp(rxEsc(rawWord));
+      if (rxExactCJK.test(example)) {
+        return {
+          html: esc(example).replace(rxExactCJK, blankHtml),
+          raw: example.replace(rxExactCJK, '___________')
+        };
+      }
+
+      // 2. CJK Verb/Adjective root stripping (e.g. 食べる -> 食べ, 사랑하다 -> 사랑)
+      const cjkRoot = rawWord.replace(/(?:하다|다|[うくぐすつぬぶむるい])$/, '');
+      if (cjkRoot.length >= 1) {
+        const rxCjkRoot = new RegExp(rxEsc(cjkRoot) + '[\u3040-\u309F\uAC00-\uD7AF]*');
+        if (rxCjkRoot.test(example)) {
+          return {
+            html: esc(example).replace(rxCjkRoot, blankHtml),
+            raw: example.replace(rxCjkRoot, '___________')
+          };
+        }
+      }
+
+      // 3. Phonetic/Furigana tokens (e.g. Kanji word with Hiragana reading in example)
+      const phoneticTokens = phonetic.split(/\s+/).filter(t => t.length >= 2);
+      for (const token of phoneticTokens) {
+        const tokenRoot = token.replace(/(?:하다|다|[うくぐすつぬぶむるい])$/, '');
+        const rxToken = new RegExp(rxEsc(tokenRoot.length >= 2 ? tokenRoot : token) + '[\u3040-\u309F\uAC00-\uD7AF]*');
+        if (rxToken.test(example)) {
+          return {
+            html: esc(example).replace(rxToken, blankHtml),
+            raw: example.replace(rxToken, '___________')
+          };
+        }
+      }
+    }
+
+    // 4. Safe fallback: Prepend blank to example sentence
+    return {
+      html: `${blankHtml} ${esc(example)}`,
+      raw: `___________ ${example}`
+    };
+  }
+
+  /* ── Utils ───────────────────────────────────────────────────────── */
+  function speak(text) { window.studySpeech?.speak(text, LANG); }
+  function speakPulse(btn, text) {
+    speak(text);
+    btn.classList.add('pulsing');
+    setTimeout(() => btn.classList.remove('pulsing'), 650);
+  }
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+  function norm(s) { return (s || '').trim().toLowerCase().replace(/\s+/g, ''); }
+  function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function ea(s) { return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+  function $(id) { return document.getElementById(id); }
+
+  /* ── Init ────────────────────────────────────────────────────────── */
+  document.addEventListener('DOMContentLoaded', () => {
+    injectCSS();
+    renderApp();
+    loadDecks();
+    setupKeyboard();
+  });
+
+  /* ── Global API ──────────────────────────────────────────────────── */
+  window.QE = {
+    startQuiz, selectOpt, submitTyping, typeKeydown,
+    clearScramble, removeLastTile, submitScramble, addTile, handleScrambleKey,
+    next, useSkip, useListen, useHint, filterResult, retryWrong,
+    speak, speakPulse
   };
-}
-
-/* ── Utils ───────────────────────────────────────────────────────── */
-function speak(text) { window.studySpeech?.speak(text, LANG); }
-function speakPulse(btn, text) {
-  speak(text);
-  btn.classList.add('pulsing');
-  setTimeout(() => btn.classList.remove('pulsing'), 650);
-}
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
-  return a;
-}
-function norm(s) { return (s || '').trim().toLowerCase().replace(/\s+/g, ''); }
-function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function ea(s) { return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
-function $(id) { return document.getElementById(id); }
-
-/* ── Init ────────────────────────────────────────────────────────── */
-document.addEventListener('DOMContentLoaded', () => {
-  injectCSS();
-  renderApp();
-  loadDecks();
-  setupKeyboard();
-});
-
-/* ── Global API ──────────────────────────────────────────────────── */
-window.QE = {
-  startQuiz, selectOpt, submitTyping, typeKeydown,
-  clearScramble, removeLastTile, submitScramble, addTile, handleScrambleKey,
-  next, useSkip, useListen, useHint, filterResult, retryWrong,
-  speak, speakPulse
-};
 
 })();

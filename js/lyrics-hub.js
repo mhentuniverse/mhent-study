@@ -2554,15 +2554,13 @@ QUY TẮC ĐẦU RA:
             const meaning = item.meaning || item.vietnamese || item.trans || '';
 
             html += `
-                <div class="spotlight-word-card" style="animation-delay: ${wIdx * 0.04}s">
+                <div class="spotlight-word-card" style="animation-delay: ${wIdx * 0.03}s">
                     <div class="spotlight-word-top">
-                        <div class="spotlight-word-term">
-                            <span class="spotlight-term-main">${this.escapeHtml(wordText)}</span>
-                            ${phonetic ? `<span class="spotlight-term-phonetic">【${this.escapeHtml(phonetic)}】</span>` : ''}
-                        </div>
-                        <span class="spotlight-term-pos">${this.escapeHtml(pos)}</span>
+                        <span class="spotlight-term-main">${this.escapeHtml(wordText)}</span>
+                        ${pos ? `<span class="spotlight-term-pos">${this.escapeHtml(pos)}</span>` : ''}
                     </div>
-                    <div class="spotlight-word-meaning">${this.escapeHtml(meaning)}</div>
+                    ${phonetic ? `<div class="spotlight-term-phonetic">【${this.escapeHtml(phonetic)}】</div>` : ''}
+                    <div class="spotlight-word-meaning" title="${this.escapeHtml(meaning)}">${this.escapeHtml(meaning)}</div>
                 </div>
             `;
         });
@@ -2572,7 +2570,7 @@ QUY TẮC ĐẦU RA:
     }
 
     // =========================================================================
-    // 6. STUDIO 16:9 VIEW MODE & VIDEO CONVERTER (RECORDING)
+    // 6. STUDIO 16:9 VIEW MODE (CINEMA STAGE FOR OBS)
     // =========================================================================
     toggleStudioMode(forceState) {
         const isStudio = typeof forceState === 'boolean' 
@@ -2585,7 +2583,14 @@ QUY TẮC ĐẦU RA:
         if (btn) btn.classList.toggle('active', isStudio);
 
         if (isStudio) {
-            this.showToast('Đã vào Chế độ Studio 16:9 (Nhấn Esc hoặc nút góc phải để thoát)', 'info', 3000);
+            // Đóng tất cả popover/modal để màn hình sạch 100% cho OBS quay video
+            this.closeVersionsDrawer();
+            this.closeSongSelectModal();
+            this.closeChangeVideoModal();
+            this.closeContribModal();
+            this.hideAllPopovers();
+
+            this.showToast('Đã vào Chế độ Studio 16:9 (Nhấn phím Esc hoặc S để thoát)', 'info', 2200);
             if (this.activeSentenceIndex >= 0) {
                 this.syncActiveSentence(this.currentTime, true);
             }
