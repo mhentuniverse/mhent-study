@@ -2395,7 +2395,31 @@ QUY TẮC ĐẦU RA:
         let activeIdx = -1;
         for (let i = 0; i < lines.length; i++) {
             const start = lines[i].startTime || 0;
-            const end = lines[i].endTime || (lines[i + 1] ? lines[i + 1].startTime : start + 6);
+            let end;
+
+            if (lines[i + 1]) {
+                const nextStart = lines[i + 1].startTime || 0;
+                const gap = nextStart - (lines[i].endTime || start);
+
+                // Nếu có endTime xác định
+                if (lines[i].endTime && lines[i].endTime > start) {
+                    // Nếu khoảng cách đến câu tiếp theo <= 3.8s: giữ câu sáng liên tục cho tới câu sau
+                    // Giải quyết triệt để vấn đề "hát chưa hết câu mà đã tắt câu" và loại bỏ hiện tượng giật cục
+                    if (gap <= 3.8) {
+                        end = nextStart;
+                    } else {
+                        // Nếu là đoạn gián tấu/dạo nhạc cụ dài (> 3.8s), cho phép ngân trọn vẹn thêm 1.4s sau endTime
+                        end = Math.min(nextStart, lines[i].endTime + 1.4);
+                    }
+                } else {
+                    // Không có endTime thì lấy thẳng thời điểm bắt đầu của câu kế tiếp
+                    end = nextStart;
+                }
+            } else {
+                // Câu cuối cùng của bài hát: giữ sáng thêm để hát hết ngân
+                end = lines[i].endTime ? (lines[i].endTime + 2.5) : (start + 8);
+            }
+
             if (effectiveTime >= start && effectiveTime < end) {
                 activeIdx = i;
                 break;
@@ -2414,7 +2438,7 @@ QUY TẮC ĐẦU RA:
             }
 
             // O(1) DOM class toggle: gỡ class active của câu trước
-            if (prevIdx >= 0) {
+            if (prevIdx >= 0 && prevIdx !== activeIdx) {
                 const prevRow = document.getElementById(`sentence-row-${prevIdx}`);
                 if (prevRow) prevRow.classList.remove('active');
             }
@@ -2428,14 +2452,20 @@ QUY TẮC ĐẦU RA:
                     if (this.isAutoScrollEnabled || forceScroll) {
                         const container = document.getElementById('lyrics-stream-container');
                         if (container) {
-                            const rowTop = currentRow.offsetTop;
-                            const rowHeight = currentRow.offsetHeight;
-                            const containerHeight = container.clientHeight;
-                            const targetTop = rowTop - (containerHeight / 2) + (rowHeight / 2);
-                            container.scrollTo({
-                                top: Math.max(0, targetTop),
-                                behavior: 'smooth'
-                            });
+                            const containerRect = container.getBoundingClientRect();
+                            const rowRect = currentRow.getBoundingClientRect();
+                            const currentScrollTop = container.scrollTop;
+                            // Tính toán chính xác vị trí tâm giữa container bất chấp scale hay padding
+                            const targetTop = currentScrollTop + (rowRect.top - containerRect.top) 
+                                            - (container.clientHeight / 2) + (rowRect.height / 2);
+                            
+                            // Chỉ cuộn nếu khoảng cách dịch chuyển đủ lớn (> 4px) để loại bỏ hoàn toàn hiện tượng khựng
+                            if (Math.abs(currentScrollTop - targetTop) > 4) {
+                                container.scrollTo({
+                                    top: Math.max(0, targetTop),
+                                    behavior: 'smooth'
+                                });
+                            }
                         }
                     }
                 } else {

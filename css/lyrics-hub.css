@@ -264,20 +264,21 @@ body.lyrics-theme .footer-brand-title {
     background: var(--lyrics-card-bg);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 20px;
-    padding: 24px;
+    padding: 16px 18px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 12px;
     height: fit-content;
     position: sticky;
-    top: 90px;
+    top: 85px;
     backdrop-filter: blur(12px);
 }
 
 @media (min-width: 1025px) {
     .lyrics-player-card {
-        max-height: calc(100vh - 105px);
+        max-height: calc(100vh - 95px);
         overflow-y: auto;
+        overflow-x: hidden;
         scrollbar-width: thin;
         scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
     }
@@ -295,12 +296,12 @@ body.lyrics-theme .footer-brand-title {
     position: relative;
     width: 100%;
     aspect-ratio: 16 / 9;
-    min-height: 240px;
+    max-height: 215px;
     flex-shrink: 0;
-    border-radius: 16px;
+    border-radius: 14px;
     overflow: hidden;
     background: #000000;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
     border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -428,14 +429,24 @@ iframe#youtube-player-frame,
 }
 
 .track-title {
-    font-size: 1.35rem;
+    font-size: 1.15rem;
     font-weight: 800;
     color: #f8fafc;
     line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.track-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .track-artist {
-    font-size: 0.95rem;
+    font-size: 0.88rem;
     color: #38bdf8;
     font-weight: 600;
 }
@@ -444,22 +455,22 @@ iframe#youtube-player-frame,
     align-self: flex-start;
     font-size: 0.72rem;
     font-weight: 800;
-    padding: 3px 8px;
+    padding: 2px 7px;
     border-radius: 6px;
     background: rgba(14, 165, 233, 0.15);
     color: #38bdf8;
     border: 1px solid rgba(14, 165, 233, 0.3);
-    margin-top: 6px;
+    margin-top: 0;
 }
 
 /* Audio Player Controls */
 .player-controls-box {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     background: rgba(255, 255, 255, 0.03);
     border-radius: 14px;
-    padding: 16px;
+    padding: 12px 14px;
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -733,8 +744,8 @@ iframe#youtube-player-frame,
     display: flex;
     flex-direction: column;
     gap: 28px;
-    scroll-behavior: smooth;
     position: relative;
+    will-change: scroll-position;
 }
 
 /* Sentence Row */
@@ -742,26 +753,50 @@ iframe#youtube-player-frame,
     padding: 16px 20px;
     border-radius: 16px;
     background: transparent;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity: 0.72;
+    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), 
+                background-color 0.35s ease, 
+                border-color 0.35s ease, 
+                box-shadow 0.35s ease, 
+                opacity 0.35s ease;
+    will-change: transform, opacity;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     gap: 8px;
     position: relative;
     border: 1px solid transparent;
+    transform-origin: center center;
 }
 
 .lyrics-sentence-row:hover {
+    opacity: 0.95;
     background: rgba(255, 255, 255, 0.03);
     border-color: rgba(255, 255, 255, 0.06);
 }
 
 /* ACTIVE HIGHLIGHT STATE (Sentence by Sentence Karaoke) */
 .lyrics-sentence-row.active {
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(99, 102, 241, 0.12));
-    border-color: rgba(14, 165, 233, 0.4);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 25px rgba(14, 165, 233, 0.2);
+    opacity: 1;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.18), rgba(99, 102, 241, 0.14));
+    border-color: rgba(14, 165, 233, 0.45);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 25px rgba(14, 165, 233, 0.22);
     transform: scale(1.02);
+}
+
+.lyrics-quick-tip-banner {
+    margin-top: 14px;
+    background: rgba(14, 165, 233, 0.08);
+    border: 1px solid rgba(14, 165, 233, 0.2);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 0.84rem;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .lyrics-sentence-row.active .sentence-orig-text {

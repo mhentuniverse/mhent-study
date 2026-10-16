@@ -144,6 +144,12 @@
                 <button type="button" class="lang-pill" data-lang="ja">🇯🇵 Tiếng Nhật</button>
                 <button type="button" class="lang-pill" data-lang="zh">🇨🇳 Tiếng Trung</button>
             </div>
+
+            <!-- Fast Dictionary Shortcut helper banner (Full-width banner outside player card) -->
+            <div class="lyrics-quick-tip-banner">
+                <i class="fa-solid fa-lightbulb" style="color: #38bdf8;"></i>
+                <span><strong>Mẹo học tập:</strong> Bấm vào <u>từ vựng có gạch chân</u> hoặc <strong>bôi đen / nhấp đúp</strong> bất kỳ từ nào trong lời bài hát để tra từ điển AISA AI và lưu vào Sổ từ vựng!</span>
+            </div>
         </section>
 
         <!-- MAIN 2-COLUMN WORKSPACE -->
@@ -175,8 +181,10 @@
 
                 <div class="track-info-box">
                     <h2 id="track-title" class="track-title">Đang tải bài hát...</h2>
-                    <div id="track-artist" class="track-artist">Nghệ sĩ</div>
-                    <span id="track-lang-badge" class="track-lang-badge">Tiếng Anh</span>
+                    <div class="track-meta-row">
+                        <span id="track-artist" class="track-artist">Nghệ sĩ</span>
+                        <span id="track-lang-badge" class="track-lang-badge">Tiếng Anh</span>
+                    </div>
                 </div>
 
                 <!-- Lyric-Video Sync Calibrator (Bù trừ độ trễ intro video) -->
@@ -252,12 +260,6 @@
                             </button>
                         </div>
                     </div>
-                </div>
-
-                <!-- Fast Dictionary Shortcut helper -->
-                <div style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.2); border-radius: 12px; padding: 12px; font-size: 0.82rem; color: #94a3b8; display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-lightbulb" style="color: #38bdf8; font-size: 1rem;"></i>
-                    <span>💡 Mẹo: Bấm vào <u>từ vựng có gạch chân</u> hoặc <strong>bôi đen / nhấp đúp bất kỳ từ nào</strong> trong lời bài hát để tra từ điển AI và lưu vào Sổ từ vựng!</span>
                 </div>
             </div>
 
