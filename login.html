@@ -612,9 +612,9 @@
                 } catch(fallbackErr) {
                     hideLoading();
                     if (typeof window.showPopup === 'function') {
-                        window.showPopup('Lỗi: ' + (e.message || fallbackErr.message), true);
+                        window.showPopup('Lỗi: ' + (fallbackErr.message || e.message), true);
                     } else if (typeof window.showToast === 'function') {
-                        window.showToast('Lỗi', e.message || fallbackErr.message, 'error');
+                        window.showToast('Lỗi', fallbackErr.message || e.message, 'error');
                     }
                 }
             }
