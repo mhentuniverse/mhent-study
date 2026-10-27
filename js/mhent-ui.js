@@ -109,6 +109,17 @@ if (typeof window !== 'undefined') {
         }
     };
 
+    if (typeof window.confirm === 'function') {
+        const _nativeConfirm = window.confirm;
+        window.confirm = function(message) {
+            console.warn('[MHEnt UI] Trình duyệt đang gọi confirm() nguyên bản đồng bộ. Vui lòng sử dụng window.mhentConfirm hoặc window.showConfirmPopup thay thế.');
+            if (typeof window.showToast === 'function') {
+                window.showToast('Xác nhận thao tác', message || '', 'info');
+            }
+            return true;
+        };
+    }
+
     if (typeof window.prompt === 'function') {
         window.prompt = function(message, defaultVal) {
             console.warn('[MHEnt UI] Trình duyệt đang gọi prompt() nguyên bản. Vui lòng dùng window.mhentPrompt hoặc window.showInputPopup thay thế.');

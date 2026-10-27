@@ -68,6 +68,165 @@
             border-color: #6366f1;
             box-shadow: var(--study-shadow-hover);
         }
+
+        /* IELTS Section */
+        .ielts-section {
+            margin-top: 40px;
+            margin-bottom: 30px;
+        }
+
+        .ielts-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .ielts-badge {
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .ielts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .ielts-card {
+            background: var(--study-surface);
+            border: 1px solid var(--study-border);
+            border-radius: var(--radius-card);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: var(--study-shadow);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ielts-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #6366f1, #a855f7);
+            opacity: 0.8;
+        }
+
+        .ielts-card:hover {
+            transform: translateY(-4px);
+            border-color: #6366f1;
+            box-shadow: var(--study-shadow-hover);
+        }
+
+        .ielts-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .ielts-card-icon {
+            font-size: 32px;
+            line-height: 1;
+        }
+
+        .ielts-card-title {
+            font-size: 17px;
+            font-weight: 900;
+            margin: 0;
+            color: var(--study-text);
+        }
+
+        .ielts-count-tag {
+            font-size: 11.5px;
+            font-weight: 800;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            background: rgba(99, 102, 241, 0.12);
+            color: #6366f1;
+            white-space: nowrap;
+        }
+
+        .ielts-card-desc {
+            font-size: 13.5px;
+            color: var(--study-text-muted);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .ielts-keywords-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .ielts-keyword-chip {
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: var(--study-subtle);
+            border: 1px solid var(--study-border);
+            color: var(--study-text);
+        }
+
+        .ielts-actions-row {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+            padding-top: 10px;
+            border-top: 1px dashed var(--study-border);
+        }
+
+        .ielts-action-btn {
+            flex: 1;
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 800;
+            text-align: center;
+            text-decoration: none;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .ielts-action-primary {
+            background: #6366f1;
+            color: #fff;
+        }
+
+        .ielts-action-primary:hover {
+            background: #4f46e5;
+            color: #fff;
+        }
+
+        .ielts-action-secondary {
+            background: var(--study-subtle);
+            border: 1px solid var(--study-border);
+            color: var(--study-text);
+        }
+
+        .ielts-action-secondary:hover {
+            border-color: #6366f1;
+            color: #6366f1;
+        }
     </style>
 </head>
 
@@ -183,6 +342,272 @@
                     →</span>
             </a>
         </div>
+
+        <!-- PHÂN KHU GIÁO TRÌNH IELTS CỐT LÕI (BAND 5.0 - 6.5+) -->
+        <section class="ielts-section" id="ielts-section">
+            <div class="ielts-header">
+                <div class="ielts-header-title">
+                    <span style="font-size: 26px;">🎯</span>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <h2 style="font-size: 20px; font-weight: 900; margin: 0;">Lộ Trình IELTS Cốt Lõi Cho Người Mới</h2>
+                            <span class="ielts-badge">Band 5.0 - 6.5+</span>
+                        </div>
+                        <p style="font-size: 13.5px; color: var(--study-text-muted); margin: 3px 0 0 0;">
+                            Hệ thống từ vựng học thuật, liên từ và cụm từ ăn điểm cao với đầy đủ IPA, nghĩa tiếng Việt chuẩn xác và câu ví dụ song ngữ.
+                        </p>
+                    </div>
+                </div>
+                <a href="/en/practice/quiz" class="auth-btn-pill" style="background: linear-gradient(135deg, #6366f1, #a855f7); font-size: 13px; padding: 8px 16px;">
+                    <i class="fa-solid fa-bolt"></i> Thử Thách Quiz Toàn Diện
+                </a>
+            </div>
+
+            <div class="ielts-grid">
+                <!-- Chuyên đề 1 -->
+                <div class="ielts-card">
+                    <div class="ielts-card-top">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="ielts-card-icon">🎯</span>
+                            <div>
+                                <h3 class="ielts-card-title">IELTS Academic Foundation</h3>
+                                <span style="font-size: 12px; color: var(--study-text-muted); font-weight: 700;">Từ vựng & Liên từ cốt lõi</span>
+                            </div>
+                        </div>
+                        <span class="ielts-count-tag">30 từ • Part 1 & 2</span>
+                    </div>
+                    <p class="ielts-card-desc">
+                        30 động từ, tính từ và trạng từ liên kết đắt giá giúp nâng cấp câu văn từ mức cơ bản lên học thuật mạch lạc trong Writing & Speaking.
+                    </p>
+                    <div class="ielts-keywords-wrap">
+                        <span class="ielts-keyword-chip">demonstrate</span>
+                        <span class="ielts-keyword-chip">prioritize</span>
+                        <span class="ielts-keyword-chip">facilitate</span>
+                        <span class="ielts-keyword-chip">coherent</span>
+                        <span class="ielts-keyword-chip">substantial</span>
+                        <span class="ielts-keyword-chip">crucial</span>
+                    </div>
+                    <div style="margin-top: auto; padding-top: 10px; border-top: 1px dashed var(--study-border); display: flex; flex-direction: column; gap: 6px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; background: var(--study-subtle); padding: 5px 8px; border-radius: 8px; border: 1px solid var(--study-border);">
+                            <span style="font-size: 11.5px; font-weight: 800; color: #6366f1;">Part 1 (15 từ)</span>
+                            <div style="display: flex; gap: 6px;">
+                                <a href="/en/practice/vocab?deck=en_deck_ielts_foundation" class="ielts-action-btn ielts-action-primary" style="padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-book-open"></i> Sổ từ
+                                </a>
+                                <a href="/en/practice/flashcards?deck=en_deck_ielts_foundation" class="ielts-action-btn ielts-action-secondary" style="padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-clone"></i> Thẻ 3D
+                                </a>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; background: var(--study-subtle); padding: 5px 8px; border-radius: 8px; border: 1px solid var(--study-border);">
+                            <span style="font-size: 11.5px; font-weight: 800; color: #a855f7;">Part 2 (15 từ)</span>
+                            <div style="display: flex; gap: 6px;">
+                                <a href="/en/practice/vocab?deck=en_deck_ielts_foundation_p2" class="ielts-action-btn ielts-action-primary" style="background: #a855f7; padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-book-open"></i> Sổ từ
+                                </a>
+                                <a href="/en/practice/flashcards?deck=en_deck_ielts_foundation_p2" class="ielts-action-btn ielts-action-secondary" style="padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-clone"></i> Thẻ 3D
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chuyên đề 2 -->
+                <div class="ielts-card">
+                    <div class="ielts-card-top">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="ielts-card-icon">🎓</span>
+                            <div>
+                                <h3 class="ielts-card-title">Education & Careers</h3>
+                                <span style="font-size: 12px; color: var(--study-text-muted); font-weight: 700;">Giáo dục & Kỹ năng tương lai</span>
+                            </div>
+                        </div>
+                        <span class="ielts-count-tag">30 từ • Part 1 & 2</span>
+                    </div>
+                    <p class="ielts-card-desc">
+                        Chủ đề phổ biến nhất trong IELTS. Thuật ngữ về trường học, phương pháp học tập hiện đại, tư duy phản biện và cơ hội việc làm.
+                    </p>
+                    <div class="ielts-keywords-wrap">
+                        <span class="ielts-keyword-chip">curriculum</span>
+                        <span class="ielts-keyword-chip">discipline</span>
+                        <span class="ielts-keyword-chip">cultivate</span>
+                        <span class="ielts-keyword-chip">pedagogy</span>
+                        <span class="ielts-keyword-chip">holistic</span>
+                        <span class="ielts-keyword-chip">employability</span>
+                    </div>
+                    <div style="margin-top: auto; padding-top: 10px; border-top: 1px dashed var(--study-border); display: flex; flex-direction: column; gap: 6px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; background: var(--study-subtle); padding: 5px 8px; border-radius: 8px; border: 1px solid var(--study-border);">
+                            <span style="font-size: 11.5px; font-weight: 800; color: #6366f1;">Part 1 (15 từ)</span>
+                            <div style="display: flex; gap: 6px;">
+                                <a href="/en/practice/vocab?deck=en_deck_ielts_education" class="ielts-action-btn ielts-action-primary" style="padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-book-open"></i> Sổ từ
+                                </a>
+                                <a href="/en/practice/flashcards?deck=en_deck_ielts_education" class="ielts-action-btn ielts-action-secondary" style="padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-clone"></i> Thẻ 3D
+                                </a>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; background: var(--study-subtle); padding: 5px 8px; border-radius: 8px; border: 1px solid var(--study-border);">
+                            <span style="font-size: 11.5px; font-weight: 800; color: #a855f7;">Part 2 (15 từ)</span>
+                            <div style="display: flex; gap: 6px;">
+                                <a href="/en/practice/vocab?deck=en_deck_ielts_education_p2" class="ielts-action-btn ielts-action-primary" style="background: #a855f7; padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-book-open"></i> Sổ từ
+                                </a>
+                                <a href="/en/practice/flashcards?deck=en_deck_ielts_education_p2" class="ielts-action-btn ielts-action-secondary" style="padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-clone"></i> Thẻ 3D
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chuyên đề 3 -->
+                <div class="ielts-card">
+                    <div class="ielts-card-top">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="ielts-card-icon">🌿</span>
+                            <div>
+                                <h3 class="ielts-card-title">Environment & Climate</h3>
+                                <span style="font-size: 12px; color: var(--study-text-muted); font-weight: 700;">Môi trường & Hành tinh</span>
+                            </div>
+                        </div>
+                        <span class="ielts-count-tag">30 từ • Part 1 & 2</span>
+                    </div>
+                    <p class="ielts-card-desc">
+                        Chủ đề trọng điểm của Writing Task 2 & Reading. Năng lượng tái tạo, bảo tồn đa dạng sinh học, khí hậu và giải pháp bền vững.
+                    </p>
+                    <div class="ielts-keywords-wrap">
+                        <span class="ielts-keyword-chip">biodiversity</span>
+                        <span class="ielts-keyword-chip">ecosystem</span>
+                        <span class="ielts-keyword-chip">renewable energy</span>
+                        <span class="ielts-keyword-chip">carbon footprint</span>
+                        <span class="ielts-keyword-chip">depletion</span>
+                        <span class="ielts-keyword-chip">afforestation</span>
+                    </div>
+                    <div style="margin-top: auto; padding-top: 10px; border-top: 1px dashed var(--study-border); display: flex; flex-direction: column; gap: 6px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; background: var(--study-subtle); padding: 5px 8px; border-radius: 8px; border: 1px solid var(--study-border);">
+                            <span style="font-size: 11.5px; font-weight: 800; color: #6366f1;">Part 1 (15 từ)</span>
+                            <div style="display: flex; gap: 6px;">
+                                <a href="/en/practice/vocab?deck=en_deck_ielts_environment" class="ielts-action-btn ielts-action-primary" style="padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-book-open"></i> Sổ từ
+                                </a>
+                                <a href="/en/practice/flashcards?deck=en_deck_ielts_environment" class="ielts-action-btn ielts-action-secondary" style="padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-clone"></i> Thẻ 3D
+                                </a>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; background: var(--study-subtle); padding: 5px 8px; border-radius: 8px; border: 1px solid var(--study-border);">
+                            <span style="font-size: 11.5px; font-weight: 800; color: #a855f7;">Part 2 (15 từ)</span>
+                            <div style="display: flex; gap: 6px;">
+                                <a href="/en/practice/vocab?deck=en_deck_ielts_environment_p2" class="ielts-action-btn ielts-action-primary" style="background: #a855f7; padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-book-open"></i> Sổ từ
+                                </a>
+                                <a href="/en/practice/flashcards?deck=en_deck_ielts_environment_p2" class="ielts-action-btn ielts-action-secondary" style="padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-clone"></i> Thẻ 3D
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chuyên đề 4 -->
+                <div class="ielts-card">
+                    <div class="ielts-card-top">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="ielts-card-icon">🤖</span>
+                            <div>
+                                <h3 class="ielts-card-title">Technology & Digital Life</h3>
+                                <span style="font-size: 12px; color: var(--study-text-muted); font-weight: 700;">Công nghệ, AI & Xã hội số</span>
+                            </div>
+                        </div>
+                        <span class="ielts-count-tag">30 từ • Part 1 & 2</span>
+                    </div>
+                    <p class="ielts-card-desc">
+                        Xu hướng đề thi IELTS mới nhất. Từ vựng về trí tuệ nhân tạo, tự động hóa, bảo mật không gian mạng và tác động của công nghệ số.
+                    </p>
+                    <div class="ielts-keywords-wrap">
+                        <span class="ielts-keyword-chip">artificial intelligence</span>
+                        <span class="ielts-keyword-chip">breakthrough</span>
+                        <span class="ielts-keyword-chip">algorithm</span>
+                        <span class="ielts-keyword-chip">cybersecurity</span>
+                        <span class="ielts-keyword-chip">indispensable</span>
+                    </div>
+                    <div style="margin-top: auto; padding-top: 10px; border-top: 1px dashed var(--study-border); display: flex; flex-direction: column; gap: 6px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; background: var(--study-subtle); padding: 5px 8px; border-radius: 8px; border: 1px solid var(--study-border);">
+                            <span style="font-size: 11.5px; font-weight: 800; color: #6366f1;">Part 1 (15 từ)</span>
+                            <div style="display: flex; gap: 6px;">
+                                <a href="/en/practice/vocab?deck=en_deck_ielts_technology" class="ielts-action-btn ielts-action-primary" style="padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-book-open"></i> Sổ từ
+                                </a>
+                                <a href="/en/practice/flashcards?deck=en_deck_ielts_technology" class="ielts-action-btn ielts-action-secondary" style="padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-clone"></i> Thẻ 3D
+                                </a>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; background: var(--study-subtle); padding: 5px 8px; border-radius: 8px; border: 1px solid var(--study-border);">
+                            <span style="font-size: 11.5px; font-weight: 800; color: #a855f7;">Part 2 (15 từ)</span>
+                            <div style="display: flex; gap: 6px;">
+                                <a href="/en/practice/vocab?deck=en_deck_ielts_technology_p2" class="ielts-action-btn ielts-action-primary" style="background: #a855f7; padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-book-open"></i> Sổ từ
+                                </a>
+                                <a href="/en/practice/flashcards?deck=en_deck_ielts_technology_p2" class="ielts-action-btn ielts-action-secondary" style="padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-clone"></i> Thẻ 3D
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chuyên đề 5 -->
+                <div class="ielts-card" style="border: 1.5px solid rgba(99, 102, 241, 0.4); background: linear-gradient(135deg, rgba(99, 102, 241, 0.04), rgba(168, 85, 247, 0.04));">
+                    <div class="ielts-card-top">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="ielts-card-icon">💎</span>
+                            <div>
+                                <h3 class="ielts-card-title" style="color: #6366f1;">Scoring Collocations & Idioms</h3>
+                                <span style="font-size: 12px; color: var(--study-text-muted); font-weight: 700;">Cụm từ ghi điểm tự nhiên</span>
+                            </div>
+                        </div>
+                        <span class="ielts-count-tag" style="background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff;">30 cụm • Part 1 & 2</span>
+                    </div>
+                    <p class="ielts-card-desc">
+                        Bí quyết ăn điểm Lexical Resource Band 6.5 - 7.5+. Diễn đạt mượt mà, lưu loát và tự nhiên như người bản ngữ thay vì ghép từng từ một.
+                    </p>
+                    <div class="ielts-keywords-wrap">
+                        <span class="ielts-keyword-chip">play a crucial role in</span>
+                        <span class="ielts-keyword-chip">broaden horizons</span>
+                        <span class="ielts-keyword-chip">profound impact</span>
+                        <span class="ielts-keyword-chip">strike a balance</span>
+                        <span class="ielts-keyword-chip">pave the way for</span>
+                    </div>
+                    <div style="margin-top: auto; padding-top: 10px; border-top: 1px dashed var(--study-border); display: flex; flex-direction: column; gap: 6px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; background: var(--study-subtle); padding: 5px 8px; border-radius: 8px; border: 1px solid var(--study-border);">
+                            <span style="font-size: 11.5px; font-weight: 800; color: #6366f1;">Part 1 (15 cụm)</span>
+                            <div style="display: flex; gap: 6px;">
+                                <a href="/en/practice/vocab?deck=en_deck_ielts_collocations" class="ielts-action-btn ielts-action-primary" style="padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-book-open"></i> Sổ từ
+                                </a>
+                                <a href="/en/practice/flashcards?deck=en_deck_ielts_collocations" class="ielts-action-btn ielts-action-secondary" style="padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-clone"></i> Thẻ 3D
+                                </a>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; background: var(--study-subtle); padding: 5px 8px; border-radius: 8px; border: 1px solid var(--study-border);">
+                            <span style="font-size: 11.5px; font-weight: 800; color: #a855f7;">Part 2 (15 cụm)</span>
+                            <div style="display: flex; gap: 6px;">
+                                <a href="/en/practice/vocab?deck=en_deck_ielts_collocations_p2" class="ielts-action-btn ielts-action-primary" style="background: #a855f7; padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-book-open"></i> Sổ từ
+                                </a>
+                                <a href="/en/practice/flashcards?deck=en_deck_ielts_collocations_p2" class="ielts-action-btn ielts-action-secondary" style="padding: 4px 8px; font-size: 11px;">
+                                    <i class="fa-solid fa-clone"></i> Thẻ 3D
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
     </main>
 

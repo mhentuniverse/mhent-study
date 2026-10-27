@@ -113,11 +113,16 @@ class StudyStorage {
         const sampleIds = [
             'ko_deck_basic_countries',
             'en_deck_essential_vocab',
+            'en_deck_ielts_foundation',
+            'en_deck_ielts_education',
+            'en_deck_ielts_environment',
+            'en_deck_ielts_technology',
+            'en_deck_ielts_collocations',
             'ja_deck_basic_n5',
             'zh_deck_basic_hsk1'
         ];
         if (sampleIds.includes(id)) return true;
-        if (id.includes('_default_') || id.includes('_sample_') || id.endsWith('_default_1')) return true;
+        if (id.includes('_default_') || id.includes('_sample_') || id.endsWith('_default_1') || id.includes('_ielts_')) return true;
         if (lang && (id === `${lang}_default_1` || id === `${lang}_sample_1` || id === `${lang}_deck_sample`)) return true;
         return false;
     }
@@ -129,24 +134,30 @@ class StudyStorage {
     getDecks(lang) {
         let decks = this.get(`decks_${lang}`, []);
         const defaultDeckMap = {
-            ko: window.DEFAULT_KO_DECK,
-            ja: window.DEFAULT_JA_DECK,
-            zh: window.DEFAULT_ZH_DECK,
-            en: window.DEFAULT_EN_DECK
+            ko: [window.DEFAULT_KO_DECK],
+            ja: [window.DEFAULT_JA_DECK],
+            zh: [window.DEFAULT_ZH_DECK],
+            en: Array.isArray(window.DEFAULT_EN_DECKS) ? window.DEFAULT_EN_DECKS : [window.DEFAULT_EN_DECK]
         };
-        const defaultDeck = defaultDeckMap[lang];
+        const defaultDecks = (defaultDeckMap[lang] || []).filter(Boolean);
 
         if (!decks || decks.length === 0) {
-            if (defaultDeck) {
-                decks = [JSON.parse(JSON.stringify(defaultDeck))];
+            if (defaultDecks.length > 0) {
+                decks = JSON.parse(JSON.stringify(defaultDecks));
                 this.saveDecks(lang, decks);
             }
-        }
-
-        // Đảm bảo bài mẫu mặc định luôn có trong danh sách
-        if (defaultDeck && !decks.some(d => this.isSampleDeck(d, lang))) {
-            decks.push(JSON.parse(JSON.stringify(defaultDeck)));
-            this.saveDecks(lang, decks);
+        } else {
+            // Đảm bảo tất cả bài mẫu mặc định luôn có trong danh sách
+            let added = false;
+            defaultDecks.forEach(defDeck => {
+                if (defDeck && !decks.some(d => d.id === defDeck.id)) {
+                    decks.push(JSON.parse(JSON.stringify(defDeck)));
+                    added = true;
+                }
+            });
+            if (added) {
+                this.saveDecks(lang, decks);
+            }
         }
 
         // BẢO VỆ DỮ LIỆU & QUYỀN RIÊNG TƯ:
@@ -239,16 +250,18 @@ class StudyStorage {
 
             // Đảm bảo bài mẫu mặc định luôn có mặt trong danh sách
             const defaultDeckMap = {
-                ko: window.DEFAULT_KO_DECK,
-                ja: window.DEFAULT_JA_DECK,
-                zh: window.DEFAULT_ZH_DECK,
-                en: window.DEFAULT_EN_DECK
+                ko: [window.DEFAULT_KO_DECK],
+                ja: [window.DEFAULT_JA_DECK],
+                zh: [window.DEFAULT_ZH_DECK],
+                en: Array.isArray(window.DEFAULT_EN_DECKS) ? window.DEFAULT_EN_DECKS : [window.DEFAULT_EN_DECK]
             };
-            const defaultDeck = defaultDeckMap[lang];
-            if (defaultDeck && !localDecks.some(d => this.isSampleDeck(d, lang))) {
-                localDecks.push(JSON.parse(JSON.stringify(defaultDeck)));
-                changed = true;
-            }
+            const defaultDecks = (defaultDeckMap[lang] || []).filter(Boolean);
+            defaultDecks.forEach(defDeck => {
+                if (defDeck && !localDecks.some(d => d.id === defDeck.id)) {
+                    localDecks.push(JSON.parse(JSON.stringify(defDeck)));
+                    changed = true;
+                }
+            });
 
             // Sắp xếp: Các bài học cá nhân của người dùng lên đầu (mới nhất trước), bài mẫu ở sau
             localDecks.sort((a, b) => {

@@ -497,7 +497,7 @@
                 window.DEFAULT_KO_DECK,
                 window.DEFAULT_JA_DECK,
                 window.DEFAULT_ZH_DECK,
-                window.DEFAULT_EN_DECK
+                ...(Array.isArray(window.DEFAULT_EN_DECKS) ? window.DEFAULT_EN_DECKS : [window.DEFAULT_EN_DECK])
             ].filter(Boolean);
 
             allCommunityDecks = [...cloudDecks];
