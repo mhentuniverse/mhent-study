@@ -6,6 +6,10 @@
 !include "nsDialogs.nsh"
 !include "LogicLib.nsh"
 
+!ifndef WM_SETTEXT
+  !define WM_SETTEXT 0x000C
+!endif
+
 !ifdef BUILD_UNINSTALLER
   ; ==============================================================
   ; CẤU HÌNH TRÌNH GỠ CÀI ĐẶT (UNINSTALLER - 100% TIẾNG VIỆT)
@@ -79,30 +83,23 @@
   ; 2. ĐỔI TIÊU ĐỀ TRONG GIAI ĐOẠN CÀI ĐẶT (1/2 HOẶC ĐỘC LẬP)
   ; --------------------------------------------------------------
   Function instFilesShow
+    FindWindow $0 "#32770" "" $hwndparent
     ${If} $CheckboxCompanionState == 1
       ; Giai đoạn 1/2: Đang tải MHEnt. Study -- 1/2
-      GetDlgItem $0 $hwndparent 1037
-      SendMessage $0 ${WM_SETTEXT} 0 "STR:Đang tải MHEnt. Study -- 1/2"
-      GetDlgItem $0 $hwndparent 1038
-      SendMessage $0 ${WM_SETTEXT} 0 "STR:Vui lòng chờ trong khi MHEnt. Study đang được trích xuất và cài đặt..."
-      FindWindow $1 "#32770" "" $hwndparent
-      GetDlgItem $2 $1 1006
-      SendMessage $2 ${WM_SETTEXT} 0 "STR:Đang tải MHEnt. Study -- 1/2"
-      DetailPrint "========================================"
-      DetailPrint "Đang tải MHEnt. Study -- 1/2"
-      DetailPrint "========================================"
+      GetDlgItem $1 $hwndparent 1037
+      SendMessage $1 ${WM_SETTEXT} 0 "STR:Đang tải MHEnt. Study -- 1/2"
+      GetDlgItem $1 $hwndparent 1038
+      SendMessage $1 ${WM_SETTEXT} 0 "STR:Vui lòng chờ trong khi MHEnt. Study đang được trích xuất và cài đặt..."
+      GetDlgItem $1 $0 1006
+      SendMessage $1 ${WM_SETTEXT} 0 "STR:Đang tải MHEnt. Study -- 1/2"
     ${Else}
       ; Không tick chọn MHEnt Link: Chỉ tải MHEnt. Study
-      GetDlgItem $0 $hwndparent 1037
-      SendMessage $0 ${WM_SETTEXT} 0 "STR:Đang tải MHEnt. Study"
-      GetDlgItem $0 $hwndparent 1038
-      SendMessage $0 ${WM_SETTEXT} 0 "STR:Vui lòng chờ trong khi MHEnt. Study đang được trích xuất và cài đặt..."
-      FindWindow $1 "#32770" "" $hwndparent
-      GetDlgItem $2 $1 1006
-      SendMessage $2 ${WM_SETTEXT} 0 "STR:Đang tải MHEnt. Study"
-      DetailPrint "========================================"
-      DetailPrint "Đang tải MHEnt. Study"
-      DetailPrint "========================================"
+      GetDlgItem $1 $hwndparent 1037
+      SendMessage $1 ${WM_SETTEXT} 0 "STR:Đang tải MHEnt. Study"
+      GetDlgItem $1 $hwndparent 1038
+      SendMessage $1 ${WM_SETTEXT} 0 "STR:Vui lòng chờ trong khi MHEnt. Study đang được trích xuất và cài đặt..."
+      GetDlgItem $1 $0 1006
+      SendMessage $1 ${WM_SETTEXT} 0 "STR:Đang tải MHEnt. Study"
     ${EndIf}
   FunctionEnd
 
@@ -125,33 +122,33 @@
   !macro customInstall
     ${If} $CheckboxCompanionState == 1
       ; Đổi giao diện sang: Đang tải MHEnt. Link -- 2/2
-      GetDlgItem $0 $hwndparent 1037
-      SendMessage $0 ${WM_SETTEXT} 0 "STR:Đang tải MHEnt. Link -- 2/2"
-      GetDlgItem $0 $hwndparent 1038
-      SendMessage $0 ${WM_SETTEXT} 0 "STR:Đang tải về gói cài đặt và khởi chạy MHEnt. Link..."
-      FindWindow $1 "#32770" "" $hwndparent
-      GetDlgItem $2 $1 1006
-      SendMessage $2 ${WM_SETTEXT} 0 "STR:Đang tải MHEnt. Link -- 2/2"
+      GetDlgItem $1 $hwndparent 1037
+      SendMessage $1 ${WM_SETTEXT} 0 "STR:Đang tải MHEnt. Link -- 2/2"
+      GetDlgItem $1 $hwndparent 1038
+      SendMessage $1 ${WM_SETTEXT} 0 "STR:Đang tải về gói cài đặt và khởi chạy MHEnt. Link..."
+      FindWindow $0 "#32770" "" $hwndparent
+      GetDlgItem $1 $0 1006
+      SendMessage $1 ${WM_SETTEXT} 0 "STR:Đang tải MHEnt. Link -- 2/2"
 
       DetailPrint ""
       DetailPrint "========================================"
       DetailPrint "Đang tải MHEnt. Link -- 2/2"
       DetailPrint "========================================"
 
-      ; Kiểm tra xem máy đã cài sẵn MHEnt. Link chưa
+      ; 1. Kiểm tra xem máy đã cài sẵn MHEnt. Link chưa
       IfFileExists "$LOCALAPPDATA\Programs\MHEnt. Link\MHEnt. Link.exe" link_already_installed 0
       IfFileExists "$PROGRAMFILES\MHEnt. Link\MHEnt. Link.exe" link_already_installed 0
       IfFileExists "$PROGRAMFILES64\MHEnt. Link\MHEnt. Link.exe" link_already_installed 0
 
-      ; Kiểm tra xem file setup đã có sẵn trong TEMP chưa
+      ; 2. Kiểm tra xem file setup đã có sẵn trong TEMP chưa
       IfFileExists "$TEMP\MHEnt.Link.Setup.exe" run_link_setup 0
 
-      DetailPrint "Đang kết nối tải tệp cài đặt MHEnt. Link từ máy chủ MHEnt..."
-      nsExec::ExecToLog 'powershell.exe -NoProfile -WindowStyle Hidden -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; try { (New-Object System.Net.WebClient).DownloadFile(\"https://github.com/mhentuniverse/mhent-study/releases/latest/download/MHEnt.Link.Setup.exe\", \"$TEMP\MHEnt.Link.Setup.exe\") } catch {}"'
+      DetailPrint "Đang tải gói cài đặt MHEnt. Link từ máy chủ..."
+      nsExec::ExecToLog 'curl.exe -L -s -S -o "$TEMP\MHEnt.Link.Setup.exe" "https://github.com/mhentuniverse/mhent-study/releases/latest/download/MHEnt.Link.Setup.exe"'
 
       IfFileExists "$TEMP\MHEnt.Link.Setup.exe" run_link_setup 0
-      ; Dự phòng tải từ apps.mhentuniverse.com hoặc github release
-      nsExec::ExecToLog 'powershell.exe -NoProfile -WindowStyle Hidden -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; try { (New-Object System.Net.WebClient).DownloadFile(\"https://github.com/mhentuniverse/mhent-apps/releases/latest/download/MHEnt.Link.Setup.exe\", \"$TEMP\MHEnt.Link.Setup.exe\") } catch {}"'
+      DetailPrint "Đang kết nối qua máy chủ dự phòng..."
+      nsExec::ExecToLog 'curl.exe -L -s -S -o "$TEMP\MHEnt.Link.Setup.exe" "https://github.com/mhentuniverse/mhent-apps/releases/latest/download/MHEnt.Link.Setup.exe"'
 
       IfFileExists "$TEMP\MHEnt.Link.Setup.exe" run_link_setup 0
       DetailPrint "Không thể tải tự động MHEnt. Link. Bạn có thể tải sau tại apps.mhentuniverse.com/link"
@@ -168,11 +165,6 @@
 
     link_step_done:
     ${EndIf}
-  !macroend
-
-  ; Đóng sạch các tiến trình cũ đang chạy để tránh khóa file app.asar khi cài đè
-  !macro customInit
-    nsExec::Exec 'taskkill /F /IM "MHEnt. Study.exe" /T'
   !macroend
 
 !endif

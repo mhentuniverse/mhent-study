@@ -97,7 +97,7 @@
       "installerHeaderIcon": "assets/study-logo.ico",
       "installerSidebar": "installer/sidebar-ins.bmp",
       "uninstallerSidebar": "installer/sidebar-ins.bmp",
-      "license": "installer/license.txt",
+      "license": "installer/license.rtf",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "MHEnt. Study",
