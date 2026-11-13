@@ -442,6 +442,9 @@ class LyricsHubApp {
         const langMap = { en: 'Tiếng Anh', ko: 'Tiếng Hàn', ja: 'Tiếng Nhật', zh: 'Tiếng Trung', vi: 'Tiếng Việt' };
         if (langBadge) langBadge.textContent = langMap[song.lang] || 'Đa ngôn ngữ';
 
+        // Thông báo cập nhật bài hát sang Discord Rich Presence
+        this.notifyDiscordPresence();
+
         // Tải độ lệch pha đã lưu cho bài hát này (Time Offset)
         this.loadOffsetForSong(song.id);
 
@@ -546,14 +549,17 @@ class LyricsHubApp {
                             this.isPlaying = true;
                             this.updatePlayBtnUi();
                             this.startPlaybackTracker();
+                            this.notifyDiscordPresence();
                         } else if (event.data === YT.PlayerState.PAUSED) {
                             this.isPlaying = false;
                             this.updatePlayBtnUi();
                             this.stopPlaybackTracker();
+                            this.notifyDiscordPresence();
                         } else if (event.data === YT.PlayerState.ENDED) {
                             this.isPlaying = false;
                             this.updatePlayBtnUi();
                             this.stopPlaybackTracker();
+                            this.notifyDiscordPresence();
                         }
                     }
                 }
@@ -2287,6 +2293,41 @@ QUY TẮC ĐẦU RA:
             }
         }
         this.updatePlayBtnUi();
+        this.notifyDiscordPresence();
+    }
+
+    notifyDiscordPresence() {
+        if (!window.MHEntDiscord || typeof window.MHEntDiscord.setLyricsActivity !== 'function') return;
+        if (!this.currentSong) return;
+
+        let curTime = 0;
+        if (this.useYouTube && this.ytPlayer && typeof this.ytPlayer.getCurrentTime === 'function') {
+            try { curTime = this.ytPlayer.getCurrentTime() || 0; } catch (e) {}
+        } else if (this.audioPlayer) {
+            curTime = this.audioPlayer.currentTime || 0;
+        }
+
+        let dur = this.duration || 0;
+        if (this.useYouTube && this.ytPlayer && typeof this.ytPlayer.getDuration === 'function') {
+            try {
+                const d = this.ytPlayer.getDuration();
+                if (d && d > 0) dur = d;
+            } catch (e) {}
+        } else if (this.audioPlayer && this.audioPlayer.duration) {
+            dur = this.audioPlayer.duration;
+        }
+        if (!dur && this.currentSong.duration) dur = this.currentSong.duration;
+
+        window.MHEntDiscord.setLyricsActivity({
+            title: this.currentSong.title,
+            artist: this.currentSong.artist,
+            language: this.currentSong.lang || this.currentSong.language || 'ja',
+            currentTime: curTime,
+            duration: dur || 210,
+            isPlaying: Boolean(this.isPlaying),
+            coverUrl: this.currentSong.thumbnail || this.currentSong.cover,
+            songId: this.currentSong.id
+        });
     }
 
     startPlaybackTracker() {

@@ -5,4 +5,5 @@ echo   MHEnt Study — Music & Language Sanctuary Desktop
 echo ===================================================
 echo Dang khoi dong ung dung...
 set "PATH=C:\Program Files\nodejs;%PATH%"
+set "ELECTRON_RUN_AS_NODE="
 npm.cmd start

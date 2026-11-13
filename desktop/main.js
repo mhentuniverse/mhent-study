@@ -12,7 +12,11 @@ const discordManager = new DiscordRPCManager();
 
 // User-Agent chuẩn Chrome hiện đại để tránh bị Google OAuth chặn lỗi 'disallowed_useragent'
 const CHROME_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
-app.userAgentFallback = CHROME_USER_AGENT;
+try {
+  if (app && 'userAgentFallback' in app) {
+    app.userAgentFallback = CHROME_USER_AGENT;
+  }
+} catch (e) {}
 
 // Đăng ký custom protocol mhentstudy:// cho Desktop để nhận đăng nhập từ Cổng Định Danh MHEnt ID
 if (process.defaultApp) {
@@ -51,10 +55,11 @@ function startLocalServer() {
         const parsedUrl = url.parse(req.url);
         let pathname = decodeURIComponent(parsedUrl.pathname);
 
-        // Thiết lập CORS header cho phép Web Browser (localhost hoặc study.mhentuniverse.com) gọi API
+        // Thiết lập CORS & PNA header cho phép Web Browser (localhost hoặc study.mhentuniverse.com) gọi API
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        res.setHeader('Access-Control-Allow-Private-Network', 'true');
 
         if (req.method === 'OPTIONS') {
           res.writeHead(204);

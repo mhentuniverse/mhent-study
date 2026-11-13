@@ -214,21 +214,24 @@
             const curSec = Math.floor(currentTime || 0);
             const durSec = Math.floor(duration || 0);
 
+            const langMap = { en: 'Tiếng Anh 🇬🇧', ko: 'Tiếng Hàn 🇰🇷', ja: 'Tiếng Nhật 🇯🇵', zh: 'Tiếng Trung 🇨🇳', vi: 'Tiếng Việt 🇻🇳' };
+            const langLabel = langMap[language] || 'Lyrics Hub 🎵';
+
             const activity = {
                 details: `${(title || 'Bài Hát').substring(0, 80)}`,
-                state: `${(artist || 'Nghệ Sĩ').substring(0, 80)} • Lyrics Hub 🎵`,
+                state: `${(artist || 'Nghệ Sĩ').substring(0, 60)} • ${langLabel}`,
                 type: 2, // 2: Listening to
                 largeImage: coverUrl && coverUrl.startsWith('http')
                     ? coverUrl
                     : 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f3a7.png',
-                largeImageText: 'MHEnt Lyrics Study Hub',
+                largeImageText: `${(title || 'MHEnt Study').substring(0, 35)} (${(artist || '').substring(0, 25)})`,
                 smallImage: isPlaying
                     ? 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/25b6.png'
                     : 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/23f8.png',
-                smallImageText: isPlaying ? 'Đang phát' : 'Tạm dừng',
+                smallImageText: isPlaying ? 'Đang phát • Lyrics Hub' : 'Tạm dừng • Lyrics Hub',
                 buttons: [
-                    { label: 'Nghe & Học cùng 🎧', url: songId ? `https://study.mhentuniverse.com/lyrics?song=${encodeURIComponent(songId)}` : window.location.href },
-                    { label: 'Lyrics Hub 🎶', url: 'https://study.mhentuniverse.com/lyrics' }
+                    { label: 'Nghe & Học cùng 🎧', url: songId ? `https://study.mhentuniverse.com/lyrics?song=${encodeURIComponent(songId)}` : 'https://study.mhentuniverse.com/lyrics' },
+                    { label: 'MHEnt Universe 🌌', url: 'https://www.mhentuniverse.com' }
                 ]
             };
 
@@ -316,16 +319,7 @@
             // 2. Sổ từ vựng
             if (path.includes('vocab')) {
                 const lang = path.includes('/ja/') ? 'ja' : path.includes('/ko/') ? 'ko' : path.includes('/zh/') ? 'zh' : 'en';
-                const urlParams = new URLSearchParams(window.location.search);
-                const deckId = urlParams.get('deck') || 'Học Tập Nền Tảng';
-
-                this.setVocabActivity({
-                    deckTitle: deckId.replace(/_/g, ' ').toUpperCase(),
-                    language: lang,
-                    currentCount: 0,
-                    totalCount: 30,
-                    deckId: deckId
-                });
+                this.hookVocabSheet(lang);
                 return;
             }
 
@@ -355,68 +349,77 @@
          * Móc nối sự kiện vào Lyrics Hub Player để phát hiện thời gian thực
          */
         hookLyricsHub() {
-            const checkPlayer = setInterval(() => {
-                if (window.lyricsHub) {
-                    clearInterval(checkPlayer);
+            let lastTrackKey = '';
+            let lastIsPlaying = null;
 
-                    // Lắng nghe sự kiện cập nhật của Lyrics Hub
-                    const originalPlaySong = window.lyricsHub.playSong;
-                    if (typeof originalPlaySong === 'function') {
-                        window.lyricsHub.playSong = (song) => {
-                            const result = originalPlaySong.apply(window.lyricsHub, [song]);
-                            this.setLyricsActivity({
-                                title: song.title,
-                                artist: song.artist,
-                                language: song.language,
-                                currentTime: 0,
-                                duration: song.duration || 210,
-                                isPlaying: true,
-                                coverUrl: song.cover || song.thumbnail,
-                                songId: song.id
-                            });
-                            return result;
-                        };
-                    }
+            const syncFromLyricsApp = () => {
+                const app = window.lyricsApp || window.lyricsHub;
+                if (!app || !app.currentSong) return;
 
-                    // Lắng nghe nút Play/Pause
-                    const audio = window.lyricsHub.audioPlayer;
-                    if (audio) {
-                        audio.addEventListener('play', () => {
-                            const song = window.lyricsHub.currentSong;
-                            if (song) {
-                                this.setLyricsActivity({
-                                    title: song.title,
-                                    artist: song.artist,
-                                    language: song.language,
-                                    currentTime: audio.currentTime,
-                                    duration: audio.duration,
-                                    isPlaying: true,
-                                    coverUrl: song.cover || song.thumbnail,
-                                    songId: song.id
-                                });
-                            }
-                        });
-
-                        audio.addEventListener('pause', () => {
-                            const song = window.lyricsHub.currentSong;
-                            if (song) {
-                                this.setLyricsActivity({
-                                    title: song.title,
-                                    artist: song.artist,
-                                    language: song.language,
-                                    currentTime: audio.currentTime,
-                                    duration: audio.duration,
-                                    isPlaying: false,
-                                    coverUrl: song.cover || song.thumbnail,
-                                    songId: song.id
-                                });
-                            }
-                        });
-                    }
+                const song = app.currentSong;
+                const isPlaying = Boolean(app.isPlaying);
+                let curTime = 0;
+                if (app.useYouTube && app.ytPlayer && typeof app.ytPlayer.getCurrentTime === 'function') {
+                    try { curTime = app.ytPlayer.getCurrentTime() || 0; } catch (e) {}
+                } else if (app.audioPlayer) {
+                    curTime = app.audioPlayer.currentTime || 0;
                 }
-            }, 500);
 
-            setTimeout(() => clearInterval(checkPlayer), 15000);
+                let dur = app.duration || (song && song.duration) || 210;
+                if (app.useYouTube && app.ytPlayer && typeof app.ytPlayer.getDuration === 'function') {
+                    try {
+                        const d = app.ytPlayer.getDuration();
+                        if (d && d > 0) dur = d;
+                    } catch (e) {}
+                }
+
+                const trackKey = `${song.id || song.title}_${isPlaying}`;
+                // Cập nhật khi đổi bài hoặc đổi trạng thái play/pause
+                if (trackKey !== lastTrackKey || isPlaying !== lastIsPlaying) {
+                    lastTrackKey = trackKey;
+                    lastIsPlaying = isPlaying;
+                    this.setLyricsActivity({
+                        title: song.title,
+                        artist: song.artist,
+                        language: song.lang || song.language || 'ja',
+                        currentTime: curTime,
+                        duration: dur,
+                        isPlaying: isPlaying,
+                        coverUrl: song.thumbnail || song.cover,
+                        songId: song.id
+                    });
+                }
+            };
+
+            // Kiểm tra định kỳ mỗi 1 giây để bắt kịp từng thao tác phát bài
+            setInterval(syncFromLyricsApp, 1000);
+            setTimeout(syncFromLyricsApp, 500);
+            setTimeout(syncFromLyricsApp, 1500);
+        }
+
+        /**
+         * Móc nối sự kiện vào Sổ Từ Vựng (Vocab Sheet)
+         */
+        hookVocabSheet(lang) {
+            let lastDeckId = '';
+            const syncFromSheet = () => {
+                const app = window.sheetApp;
+                if (!app) return;
+                const deck = app.currentDeck;
+                const deckId = deck ? (deck.id || deck.title) : '';
+                if (deckId !== lastDeckId && deck) {
+                    lastDeckId = deckId;
+                    this.setVocabActivity({
+                        deckTitle: deck.title || deck.id || 'Chuyên đề từ vựng',
+                        language: app.lang || lang,
+                        currentCount: deck.words ? deck.words.length : 0,
+                        totalCount: deck.words ? deck.words.length : 30,
+                        deckId: deck.id || ''
+                    });
+                }
+            };
+            setInterval(syncFromSheet, 1500);
+            setTimeout(syncFromSheet, 600);
         }
 
         // =========================================================
