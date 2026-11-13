@@ -12,7 +12,7 @@ if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.
   });
   // Tuyệt đối không can thiệp fetch trên localhost/APK
 } else {
-  const CACHE_NAME = 'mhent-study-v2.1.2';
+  const CACHE_NAME = 'mhent-study-v2.1.3';
   const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -128,6 +128,26 @@ if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.
             throw err;
           }
         })()
+      );
+      return;
+    }
+
+    // Network-First cho Scripts và Styles để luôn cập nhật tức thì (chống kẹt cookie/cache cũ)
+    if (url.pathname.startsWith('/js/') || url.pathname.startsWith('/css/')) {
+      event.respondWith(
+        fetch(req)
+          .then(async (networkRes) => {
+            const cleanRes = await cleanResponse(networkRes);
+            if (cleanRes && cleanRes.status === 200) {
+              const clone = cleanRes.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+            }
+            return cleanRes;
+          })
+          .catch(async () => {
+            const cached = await caches.match(req);
+            if (cached) return await cleanResponse(cached);
+          })
       );
       return;
     }
