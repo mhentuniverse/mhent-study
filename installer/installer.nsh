@@ -87,8 +87,9 @@
     IfFileExists "$PROGRAMFILES\MHEnt. Link\MHEnt. Link.exe" launch_prog 0
     IfFileExists "$PROGRAMFILES64\MHEnt. Link\MHEnt. Link.exe" launch_prog64 0
 
-    ; Chưa cài đặt: Mở trang tải MHEnt Link kèm tham số auto-download
-    ExecShell "open" "https://apps.mhentuniverse.com/link?download=true"
+    ; Chưa cài đặt: Tự động tải trực tiếp file setup MHEnt Link về %TEMP% và khởi chạy cài đặt (không mở trình duyệt tải song song)
+    DetailPrint "Dang tai bo cai dat MHEnt. Link..."
+    Exec 'powershell.exe -NoProfile -WindowStyle Hidden -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; try { (New-Object System.Net.WebClient).DownloadFile(\"https://github.com/mhentuniverse/mhent-apps/releases/latest/download/MHEnt.Link.Setup.exe\", \"$TEMP\MHEnt.Link.Setup.exe\"); Start-Process \"$TEMP\MHEnt.Link.Setup.exe\" } catch {}"'
     Goto link_done
 
   launch_localapp:
