@@ -150,6 +150,13 @@ jobs:
             NEWNAME="$(printf '%s' "$FNAME" | sed 's/ /-/g')"
             DEST="release-assets/windows/release/$NEWNAME"
             [ "$f" != "$DEST" ] && cp "$f" "$DEST"
+            # Provide permanent unversioned aliases for constant download URLs
+            if [[ "$FNAME" == *"Setup"* && "$FNAME" == *".exe" ]]; then
+              cp "$f" "release-assets/windows/release/MHEnt-Study-Setup.exe"
+              cp "$f" "release-assets/windows/release/MHEnt.Study.Setup.exe"
+            elif [[ ("$FNAME" == *"Portable"* || "$FNAME" != *"Setup"*) && "$FNAME" == *".exe" ]]; then
+              cp "$f" "release-assets/windows/release/MHEnt-Study-Portable.exe"
+            fi
           done < <(find release-assets/windows -type f \( -name '*.exe' -o -name '*.nsis.7z' \) -print0)
 
           # Flatten Android APKs from any artifact directory structure.
@@ -157,7 +164,10 @@ jobs:
             FNAME="$(basename "$f")"
             case "$FNAME" in
               app-debug.apk) NEWNAME="MHEnt-Study-Android-Debug-v${VERSION}.apk" ;;
-              app-release.apk|app-release-unsigned.apk) NEWNAME="MHEnt-Study-Android-Release-v${VERSION}.apk" ;;
+              app-release.apk|app-release-unsigned.apk)
+                NEWNAME="MHEnt-Study-Android-Release-v${VERSION}.apk"
+                cp "$f" "release-assets/android/release/MHEnt-Study-Release.apk"
+                ;;
               *) NEWNAME="MHEnt-Study-Android-v${VERSION}.apk" ;;
             esac
             DEST="release-assets/android/release/$NEWNAME"
