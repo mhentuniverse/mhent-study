@@ -675,9 +675,12 @@
                         </button>
                     </div>
 
-                    <div style="margin-top: 14px; text-align: center;">
+                    <div style="margin-top: 14px; text-align: center; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+                        <a href="https://accounts.mhentuniverse.com/profile" target="_blank" style="font-size: 11.5px; color: #7983f5; text-decoration: none; font-weight: 700;">
+                            <i class="fa-brands fa-discord"></i> Quản lý liên kết MHEnt ID
+                        </a>
                         <a href="javascript:void(0)" id="btn-open-custom-client" style="font-size: 11.5px; color: #60a5fa; text-decoration: none;">
-                            <i class="fa-solid fa-gear"></i> Tùy chỉnh Discord Application ID (Đổi tên hiển thị)
+                            <i class="fa-solid fa-gear"></i> Tùy chỉnh App ID
                         </a>
                     </div>
                 </div>
