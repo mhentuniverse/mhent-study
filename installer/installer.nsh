@@ -3,6 +3,9 @@
 ; Miyazaki Haruto Entertainment Co., Ltd.
 ; ================================================================
 
+!include "nsDialogs.nsh"
+!include "LogicLib.nsh"
+
 !ifdef BUILD_UNINSTALLER
   ; ==============================================================
   ; CẤU HÌNH TRÌNH GỠ CÀI ĐẶT (UNINSTALLER - 100% TIẾNG VIỆT)
@@ -27,14 +30,9 @@
   !define MUI_ABORTWARNING_TEXT "Bạn có chắc muốn hủy cài đặt MHEnt. Study không?"
 
   ; Điều khoản sử dụng
-  !define MUI_LICENSEPAGE_TEXT_TOP "Vui lòng đọc kỹ Điều Khoản Sử Dụng của MHEnt. Study trước khi cài đặt."
+  !define MUI_LICENSEPAGE_TEXT_TOP "Vui lòng đọc kỹ Điều Khoản & Bảo Mật của MHEnt Universe trước khi cài đặt:"
   !define MUI_LICENSEPAGE_TEXT_BOTTOM "Nếu bạn đồng ý với các điều khoản, chọn 'Tôi đồng ý' và nhấn Tiếp tục."
   !define MUI_LICENSEPAGE_CHECKBOX
-
-  ; Tùy chọn cài đặt kèm MHEnt. Link trên Trang Hoàn Tất (Finish Page)
-  !define MUI_FINISHPAGE_SHOWREADME ""
-  !define MUI_FINISHPAGE_SHOWREADME_TEXT "Tải kèm MHEnt. Link (Cầu nối Discord & Hệ sinh thái MHEnt)"
-  !define MUI_FINISHPAGE_SHOWREADME_FUNCTION "InstallOrDownloadMHEntLink"
 
   ; Trang hoàn tất cài đặt
   !define MUI_FINISHPAGE_TITLE "Cài đặt hoàn tất! 🎉"
@@ -43,13 +41,53 @@
   !define MUI_FINISHPAGE_LINK "Truy cập study.mhentuniverse.com"
   !define MUI_FINISHPAGE_LINK_LOCATION "https://study.mhentuniverse.com/download"
 
-  ; Hàm kích hoạt mở hoặc tải MHEnt. Link (dùng thuần lệnh NSIS native)
+  ; Biến trạng thái tùy chọn tải kèm MHEnt. Link
+  Var DialogCompanion
+  Var CheckboxCompanion
+  Var CheckboxCompanionState
+  Var MHEntLinkTriggered
+
+  ; --------------------------------------------------------------
+  ; 1. BƯỚC TÙY CHỌN TẢI KÈM TRƯỚC GIAI ĐOẠN CÀI ĐẶT
+  ; --------------------------------------------------------------
+  Function CompanionPageCreate
+    nsDialogs::Create 1018
+    Pop $DialogCompanion
+    ${If} $DialogCompanion == error
+      Abort
+    ${EndIf}
+
+    ${NSD_CreateLabel} 0 0 100% 12u "PHẦN MỀM ĐỒNG HÀNH BỔ TRỢ (TÙY CHỌN)"
+    Pop $0
+
+    ${NSD_CreateLabel} 0 16u 100% 32u "MHEnt. Study kết hợp cùng MHEnt. Link giúp bạn tự động hiển thị trạng thái học tập (Sổ từ vựng, Thẻ ghi nhớ 3D, Nghe nhạc) trực tiếp lên hồ sơ Discord cá nhân và đồng bộ Cổng Định Danh MHEnt ID.$\r$\n$\r$\nBạn có muốn tải kèm MHEnt. Link không?"
+    Pop $0
+
+    ${NSD_CreateCheckbox} 0 54u 100% 15u "Tải và cài đặt kèm MHEnt. Link — Cầu nối Discord Rich Presence (Khuyên dùng)"
+    Pop $CheckboxCompanion
+
+    ; Mặc định tích chọn sẵn
+    ${NSD_SetState} $CheckboxCompanion 1
+
+    nsDialogs::Show
+  FunctionEnd
+
+  Function CompanionPageLeave
+    ${NSD_GetState} $CheckboxCompanion $CheckboxCompanionState
+  FunctionEnd
+
+  ; Hàm kích hoạt mở hoặc tải MHEnt. Link
   Function InstallOrDownloadMHEntLink
+    ${If} $MHEntLinkTriggered == "1"
+      Return
+    ${EndIf}
+    StrCpy $MHEntLinkTriggered "1"
+
     IfFileExists "$LOCALAPPDATA\Programs\MHEnt. Link\MHEnt. Link.exe" launch_localapp 0
     IfFileExists "$PROGRAMFILES\MHEnt. Link\MHEnt. Link.exe" launch_prog 0
     IfFileExists "$PROGRAMFILES64\MHEnt. Link\MHEnt. Link.exe" launch_prog64 0
 
-    ; Chưa cài đặt: Tự động mở trang tải MHEnt Link kèm tham số auto-download
+    ; Chưa cài đặt: Mở trang tải MHEnt Link kèm tham số auto-download
     ExecShell "open" "https://apps.mhentuniverse.com/link?download=true"
     Goto link_done
 
@@ -72,6 +110,23 @@
     !define MUI_WELCOMEPAGE_TITLE "Chào mừng bạn đến với MHEnt. Study!"
     !define MUI_WELCOMEPAGE_TEXT "Trình cài đặt sẽ hướng dẫn bạn cài đặt $(^NameDA) lên máy tính.$\r$\n$\r$\nMHEnt. Study là không gian học ngoại ngữ đa vũ trụ — Tiếng Hàn, Nhật, Trung và Anh — với tính năng học offline và đồng bộ đám mây.$\r$\n$\r$\nNhấn Tiếp tục để bắt đầu cài đặt."
     !insertmacro MUI_PAGE_WELCOME
+  !macroend
+
+  ; Hiển thị trang tùy chọn phần mềm đi kèm TRƯỚC KHI BẮT ĐẦU CÀI ĐẶT
+  !macro customPageAfterChangeDir
+    Page custom CompanionPageCreate CompanionPageLeave
+  !macroend
+
+  ; Khởi chạy tải kèm MHEnt. Link nếu người dùng đã chọn
+  !macro customInstall
+    ${If} $CheckboxCompanionState == 1
+      Call InstallOrDownloadMHEntLink
+    ${EndIf}
+  !macroend
+
+  ; Đóng sạch các tiến trình cũ đang chạy để tránh khóa file app.asar khi cài đè
+  !macro customInit
+    nsExec::Exec 'taskkill /F /IM "MHEnt. Study.exe" /T'
   !macroend
 
 !endif
