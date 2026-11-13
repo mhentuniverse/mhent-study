@@ -281,6 +281,19 @@
             const curSec = Math.floor(currentTime || 0);
             const durSec = Math.floor(duration || 0);
 
+            // Quản lý dọn dẹp khi tạm dừng (giống Spotify)
+            if (this.pauseClearTimer) {
+                clearTimeout(this.pauseClearTimer);
+                this.pauseClearTimer = null;
+            }
+
+            if (!isPlaying) {
+                // Khi tạm dừng, giữ trạng thái pause trong 20s rồi tự động xóa khỏi Discord
+                this.pauseClearTimer = setTimeout(() => {
+                    this.clearActivity();
+                }, 20000);
+            }
+
             const langMap = { en: 'Tiếng Anh 🇬🇧', ko: 'Tiếng Hàn 🇰🇷', ja: 'Tiếng Nhật 🇯🇵', zh: 'Tiếng Trung 🇨🇳', vi: 'Tiếng Việt 🇻🇳' };
             const langLabel = langMap[language] || 'Lyrics Hub 🎵';
 
@@ -291,11 +304,11 @@
                 largeImage: coverUrl && coverUrl.startsWith('http')
                     ? coverUrl
                     : 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f3a7.png',
-                largeImageText: `${(title || 'MHEnt Study').substring(0, 35)} (${(artist || '').substring(0, 25)})`,
+                largeImageText: `${(title || 'MHEnt Universe').substring(0, 35)} (${(artist || '').substring(0, 25)})`,
                 smallImage: isPlaying
                     ? 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/25b6.png'
                     : 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/23f8.png',
-                smallImageText: isPlaying ? 'Đang phát • Lyrics Hub' : 'Tạm dừng • Lyrics Hub',
+                smallImageText: isPlaying ? 'Đang phát • MHEnt Universe' : 'Tạm dừng • MHEnt Universe',
                 buttons: [
                     { label: 'Nghe & Học cùng 🎧', url: songId ? `https://study.mhentuniverse.com/lyrics?song=${encodeURIComponent(songId)}` : 'https://study.mhentuniverse.com/lyrics' },
                     { label: 'MHEnt Universe 🌌', url: 'https://www.mhentuniverse.com' }
@@ -364,21 +377,13 @@
         }
 
         /**
-         * Tự động phát hiện ngữ cảnh trang để set activity ban đầu
+         * Tự động phát hiện ngữ cảnh trang để móc nối sự kiện (không tự ý spam presence nếu không nghe/học)
          */
         autoDetectPageContext() {
             const path = window.location.pathname.toLowerCase();
 
-            // 1. Lyrics Hub
+            // 1. Lyrics Hub (chỉ hook, đợi người dùng bấm phát nhạc mới set activity)
             if (path.includes('lyrics')) {
-                // Sẽ được cập nhật khi lyrics-hub.js phát nhạc, đặt trạng thái chờ trước
-                this.setActivity({
-                    details: 'MHEnt Lyrics Study Hub 🎵',
-                    state: 'Đang chọn bài hát yêu thích',
-                    type: 2,
-                    largeImage: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f3a7.png',
-                    largeImageText: 'Lyrics Hub'
-                });
                 this.hookLyricsHub();
                 return;
             }
@@ -392,24 +397,8 @@
 
             // 3. Thẻ 3D Flashcards
             if (path.includes('flashcard')) {
-                const lang = path.includes('/ja/') ? 'ja' : path.includes('/ko/') ? 'ko' : path.includes('/zh/') ? 'zh' : 'en';
-                this.setFlashcardsActivity({
-                    deckTitle: 'Luyện Phản Xạ Thẻ 3D',
-                    language: lang,
-                    currentIndex: 1,
-                    totalCards: 25
-                });
                 return;
             }
-
-            // 4. Trang chủ Study
-            this.setActivity({
-                details: 'Khám Phá Vũ Trụ Ngôn Ngữ',
-                state: 'Tiếng Anh • Nhật • Hàn • Trung',
-                type: 0,
-                largeImage: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f30c.png',
-                largeImageText: 'MHEnt. Study Universe'
-            });
         }
 
         /**
