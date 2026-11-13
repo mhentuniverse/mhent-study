@@ -2462,3 +2462,224 @@ body {
 
 
 
+
+
+/* ==========================================================================
+   NATIVE APP RUNTIME STYLING (ELECTRON DESKTOP & PWA STANDALONE)
+   ========================================================================== */
+
+/* 1. Custom Frameless Desktop Titlebar (Discord/MHEnt. Link Style) */
+.mhent-desktop-titlebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 38px;
+    background: #070b13;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10000;
+    user-select: none;
+    -webkit-user-select: none;
+    font-family: 'Nunito', sans-serif;
+}
+
+body.is-desktop-app {
+    padding-top: 38px !important;
+}
+
+body.is-desktop-app .study-nav {
+    top: 38px !important;
+}
+
+.titlebar-drag-region {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    height: 100%;
+    -webkit-app-region: drag;
+    padding-left: 14px;
+    padding-right: 14px;
+    cursor: default;
+}
+
+.titlebar-left {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.titlebar-logo {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    object-fit: contain;
+}
+
+.titlebar-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    color: #e2e8f0;
+}
+
+.titlebar-tag {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    background: rgba(56, 189, 248, 0.12);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.titlebar-center {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.titlebar-pill {
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    background: rgba(88, 101, 242, 0.12);
+    border: 1px solid rgba(88, 101, 242, 0.25);
+    color: #818cf8;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.titlebar-window-controls {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    -webkit-app-region: no-drag;
+}
+
+.win-btn {
+    width: 46px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    outline: none;
+}
+
+.win-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+}
+
+.win-btn.win-close:hover {
+    background: #ef4444;
+    color: #ffffff;
+}
+
+/* 2. Native App Status Bar / Dock (Replaces Marketing Website Mega Footer) */
+body.is-app-mode .study-mega-footer {
+    display: none !important;
+}
+
+body.is-app-mode {
+    padding-bottom: 30px !important;
+    user-select: none;
+    -webkit-user-select: none;
+    overscroll-behavior-y: none;
+}
+
+body.is-app-mode input,
+body.is-app-mode textarea,
+body.is-app-mode [contenteditable="true"] {
+    user-select: text;
+    -webkit-user-select: text;
+}
+
+.mhent-app-status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 28px;
+    background: #070b13;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    z-index: 9999;
+    user-select: none;
+    -webkit-user-select: none;
+    font-family: 'Nunito', sans-serif;
+}
+
+.status-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+.status-badge-offline {
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    font-size: 9.5px;
+    font-weight: 800;
+}
+
+.status-bar-center {
+    font-size: 11px;
+    color: #cbd5e1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 50%;
+}
+
+.status-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.status-discord-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #818cf8;
+}
+
+.btn-pwa-pill {
+    background: linear-gradient(135deg, #0ea5e9, #6366f1) !important;
+    color: #fff !important;
+    border: none !important;
+    animation: pulseGlow 2s infinite alternate;
+}
+
+@keyframes pulseGlow {
+    from { box-shadow: 0 0 8px rgba(14, 165, 233, 0.3); }
+    to { box-shadow: 0 0 16px rgba(99, 102, 241, 0.6); }
+}

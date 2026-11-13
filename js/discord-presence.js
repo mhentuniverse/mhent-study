@@ -608,6 +608,11 @@
                 dot.style.background = '#64748b';
                 text.textContent = this.isDesktop ? 'Discord Đang Chờ' : 'Discord (Web Bridge)';
             }
+
+            const tbText = document.getElementById('titlebarDiscordText');
+            if (tbText) tbText.textContent = text.textContent;
+            const sbText = document.getElementById('statusBarDiscordText');
+            if (sbText) sbText.textContent = text.textContent;
         }
 
         openSettingsModal() {

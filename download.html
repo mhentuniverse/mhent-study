@@ -431,6 +431,28 @@
             font-size: 0.78rem;
         }
 
+        
+        .platform-card.recommended {
+            border-color: #38bdf8 !important;
+            box-shadow: 0 0 35px rgba(56, 189, 248, 0.28) !important;
+            transform: translateY(-4px);
+        }
+        .recommended-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            font-size: 11px;
+            font-weight: 800;
+            margin-bottom: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         /* Buttons */
         .btn-download {
             display: flex;
@@ -722,7 +744,7 @@
         <p>Học ngoại ngữ mọi lúc mọi nơi. Hỗ trợ học offline, đồng bộ dữ liệu lên mây khi có mạng.</p>
         <div class="version-info">
             <i class="fas fa-tag" style="color: #a78bfa;"></i>
-            <strong>v1.0.0</strong>
+            <strong>v2.2.0 (Study 3.0)</strong>
             <span>•</span>
             <span id="releaseDate">Cập nhật mới nhất</span>
             <span>•</span>
@@ -738,13 +760,13 @@
         <div class="changelog-card">
             <div class="changelog-icon">🎉</div>
             <div class="changelog-content">
-                <h3>Có gì mới trong v1.0.0?</h3>
+                <h3>Có gì mới trong Study 3.0 (v2.2.0)?</h3>
                 <ul class="changelog-list">
-                    <li>Ra mắt ứng dụng desktop cho Windows (cài đặt & portable)</li>
-                    <li>Ra mắt ứng dụng Android (APK)</li>
-                    <li>Tính năng lưu bộ thẻ offline, học không cần mạng</li>
-                    <li>Đồng bộ tiến trình lên đám mây khi kết nối trở lại</li>
-                    <li>Hỗ trợ 4 ngôn ngữ: Tiếng Hàn, Nhật, Trung, Anh</li>
+                    <li>Giao diện Study 3.0 hoàn toàn mới: Khung hình rộng rãi, mượt mà chuẩn EdTech.</li>
+                    <li>Cửa sổ Desktop không viền hiện đại (Frameless) với thanh tiêu đề tích hợp như Discord & Spotify.</li>
+                    <li>Thanh trạng thái Native Status Bar tự động thay thế footer web khi chạy trên ứng dụng.</li>
+                    <li>Khắc phục triệt để lỗi từ chối cookie trên localhost, Dark Mode lưu tức thì.</li>
+                    <li>Đồng bộ trạng thái học tập và phát nhạc thời gian thực lên Discord Rich Presence.</li>
                 </ul>
             </div>
         </div>
@@ -998,6 +1020,7 @@
         }
 
         loadReleaseInfo();
+        autoDetectPlatform();
     </script>
 </body>
 

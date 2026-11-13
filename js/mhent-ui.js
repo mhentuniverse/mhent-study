@@ -926,7 +926,164 @@ window.openSideDrawer = function() {
     setTimeout(() => overlay.classList.add('show'), 10);
 };
 
+
+
+// ==========================================================================
+// 🚀 NATIVE APP RUNTIME & CUSTOM DESKTOP TITLEBAR (STUDY 3.0)
+// ==========================================================================
+function initNativeAppExperience() {
+    const isDesktop = Boolean(window.MHEntDesktop && window.MHEntDesktop.isDesktop);
+    const isStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+    const isCapacitor = Boolean(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+    const isApp = isDesktop || isStandalone || isCapacitor;
+
+    if (isApp) {
+        document.documentElement.classList.add('is-app-mode');
+        document.body.classList.add('is-app-mode');
+        renderAppStatusBar();
+    }
+
+    if (isDesktop) {
+        document.documentElement.classList.add('is-desktop-app');
+        document.body.classList.add('is-desktop-app');
+        renderDesktopTitlebar();
+    }
+
+    if (!isApp) {
+        setupPWAInstallPrompt();
+    }
+}
+
+function renderDesktopTitlebar() {
+    if (document.getElementById('mhent-desktop-titlebar')) return;
+
+    const titlebar = document.createElement('div');
+    titlebar.id = 'mhent-desktop-titlebar';
+    titlebar.className = 'mhent-desktop-titlebar';
+    titlebar.innerHTML = `
+        <div class="titlebar-drag-region" id="titlebarDragArea">
+            <div class="titlebar-left">
+                <img src="/assets/study-logo.png" alt="MHEnt Study Logo" class="titlebar-logo" onerror="this.src='/assets/icon-web.png'">
+                <span class="titlebar-title">MHEnt. Study</span>
+                <span class="titlebar-tag">DESKTOP APP</span>
+            </div>
+            <div class="titlebar-center">
+                <span class="titlebar-pill" id="titlebarDiscordPill">
+                    <span class="pulse-dot"></span> <span id="titlebarDiscordText">Discord: Sẵn sàng</span>
+                </span>
+            </div>
+        </div>
+        <div class="titlebar-window-controls">
+            <button class="win-btn win-min" id="winBtnMin" title="Thu nhỏ (Minimize)">
+                <i class="fa-solid fa-minus"></i>
+            </button>
+            <button class="win-btn win-max" id="winBtnMax" title="Phóng to (Maximize)">
+                <i class="fa-regular fa-square" id="winBtnMaxIcon"></i>
+            </button>
+            <button class="win-btn win-close" id="winBtnClose" title="Đóng (Close)">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    `;
+
+    document.body.prepend(titlebar);
+
+    // Event listeners
+    const btnMin = document.getElementById('winBtnMin');
+    const btnMax = document.getElementById('winBtnMax');
+    const btnClose = document.getElementById('winBtnClose');
+    const iconMax = document.getElementById('winBtnMaxIcon');
+    const dragArea = document.getElementById('titlebarDragArea');
+
+    if (btnMin) btnMin.onclick = () => window.MHEntDesktop?.minimizeWindow?.();
+    if (btnMax) {
+        btnMax.onclick = async () => {
+            await window.MHEntDesktop?.maximizeWindow?.();
+            if (window.MHEntDesktop?.isMaximized) {
+                const isMax = await window.MHEntDesktop.isMaximized();
+                if (iconMax) {
+                    iconMax.className = isMax ? 'fa-regular fa-window-restore' : 'fa-regular fa-square';
+                }
+            }
+        };
+    }
+    if (btnClose) btnClose.onclick = () => window.MHEntDesktop?.closeWindow?.();
+
+    if (dragArea) {
+        dragArea.ondblclick = () => btnMax?.click();
+    }
+
+    if (window.MHEntDesktop?.onWindowState) {
+        window.MHEntDesktop.onWindowState((isMax) => {
+            if (iconMax) {
+                iconMax.className = isMax ? 'fa-regular fa-window-restore' : 'fa-regular fa-square';
+            }
+        });
+    }
+}
+
+function renderAppStatusBar() {
+    if (document.getElementById('mhent-app-status-bar')) return;
+
+    const bar = document.createElement('div');
+    bar.id = 'mhent-app-status-bar';
+    bar.className = 'mhent-app-status-bar';
+    bar.innerHTML = `
+        <div class="status-bar-left">
+            <span class="status-dot"></span>
+            <span class="status-node-label">MHEnt Study Node (Local Core)</span>
+            <span class="status-badge-offline">Offline Ready</span>
+        </div>
+        <div class="status-bar-center">
+            <span id="appStatusActivity"><i class="fa-solid fa-graduation-cap"></i> Không Gian Học Ngoại Ngữ Đa Vũ Trụ</span>
+        </div>
+        <div class="status-bar-right">
+            <span class="status-discord-pill" id="statusBarDiscordPill">
+                <i class="fa-brands fa-discord"></i> <span id="statusBarDiscordText">Discord RPC Sẵn Sàng</span>
+            </span>
+            <span class="status-app-version">v2.2.0</span>
+        </div>
+    `;
+
+    document.body.appendChild(bar);
+}
+
+// PWA Install Prompt Handler for Web users
+let deferredPwaPrompt = null;
+function setupPWAInstallPrompt() {
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPwaPrompt = e;
+        showInstallPill();
+    });
+}
+
+function showInstallPill() {
+    const navActions = document.querySelector('.nav-study-actions');
+    if (!navActions || document.getElementById('btn-pwa-install')) return;
+
+    const btn = document.createElement('button');
+    btn.id = 'btn-pwa-install';
+    btn.className = 'auth-btn-pill btn-pwa-pill';
+    btn.innerHTML = '<i class="fa-solid fa-download"></i> Cài App';
+    btn.title = 'Cài đặt MHEnt Study về máy tính hoặc điện thoại';
+    btn.onclick = async () => {
+        if (deferredPwaPrompt) {
+            deferredPwaPrompt.prompt();
+            const choice = await deferredPwaPrompt.userChoice;
+            if (choice && choice.outcome === 'accepted') {
+                btn.remove();
+            }
+            deferredPwaPrompt = null;
+        } else {
+            window.location.href = '/download.html';
+        }
+    };
+    navActions.prepend(btn);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+    initNativeAppExperience();
     window.renderBottomNav();
 
     // Nhấp vào avatar người dùng trên Navbar để mở Drawer (hỗ trợ cả PC lẫn Mobile)

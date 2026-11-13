@@ -285,11 +285,13 @@ async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1366,
     height: 860,
-    minWidth: 480,
-    minHeight: 640,
+    minWidth: 800,
+    minHeight: 580,
     backgroundColor: '#070b13',
     title: 'MHEnt. Study — Không Gian Học Ngoại Ngữ Đa Vũ Trụ',
     icon: fs.existsSync(iconPath) ? iconPath : undefined,
+    frame: false,
+    titleBarStyle: 'hidden',
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -298,6 +300,18 @@ async function createWindow() {
       nodeIntegration: false,
       sandbox: false,
       webSecurity: false // Cho phép tải audio, video và tài nguyên cross-origin
+    }
+  });
+
+  mainWindow.on('maximize', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('desktop:window-state', true);
+    }
+  });
+
+  mainWindow.on('unmaximize', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('desktop:window-state', false);
     }
   });
 
