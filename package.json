@@ -1,6 +1,6 @@
 {
   "name": "mhent-study",
-  "version": "1.0.0",
+  "version": "2.2.0",
   "description": "MHEnt Study — Music & Language Sanctuary Desktop & Mobile App (MHEnt Universe)",
   "main": "desktop/main.js",
   "scripts": {
@@ -46,7 +46,7 @@
     "appId": "com.mhentuniverse.study",
     "productName": "MHEnt. Study",
     "copyright": "© 2026 Miyazaki Haruto Entertainment Co., Ltd.",
-    "buildVersion": "1.0.0",
+    "buildVersion": "2.2.0",
     "directories": {
       "output": "dist",
       "buildResources": "installer"
