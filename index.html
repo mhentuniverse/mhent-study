@@ -85,9 +85,9 @@
             </button>
 
             <!-- Nút đăng nhập -->
-            <button id="btn-login" class="auth-btn-pill" onclick="window.location.href='/login.html'">
+            <a id="btn-login" class="auth-btn-pill" href="/login.html" style="text-decoration: none;">
                 <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập
-            </button>
+            </a>
 
             <!-- Profile khi đã đăng nhập -->
             <div id="user-profile" class="user-chip" style="display: none;">
@@ -336,13 +336,14 @@
     </main>
 
     <!-- MEGA FOOTER PREMIER STUDY DIRECTORY -->
+    <!-- MEGA FOOTER PREMIER STUDY DIRECTORY -->
     <footer class="study-mega-footer">
         <div class="footer-container">
             <div class="footer-grid">
                 <!-- Cột 1: Thương hiệu MHEnt Study -->
                 <div class="footer-brand-col">
                     <a href="/" class="footer-brand-title">
-                        <img src="/assets/study-logo.png" alt="MHEnt Study Logo" class="footer-brand-logo">
+                        <img src="/assets/study-logo.png" alt="MHEnt Logo" class="footer-brand-logo" onerror="this.src='/assets/icon-web.png'">
                         <span class="footer-brand-name">MHEnt. Study</span>
                     </a>
                     <p class="footer-brand-slogan">
@@ -360,31 +361,31 @@
 
                 <!-- Cột 2: Các Phòng Học Ngoại Ngữ -->
                 <div class="footer-col">
-                    <h3 class="footer-col-heading"><i class="fa-solid fa-book-open" style="margin-right: 6px;"></i> Không Gian Học Tập</h3>
+                    <h3 class="footer-col-heading">📚 Không Gian Học Tập</h3>
                     <ul class="footer-links-list">
-                        <li><a href="/ja/index.html" class="footer-nav-link">🇯🇵 Tiếng Nhật (JLPT N5-N1)</a></li>
-                        <li><a href="/ko/index.html" class="footer-nav-link">🇰🇷 Tiếng Hàn (Hangeul & TOPIK)</a></li>
-                        <li><a href="/zh/index.html" class="footer-nav-link">🇨🇳 Tiếng Trung (HSK & Pinyin)</a></li>
-                        <li><a href="/en/index.html" class="footer-nav-link">🇬🇧 Tiếng Anh (44 Âm IPA)</a></li>
-                        <li><a href="/shared/index.html" class="footer-nav-link"><i class="fa-solid fa-folder-open" style="margin-right: 4px;"></i> Kho Bộ Thẻ Chia Sẻ</a></li>
+                        <li><a href="/ja" class="footer-nav-link">🇯🇵 Tiếng Nhật (JLPT N5-N1)</a></li>
+                        <li><a href="/ko" class="footer-nav-link">🇰🇷 Tiếng Hàn (Hangeul & TOPIK)</a></li>
+                        <li><a href="/zh" class="footer-nav-link">🇨🇳 Tiếng Trung (HSK & Pinyin)</a></li>
+                        <li><a href="/en" class="footer-nav-link">🇬🇧 Tiếng Anh (44 Âm IPA)</a></li>
+                        <li><a href="/shared" class="footer-nav-link">📂 Kho Bộ Thẻ Chia Sẻ</a></li>
                     </ul>
                 </div>
 
                 <!-- Cột 3: Đại Sảnh & Giải Trí -->
                 <div class="footer-col">
-                    <h3 class="footer-col-heading"><i class="fa-solid fa-film" style="margin-right: 6px;"></i> Đại Sảnh & Giải Trí</h3>
+                    <h3 class="footer-col-heading">🎬 Đại Sảnh & Giải Trí</h3>
                     <ul class="footer-links-list">
                         <li><a href="https://www.mhentuniverse.com" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Đại Sảnh MHEnt Universe</a></li>
                         <li><a href="https://www.mhentuniverse.com/cinema" target="_blank" rel="noopener noreferrer" class="footer-nav-link">MHEnt Cinema (Anime & Movie)</a></li>
                         <li><a href="https://www.mhentuniverse.com/arena" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Arena (Đấu Trí Trực Tuyến)</a></li>
                         <li><a href="https://www.mhentuniverse.com/game" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Game Center (Cờ Tướng, Cờ Vua)</a></li>
-                        <li><a href="/login.html" class="footer-nav-link">Cổng Định Danh Học Viên</a></li>
+                        <li><a href="/login" class="footer-nav-link">Cổng Định Danh Học Viên</a></li>
                     </ul>
                 </div>
 
                 <!-- Cột 4: Hệ Thống & Pháp Lý -->
                 <div class="footer-col">
-                    <h3 class="footer-col-heading"><i class="fa-solid fa-scale-balanced" style="margin-right: 6px;"></i> Pháp Lý & Hỗ Trợ</h3>
+                    <h3 class="footer-col-heading">⚖️ Pháp Lý & Hỗ Trợ</h3>
                     <ul class="footer-links-list">
                         <li><a href="https://docs.mhentuniverse.com/terms" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Điều khoản dịch vụ</a></li>
                         <li><a href="https://docs.mhentuniverse.com/privacy" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Chính sách bảo mật</a></li>

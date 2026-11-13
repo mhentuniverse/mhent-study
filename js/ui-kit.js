@@ -82,6 +82,23 @@
                 return Promise.resolve(true);
             };
         }
+
+        // 4. Safe Cross-Platform Dark Mode Handler (No localhost cookie domain errors)
+        window.toggleDarkMode = function() {
+            document.body.classList.toggle('dark-mode');
+            document.documentElement.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            try {
+                localStorage.setItem('mhent_dark_mode', isDark ? 'on' : 'off');
+                const isMHEntDomain = typeof window !== 'undefined' && window.location && window.location.hostname.endsWith('mhentuniverse.com');
+                const domainStr = isMHEntDomain ? '; domain=.mhentuniverse.com' : '';
+                document.cookie = `mhent_dark_mode=${isDark ? 'on' : 'off'}${domainStr}; path=/; max-age=31536000; SameSite=Lax`;
+            } catch (e) {
+                console.warn('[MHEnt Study] Could not save dark mode preference:', e);
+            }
+            const drawerSwitch = document.getElementById('drawer-dark-switch');
+            if (drawerSwitch) drawerSwitch.checked = isDark;
+        };
     }
 })();
 

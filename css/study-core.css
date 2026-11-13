@@ -723,6 +723,191 @@ body {
     letter-spacing: 0.02em;
 }
 
+/* ==========================================================================
+   LANGUAGE HUBS, TOOL GRIDS & PRACTICE ARENAS (STUDY 3.0)
+   ========================================================================== */
+
+/* Universal Language Hub Banner */
+.hub-banner {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(99, 102, 241, 0.06));
+    border: 1px solid var(--study-border);
+    border-radius: var(--radius-card);
+    padding: 30px 34px;
+    margin-bottom: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+    box-shadow: var(--study-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.hub-banner.ko {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(14, 165, 233, 0.08)), var(--study-surface);
+    border-color: rgba(236, 72, 153, 0.3);
+}
+
+.hub-banner.ja {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(245, 158, 11, 0.08)), var(--study-surface);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.hub-banner.zh {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(239, 68, 68, 0.08)), var(--study-surface);
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.hub-banner.en {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(14, 165, 233, 0.08)), var(--study-surface);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* Tool Grid - Responsive 3-columns on desktop, 2 on tablet, 1 on mobile */
+.tool-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+    margin-bottom: 34px;
+}
+@media (max-width: 1080px) {
+    .tool-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 640px) {
+    .tool-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.tool-box {
+    background: var(--study-surface);
+    border: 1px solid var(--study-border);
+    border-radius: var(--radius-card);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: var(--study-shadow);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
+}
+
+.tool-box:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--study-shadow-hover);
+    border-color: var(--accent-edu);
+}
+
+.tool-box.ko:hover { border-color: var(--color-ko); }
+.tool-box.ja:hover { border-color: var(--color-ja); }
+.tool-box.zh:hover { border-color: var(--color-zh); }
+.tool-box.en:hover { border-color: var(--color-en); }
+
+/* Practice Arena Grid & Mode Boxes */
+.practice-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    margin-top: 24px;
+}
+@media (max-width: 1100px) {
+    .practice-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 640px) {
+    .practice-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.mode-box {
+    background: var(--study-surface);
+    border: 1px solid var(--study-border);
+    border-radius: var(--radius-card);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: var(--study-shadow);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mode-box:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--study-shadow-hover);
+    border-color: var(--accent-edu);
+}
+
+.mode-box.ko:hover { border-color: var(--color-ko); }
+.mode-box.ja:hover { border-color: var(--color-ja); }
+.mode-box.zh:hover { border-color: var(--color-zh); }
+.mode-box.en:hover { border-color: var(--color-en); }
+
+.mode-icon {
+    font-size: 36px;
+    line-height: 1;
+}
+
+.mode-title {
+    font-size: 17px;
+    font-weight: 900;
+    margin: 0;
+    color: var(--study-text);
+}
+
+.mode-desc {
+    font-size: 13.5px;
+    color: var(--study-text-muted);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.mode-action {
+    margin-top: auto;
+    font-weight: 800;
+    font-size: 13.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--accent-edu);
+}
+
+/* Fluid Alphabet Layout */
+.alphabet-container {
+    max-width: 1440px;
+    width: min(95%, 1440px);
+    margin: 0 auto;
+    padding: 28px 0 54px 0;
+}
+
+/* Fluid Shared Decks Vault Layout */
+.shared-hero {
+    max-width: 1200px;
+    width: min(95%, 1200px);
+    margin: 2rem auto;
+    padding: 2.5rem;
+    background: var(--study-surface);
+    border: 1px solid var(--study-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--study-shadow);
+    text-align: center;
+}
+
+.community-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
 /* Footer gọn gàng (Legacy) */
 .study-footer {
     padding: 30px 24px;

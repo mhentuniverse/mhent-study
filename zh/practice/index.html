@@ -26,12 +26,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .practice-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 24px;
-        }
+        
         .mode-box {
             background: var(--study-surface);
             border: 1px solid var(--study-border);
@@ -80,7 +75,7 @@
 
     <nav class="study-nav">
         <a href="/" class="nav-brand-box">
-            <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="brand-avatar">
+            <img src="/assets/study-logo.png" alt="MHEnt Study Logo" class="brand-avatar" onerror="this.src=\'/assets/icon-web.png\'">
             <div class="brand-title-wrap">
                 <span class="brand-main-title">MHEnt. <span>Study</span></span>
                 <span class="brand-sub-badge">CHINESE SPACE</span>
@@ -108,7 +103,7 @@
         </div>
     </div>
 
-    <main class="study-wrapper" style="max-width: 1000px; margin: 30px auto; padding: 0 20px;">
+    <main class="study-wrapper">
         <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(239, 68, 68, 0.1)); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-card); padding: 24px; margin-bottom: 24px;">
             <span style="font-size: 13px; font-weight: 800; color: #f59e0b; text-transform: uppercase;">CHINESE ARENA</span>
             <h1 style="font-size: 26px; font-weight: 900; margin: 4px 0 8px 0;">🏋️ Phòng Luyện Tập Tiếng Trung Quốc</h1>
@@ -189,13 +184,14 @@
     </main>
 
 <!-- MEGA FOOTER PREMIER STUDY DIRECTORY -->
+    <!-- MEGA FOOTER PREMIER STUDY DIRECTORY -->
     <footer class="study-mega-footer">
         <div class="footer-container">
             <div class="footer-grid">
                 <!-- Cột 1: Thương hiệu MHEnt Study -->
                 <div class="footer-brand-col">
-                    <a onclick="window.location.href='/'" class="footer-brand-title" style="cursor: pointer;">
-                        <img src="/assets/avt-web.jpg" alt="MHEnt Logo" class="footer-brand-logo">
+                    <a href="/" class="footer-brand-title">
+                        <img src="/assets/study-logo.png" alt="MHEnt Logo" class="footer-brand-logo" onerror="this.src='/assets/icon-web.png'">
                         <span class="footer-brand-name">MHEnt. Study</span>
                     </a>
                     <p class="footer-brand-slogan">
@@ -215,11 +211,11 @@
                 <div class="footer-col">
                     <h3 class="footer-col-heading">📚 Không Gian Học Tập</h3>
                     <ul class="footer-links-list">
-                        <li><a onclick="window.location.href='/ja'" class="footer-nav-link">🇯🇵 Tiếng Nhật (JLPT N5-N1)</a></li>
-                        <li><a onclick="window.location.href='/ko'" class="footer-nav-link">🇰🇷 Tiếng Hàn (Hangeul & TOPIK)</a></li>
-                        <li><a onclick="window.location.href='/zh'" class="footer-nav-link">🇨🇳 Tiếng Trung (HSK & Pinyin)</a></li>
-                        <li><a onclick="window.location.href='/en'" class="footer-nav-link">🇬🇧 Tiếng Anh (44 Âm IPA)</a></li>
-                        <li><a onclick="window.location.href='/shared'" class="footer-nav-link">📂 Kho Bộ Thẻ Chia Sẻ</a></li>
+                        <li><a href="/ja" class="footer-nav-link">🇯🇵 Tiếng Nhật (JLPT N5-N1)</a></li>
+                        <li><a href="/ko" class="footer-nav-link">🇰🇷 Tiếng Hàn (Hangeul & TOPIK)</a></li>
+                        <li><a href="/zh" class="footer-nav-link">🇨🇳 Tiếng Trung (HSK & Pinyin)</a></li>
+                        <li><a href="/en" class="footer-nav-link">🇬🇧 Tiếng Anh (44 Âm IPA)</a></li>
+                        <li><a href="/shared" class="footer-nav-link">📂 Kho Bộ Thẻ Chia Sẻ</a></li>
                     </ul>
                 </div>
 
@@ -227,11 +223,11 @@
                 <div class="footer-col">
                     <h3 class="footer-col-heading">🎬 Đại Sảnh & Giải Trí</h3>
                     <ul class="footer-links-list">
-                        <li><a onclick="window.open('https://www.mhentuniverse.com', '_blank')" class="footer-nav-link">Đại Sảnh MHEnt Universe</a></li>
-                        <li><a onclick="window.open('https://www.mhentuniverse.com/cinema', '_blank')" class="footer-nav-link">MHEnt Cinema (Anime & Movie)</a></li>
-                        <li><a onclick="window.open('https://www.mhentuniverse.com/arena', '_blank')" class="footer-nav-link">Arena (Đấu Trí Trực Tuyến)</a></li>
-                        <li><a onclick="window.open('https://www.mhentuniverse.com/game', '_blank')" class="footer-nav-link">Game Center (Cờ Tướng, Cờ Vua)</a></li>
-                        <li><a onclick="window.location.href='/login'" class="footer-nav-link">Cổng Định Danh Học Viên</a></li>
+                        <li><a href="https://www.mhentuniverse.com" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Đại Sảnh MHEnt Universe</a></li>
+                        <li><a href="https://www.mhentuniverse.com/cinema" target="_blank" rel="noopener noreferrer" class="footer-nav-link">MHEnt Cinema (Anime & Movie)</a></li>
+                        <li><a href="https://www.mhentuniverse.com/arena" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Arena (Đấu Trí Trực Tuyến)</a></li>
+                        <li><a href="https://www.mhentuniverse.com/game" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Game Center (Cờ Tướng, Cờ Vua)</a></li>
+                        <li><a href="/login" class="footer-nav-link">Cổng Định Danh Học Viên</a></li>
                     </ul>
                 </div>
 
@@ -239,10 +235,10 @@
                 <div class="footer-col">
                     <h3 class="footer-col-heading">⚖️ Pháp Lý & Hỗ Trợ</h3>
                     <ul class="footer-links-list">
-                        <li><a onclick="window.open('https://docs.mhentuniverse.com/terms', '_blank')" class="footer-nav-link">Điều khoản dịch vụ</a></li>
-                        <li><a onclick="window.open('https://docs.mhentuniverse.com/privacy', '_blank')" class="footer-nav-link">Chính sách bảo mật</a></li>
-                        <li><a onclick="window.open('https://www.mhentuniverse.com/about', '_blank')" class="footer-nav-link">Về chúng tớ & Đóng góp ý kiến</a></li>
-                        <li><a onclick="window.open('https://www.facebook.com/mhentuniverse', '_blank')" class="footer-nav-link">Cộng đồng MHEnt Universe</a></li>
+                        <li><a href="https://docs.mhentuniverse.com/terms" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Điều khoản dịch vụ</a></li>
+                        <li><a href="https://docs.mhentuniverse.com/privacy" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Chính sách bảo mật</a></li>
+                        <li><a href="https://www.mhentuniverse.com/about" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Về chúng tớ & Đóng góp ý kiến</a></li>
+                        <li><a href="https://www.facebook.com/mhentuniverse" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Cộng đồng MHEnt Universe</a></li>
                     </ul>
                 </div>
             </div>
@@ -254,11 +250,11 @@
                     © 2026 <strong>Miyazaki Haruto Entertainment Co., Ltd.</strong> All rights reserved.
                 </div>
                 <div class="footer-social-strip">
-                    <a onclick="window.open('https://www.facebook.com/mharuto.entertainment/', '_blank')">
+                    <a href="https://www.facebook.com/mharuto.entertainment/" target="_blank" rel="noopener noreferrer">
                         <i class="fa-brands fa-facebook"></i> Fanpage
                     </a>
                     <span>•</span>
-                    <a onclick="window.open('https://www.facebook.com/mhentuniverse', '_blank')">
+                    <a href="https://www.facebook.com/mhentuniverse" target="_blank" rel="noopener noreferrer">
                         <i class="fa-solid fa-users"></i> Community
                     </a>
                     <span>•</span>
@@ -279,7 +275,9 @@
             document.documentElement.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
             localStorage.setItem('mhent_dark_mode', isDark ? 'on' : 'off');
-            document.cookie = `mhent_dark_mode=${isDark ? 'on' : 'off'}; domain=.mhentuniverse.com; path=/; max-age=31536000; SameSite=Lax`;
+            const isMHEntDomain = window.location.hostname.endsWith("mhentuniverse.com");
+            const domainAttr = isMHEntDomain ? "; domain=.mhentuniverse.com" : "";
+            document.cookie = `mhent_dark_mode=${isDark ? "on" : "off"}${domainAttr}; path=/; max-age=31536000; SameSite=Lax`;
         }
         if (document.documentElement.classList.contains('dark-mode') || localStorage.getItem('mhent_dark_mode') === 'on') document.body.classList.add('dark-mode');
     </script>

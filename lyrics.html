@@ -91,9 +91,9 @@
             </button>
 
             <!-- Nút đăng nhập -->
-            <button id="btn-login" class="auth-btn-pill" onclick="window.location.href='/login.html'">
+            <a id="btn-login" class="auth-btn-pill" href="/login.html" style="text-decoration: none;">
                 <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập
-            </button>
+            </a>
 
             <!-- Profile khi đã đăng nhập (Chỉ hiện Avatar tròn, bấm để mở Drawer thông tin chi tiết) -->
             <div id="user-profile" class="user-chip user-chip-avatar-only" style="display: none;" onclick="window.openSideDrawer && window.openSideDrawer()" title="Xem trang cá nhân & Menu Tiện ích (MHEnt Drawer)">
@@ -767,17 +767,18 @@
     <div id="study-toast-container" class="study-toast-container"></div>
 
     <!-- GLOBAL MEGA FOOTER -->
+    <!-- MEGA FOOTER PREMIER STUDY DIRECTORY -->
     <footer class="study-mega-footer">
         <div class="footer-container">
             <div class="footer-grid">
                 <!-- Cột 1: Thương hiệu MHEnt Study -->
                 <div class="footer-brand-col">
                     <a href="/" class="footer-brand-title">
-                        <img src="/assets/study-logo.png" alt="MHEnt Study Logo" class="footer-brand-logo">
+                        <img src="/assets/study-logo.png" alt="MHEnt Logo" class="footer-brand-logo" onerror="this.src='/assets/icon-web.png'">
                         <span class="footer-brand-name">MHEnt. Study</span>
                     </a>
                     <p class="footer-brand-slogan">
-                        Không Gian Học Ngoại Ngữ Đa Vũ Trụ & Học Qua Bài Hát Tương Tác. Đồng bộ lời Karaoke, bóc tách từ vựng học thuật bằng AISA AI.
+                        Không Gian Học Ngoại Ngữ Đa Vũ Trụ. Hệ thống ôn tập thẻ ghi nhớ 3D, sổ từ vựng thông minh và thi thử trắc nghiệm cùng AI.
                     </p>
                     <div class="footer-corp-meta">
                         Một phân khu học thuật trực thuộc <strong>Project MHEnt. Universe</strong>.<br>
@@ -791,32 +792,31 @@
 
                 <!-- Cột 2: Các Phòng Học Ngoại Ngữ -->
                 <div class="footer-col">
-                    <h3 class="footer-col-heading"><i class="fa-solid fa-book-open" style="margin-right: 6px;"></i> Không Gian Học Tập</h3>
+                    <h3 class="footer-col-heading">📚 Không Gian Học Tập</h3>
                     <ul class="footer-links-list">
-                        <li><a href="/lyrics.html" class="footer-nav-link" style="color: #38bdf8; font-weight: 700;"><i class="fa-solid fa-headphones" style="margin-right: 4px;"></i> Học Qua Lời Bài Hát (Mới)</a></li>
-                        <li><a href="/ja/index.html" class="footer-nav-link">🇯🇵 Tiếng Nhật (JLPT N5-N1)</a></li>
-                        <li><a href="/ko/index.html" class="footer-nav-link">🇰🇷 Tiếng Hàn (Hangeul & TOPIK)</a></li>
-                        <li><a href="/zh/index.html" class="footer-nav-link">🇨🇳 Tiếng Trung (HSK & Pinyin)</a></li>
-                        <li><a href="/en/index.html" class="footer-nav-link">🇬🇧 Tiếng Anh (44 Âm IPA)</a></li>
-                        <li><a href="/shared/index.html" class="footer-nav-link"><i class="fa-solid fa-folder-open" style="margin-right: 4px;"></i> Kho Bộ Thẻ Chia Sẻ</a></li>
+                        <li><a href="/ja" class="footer-nav-link">🇯🇵 Tiếng Nhật (JLPT N5-N1)</a></li>
+                        <li><a href="/ko" class="footer-nav-link">🇰🇷 Tiếng Hàn (Hangeul & TOPIK)</a></li>
+                        <li><a href="/zh" class="footer-nav-link">🇨🇳 Tiếng Trung (HSK & Pinyin)</a></li>
+                        <li><a href="/en" class="footer-nav-link">🇬🇧 Tiếng Anh (44 Âm IPA)</a></li>
+                        <li><a href="/shared" class="footer-nav-link">📂 Kho Bộ Thẻ Chia Sẻ</a></li>
                     </ul>
                 </div>
 
                 <!-- Cột 3: Đại Sảnh & Giải Trí -->
                 <div class="footer-col">
-                    <h3 class="footer-col-heading"><i class="fa-solid fa-film" style="margin-right: 6px;"></i> Đại Sảnh & Giải Trí</h3>
+                    <h3 class="footer-col-heading">🎬 Đại Sảnh & Giải Trí</h3>
                     <ul class="footer-links-list">
                         <li><a href="https://www.mhentuniverse.com" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Đại Sảnh MHEnt Universe</a></li>
                         <li><a href="https://www.mhentuniverse.com/cinema" target="_blank" rel="noopener noreferrer" class="footer-nav-link">MHEnt Cinema (Anime & Movie)</a></li>
                         <li><a href="https://www.mhentuniverse.com/arena" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Arena (Đấu Trí Trực Tuyến)</a></li>
                         <li><a href="https://www.mhentuniverse.com/game" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Game Center (Cờ Tướng, Cờ Vua)</a></li>
-                        <li><a href="/login.html" class="footer-nav-link">Cổng Định Danh Học Viên</a></li>
+                        <li><a href="/login" class="footer-nav-link">Cổng Định Danh Học Viên</a></li>
                     </ul>
                 </div>
 
                 <!-- Cột 4: Hệ Thống & Pháp Lý -->
                 <div class="footer-col">
-                    <h3 class="footer-col-heading"><i class="fa-solid fa-scale-balanced" style="margin-right: 6px;"></i> Pháp Lý & Hỗ Trợ</h3>
+                    <h3 class="footer-col-heading">⚖️ Pháp Lý & Hỗ Trợ</h3>
                     <ul class="footer-links-list">
                         <li><a href="https://docs.mhentuniverse.com/terms" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Điều khoản dịch vụ</a></li>
                         <li><a href="https://docs.mhentuniverse.com/privacy" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Chính sách bảo mật</a></li>
@@ -841,9 +841,7 @@
                         <i class="fa-solid fa-users"></i> Community
                     </a>
                     <span>•</span>
-                    <a href="https://discord.gg/mhentuniverse" target="_blank" rel="noopener noreferrer">
-                        <i class="fa-brands fa-discord"></i> Discord
-                    </a>
+                    <span style="opacity: 0.65;">Study v2.0</span>
                 </div>
             </div>
         </div>
