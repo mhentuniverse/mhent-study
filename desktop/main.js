@@ -3,11 +3,13 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const url = require('url');
+const { WebSocketServer } = require('ws');
 const DiscordRPCManager = require('./discord-manager');
 
 let mainWindow = null;
 let localServer = null;
 let localServerPort = 0;
+let wss = null;
 const discordManager = new DiscordRPCManager();
 
 // User-Agent chuẩn Chrome hiện đại để tránh bị Google OAuth chặn lỗi 'disallowed_useragent'
@@ -190,12 +192,61 @@ function startLocalServer() {
         localServer.removeListener('error', onError);
         localServerPort = localServer.address().port;
         console.log(`[MHEnt. Study Local Server] Listening on http://localhost:${localServerPort}`);
+
+        // Khởi động WebSocket Server phục vụ cầu nối Realtime 2 chiều cho Web Browser
+        try {
+          if (!wss) {
+            wss = new WebSocketServer({ server: localServer });
+            wss.on('connection', (ws) => {
+              // Gửi trạng thái Discord hiện tại ngay khi Web client kết nối
+              ws.send(JSON.stringify({ type: 'status', ...discordManager.getStatus() }));
+
+              ws.on('message', (raw) => {
+                try {
+                  const data = JSON.parse(raw);
+                  if (data.action === 'setActivity') {
+                    discordManager.setActivity(data.activity);
+                    ws.send(JSON.stringify({ type: 'ack', action: 'setActivity', success: true }));
+                  } else if (data.action === 'clearActivity') {
+                    discordManager.clearActivity();
+                    ws.send(JSON.stringify({ type: 'ack', action: 'clearActivity', success: true }));
+                  } else if (data.action === 'setClientId') {
+                    discordManager.setClientId(data.clientId);
+                    ws.send(JSON.stringify({ type: 'ack', action: 'setClientId', success: true }));
+                  }
+                } catch (err) {
+                  console.warn('[WS Message Error]:', err.message);
+                }
+              });
+            });
+
+            discordManager.on('ready', (user) => {
+              broadcastWs({ type: 'status', connected: true, ready: true, user });
+            });
+            discordManager.on('disconnected', () => {
+              broadcastWs({ type: 'status', connected: false, ready: false });
+            });
+          }
+        } catch (e) {
+          console.warn('[MHEnt Study WS Error]:', e);
+        }
+
         resolve(localServerPort);
       });
     }
 
     tryListen(PREFERRED_PORT);
   });
+}
+
+function broadcastWs(msg) {
+  if (!wss) return;
+  const raw = JSON.stringify(msg);
+  for (const client of wss.clients) {
+    if (client.readyState === 1) {
+      try { client.send(raw); } catch (e) {}
+    }
+  }
 }
 
 async function createWindow() {

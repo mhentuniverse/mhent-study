@@ -39,7 +39,8 @@
   },
   "dependencies": {
     "@capacitor/core": "^6.2.0",
-    "@xhayper/discord-rpc": "^1.5.1"
+    "@xhayper/discord-rpc": "^1.5.1",
+    "ws": "^8.23.0"
   },
   "build": {
     "appId": "com.mhentuniverse.study",

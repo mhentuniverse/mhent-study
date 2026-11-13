@@ -39,9 +39,8 @@
                     console.warn('[MHEnt Discord] Lỗi lấy status Desktop:', e);
                 }
             } else {
-                // Trên Web Browser: Kiểm tra cầu nối Localhost Desktop Helper
-                this.probeLocalBridge();
-                this.checkInterval = setInterval(() => this.probeLocalBridge(), 20000);
+                // Trên Web Browser: Khởi động WebSocket thời gian thực siêu tốc 2 chiều
+                this.connectWebSocket();
             }
 
             // Tự động phân tích trang hiện tại để phát tín hiệu Presence phù hợp
@@ -51,6 +50,51 @@
 
             // Gắn widget UI vào trang (nếu là trang có giao diện chính)
             this.injectDiscordUI();
+        }
+
+        connectWebSocket() {
+            if (this.isDesktop) return;
+            if (this.ws && (this.ws.readyState === 0 || this.ws.readyState === 1)) return;
+
+            try {
+                const ws = new WebSocket(`ws://127.0.0.1:${BRIDGE_HTTP_PORT}`);
+                this.ws = ws;
+
+                ws.onopen = () => {
+                    this.isBridgeConnected = true;
+                    this.updateUIPill();
+                    if (this.currentActivity) {
+                        try { ws.send(JSON.stringify({ action: 'setActivity', activity: this.currentActivity })); } catch(e){}
+                    }
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        const msg = JSON.parse(event.data);
+                        if (msg.type === 'status') {
+                            this.isBridgeConnected = Boolean(msg.ready);
+                            this.discordUser = msg.user || null;
+                            this.updateUIPill();
+                        }
+                    } catch (e) {}
+                };
+
+                ws.onclose = () => {
+                    this.isBridgeConnected = false;
+                    this.ws = null;
+                    this.updateUIPill();
+                    setTimeout(() => this.connectWebSocket(), 3000);
+                };
+
+                ws.onerror = () => {
+                    this.isBridgeConnected = false;
+                    this.updateUIPill();
+                    this.probeLocalBridge();
+                };
+            } catch (e) {
+                this.probeLocalBridge();
+                setTimeout(() => this.connectWebSocket(), 5000);
+            }
         }
 
         async probeLocalBridge() {
@@ -109,11 +153,22 @@
                 }
             }
 
-            // 3. Gửi qua Local Bridge nếu đang ở Web Browser
+            // 3. Gửi qua WebSocket Realtime tức thì (Độ trễ 0.001s, không bị Chrome chặn PNA hay preflight)
+            if (this.ws && this.ws.readyState === 1) {
+                try {
+                    this.ws.send(JSON.stringify({ action: 'setActivity', activity }));
+                    this.isBridgeConnected = true;
+                    this.updateUIPill();
+                    return true;
+                } catch (e) {}
+            }
+
+            // Fallback gửi qua HTTP nếu WebSocket đang kết nối lại
             try {
                 const res = await fetch(`http://127.0.0.1:${BRIDGE_HTTP_PORT}/api/discord-rpc`, {
                     method: 'POST',
                     mode: 'cors',
+                    cache: 'no-store',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'setActivity', activity })
                 });
