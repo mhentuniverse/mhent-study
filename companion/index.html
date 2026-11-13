@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MHEnt. Link — Trung Tâm Đồng Bộ & Cầu Nối Vũ Trụ</title>
+  <link rel="icon" type="image/png" href="assets/icon-logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-dark: #070b13;
+      --sidebar-bg: #090e18;
+      --stage-bg: #070b13;
+      --card-bg: rgba(15, 23, 42, 0.72);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.35);
+      --discord: #5865F2;
+      --discord-glow: rgba(88, 101, 242, 0.35);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* CUSTOM SLEEK SCROLLBAR */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(56, 189, 248, 0.35);
+    }
+
+    /* ========================================================
+       1. CUSTOM TITLEBAR (FRAMELESS DESKTOP WINDOW)
+       ======================================================== */
+    .app-titlebar {
+      height: 38px;
+      background: var(--sidebar-bg);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      -webkit-app-region: drag;
+      padding-left: 14px;
+      z-index: 1000;
+      flex-shrink: 0;
+    }
+
+    .titlebar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .titlebar-logo {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      object-fit: contain;
+    }
+    .titlebar-title {
+      font-size: 12.5px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .titlebar-tag {
+      font-size: 10.5px;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      font-weight: 800;
+    }
+
+    .titlebar-center {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      -webkit-app-region: no-drag;
+    }
+    .titlebar-pill {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: 0.2s;
+    }
+    .titlebar-pill.green {
+      background: rgba(34, 197, 94, 0.12);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    .titlebar-pill.discord {
+      background: rgba(88, 101, 242, 0.12);
+      color: #818cf8;
+      border: 1px solid rgba(88, 101, 242, 0.35);
+    }
+
+    .titlebar-window-controls {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      -webkit-app-region: no-drag;
+    }
+    .win-btn {
+      width: 46px;
+      height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .win-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #f8fafc;
+    }
+    .win-btn.close:hover {
+      background: #ef4444;
+      color: #ffffff;
+    }
+
+    /* ========================================================
+       2. APP SHELL LAYOUT (SIDEBAR + STAGE)
+       ======================================================== */
+    .app-shell {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 38px);
+      overflow: hidden;
+    }
+
+    /* LEFT SIDEBAR */
+    .app-sidebar {
+      width: 250px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      padding: 16px 12px;
+    }
+
+    .sidebar-brand-box {
+      padding: 8px 12px 18px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      margin-bottom: 14px;
+    }
+    .brand-eyebrow {
+      font-size: 9.5px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .brand-main-text {
+      font-size: 15px;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .brand-main-text i {
+      color: var(--accent);
+      font-size: 13px;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex: 1;
+    }
+    .nav-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #475569;
+      padding: 8px 12px 4px 12px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      color: #94a3b8;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .nav-item i {
+      font-size: 15px;
+      width: 20px;
+      text-align: center;
+      color: #64748b;
+      transition: color 0.2s ease;
+    }
+    .nav-item:hover {
+      color: #f1f5f9;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .nav-item:hover i {
+      color: var(--accent);
+    }
+    .nav-item.active {
+      color: #fff;
+      background: linear-gradient(90deg, rgba(56, 189, 248, 0.16) 0%, rgba(56, 189, 248, 0.04) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      font-weight: 800;
+    }
+    .nav-item.active i {
+      color: var(--accent);
+      filter: drop-shadow(0 0 8px var(--accent-glow));
+    }
+    .nav-badge-pill {
+      margin-left: auto;
+      font-size: 10.5px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      background: rgba(88, 101, 242, 0.25);
+      color: #a5b4fc;
+    }
+
+    /* USER PROFILE BOTTOM TILE (DISCORD/SPOTIFY STYLE) */
+    .sidebar-user-tile {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      margin-top: auto;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+    .user-avatar-wrap {
+      position: relative;
+      width: 38px;
+      height: 38px;
+      flex-shrink: 0;
+    }
+    .user-avatar-img {
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1.5px solid var(--accent);
+      background: #0f172a;
+    }
+    .user-online-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #22c55e;
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      border: 2px solid #090e18;
+    }
+    .user-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .user-name {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .user-role-text {
+      font-size: 11px;
+      color: #94a3b8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .user-btn-action {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .user-btn-action:hover {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+    }
+
+    /* RIGHT CONTENT WORKSPACE STAGE */
+    .app-stage {
+      flex: 1;
+      height: 100%;
+      overflow-y: auto;
+      background: radial-gradient(circle at 60% 0%, #151833 0%, #070b13 75%);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* VIEW PANES */
+    .view-pane {
+      display: none;
+      padding: 26px 36px 36px 36px;
+      max-width: 1240px;
+      width: 100%;
+      margin: 0 auto;
+      animation: fadeIn 0.25s ease-out;
+    }
+    .view-pane.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* HERO STAGE HEADER */
+    .stage-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .stage-title {
+      font-size: 22px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -0.2px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .stage-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+    .stage-header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* GLASS CARD SYSTEM */
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 22px 26px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      position: relative;
+      margin-bottom: 22px;
+    }
+    .glass-card:last-child {
+      margin-bottom: 0;
+    }
+    .card-title-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .card-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    /* PROMPT BANNER FOR DISCORD */
+    .discord-prompt-banner {
+      display: none;
+      background: linear-gradient(135deg, rgba(88, 101, 242, 0.25) 0%, rgba(15, 23, 42, 0.95) 100%);
+      border: 1px solid rgba(88, 101, 242, 0.5);
+      border-radius: 18px;
+      padding: 18px 24px;
+      box-shadow: 0 10px 32px rgba(88, 101, 242, 0.25);
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 22px;
+      animation: slideDown 0.3s ease;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .prompt-icon-wrap {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: rgba(88, 101, 242, 0.25);
+      border: 1px solid rgba(88, 101, 242, 0.6);
+      color: #818cf8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+      box-shadow: 0 0 20px rgba(88, 101, 242, 0.4);
+    }
+    .prompt-content {
+      flex: 1;
+    }
+    .prompt-title {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .prompt-desc {
+      font-size: 12.5px;
+      color: #cbd5e1;
+      line-height: 1.45;
+      margin-bottom: 10px;
+    }
+    .prompt-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .btn-prompt-link {
+      padding: 7px 18px;
+      border-radius: 9999px;
+      border: none;
+      background: linear-gradient(135deg, #5865F2, #7983f5);
+      color: #fff;
+      font-weight: 800;
+      font-size: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 0 16px rgba(88, 101, 242, 0.45);
+      transition: 0.2s;
+    }
+    .btn-prompt-link:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 22px rgba(88, 101, 242, 0.65);
+    }
+    .btn-prompt-dismiss {
+      padding: 7px 14px;
+      border-radius: 9999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      color: #94a3b8;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-prompt-dismiss:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    /* TOP 3 STATS CARDS */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+    .stat-mini-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border 0.2s;
+    }
+    .stat-mini-card:hover {
+      border-color: rgba(56, 189, 248, 0.3);
+    }
+    .stat-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .stat-icon.blue {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+    .stat-icon.purple {
+      background: rgba(88, 101, 242, 0.15);
+      color: #818cf8;
+      border: 1px solid rgba(88, 101, 242, 0.3);
+    }
+    .stat-icon.green {
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    .stat-text {
+      flex: 1;
+      min-width: 0;
+    }
+    .stat-label {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #64748b;
+    }
+    .stat-val {
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    /* LIVE DISCORD PRESENCE WIDGET */
+    .presence-live-widget {
+      background: linear-gradient(135deg, rgba(88, 101, 242, 0.15) 0%, rgba(15, 23, 42, 0.6) 100%);
+      border: 1px solid rgba(88, 101, 242, 0.35);
+      border-radius: 18px;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+    .presence-art-box {
+      width: 64px;
+      height: 64px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .presence-art-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .presence-art-icon {
+      font-size: 26px;
+      color: #818cf8;
+    }
+    .presence-details {
+      flex: 1;
+      min-width: 0;
+    }
+    .presence-eyebrow {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #818cf8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .presence-track-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .presence-track-sub {
+      font-size: 13px;
+      color: #cbd5e1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+    .presence-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* APPS GRID SYSTEM */
+    .apps-horizontal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+    @media (max-width: 980px) {
+      .apps-horizontal-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .app-card {
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 18px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .app-card:hover {
+      border-color: rgba(56, 189, 248, 0.35);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+    .app-header-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+    .app-icon-wrap {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .app-icon-wrap.study {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+    .app-icon-wrap.horizon {
+      background: rgba(168, 85, 247, 0.15);
+      color: #c084fc;
+      border: 1px solid rgba(168, 85, 247, 0.35);
+    }
+    .app-icon-wrap.orbit {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+    .app-meta {
+      flex: 1;
+    }
+    .app-title-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .app-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .app-tag {
+      font-size: 10.5px;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 9999px;
+    }
+    .app-desc {
+      font-size: 12.5px;
+      color: #94a3b8;
+      line-height: 1.45;
+      margin-top: 4px;
+    }
+    .app-card-footer {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* ACTION BUTTONS */
+    .btn-launch {
+      width: 100%;
+      padding: 10px 18px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: 'Nunito', sans-serif;
+      transition: all 0.2s ease;
+    }
+    .btn-launch.study {
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      color: #fff;
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+    }
+    .btn-launch.study:hover {
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+      transform: translateY(-1px);
+    }
+    .btn-launch.horizon {
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      color: #fff;
+      box-shadow: 0 0 14px rgba(168, 85, 247, 0.35);
+    }
+    .btn-launch.horizon:hover {
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.6);
+      transform: translateY(-1px);
+    }
+    .btn-launch.orbit {
+      background: linear-gradient(135deg, #d97706, #fbbf24);
+      color: #000;
+      box-shadow: 0 0 14px rgba(245, 158, 11, 0.35);
+    }
+    .btn-launch.orbit:hover {
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+      transform: translateY(-1px);
+    }
+
+    /* SETTINGS ROWS */
+    .setting-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .setting-item-row:last-child {
+      border-bottom: none;
+    }
+    .setting-info {
+      flex: 1;
+      padding-right: 20px;
+    }
+    .setting-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .setting-desc {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+
+    /* TOGGLE SWITCH */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(255, 255, 255, 0.15);
+      transition: .3s;
+      border-radius: 9999px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 14px var(--accent-glow);
+    }
+    input:checked + .slider:before {
+      transform: translateX(22px);
+    }
+
+    /* DISCORD TAB INSPECTOR */
+    .discord-profile-preview {
+      background: #111214;
+      border-radius: 16px;
+      padding: 20px;
+      width: 340px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+    }
+    .discord-badge-header {
+      height: 60px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #5865F2, #818cf8);
+      position: relative;
+    }
+    .discord-avatar-overlap {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      border: 5px solid #111214;
+      background: #2b2d31;
+      position: absolute;
+      bottom: -34px;
+      left: 16px;
+      overflow: hidden;
+    }
+    .discord-card-body {
+      margin-top: 40px;
+      padding: 0 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================================
+       1. INTEGRATED NATIVE-STYLE DESKTOP TITLEBAR
+       ======================================================== -->
+  <header class="app-titlebar">
+    <div class="titlebar-left">
+      <img src="assets/icon-logo.png" alt="MH" class="titlebar-logo">
+      <div class="titlebar-title">
+        MHEnt. Link
+        <span class="titlebar-tag">Universe Hub</span>
+      </div>
+    </div>
+
+    <div class="titlebar-center">
+      <div class="titlebar-pill green" id="tb-badge-port">
+        <i class="fa-solid fa-bolt"></i> Cổng 14128 Sẵn Sàng
+      </div>
+      <div class="titlebar-pill discord" id="tb-badge-discord">
+        <i class="fa-brands fa-discord"></i> Discord: Đang kết nối...
+      </div>
+    </div>
+
+    <div class="titlebar-window-controls">
+      <button class="win-btn" id="win-min" title="Thu nhỏ"><i class="fa-solid fa-minus"></i></button>
+      <button class="win-btn" id="win-max" title="Phóng to / Khôi phục"><i class="fa-regular fa-square" id="icon-win-max"></i></button>
+      <button class="win-btn close" id="win-close" title="Ẩn xuống khay hệ thống"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  </header>
+
+  <!-- ========================================================
+       2. APP SHELL LAYOUT: SIDEBAR + STAGE
+       ======================================================== -->
+  <div class="app-shell">
+
+    <!-- LEFT NAVIGATION SIDEBAR -->
+    <aside class="app-sidebar">
+      <div class="sidebar-brand-box">
+        <div class="brand-eyebrow">Miyazaki Haruto Ent.</div>
+        <div class="brand-main-text">
+          <i class="fa-solid fa-atom"></i> Ecosystem Suite
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-label">Không Gian</div>
+
+        <div class="nav-item active" id="nav-dashboard" onclick="switchTab('dashboard')">
+          <i class="fa-solid fa-compass"></i>
+          <span>Tổng Quan</span>
+        </div>
+
+        <div class="nav-item" id="nav-apps" onclick="switchTab('apps')">
+          <i class="fa-solid fa-rocket"></i>
+          <span>Kho Ứng Dụng</span>
+          <span class="nav-badge-pill" id="sidebar-app-count">3</span>
+        </div>
+
+        <div class="nav-item" id="nav-discord" onclick="switchTab('discord')">
+          <i class="fa-brands fa-discord"></i>
+          <span>Discord Hub</span>
+        </div>
+
+        <div class="nav-item" id="nav-settings" onclick="switchTab('settings')">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Cài Đặt</span>
+        </div>
+      </nav>
+
+      <!-- BOTTOM PINNED USER PROFILE TILE -->
+      <div class="sidebar-user-tile" id="sidebar-user-tile">
+        <div class="user-avatar-wrap">
+          <img src="assets/icon-logo.png" alt="Avatar" class="user-avatar-img" id="user-avatar">
+          <div class="user-online-dot"></div>
+        </div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Đang tải...</div>
+          <div class="user-role-text" id="user-role">
+            <i class="fa-solid fa-circle-check" style="color: var(--accent);"></i>
+            <span id="user-role-name">Thành Viên MHEnt ID</span>
+          </div>
+        </div>
+        <button class="user-btn-action" id="btn-user-action" title="Tùy chọn tài khoản">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- RIGHT CONTENT WORKSPACE STAGE -->
+    <main class="app-stage">
+
+      <!-- ====================================================
+           TAB 1: TỔNG QUAN (DASHBOARD)
+           ==================================================== -->
+      <section class="view-pane active" id="view-dashboard">
+        
+        <!-- HEADER ROW -->
+        <div class="stage-header-row">
+          <div>
+            <h1 class="stage-title">
+              <i class="fa-solid fa-sparkles" style="color: var(--accent);"></i>
+              Tổng Quan Hệ Sinh Thái
+            </h1>
+            <p class="stage-desc">Trung tâm điều phối & đồng bộ danh tính, ứng dụng và trạng thái Discord thời gian thực</p>
+          </div>
+          <div class="stage-header-actions">
+            <button class="btn-prompt-dismiss" id="btn-refresh-status" style="border-radius: 12px; padding: 8px 16px;">
+              <i class="fa-solid fa-arrows-rotate" id="icon-sync-refresh"></i> Làm Mới
+            </button>
+          </div>
+        </div>
+
+        <!-- DISCORD LINK PROMPT BANNER (IF DETECTED BUT UNLINKED) -->
+        <div class="discord-prompt-banner" id="banner-discord-prompt">
+          <div class="prompt-icon-wrap">
+            <i class="fa-brands fa-discord"></i>
+          </div>
+          <div class="prompt-content">
+            <div class="prompt-title">
+              <span>Phát hiện Discord Desktop:</span>
+              <strong id="prompt-discord-user" style="color: #a5b4fc;">@user</strong>
+            </div>
+            <div class="prompt-desc">
+              Tài khoản MHEnt ID của bạn chưa liên kết với Discord này. Bạn có muốn kích hoạt liên kết để tự động hiển thị huy hiệu và đồng bộ tiến trình học/nghe nhạc vào hồ sơ cá nhân không?
+            </div>
+            <div class="prompt-actions">
+              <button class="btn-prompt-link" id="btn-prompt-link-discord">
+                <i class="fa-solid fa-link"></i> Liên Kết Ngay
+              </button>
+              <button class="btn-prompt-dismiss" id="btn-prompt-dismiss-discord">
+                Bỏ qua
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 STATS CARDS -->
+        <div class="stats-row">
+          <div class="stat-mini-card">
+            <div class="stat-icon green">
+              <i class="fa-solid fa-network-wired"></i>
+            </div>
+            <div class="stat-text">
+              <div class="stat-label">Cổng Local Bridge</div>
+              <div class="stat-val" id="stat-port">14128 (Hoạt động)</div>
+            </div>
+          </div>
+
+          <div class="stat-mini-card">
+            <div class="stat-icon purple">
+              <i class="fa-brands fa-discord"></i>
+            </div>
+            <div class="stat-text">
+              <div class="stat-label">Cầu Nối Discord</div>
+              <div class="stat-val" id="stat-discord">Chờ kết nối...</div>
+            </div>
+          </div>
+
+          <div class="stat-mini-card">
+            <div class="stat-icon blue">
+              <i class="fa-solid fa-id-card"></i>
+            </div>
+            <div class="stat-text">
+              <div class="stat-label">Danh Tính Universe ID</div>
+              <div class="stat-val" id="stat-profile">Chưa Đăng Nhập</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIVE DISCORD PRESENCE WIDGET -->
+        <div class="presence-live-widget" id="presence-live-widget">
+          <div class="presence-art-box">
+            <img src="assets/icon-logo.png" alt="Cover" class="presence-art-img" id="presence-cover" style="display: none;">
+            <i class="fa-solid fa-compact-disc presence-art-icon" id="presence-placeholder-icon"></i>
+          </div>
+          <div class="presence-details">
+            <div class="presence-eyebrow">
+              <i class="fa-solid fa-signal-stream"></i>
+              <span id="presence-eyebrow-text">DISCORD RICH PRESENCE (ZERO-IDLE)</span>
+            </div>
+            <div class="presence-track-title" id="presence-title">Đang chờ tín hiệu phát nhạc hoặc học tập...</div>
+            <div class="presence-track-sub" id="presence-sub">Spotify-Style: Tự động phát khi bạn sử dụng Web/Apps và xóa sạch tức thì khi dừng.</div>
+          </div>
+          <div class="presence-actions">
+            <button id="btn-quick-clear-discord" style="padding: 8px 16px; border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.1); color: #f87171; font-weight: 800; cursor: pointer; font-size: 12px; font-family: 'Nunito', sans-serif; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-broom"></i> Xóa Activity
+            </button>
+          </div>
+        </div>
+
+        <!-- APPS QUICK LAUNCH SECTION -->
+        <div class="glass-card">
+          <div class="card-title-bar">
+            <div class="card-title">
+              <i class="fa-solid fa-cubes"></i> Ứng Dụng Trong Hệ Sinh Thái
+            </div>
+            <button class="btn-prompt-dismiss" id="btn-rescan-apps-dash" style="padding: 4px 12px; font-size: 11.5px;">
+              <i class="fa-solid fa-magnifying-glass" id="icon-dash-rescan"></i> Quét Lại Máy Tính
+            </button>
+          </div>
+
+          <div class="apps-horizontal-grid">
+            
+            <!-- STUDY -->
+            <div class="app-card">
+              <div>
+                <div class="app-header-box">
+                  <div class="app-icon-wrap study">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                  </div>
+                  <div class="app-meta">
+                    <div class="app-title-line">
+                      <span class="app-name">MHEnt. Study</span>
+                      <span class="app-tag" id="dash-badge-study" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">Phiên Bản Web</span>
+                    </div>
+                    <div class="app-desc">Khám phá Vũ Trụ Ngôn Ngữ (Anh, Nhật, Hàn, Trung), luyện thẻ 3D, nghe nhạc Karaoke Song ngữ trực quan.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="app-card-footer" style="display: flex; gap: 8px;">
+                <button class="btn-launch study" id="btn-dash-launch-study" style="flex: 1;">
+                  <i class="fa-solid fa-globe" id="icon-dash-study"></i>
+                  <span id="text-dash-study">Mở Study (Bản Web)</span>
+                </button>
+                <button class="btn-prompt-dismiss" id="btn-dash-download-study" style="padding: 0 12px; height: 38px; border-radius: 8px; font-size: 13px; white-space: nowrap;" title="Tải bản cài đặt Desktop (.exe) từ MHEnt Apps" onclick="window.MHEntLink.openExternal('https://apps.mhentuniverse.com/study?download=true')">
+                  <i class="fa-solid fa-download"></i> Tải Desktop
+                </button>
+              </div>
+            </div>
+
+            <!-- HORIZON -->
+            <div class="app-card">
+              <div>
+                <div class="app-header-box">
+                  <div class="app-icon-wrap horizon">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                  </div>
+                  <div class="app-meta">
+                    <div class="app-title-line">
+                      <span class="app-name">MHEnt. Horizon</span>
+                      <span class="app-tag" id="dash-badge-horizon" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">Sẵn Sàng (Studio)</span>
+                    </div>
+                    <div class="app-desc">Môi trường sáng tạo và Studio Trợ lý AI AISA. Tương tác giọng nói thời gian thực & Mô hình VTuber.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="app-card-footer">
+                <button class="btn-launch horizon" id="btn-dash-launch-horizon">
+                  <i class="fa-solid fa-wand-sparkles" id="icon-dash-horizon"></i>
+                  <span id="text-dash-horizon">Mở Horizon Studio</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- ORBIT -->
+            <div class="app-card">
+              <div>
+                <div class="app-header-box">
+                  <div class="app-icon-wrap orbit">
+                    <i class="fa-solid fa-meteor"></i>
+                  </div>
+                  <div class="app-meta">
+                    <div class="app-title-line">
+                      <span class="app-name">AISA Orbit</span>
+                      <span class="app-tag" id="dash-badge-orbit" style="background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);">Đã Cài Đặt (v1.0.0)</span>
+                    </div>
+                    <div class="app-desc">Trợ lý AI vũ trụ và không gian tương tác thông minh thế hệ mới thuộc Miyazaki Haruto Entertainment.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="app-card-footer">
+                <button class="btn-launch orbit" id="btn-dash-launch-orbit">
+                  <i class="fa-solid fa-rocket" id="icon-dash-orbit"></i>
+                  <span id="text-dash-orbit">Mở AISA Orbit</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ====================================================
+           TAB 2: KHO ỨNG DỤNG (APPS WORKSPACE)
+           ==================================================== -->
+      <section class="view-pane" id="view-apps">
+        <div class="stage-header-row">
+          <div>
+            <h1 class="stage-title">
+              <i class="fa-solid fa-rocket" style="color: var(--accent);"></i>
+              Kho Ứng Dụng MHEnt Universe
+            </h1>
+            <p class="stage-desc">Quản lý đường dẫn, cài đặt và mở nhanh toàn bộ ứng dụng thuộc hệ sinh thái trên máy tính</p>
+          </div>
+          <div class="stage-header-actions">
+            <button class="btn-prompt-dismiss" id="btn-rescan-apps-full" style="border-radius: 12px; padding: 8px 16px;">
+              <i class="fa-solid fa-arrows-rotate" id="icon-full-rescan"></i> Quét Lại Hệ Thống
+            </button>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-title-bar">
+            <div class="card-title">
+              <i class="fa-solid fa-list-check"></i> Danh Sách Ứng Dụng Phát Hiện
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            
+            <!-- STUDY DETAIL -->
+            <div class="stat-mini-card" style="padding: 20px; align-items: flex-start;">
+              <div class="app-icon-wrap study" style="width: 56px; height: 56px; font-size: 26px;">
+                <i class="fa-solid fa-graduation-cap"></i>
+              </div>
+              <div style="flex: 1;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <h3 style="font-size: 17px; font-weight: 800; color: #fff;">MHEnt. Study — Vũ Trụ Học Ngoại Ngữ</h3>
+                  <span class="app-tag" id="app-status-tag-study" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">Phiên Bản Web</span>
+                </div>
+                <p style="font-size: 13px; color: #94a3b8; margin: 6px 0 14px 0;">
+                  Nền tảng học tập 3D song ngữ, luyện nghe tương tác, hát Karaoke hiển thị lời thời gian thực và đồng bộ Discord Rich Presence tức thì.
+                </p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                  <button class="btn-launch study" id="btn-app-launch-study" style="width: auto; padding: 8px 24px;">
+                    <i class="fa-solid fa-globe"></i> Khởi Chạy
+                  </button>
+                  <button class="btn-prompt-dismiss" onclick="window.MHEntLink.openExternal('https://study.mhentuniverse.com')">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở Web
+                  </button>
+                  <button class="btn-prompt-dismiss" id="btn-app-download-study" onclick="window.MHEntLink.openExternal('https://apps.mhentuniverse.com/study?download=true')" style="border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">
+                    <i class="fa-solid fa-download"></i> Tải Bản Desktop
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- HORIZON DETAIL -->
+            <div class="stat-mini-card" style="padding: 20px; align-items: flex-start;">
+              <div class="app-icon-wrap horizon" style="width: 56px; height: 56px; font-size: 26px;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+              </div>
+              <div style="flex: 1;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <h3 style="font-size: 17px; font-weight: 800; color: #fff;">MHEnt. Horizon — Studio Trợ Lý & Sáng Tạo</h3>
+                  <span class="app-tag" id="app-status-tag-horizon" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">Sẵn Sàng (Studio)</span>
+                </div>
+                <p style="font-size: 13px; color: #94a3b8; margin: 6px 0 14px 0;">
+                  Môi trường làm việc AI Studio, điều khiển tương tác mô hình VTuber 2D/3D và trợ lý trí tuệ nhân tạo AISA hỗ trợ sáng tạo nội dung.
+                </p>
+                <div style="display: flex; gap: 10px;">
+                  <button class="btn-launch horizon" id="btn-app-launch-horizon" style="width: auto; padding: 8px 24px;">
+                    <i class="fa-solid fa-wand-sparkles"></i> Khởi Chạy Horizon
+                  </button>
+                  <button class="btn-prompt-dismiss" onclick="window.MHEntLink.openExternal('https://www.mhentuniverse.com')">
+                    Trang Chủ MHEnt
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ORBIT DETAIL -->
+            <div class="stat-mini-card" style="padding: 20px; align-items: flex-start;">
+              <div class="app-icon-wrap orbit" style="width: 56px; height: 56px; font-size: 26px;">
+                <i class="fa-solid fa-meteor"></i>
+              </div>
+              <div style="flex: 1;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <h3 style="font-size: 17px; font-weight: 800; color: #fff;">AISA Orbit — Trợ Lý AI Vũ Trụ</h3>
+                  <span class="app-tag" id="app-status-tag-orbit" style="background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);">Đã Cài Đặt (v1.0.0)</span>
+                </div>
+                <p style="font-size: 13px; color: #94a3b8; margin: 6px 0 14px 0;">
+                  Ứng dụng Desktop tương tác AI thời gian thực, quản lý không gian làm việc và đồng hành thông minh cho các nhà sáng tạo trong vũ trụ MHEnt.
+                </p>
+                <div style="display: flex; gap: 10px;">
+                  <button class="btn-launch orbit" id="btn-app-launch-orbit" style="width: auto; padding: 8px 24px;">
+                    <i class="fa-solid fa-rocket"></i> Khởi Chạy Orbit
+                  </button>
+                  <button class="btn-prompt-dismiss" onclick="window.MHEntLink.openExternal('https://www.mhentuniverse.com')">
+                    Tìm hiểu thêm
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================
+           TAB 3: DISCORD HUB
+           ==================================================== -->
+      <section class="view-pane" id="view-discord">
+        <div class="stage-header-row">
+          <div>
+            <h1 class="stage-title">
+              <i class="fa-brands fa-discord" style="color: #818cf8;"></i>
+              Cầu Nối Discord Rich Presence
+            </h1>
+            <p class="stage-desc">Quản lý giao thức IPC kết nối tới Discord Desktop Client & hiển thị hoạt động người dùng</p>
+          </div>
+          <div class="stage-header-actions">
+            <button class="btn-prompt-dismiss" id="btn-discord-tab-clear" style="border-radius: 12px; padding: 8px 16px; color: #f87171; border-color: rgba(239, 68, 68, 0.3);">
+              <i class="fa-solid fa-broom"></i> Xóa Hoạt Động Hiện Tại
+            </button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 340px; gap: 22px;">
+          
+          <!-- LEFT COLUMN: STATUS & LINKING -->
+          <div class="glass-card" style="margin-bottom: 0;">
+            <div class="card-title-bar">
+              <div class="card-title">
+                <i class="fa-solid fa-circle-nodes"></i> Trạng Thái Kết Nối Discord
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px;">
+              <div class="stat-mini-card">
+                <div class="stat-icon purple"><i class="fa-brands fa-discord"></i></div>
+                <div class="stat-text">
+                  <div class="stat-label">Discord Client Đang Mở</div>
+                  <div class="stat-val" id="discord-client-user">Đang kiểm tra...</div>
+                </div>
+              </div>
+
+              <div class="stat-mini-card">
+                <div class="stat-icon blue"><i class="fa-solid fa-key"></i></div>
+                <div class="stat-text">
+                  <div class="stat-label">Application Client ID</div>
+                  <div class="stat-val">1570699759319126037 (MHEnt. Universe)</div>
+                </div>
+              </div>
+
+              <div class="stat-mini-card">
+                <div class="stat-icon green"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="stat-text">
+                  <div class="stat-label">Trạng Thái Liên Kết MHEnt ID</div>
+                  <div class="stat-val" id="discord-link-full-status">Đang kiểm tra...</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+              <h4 style="font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 6px;">Quy Tắc Quản Lý Hiện Diện (Spotify-Style):</h4>
+              <p style="font-size: 12.5px; color: #94a3b8; line-height: 1.5;">
+                • Chỉ hiển thị khi bạn đang thực sự phát nhạc hoặc học tập trên Web & Apps.<br>
+                • Tự động xóa sạch tức thì khi bạn bấm Pause, đóng trình duyệt hoặc tắt ứng dụng.<br>
+                • Không để lại bóng mờ (zombie presence) khi bạn không sử dụng.
+              </p>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: DISCORD PROFILE SIMULATOR -->
+          <div style="display: flex; flex-direction: column; gap: 14px; align-items: center;">
+            <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.6px; width: 100%; text-align: left;">
+              Mô Phỏng Thẻ Discord Của Bạn
+            </div>
+
+            <div class="discord-profile-preview">
+              <div class="discord-badge-header">
+                <div class="discord-avatar-overlap">
+                  <img src="assets/icon-logo.png" alt="Discord" id="sim-discord-avatar" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+              </div>
+              <div class="discord-card-body">
+                <div style="font-size: 17px; font-weight: 900; color: #fff;" id="sim-discord-name">Yurika</div>
+                <div style="font-size: 12px; color: #94a3b8; margin-top: 1px;" id="sim-discord-tag">@yorutsukiyurika</div>
+                <div style="font-size: 11px; padding: 2px 8px; border-radius: 9999px; background: rgba(88, 101, 242, 0.2); color: #818cf8; display: inline-block; margin-top: 6px; font-weight: 800;">
+                  MHEnt. Universe
+                </div>
+
+                <div style="margin-top: 16px; padding: 12px; border-radius: 10px; background: #1e1f22; border: 1px solid rgba(255, 255, 255, 0.05);">
+                  <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px;">
+                    Listening to MHEnt. Universe
+                  </div>
+                  <div style="display: flex; gap: 10px; align-items: center;">
+                    <img src="assets/icon-logo.png" alt="Art" id="sim-track-art" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover;">
+                    <div style="flex: 1; min-width: 0;">
+                      <div style="font-size: 13px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="sim-track-title">
+                        Usseewa (うっせぇわ)
+                      </div>
+                      <div style="font-size: 11.5px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="sim-track-sub">
+                        Ado - Tiếng Nhật JP
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ====================================================
+           TAB 4: CÀI ĐẶT (SETTINGS)
+           ==================================================== -->
+      <section class="view-pane" id="view-settings">
+        <div class="stage-header-row">
+          <div>
+            <h1 class="stage-title">
+              <i class="fa-solid fa-sliders" style="color: var(--accent);"></i>
+              Cài Đặt Hệ Thống
+            </h1>
+            <p class="stage-desc">Tùy chỉnh hành vi khởi động, thu nhỏ khay hệ thống và thông số kết nối</p>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-title-bar">
+            <div class="card-title">
+              <i class="fa-solid fa-gear"></i> Hành Vi Ứng Dụng & Windows
+            </div>
+          </div>
+
+          <div class="setting-item-row">
+            <div class="setting-info">
+              <div class="setting-title">Khởi động cùng Windows (Chạy ngầm ở Khay Hệ Thống)</div>
+              <div class="setting-desc">Tự động khởi động dưới nền góc đồng hồ khi bạn bật máy để duy trì cầu nối Discord cho Web & Apps mà không mở bung cửa sổ.</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-startup">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-item-row">
+            <div class="setting-info">
+              <div class="setting-title">Thu nhỏ xuống Khay Hệ Thống khi bấm nút Đóng (✕)</div>
+              <div class="setting-desc">Giữ MHEnt. Link luôn chạy ngầm để tiếp tục duy trì kết nối Discord thay vì thoát hẳn ứng dụng.</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" checked disabled>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-item-row">
+            <div class="setting-info">
+              <div class="setting-title">Cổng Giao Thức Cầu Nối Cục Bộ (Local Bridge Port)</div>
+              <div class="setting-desc">Cổng HTTP & WebSocket lắng nghe yêu cầu cập nhật Rich Presence từ trình duyệt web.</div>
+            </div>
+            <div style="font-size: 13px; font-weight: 800; color: var(--accent); background: rgba(56, 189, 248, 0.1); padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.25);">
+              Port 14128 (Mặc Định)
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-title-bar">
+            <div class="card-title">
+              <i class="fa-solid fa-shield"></i> Thông Tin Ứng Dụng & Bản Quyền
+            </div>
+          </div>
+
+          <div style="font-size: 13px; color: #94a3b8; line-height: 1.6;">
+            <strong>MHEnt. Link — Universe Hub & Discord Bridge</strong><br>
+            Phiên bản: <strong>v1.0.0 (Native Frameless Shell)</strong><br>
+            Bản quyền thuộc về © 2026 <strong>Miyazaki Haruto Entertainment Co., Ltd.</strong><br>
+            Dự án: <em>Project MHEnt. Universe</em> • Mọi quyền được bảo lưu.
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- ========================================================
+       3. CLIENT INTERACTION JAVASCRIPT
+       ======================================================== -->
+  <script>
+    let isPromptDismissed = false;
+    let latestStatus = null;
+
+    // A. TAB SWITCHING
+    function switchTab(tabId) {
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.view-pane').forEach(el => el.classList.remove('active'));
+
+      const navEl = document.getElementById(`nav-${tabId}`);
+      const viewEl = document.getElementById(`view-${tabId}`);
+      if (navEl) navEl.classList.add('active');
+      if (viewEl) viewEl.classList.add('active');
+    }
+
+    (async () => {
+      // 1. WINDOW CONTROLS
+      const btnWinMin = document.getElementById('win-min');
+      const btnWinMax = document.getElementById('win-max');
+      const btnWinClose = document.getElementById('win-close');
+      const iconWinMax = document.getElementById('icon-win-max');
+
+      if (btnWinMin) btnWinMin.onclick = () => window.MHEntLink.minimizeWindow();
+      if (btnWinClose) btnWinClose.onclick = () => window.MHEntLink.closeWindow();
+      if (btnWinMax) {
+        btnWinMax.onclick = () => window.MHEntLink.maximizeWindow();
+      }
+
+      if (window.MHEntLink.onMaximizedChange) {
+        window.MHEntLink.onMaximizedChange((isMax) => {
+          if (iconWinMax) {
+            iconWinMax.className = isMax ? 'fa-regular fa-clone' : 'fa-regular fa-square';
+          }
+        });
+      }
+
+      // 2. TẢI TRẠNG THÁI BAN ĐẦU
+      try {
+        latestStatus = await window.MHEntLink.getStatus();
+        renderStatus(latestStatus);
+
+        window.MHEntLink.onStatusChange((data) => {
+          latestStatus = data;
+          renderStatus(data);
+        });
+
+        // Khởi động cùng Windows toggle
+        const startupToggle = document.getElementById('toggle-startup');
+        if (startupToggle && latestStatus && latestStatus.loginSettings) {
+          startupToggle.checked = Boolean(latestStatus.loginSettings.openAtLogin);
+          startupToggle.addEventListener('change', async () => {
+            await window.MHEntLink.setLoginSettings({ openAtLogin: startupToggle.checked });
+          });
+        }
+      } catch (err) {
+        console.error('[MHEnt Link Status Error]:', err);
+      }
+
+      // 3. CÁC NÚT KHỞI CHẠY APP
+      const setupLaunch = (btnId, key) => {
+        const btn = document.getElementById(btnId);
+        if (btn) {
+          btn.onclick = async () => {
+            const res = await window.MHEntLink.launchApp(key);
+            if (res && !res.success && res.message) alert(res.message);
+          };
+        }
+      };
+
+      setupLaunch('btn-dash-launch-study', 'study');
+      setupLaunch('btn-app-launch-study', 'study');
+      setupLaunch('btn-dash-launch-horizon', 'horizon');
+      setupLaunch('btn-app-launch-horizon', 'horizon');
+      setupLaunch('btn-dash-launch-orbit', 'orbit');
+      setupLaunch('btn-app-launch-orbit', 'orbit');
+
+      // 4. QUÉT LẠI APP
+      const setupRescan = (btnId, iconId) => {
+        const btn = document.getElementById(btnId);
+        const icon = document.getElementById(iconId);
+        if (btn) {
+          btn.onclick = async () => {
+            if (icon) icon.classList.add('fa-spin');
+            try {
+              const apps = await window.MHEntLink.scanApps();
+              if (apps && latestStatus) {
+                latestStatus.apps = apps;
+                renderApps(apps);
+              }
+            } catch (e) {}
+            setTimeout(() => {
+              if (icon) icon.classList.remove('fa-spin');
+            }, 600);
+          };
+        }
+      };
+      setupRescan('btn-rescan-apps-dash', 'icon-dash-rescan');
+      setupRescan('btn-rescan-apps-full', 'icon-full-rescan');
+
+      // 5. NÚT LÀM MỚI CHUNG
+      const btnRefresh = document.getElementById('btn-refresh-status');
+      if (btnRefresh) {
+        btnRefresh.onclick = async () => {
+          const icon = document.getElementById('icon-sync-refresh');
+          if (icon) icon.classList.add('fa-spin');
+          try {
+            latestStatus = await window.MHEntLink.getStatus();
+            renderStatus(latestStatus);
+          } catch (e) {}
+          setTimeout(() => {
+            if (icon) icon.classList.remove('fa-spin');
+          }, 600);
+        };
+      }
+
+      // 6. XÓA DISCORD ACTIVITY
+      const handleClearDiscord = async () => {
+        await window.MHEntLink.clearDiscordActivity();
+        alert('Đã xóa sạch Activity trên Discord!');
+      };
+      const btnQuickClear = document.getElementById('btn-quick-clear-discord');
+      if (btnQuickClear) btnQuickClear.onclick = handleClearDiscord;
+      const btnTabClear = document.getElementById('btn-discord-tab-clear');
+      if (btnTabClear) btnTabClear.onclick = handleClearDiscord;
+
+      // 7. BANNER LIÊN KẾT DISCORD
+      const btnPromptLink = document.getElementById('btn-prompt-link-discord');
+      if (btnPromptLink) {
+        btnPromptLink.onclick = () => {
+          const clientId = '1570699759319126037';
+          const redirectUri = encodeURIComponent('https://accounts.mhentuniverse.com/profile');
+          window.MHEntLink.openExternal(`https://discord.com/oauth2/authorize?client_id=${clientId}&response_type=token&redirect_uri=${redirectUri}&scope=identify`);
+        };
+      }
+      const btnPromptDismiss = document.getElementById('btn-prompt-dismiss-discord');
+      if (btnPromptDismiss) {
+        btnPromptDismiss.onclick = () => {
+          isPromptDismissed = true;
+          document.getElementById('banner-discord-prompt').style.display = 'none';
+        };
+      }
+
+      // 8. HÀM CẬP NHẬT GIAO DIỆN CHÍNH
+      function renderStatus(data) {
+        if (!data) return;
+
+        const hasMHEntAccount = Boolean(data.profile && data.profile.uid);
+        const hasLinkedDiscord = Boolean(data.profile && data.profile.discord && data.profile.discord.id);
+        const hasDiscordDesktop = Boolean(data.discord && data.discord.ready && data.discord.user);
+
+        // A. TITLEBAR PILLS
+        const tbDiscord = document.getElementById('tb-badge-discord');
+        if (hasDiscordDesktop) {
+          const uName = data.discord.user.global_name || data.discord.user.username;
+          tbDiscord.className = 'titlebar-pill discord';
+          tbDiscord.innerHTML = `<i class="fa-brands fa-discord"></i> Discord: ${uName}`;
+        } else {
+          tbDiscord.className = 'titlebar-pill';
+          tbDiscord.style.background = 'rgba(239, 68, 68, 0.12)';
+          tbDiscord.style.color = '#f87171';
+          tbDiscord.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+          tbDiscord.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Discord: Ngắt kết nối`;
+        }
+
+        // B. BANNER GỢI Ý
+        const banner = document.getElementById('banner-discord-prompt');
+        const promptUser = document.getElementById('prompt-discord-user');
+        if (hasMHEntAccount && !hasLinkedDiscord && hasDiscordDesktop && !isPromptDismissed) {
+          banner.style.display = 'flex';
+          promptUser.textContent = data.discord.user.global_name 
+            ? `${data.discord.user.global_name} (@${data.discord.user.username})` 
+            : `@${data.discord.user.username}`;
+        } else {
+          banner.style.display = 'none';
+        }
+
+        // C. STATS MINI CARDS
+        const statDiscord = document.getElementById('stat-discord');
+        if (statDiscord) {
+          statDiscord.textContent = hasDiscordDesktop 
+            ? `@${data.discord.user.username}` 
+            : 'Chưa mở Discord';
+        }
+
+        const statProfile = document.getElementById('stat-profile');
+        if (statProfile) {
+          statProfile.textContent = hasMHEntAccount 
+            ? (data.profile.displayName || 'Đã Xác Thực') 
+            : 'Chưa Đăng Nhập';
+        }
+
+        // D. BOTTOM PINNED USER PROFILE TILE
+        const userNameEl = document.getElementById('user-name');
+        const userAvatarEl = document.getElementById('user-avatar');
+        const userRoleEl = document.getElementById('user-role-name');
+        const userBtnAction = document.getElementById('btn-user-action');
+
+        if (hasMHEntAccount) {
+          userNameEl.textContent = data.profile.displayName || 'Thành Viên MHEnt';
+          if (data.profile.photoURL) userAvatarEl.src = data.profile.photoURL;
+          const isAdmin = (data.profile.role || 'user').toUpperCase() === 'ADMIN';
+          userRoleEl.textContent = isAdmin ? 'Quản Trị Viên' : 'Thành Viên MHEnt ID';
+
+          userBtnAction.title = 'Đăng xuất MHEnt ID';
+          userBtnAction.innerHTML = '<i class="fa-solid fa-arrow-right-from-bracket"></i>';
+          userBtnAction.onclick = async () => {
+            if (confirm('Bạn có muốn đăng xuất tài khoản MHEnt ID khỏi thiết bị này?')) {
+              await window.MHEntLink.logoutProfile();
+            }
+          };
+        } else {
+          userNameEl.textContent = 'Chưa Đăng Nhập';
+          userAvatarEl.src = 'assets/icon-logo.png';
+          userRoleEl.textContent = 'Bấm để đăng nhập ID';
+
+          userBtnAction.title = 'Đăng nhập MHEnt ID';
+          userBtnAction.innerHTML = '<i class="fa-solid fa-key" style="color: var(--accent);"></i>';
+          userBtnAction.onclick = () => {
+            window.MHEntLink.openExternal('https://accounts.mhentuniverse.com/profile?action=sync-desktop');
+          };
+        }
+
+        // E. LIVE DISCORD PRESENCE WIDGET & SIMULATOR
+        renderPresence(data.discord);
+
+        // F. APPS RENDERING
+        if (data.apps) {
+          renderApps(data.apps);
+        }
+      }
+
+      function renderPresence(discordData) {
+        const titleEl = document.getElementById('presence-title');
+        const subEl = document.getElementById('presence-sub');
+        const coverEl = document.getElementById('presence-cover');
+        const iconEl = document.getElementById('presence-placeholder-icon');
+        const eyebrowEl = document.getElementById('presence-eyebrow-text');
+
+        // Discord Tab Sim
+        const simName = document.getElementById('sim-discord-name');
+        const simTag = document.getElementById('sim-discord-tag');
+        const simAvatar = document.getElementById('sim-discord-avatar');
+        const simTrackTitle = document.getElementById('sim-track-title');
+        const simTrackSub = document.getElementById('sim-track-sub');
+        const simTrackArt = document.getElementById('sim-track-art');
+        const discClientUser = document.getElementById('discord-client-user');
+        const discLinkStatus = document.getElementById('discord-link-full-status');
+
+        if (discordData && discordData.ready && discordData.user) {
+          const u = discordData.user;
+          discClientUser.textContent = `${u.global_name || u.username} (@${u.username})`;
+          simName.textContent = u.global_name || u.username;
+          simTag.textContent = `@${u.username}`;
+          if (u.avatar) {
+            simAvatar.src = `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png?size=128`;
+          }
+
+          discLinkStatus.textContent = latestStatus && latestStatus.profile && latestStatus.profile.discord 
+            ? 'Đã Liên Kết Với MHEnt Universe ID' 
+            : 'Chưa Liên Kết (Sẵn Sàng Ghép Nối)';
+
+          if (discordData.currentActivity) {
+            const act = discordData.currentActivity;
+            eyebrowEl.textContent = `ĐANG PHÁT: ${act.name || 'MHEnt. Universe'}`;
+            titleEl.textContent = act.details || 'Đang hoạt động trong Vũ Trụ MHEnt';
+            subEl.textContent = act.state || 'Chi tiết hoạt động';
+
+            simTrackTitle.textContent = act.details || 'Hoạt động';
+            simTrackSub.textContent = act.state || 'MHEnt Universe';
+
+            if (act.assets && act.assets.large_image) {
+              let imgUrl = act.assets.large_image;
+              if (imgUrl.startsWith('mp:')) {
+                imgUrl = 'https://media.discordapp.net/' + imgUrl.replace('mp:', '');
+              }
+              coverEl.src = imgUrl;
+              coverEl.style.display = 'block';
+              iconEl.style.display = 'none';
+              simTrackArt.src = imgUrl;
+            } else {
+              coverEl.style.display = 'none';
+              iconEl.style.display = 'block';
+            }
+          } else {
+            eyebrowEl.textContent = 'DISCORD RICH PRESENCE (ZERO-IDLE)';
+            titleEl.textContent = 'Đang chờ tín hiệu phát nhạc hoặc học tập...';
+            subEl.textContent = 'Spotify-Style: Tự động phát khi bạn sử dụng Web/Apps và xóa sạch tức thì khi dừng.';
+            coverEl.style.display = 'none';
+            iconEl.style.display = 'block';
+
+            simTrackTitle.textContent = 'Đang nghỉ ngơi (Zero-Idle)';
+            simTrackSub.textContent = 'Không có hoạt động nền làm phiền';
+          }
+        } else {
+          discClientUser.textContent = 'Chưa phát hiện Discord Desktop';
+          discLinkStatus.textContent = 'Chờ kết nối Discord';
+          eyebrowEl.textContent = 'DISCORD CHƯA KẾT NỐI';
+          titleEl.textContent = 'Hãy mở ứng dụng Discord Desktop trên máy tính';
+          subEl.textContent = 'MHEnt. Link sẽ tự động nhận diện Pipe cục bộ ngay khi Discord khởi động.';
+          coverEl.style.display = 'none';
+          iconEl.style.display = 'block';
+        }
+      }
+
+      function renderApps(apps) {
+        if (!apps) return;
+        ['study', 'horizon', 'orbit'].forEach(key => {
+          const appData = apps[key];
+          if (!appData) return;
+
+          // Dashboard cards
+          const dashBadge = document.getElementById(`dash-badge-${key}`);
+          const dashText = document.getElementById(`text-dash-${key}`);
+          const dashIcon = document.getElementById(`icon-dash-${key}`);
+
+          // Full apps tab tags
+          const fullTag = document.getElementById(`app-status-tag-${key}`);
+
+          const badgeText = appData.statusText || (appData.installed ? 'Đã cài đặt' : (appData.isWeb ? 'Bản Web' : 'Chưa cài'));
+          if (dashBadge) dashBadge.textContent = badgeText;
+          if (fullTag) fullTag.textContent = badgeText;
+
+          if (dashText && appData.buttonText) dashText.textContent = appData.buttonText;
+          if (dashIcon && appData.buttonIcon) {
+            dashIcon.className = `fa-solid ${appData.buttonIcon}`;
+          }
+        });
+      }
+
+    })();
+  </script>
+</body>
+</html>

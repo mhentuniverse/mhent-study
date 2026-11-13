@@ -45,6 +45,20 @@ jobs:
             exit $exitCode
           }
 
+          if (Test-Path "companion/package.json") {
+            Write-Host "Building MHEnt Link Companion Installer..."
+            cd companion
+            npm install --no-audit --no-fund
+            & node ..\node_modules\electron-builder\cli.js --publish never
+            if (Test-Path "dist") {
+              Get-ChildItem "dist\*.exe" | ForEach-Object {
+                Copy-Item $_.FullName "..\dist\MHEnt.Link.Setup.exe" -Force
+                Copy-Item $_.FullName "..\dist\MHEnt-Link-Setup.exe" -Force
+              }
+            }
+            cd ..
+          }
+
       - name: Upload Windows Executables
         if: always()
         uses: actions/upload-artifact@v4
@@ -151,7 +165,10 @@ jobs:
             DEST="release-assets/windows/release/$NEWNAME"
             [ "$f" != "$DEST" ] && cp "$f" "$DEST"
             # Provide permanent unversioned aliases for constant download URLs
-            if [[ "$FNAME" == *"Setup"* && "$FNAME" == *".exe" ]]; then
+            if [[ "$FNAME" == *"Link"* && "$FNAME" == *".exe" ]]; then
+              cp "$f" "release-assets/windows/release/MHEnt-Link-Setup.exe"
+              cp "$f" "release-assets/windows/release/MHEnt.Link.Setup.exe"
+            elif [[ "$FNAME" == *"Setup"* && "$FNAME" == *".exe" ]]; then
               cp "$f" "release-assets/windows/release/MHEnt-Study-Setup.exe"
               cp "$f" "release-assets/windows/release/MHEnt.Study.Setup.exe"
             elif [[ ("$FNAME" == *"Portable"* || "$FNAME" != *"Setup"*) && "$FNAME" == *".exe" ]]; then

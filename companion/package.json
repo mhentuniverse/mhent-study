@@ -1,0 +1,51 @@
+{
+  "name": "mhent-link",
+  "version": "1.0.0",
+  "description": "MHEnt. Link — Nền Tảng Đồng Bộ Danh Tính, Hệ Sinh Thái & Cầu Nối Discord Rich Presence",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --publish never"
+  },
+  "author": "Miyazaki Haruto Entertainment Co., Ltd.",
+  "license": "ISC",
+  "dependencies": {
+    "ws": "^8.23.0"
+  },
+  "devDependencies": {
+    "electron": "^30.5.1",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.mhentuniverse.link",
+    "productName": "MHEnt. Link",
+    "copyright": "© 2026 Miyazaki Haruto Entertainment Co., Ltd.",
+    "buildVersion": "1.0.0",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "assets/app-logo.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MHEnt. Link",
+      "runAfterFinish": true
+    },
+    "protocols": [
+      {
+        "name": "MHEnt Link Protocol",
+        "schemes": [
+          "mhentlink"
+        ]
+      }
+    ]
+  }
+}
