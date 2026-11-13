@@ -12,7 +12,7 @@ if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.
   });
   // Tuyệt đối không can thiệp fetch trên localhost/APK
 } else {
-  const CACHE_NAME = 'mhent-study-v2.1.0';
+  const CACHE_NAME = 'mhent-study-v2.1.2';
   const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -36,6 +36,7 @@ if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.
     '/js/vocab-sheet.js',
     '/js/deck-selector.js',
     '/js/lyrics-hub.js',
+    '/js/discord-presence.js',
     '/data/sample-ko.js',
     '/data/sample-ja.js',
     '/data/sample-zh.js',
