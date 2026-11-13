@@ -197,7 +197,14 @@ function startLocalServer() {
         try {
           if (!wss) {
             wss = new WebSocketServer({ server: localServer });
+            let emptyClientsTimer = null;
+
             wss.on('connection', (ws) => {
+              if (emptyClientsTimer) {
+                clearTimeout(emptyClientsTimer);
+                emptyClientsTimer = null;
+              }
+
               // Gửi trạng thái Discord hiện tại ngay khi Web client kết nối
               ws.send(JSON.stringify({ type: 'status', ...discordManager.getStatus() }));
 
@@ -217,6 +224,21 @@ function startLocalServer() {
                 } catch (err) {
                   console.warn('[WS Message Error]:', err.message);
                 }
+              });
+
+              ws.on('close', () => {
+                // Nếu tất cả tab web đều đã tắt, tự động xóa Rich Presence sau 3 giây
+                if (emptyClientsTimer) clearTimeout(emptyClientsTimer);
+                emptyClientsTimer = setTimeout(() => {
+                  let activeCount = 0;
+                  wss.clients.forEach(c => {
+                    if (c.readyState === 1) activeCount++;
+                  });
+                  if (activeCount === 0) {
+                    console.log('[MHEnt Bridge] Không còn tab Web nào mở, tự động dọn dẹp Rich Presence...');
+                    discordManager.clearActivity();
+                  }
+                }, 3000);
               });
             });
 

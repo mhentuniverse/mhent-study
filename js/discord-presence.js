@@ -50,6 +50,18 @@
 
             // Gắn widget UI vào trang (nếu là trang có giao diện chính)
             this.injectDiscordUI();
+
+            // Tự động xóa activity khi tắt tab hoặc chuyển trang
+            window.addEventListener('beforeunload', () => {
+                if (this.ws && this.ws.readyState === 1) {
+                    try { this.ws.send(JSON.stringify({ action: 'clearActivity' })); } catch(e){}
+                } else if (navigator.sendBeacon) {
+                    try {
+                        const blob = new Blob([JSON.stringify({ action: 'clearActivity' })], { type: 'application/json' });
+                        navigator.sendBeacon(`http://127.0.0.1:${BRIDGE_HTTP_PORT}/api/discord-rpc`, blob);
+                    } catch(e){}
+                }
+            });
         }
 
         connectWebSocket() {
