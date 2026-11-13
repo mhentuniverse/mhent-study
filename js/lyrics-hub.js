@@ -442,8 +442,10 @@ class LyricsHubApp {
         const langMap = { en: 'Tiếng Anh', ko: 'Tiếng Hàn', ja: 'Tiếng Nhật', zh: 'Tiếng Trung', vi: 'Tiếng Việt' };
         if (langBadge) langBadge.textContent = langMap[song.lang] || 'Đa ngôn ngữ';
 
-        // Thông báo cập nhật bài hát sang Discord Rich Presence
-        this.notifyDiscordPresence();
+        // Thông báo cập nhật bài hát sang Discord Rich Presence (chỉ khi đang phát)
+        if (this.isPlaying) {
+            this.notifyDiscordPresence();
+        }
 
         // Tải độ lệch pha đã lưu cho bài hát này (Time Offset)
         this.loadOffsetForSong(song.id);
@@ -2297,8 +2299,15 @@ QUY TẮC ĐẦU RA:
     }
 
     notifyDiscordPresence() {
-        if (!window.MHEntDiscord || typeof window.MHEntDiscord.setLyricsActivity !== 'function') return;
-        if (!this.currentSong) return;
+        if (!window.MHEntDiscord) return;
+
+        // Đúng chuẩn Spotify: Nếu không phát nhạc hoặc không có bài, xóa ngay lập tức khỏi Discord
+        if (!this.isPlaying || !this.currentSong) {
+            if (typeof window.MHEntDiscord.clearActivity === 'function') {
+                window.MHEntDiscord.clearActivity();
+            }
+            return;
+        }
 
         let curTime = 0;
         if (this.useYouTube && this.ytPlayer && typeof this.ytPlayer.getCurrentTime === 'function') {

@@ -281,17 +281,10 @@
             const curSec = Math.floor(currentTime || 0);
             const durSec = Math.floor(duration || 0);
 
-            // Quản lý dọn dẹp khi tạm dừng (giống Spotify)
-            if (this.pauseClearTimer) {
-                clearTimeout(this.pauseClearTimer);
-                this.pauseClearTimer = null;
-            }
-
+            // Đúng chuẩn Spotify: Phải ĐANG PHÁT NHẠC thì mới lên Discord, dừng phát là xóa ngay
             if (!isPlaying) {
-                // Khi tạm dừng, giữ trạng thái pause trong 20s rồi tự động xóa khỏi Discord
-                this.pauseClearTimer = setTimeout(() => {
-                    this.clearActivity();
-                }, 20000);
+                this.clearActivity();
+                return;
             }
 
             const langMap = { en: 'Tiếng Anh 🇬🇧', ko: 'Tiếng Hàn 🇰🇷', ja: 'Tiếng Nhật 🇯🇵', zh: 'Tiếng Trung 🇨🇳', vi: 'Tiếng Việt 🇻🇳' };
