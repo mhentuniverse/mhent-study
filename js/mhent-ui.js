@@ -1076,7 +1076,7 @@ function showInstallPill() {
             }
             deferredPwaPrompt = null;
         } else {
-            window.location.href = '/download.html';
+            window.open('https://apps.mhentuniverse.com/study', '_blank');
         }
     };
     navActions.prepend(btn);
