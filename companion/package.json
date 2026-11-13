@@ -18,6 +18,7 @@
     "electron-builder": "^24.13.3"
   },
   "build": {
+    "electronVersion": "30.5.1",
     "appId": "com.mhentuniverse.link",
     "productName": "MHEnt. Link",
     "copyright": "© 2026 Miyazaki Haruto Entertainment Co., Ltd.",

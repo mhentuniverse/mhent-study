@@ -140,24 +140,59 @@
       IfFileExists "$PROGRAMFILES\MHEnt. Link\MHEnt. Link.exe" link_already_installed 0
       IfFileExists "$PROGRAMFILES64\MHEnt. Link\MHEnt. Link.exe" link_already_installed 0
 
-      ; 2. Kiểm tra xem file setup đã có sẵn trong TEMP chưa
-      IfFileExists "$TEMP\MHEnt.Link.Setup.exe" run_link_setup 0
+      ; 2. Kiểm tra xem file setup đã có sẵn trong TEMP và có dung lượng hợp lệ (> 10MB) không
+      IfFileExists "$TEMP\MHEnt.Link.Setup.exe" check_temp_size 0
+      Goto start_download
 
+    check_temp_size:
+      FileOpen $R0 "$TEMP\MHEnt.Link.Setup.exe" r
+      FileSeek $R0 0 END $R1
+      FileClose $R0
+      ${If} $R1 > 10485760
+        Goto run_link_setup
+      ${EndIf}
+      Delete "$TEMP\MHEnt.Link.Setup.exe"
+
+    start_download:
       DetailPrint "Đang tải gói cài đặt MHEnt. Link từ máy chủ..."
-      nsExec::ExecToLog 'curl.exe -L -s -S -o "$TEMP\MHEnt.Link.Setup.exe" "https://github.com/mhentuniverse/mhent-study/releases/latest/download/MHEnt.Link.Setup.exe"'
+      nsExec::ExecToLog 'curl.exe -f -L -s -S -o "$TEMP\MHEnt.Link.Setup.exe" "https://github.com/mhentuniverse/mhent-study/releases/latest/download/MHEnt.Link.Setup.exe"'
 
-      IfFileExists "$TEMP\MHEnt.Link.Setup.exe" run_link_setup 0
+      IfFileExists "$TEMP\MHEnt.Link.Setup.exe" check_after_dl1 0
+      Goto try_dl2
+
+    check_after_dl1:
+      FileOpen $R0 "$TEMP\MHEnt.Link.Setup.exe" r
+      FileSeek $R0 0 END $R1
+      FileClose $R0
+      ${If} $R1 > 10485760
+        Goto run_link_setup
+      ${EndIf}
+      Delete "$TEMP\MHEnt.Link.Setup.exe"
+
+    try_dl2:
       DetailPrint "Đang kết nối qua máy chủ dự phòng..."
-      nsExec::ExecToLog 'curl.exe -L -s -S -o "$TEMP\MHEnt.Link.Setup.exe" "https://github.com/mhentuniverse/mhent-apps/releases/latest/download/MHEnt.Link.Setup.exe"'
+      nsExec::ExecToLog 'curl.exe -f -L -s -S -o "$TEMP\MHEnt.Link.Setup.exe" "https://github.com/mhentuniverse/mhent-apps/releases/latest/download/MHEnt.Link.Setup.exe"'
 
-      IfFileExists "$TEMP\MHEnt.Link.Setup.exe" run_link_setup 0
+      IfFileExists "$TEMP\MHEnt.Link.Setup.exe" check_after_dl2 0
+      Goto dl_failed
+
+    check_after_dl2:
+      FileOpen $R0 "$TEMP\MHEnt.Link.Setup.exe" r
+      FileSeek $R0 0 END $R1
+      FileClose $R0
+      ${If} $R1 > 10485760
+        Goto run_link_setup
+      ${EndIf}
+      Delete "$TEMP\MHEnt.Link.Setup.exe"
+
+    dl_failed:
       DetailPrint "Không thể tải tự động MHEnt. Link. Bạn có thể tải sau tại apps.mhentuniverse.com/link"
       Goto link_step_done
 
     run_link_setup:
-      DetailPrint "Đã có tệp cài đặt! Đang khởi chạy trình cài đặt MHEnt. Link..."
+      DetailPrint "Đã có tệp cài đặt MHEnt. Link! Đang khởi chạy..."
       Exec "$TEMP\MHEnt.Link.Setup.exe"
-      DetailPrint "MHEnt. Link đã khởi chạy cài đặt thành công."
+      DetailPrint "Trình cài đặt MHEnt. Link đã được khởi chạy."
       Goto link_step_done
 
     link_already_installed:

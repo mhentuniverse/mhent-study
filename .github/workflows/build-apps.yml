@@ -47,16 +47,13 @@ jobs:
 
           if (Test-Path "companion/package.json") {
             Write-Host "Building MHEnt Link Companion Installer..."
-            cd companion
-            npm install --no-audit --no-fund
-            & node ..\node_modules\electron-builder\cli.js --publish never
-            if (Test-Path "dist") {
-              Get-ChildItem "dist\*.exe" | ForEach-Object {
-                Copy-Item $_.FullName "..\dist\MHEnt.Link.Setup.exe" -Force
-                Copy-Item $_.FullName "..\dist\MHEnt-Link-Setup.exe" -Force
+            & node .\node_modules\electron-builder\cli.js --project companion --publish never
+            if (Test-Path "companion/dist") {
+              Get-ChildItem "companion\dist\*.exe" | ForEach-Object {
+                Copy-Item $_.FullName "dist\MHEnt.Link.Setup.exe" -Force
+                Copy-Item $_.FullName "dist\MHEnt-Link-Setup.exe" -Force
               }
             }
-            cd ..
           }
 
       - name: Upload Windows Executables
