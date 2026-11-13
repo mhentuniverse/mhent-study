@@ -3,10 +3,12 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const url = require('url');
+const DiscordRPCManager = require('./discord-manager');
 
 let mainWindow = null;
 let localServer = null;
 let localServerPort = 0;
+const discordManager = new DiscordRPCManager();
 
 // User-Agent chuẩn Chrome hiện đại để tránh bị Google OAuth chặn lỗi 'disallowed_useragent'
 const CHROME_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
@@ -48,6 +50,48 @@ function startLocalServer() {
       try {
         const parsedUrl = url.parse(req.url);
         let pathname = decodeURIComponent(parsedUrl.pathname);
+
+        // Thiết lập CORS header cho phép Web Browser (localhost hoặc study.mhentuniverse.com) gọi API
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+        if (req.method === 'OPTIONS') {
+          res.writeHead(204);
+          res.end();
+          return;
+        }
+
+        // API Trạng thái Discord Rich Presence
+        if (pathname === '/api/discord-status') {
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: true, ...discordManager.getStatus() }));
+          return;
+        }
+
+        // API Cập nhật Discord Rich Presence từ Web Browser
+        if (pathname === '/api/discord-rpc' && req.method === 'POST') {
+          let body = '';
+          req.on('data', chunk => { body += chunk; });
+          req.on('end', () => {
+            try {
+              const data = JSON.parse(body || '{}');
+              if (data.action === 'setActivity') {
+                discordManager.setActivity(data.activity);
+              } else if (data.action === 'clearActivity') {
+                discordManager.clearActivity();
+              } else if (data.action === 'setClientId') {
+                discordManager.setClientId(data.clientId);
+              }
+              res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+              res.end(JSON.stringify({ success: true, status: discordManager.getStatus() }));
+            } catch (err) {
+              res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+              res.end(JSON.stringify({ success: false, error: err.message }));
+            }
+          });
+          return;
+        }
 
         // Xử lý Auth Callback từ Trình duyệt (accounts.mhentuniverse.com)
         if (pathname === '/auth-callback') {
@@ -252,6 +296,21 @@ ipcMain.handle('desktop:open-external', (event, targetUrl) => {
   if (targetUrl) shell.openExternal(targetUrl);
 });
 
+// Discord Rich Presence IPC Handlers
+ipcMain.handle('discord:set-activity', (event, activity) => {
+  return discordManager.setActivity(activity);
+});
+ipcMain.handle('discord:clear-activity', () => {
+  return discordManager.clearActivity();
+});
+ipcMain.handle('discord:get-status', () => {
+  return discordManager.getStatus();
+});
+ipcMain.handle('discord:set-client-id', (event, clientId) => {
+  discordManager.setClientId(clientId);
+  return discordManager.getStatus();
+});
+
 // Đảm bảo chỉ chạy 1 phiên duy nhất (Single instance) và xử lý Deep Link
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
@@ -291,10 +350,20 @@ if (!gotTheLock) {
     }
   });
 
-  app.whenReady().then(createWindow);
+  app.whenReady().then(() => {
+    createWindow();
+    try {
+      discordManager.connect();
+    } catch (e) {
+      console.warn('[MHEnt Study] Discord RPC connect warning:', e.message);
+    }
+  });
 }
 
 app.on('window-all-closed', () => {
+  try {
+    discordManager.destroy();
+  } catch (e) {}
   if (localServer) {
     try { localServer.close(); } catch (e) {}
     localServer = null;

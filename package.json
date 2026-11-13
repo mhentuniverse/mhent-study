@@ -38,7 +38,8 @@
     "sharp": "^0.35.5"
   },
   "dependencies": {
-    "@capacitor/core": "^6.2.0"
+    "@capacitor/core": "^6.2.0",
+    "@xhayper/discord-rpc": "^1.5.1"
   },
   "build": {
     "appId": "com.mhentuniverse.study",
