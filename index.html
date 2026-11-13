@@ -98,7 +98,7 @@
             </div>
 
             <!-- Nút bật Menu Drawer trên mobile -->
-            <button class="mobile-drawer-toggle" onclick="window.openSideDrawer()" title="Menu Tiện Ích">
+            <button class="mobile-drawer-toggle" onclick="window.openSideDrawer && window.openSideDrawer()" title="Menu Tiện Ích">
                 <i class="fa-solid fa-bars"></i>
             </button>
         </div>
@@ -241,7 +241,7 @@
             <div class="footer-grid">
                 <!-- Cột 1: Thương hiệu MHEnt Study -->
                 <div class="footer-brand-col">
-                    <a onclick="window.location.href='/'" class="footer-brand-title" style="cursor: pointer;">
+                    <a href="/" class="footer-brand-title">
                         <img src="/assets/study-logo.png" alt="MHEnt Study Logo" class="footer-brand-logo">
                         <span class="footer-brand-name">MHEnt. Study</span>
                     </a>
@@ -262,11 +262,11 @@
                 <div class="footer-col">
                     <h3 class="footer-col-heading"><i class="fa-solid fa-book-open" style="margin-right: 6px;"></i> Không Gian Học Tập</h3>
                     <ul class="footer-links-list">
-                        <li><a onclick="window.location.href='/ja/index.html'" class="footer-nav-link">🇯🇵 Tiếng Nhật (JLPT N5-N1)</a></li>
-                        <li><a onclick="window.location.href='/ko/index.html'" class="footer-nav-link">🇰🇷 Tiếng Hàn (Hangeul & TOPIK)</a></li>
-                        <li><a onclick="window.location.href='/zh/index.html'" class="footer-nav-link">🇨🇳 Tiếng Trung (HSK & Pinyin)</a></li>
-                        <li><a onclick="window.location.href='/en/index.html'" class="footer-nav-link">🇬🇧 Tiếng Anh (44 Âm IPA)</a></li>
-                        <li><a onclick="window.location.href='/shared/index.html'" class="footer-nav-link"><i class="fa-solid fa-folder-open" style="margin-right: 4px;"></i> Kho Bộ Thẻ Chia Sẻ</a></li>
+                        <li><a href="/ja/index.html" class="footer-nav-link">🇯🇵 Tiếng Nhật (JLPT N5-N1)</a></li>
+                        <li><a href="/ko/index.html" class="footer-nav-link">🇰🇷 Tiếng Hàn (Hangeul & TOPIK)</a></li>
+                        <li><a href="/zh/index.html" class="footer-nav-link">🇨🇳 Tiếng Trung (HSK & Pinyin)</a></li>
+                        <li><a href="/en/index.html" class="footer-nav-link">🇬🇧 Tiếng Anh (44 Âm IPA)</a></li>
+                        <li><a href="/shared/index.html" class="footer-nav-link"><i class="fa-solid fa-folder-open" style="margin-right: 4px;"></i> Kho Bộ Thẻ Chia Sẻ</a></li>
                     </ul>
                 </div>
 
@@ -274,11 +274,11 @@
                 <div class="footer-col">
                     <h3 class="footer-col-heading"><i class="fa-solid fa-film" style="margin-right: 6px;"></i> Đại Sảnh & Giải Trí</h3>
                     <ul class="footer-links-list">
-                        <li><a onclick="window.open('https://www.mhentuniverse.com', '_blank')" class="footer-nav-link">Đại Sảnh MHEnt Universe</a></li>
-                        <li><a onclick="window.open('https://www.mhentuniverse.com/cinema', '_blank')" class="footer-nav-link">MHEnt Cinema (Anime & Movie)</a></li>
-                        <li><a onclick="window.open('https://www.mhentuniverse.com/arena', '_blank')" class="footer-nav-link">Arena (Đấu Trí Trực Tuyến)</a></li>
-                        <li><a onclick="window.open('https://www.mhentuniverse.com/game', '_blank')" class="footer-nav-link">Game Center (Cờ Tướng, Cờ Vua)</a></li>
-                        <li><a onclick="window.location.href='/login.html'" class="footer-nav-link">Cổng Định Danh Học Viên</a></li>
+                        <li><a href="https://www.mhentuniverse.com" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Đại Sảnh MHEnt Universe</a></li>
+                        <li><a href="https://www.mhentuniverse.com/cinema" target="_blank" rel="noopener noreferrer" class="footer-nav-link">MHEnt Cinema (Anime & Movie)</a></li>
+                        <li><a href="https://www.mhentuniverse.com/arena" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Arena (Đấu Trí Trực Tuyến)</a></li>
+                        <li><a href="https://www.mhentuniverse.com/game" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Game Center (Cờ Tướng, Cờ Vua)</a></li>
+                        <li><a href="/login.html" class="footer-nav-link">Cổng Định Danh Học Viên</a></li>
                     </ul>
                 </div>
 
@@ -286,10 +286,10 @@
                 <div class="footer-col">
                     <h3 class="footer-col-heading"><i class="fa-solid fa-scale-balanced" style="margin-right: 6px;"></i> Pháp Lý & Hỗ Trợ</h3>
                     <ul class="footer-links-list">
-                        <li><a onclick="window.open('https://docs.mhentuniverse.com/terms', '_blank')" class="footer-nav-link">Điều khoản dịch vụ</a></li>
-                        <li><a onclick="window.open('https://docs.mhentuniverse.com/privacy', '_blank')" class="footer-nav-link">Chính sách bảo mật</a></li>
-                        <li><a onclick="window.open('https://www.mhentuniverse.com/about', '_blank')" class="footer-nav-link">Về chúng tớ & Đóng góp ý kiến</a></li>
-                        <li><a onclick="window.open('https://www.facebook.com/mhentuniverse', '_blank')" class="footer-nav-link">Cộng đồng MHEnt Universe</a></li>
+                        <li><a href="https://docs.mhentuniverse.com/terms" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Điều khoản dịch vụ</a></li>
+                        <li><a href="https://docs.mhentuniverse.com/privacy" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Chính sách bảo mật</a></li>
+                        <li><a href="https://www.mhentuniverse.com/about" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Về chúng tớ & Đóng góp ý kiến</a></li>
+                        <li><a href="https://www.facebook.com/mhentuniverse" target="_blank" rel="noopener noreferrer" class="footer-nav-link">Cộng đồng MHEnt Universe</a></li>
                     </ul>
                 </div>
             </div>
@@ -301,11 +301,11 @@
                     © 2026 <strong>Miyazaki Haruto Entertainment Co., Ltd.</strong> All rights reserved.
                 </div>
                 <div class="footer-social-strip">
-                    <a onclick="window.open('https://www.facebook.com/mharuto.entertainment/', '_blank')">
+                    <a href="https://www.facebook.com/mharuto.entertainment/" target="_blank" rel="noopener noreferrer">
                         <i class="fa-brands fa-facebook"></i> Fanpage
                     </a>
                     <span>•</span>
-                    <a onclick="window.open('https://www.facebook.com/mhentuniverse', '_blank')">
+                    <a href="https://www.facebook.com/mhentuniverse" target="_blank" rel="noopener noreferrer">
                         <i class="fa-solid fa-users"></i> Community
                     </a>
                     <span>•</span>
@@ -316,7 +316,6 @@
     </footer>
 
     <!-- SCRIPTS -->
-    <script src="/js/config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/js/supabase-client.js"></script>
     <script src="/js/mhent-ui.js"></script>
@@ -344,8 +343,10 @@
             document.documentElement.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
             localStorage.setItem('mhent_dark_mode', isDark ? 'on' : 'off');
-            // Lưu Cookie dùng chung cho toàn bộ các subdomain (*.mhentuniverse.com)
-            document.cookie = `mhent_dark_mode=${isDark ? 'on' : 'off'}; domain=.mhentuniverse.com; path=/; max-age=31536000; SameSite=Lax`;
+            // Lưu Cookie dùng chung cho toàn bộ các subdomain (*.mhentuniverse.com) nếu đang trên domain chính
+            const isMHEntDomain = window.location.hostname.endsWith('mhentuniverse.com');
+            const domainAttr = isMHEntDomain ? '; domain=.mhentuniverse.com' : '';
+            document.cookie = `mhent_dark_mode=${isDark ? 'on' : 'off'}${domainAttr}; path=/; max-age=31536000; SameSite=Lax`;
         }
 
         if (document.documentElement.classList.contains('dark-mode') || localStorage.getItem('mhent_dark_mode') === 'on') {
