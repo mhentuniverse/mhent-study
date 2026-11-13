@@ -16,7 +16,7 @@
     <link rel="apple-touch-icon" href="/assets/study-logo.png">
     <link rel="manifest" href="/manifest.json">
 
-    <link rel="stylesheet" href="/css/study-core.css">
+    <link rel="stylesheet" href="/css/study-core.css?v=2.1.4">
     <link rel="stylesheet" href="/css/mhent-ui.css">
     <link rel="stylesheet" href="/css/mhent-mobile.css">
     <link rel="stylesheet" href="/css/ai-dictionary.css">
@@ -107,52 +107,161 @@
     <!-- KHUNG CHÍNH (STUDY WRAPPER) -->
     <main class="study-wrapper">
 
-        <!-- HỘP LỜI CHÀO & TỔNG QUAN HỌC TẬP -->
-        <section class="study-greeting-box">
-            <div class="greeting-text">
-                <h1>Chào mừng bạn đến với MHEnt. Study! ✨</h1>
-                <p>Hôm nay bạn muốn trau dồi từ vựng, luyện nghe hay thi thử cùng AI của ngôn ngữ nào?</p>
+        <!-- 1. HERO WELCOME & MOTIVATION BANNER (STUDY 3.0) -->
+        <section class="study-hero-banner">
+            <div class="hero-main-content">
+                <div class="hero-badge-pill">
+                    <i class="fa-solid fa-sparkles"></i> MHEnt Study Universe • Học Tập Đa Không Gian
+                </div>
+                <h1 class="hero-title">
+                    Khám phá <span>Vũ Trụ Ngôn Ngữ</span>
+                </h1>
+                <p class="hero-desc">
+                    Hệ thống học ngoại ngữ tương tác thế hệ mới: Luyện thẻ 3D, hát Karaoke song ngữ, tra cứu AI chuyên sâu và đồng bộ tiến trình học tập đa nền tảng.
+                </p>
             </div>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <a href="/lyrics.html" class="btn-quick-tool"
-                    style="background: linear-gradient(135deg, #0ea5e9, #8b5cf6); color: #fff; padding: 10px 18px;">
-                    <i class="fa-solid fa-headphones-simple"></i> Học qua Bài hát (Mới)
-                </a>
-                <button type="button" class="btn-quick-tool" onclick="window.aisaDict && window.aisaDict.open()"
-                    style="background: rgba(14, 165, 233, 0.12); color: var(--accent-edu); border: 1.5px solid var(--accent-edu); padding: 10px 18px; cursor: pointer;">
-                    <i class="fa-solid fa-book-sparkles"></i> Từ điển AI
-                </button>
-                <a href="/ko/practice/vocab.html" class="btn-quick-tool"
-                    style="background: rgba(255, 255, 255, 0.08); padding: 10px 18px;">
-                    <i class="fa-solid fa-book-open"></i> Sổ từ vựng thông minh
-                </a>
-                <a href="/shared/index.html" class="btn-quick-tool" style="padding: 10px 18px;">
-                    <i class="fa-solid fa-cloud-arrow-down"></i> Nhận bài chia sẻ
-                </a>
+            
+            <div class="hero-stats-panel">
+                <div class="hero-stat-card">
+                    <div class="hero-stat-icon" style="background: rgba(249, 115, 22, 0.15); color: #f97316;">
+                        <i class="fa-solid fa-fire-flame-curved"></i>
+                    </div>
+                    <div>
+                        <div class="hero-stat-val" id="hero-streak-display">1 Ngày</div>
+                        <div class="hero-stat-label">Chuỗi Học Tập</div>
+                    </div>
+                </div>
+
+                <div class="hero-stat-card">
+                    <div class="hero-stat-icon" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">
+                        <i class="fa-solid fa-language"></i>
+                    </div>
+                    <div>
+                        <div class="hero-stat-val">4 Không Gian</div>
+                        <div class="hero-stat-label">Hàn • Nhật • Trung • Anh</div>
+                    </div>
+                </div>
+
+                <div class="hero-stat-card">
+                    <div class="hero-stat-icon" style="background: rgba(168, 85, 247, 0.15); color: #c084fc;">
+                        <i class="fa-solid fa-headphones-simple"></i>
+                    </div>
+                    <div>
+                        <div class="hero-stat-val">Lyrics Hub</div>
+                        <div class="hero-stat-label">Karaoke Song Ngữ</div>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- 4 PHÒNG HỌC NGÔN NGỮ (LANGUAGE HUBS) -->
+        <!-- 2. KHU VỰC CÔNG CỤ TƯƠNG TÁC NỔI BẬT (FEATURED LEARNING HUBS) -->
+        <div class="featured-hubs-grid">
+            
+            <!-- A. LYRICS HUB -->
+            <div class="featured-hub-card lyrics">
+                <div>
+                    <div class="featured-hub-header">
+                        <div class="featured-hub-icon" style="background: linear-gradient(135deg, #0284c7, #8b5cf6); color: #fff; box-shadow: 0 4px 16px rgba(14, 165, 233, 0.35);">
+                            <i class="fa-solid fa-headphones"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #38bdf8; letter-spacing: 0.5px;">Phòng Luyện Nghe Mới</div>
+                            <h2 class="featured-hub-title">Học Qua Lời Bài Hát (Lyrics Hub)</h2>
+                        </div>
+                    </div>
+                    <p class="featured-hub-desc">
+                        Luyện nghe qua giai điệu âm nhạc, theo dõi lời chạy từng câu chuẩn Karaoke, bóc tách từ vựng hay và nhấp tra từ điển AISA AI ngay trong bài hát.
+                    </p>
+                </div>
+                <div class="featured-hub-footer">
+                    <a href="/lyrics.html" class="btn-quick-tool" style="background: linear-gradient(135deg, #0ea5e9, #8b5cf6); color: #fff; padding: 10px 22px; font-size: 13.5px; border: none; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.35);">
+                        <i class="fa-solid fa-play"></i> Bắt đầu nghe & học
+                    </a>
+                </div>
+            </div>
+
+            <!-- B. AISA AI DICTIONARY -->
+            <div class="featured-hub-card">
+                <div>
+                    <div class="featured-hub-header">
+                        <div class="featured-hub-icon" style="background: rgba(14, 165, 233, 0.15); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.3);">
+                            <i class="fa-solid fa-book-sparkles"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--study-text-muted); letter-spacing: 0.5px;">Tra Cứu Thông Minh</div>
+                            <h2 class="featured-hub-title">Từ Điển AI AISA (Ctrl+K)</h2>
+                        </div>
+                    </div>
+                    <p class="featured-hub-desc">
+                        Tra cứu từ vựng đa ngữ, phát âm bản xứ, phân tích Hán tự & cấu trúc ngữ pháp tức thì từ mọi vị trí trên trang web.
+                    </p>
+                </div>
+                <div class="featured-hub-footer">
+                    <button type="button" class="btn-quick-tool" onclick="window.aisaDict && window.aisaDict.open()" style="cursor: pointer; width: 100%;">
+                        <i class="fa-solid fa-magnifying-glass"></i> Mở Từ điển AI
+                    </button>
+                </div>
+            </div>
+
+            <!-- C. SHARED CLOUD DECKS -->
+            <div class="featured-hub-card">
+                <div>
+                    <div class="featured-hub-header">
+                        <div class="featured-hub-icon" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
+                            <i class="fa-solid fa-cloud-arrow-down"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--study-text-muted); letter-spacing: 0.5px;">Cộng Đồng MHEnt</div>
+                            <h2 class="featured-hub-title">Kho Bộ Thẻ Chia Sẻ</h2>
+                        </div>
+                    </div>
+                    <p class="featured-hub-desc">
+                        Tải về các bộ từ vựng JLPT, HSK, TOPIK, IELTS do cộng đồng biên soạn hoặc sao lưu bộ từ của bạn lên đám mây Supabase.
+                    </p>
+                </div>
+                <div class="featured-hub-footer">
+                    <a href="/shared/index.html" class="btn-quick-tool" style="width: 100%;">
+                        <i class="fa-solid fa-folder-open"></i> Khám phá kho thẻ
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 3. TIÊU ĐỀ PHÂN KHU HỌC TẬP -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+            <div>
+                <h2 style="font-size: 20px; font-weight: 900; color: var(--study-text); display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-compass" style="color: var(--accent-edu);"></i>
+                    4 Phòng Học Ngôn Ngữ Chuyên Sâu
+                </h2>
+                <p style="font-size: 13px; color: var(--study-text-muted); margin: 2px 0 0 0;">
+                    Chọn ngôn ngữ bạn muốn chinh phục hôm nay để bắt đầu luyện phản xạ và từ vựng
+                </p>
+            </div>
+            <a href="/download.html" class="btn-quick-tool" style="padding: 7px 16px; border-radius: 9999px; font-size: 12px; color: #a855f7; border-color: rgba(168, 85, 247, 0.3);">
+                <i class="fa-solid fa-download"></i> Tải App Cho Máy Tính & Điện Thoại
+            </a>
+        </div>
+
+        <!-- 4 PHÒNG HỌC NGÔN NGỮ (LANGUAGE HUBS GRID) -->
         <div class="lang-hub-grid">
 
             <!-- 🇰🇷 TIẾNG HÀN -->
             <div class="lang-hub-card ko">
                 <div class="card-top-row">
                     <span class="card-flag-badge">🇰🇷</span>
-                    <span class="card-status-badge">15 Từ vựng cơ bản</span>
+                    <span class="card-status-badge">Hangeul & TOPIK</span>
                 </div>
                 <div>
                     <h2 class="card-lang-name">Tiếng Hàn Quốc</h2>
-                    <span class="card-lang-native">한국어 • Hangeul & TOPIK</span>
+                    <span class="card-lang-native">한국어 • Hangeul & TOPIK I-II</span>
                 </div>
                 <div class="card-actions-grid">
                     <a href="/ko/alphabet.html" class="btn-quick-tool"><i class="fa-solid fa-font"></i> Bảng Hangeul</a>
-                    <a href="/ko/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i>
-                        Sổ từ vựng</a>
-                    <a href="/ko/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i>
-                        Flashcard 3D</a>
-                    <a href="/ko/practice/index.html" class="btn-quick-tool"><i class="fa-solid fa-gamepad"></i>
-                        Luyện tập & Quiz</a>
+                    <a href="/ko/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i> Sổ từ vựng</a>
+                    <a href="/ko/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i> Flashcard 3D</a>
+                    <a href="/ko/practice/index.html" class="btn-quick-tool"><i class="fa-solid fa-gamepad"></i> Luyện tập & Quiz</a>
                     <a href="/ko/index.html" class="btn-main-enter">
                         Vào phòng học Tiếng Hàn <i class="fa-solid fa-arrow-right"></i>
                     </a>
@@ -163,20 +272,17 @@
             <div class="lang-hub-card ja">
                 <div class="card-top-row">
                     <span class="card-flag-badge">🇯🇵</span>
-                    <span class="card-status-badge">15 Từ JLPT N5 & Kanji</span>
+                    <span class="card-status-badge">JLPT N5 - N1</span>
                 </div>
                 <div>
                     <h2 class="card-lang-name">Tiếng Nhật Bản</h2>
-                    <span class="card-lang-native">日本語 • Hiragana & Kanji</span>
+                    <span class="card-lang-native">日本語 • Kana & Kanji</span>
                 </div>
                 <div class="card-actions-grid">
                     <a href="/ja/alphabet.html" class="btn-quick-tool"><i class="fa-solid fa-font"></i> Bảng Kana</a>
-                    <a href="/ja/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i>
-                        Sổ từ vựng</a>
-                    <a href="/ja/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i>
-                        Flashcard 3D</a>
-                    <a href="/ja/practice/index.html" class="btn-quick-tool"><i class="fa-solid fa-gamepad"></i>
-                        Luyện tập & Quiz</a>
+                    <a href="/ja/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i> Sổ từ vựng</a>
+                    <a href="/ja/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i> Flashcard 3D</a>
+                    <a href="/ja/practice/index.html" class="btn-quick-tool"><i class="fa-solid fa-gamepad"></i> Luyện tập & Quiz</a>
                     <a href="/ja/index.html" class="btn-main-enter">
                         Vào phòng học Tiếng Nhật <i class="fa-solid fa-arrow-right"></i>
                     </a>
@@ -187,7 +293,7 @@
             <div class="lang-hub-card zh">
                 <div class="card-top-row">
                     <span class="card-flag-badge">🇨🇳</span>
-                    <span class="card-status-badge">15 Từ HSK 1 - 2 & Hán Tự</span>
+                    <span class="card-status-badge">HSK 1 - 6 & Pinyin</span>
                 </div>
                 <div>
                     <h2 class="card-lang-name">Tiếng Trung Quốc</h2>
@@ -195,12 +301,9 @@
                 </div>
                 <div class="card-actions-grid">
                     <a href="/zh/alphabet.html" class="btn-quick-tool"><i class="fa-solid fa-font"></i> Bảng Pinyin</a>
-                    <a href="/zh/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i>
-                        Sổ từ vựng</a>
-                    <a href="/zh/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i>
-                        Flashcard 3D</a>
-                    <a href="/zh/practice/index.html" class="btn-quick-tool"><i class="fa-solid fa-gamepad"></i>
-                        Luyện tập & Quiz</a>
+                    <a href="/zh/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i> Sổ từ vựng</a>
+                    <a href="/zh/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i> Flashcard 3D</a>
+                    <a href="/zh/practice/index.html" class="btn-quick-tool"><i class="fa-solid fa-gamepad"></i> Luyện tập & Quiz</a>
                     <a href="/zh/index.html" class="btn-main-enter">
                         Vào phòng học Tiếng Trung <i class="fa-solid fa-arrow-right"></i>
                     </a>
@@ -211,7 +314,7 @@
             <div class="lang-hub-card en">
                 <div class="card-top-row">
                     <span class="card-flag-badge">🇬🇧</span>
-                    <span class="card-status-badge">44 Âm IPA & 15 Từ vựng</span>
+                    <span class="card-status-badge">44 Âm IPA & IELTS</span>
                 </div>
                 <div>
                     <h2 class="card-lang-name">Tiếng Anh</h2>
@@ -219,12 +322,9 @@
                 </div>
                 <div class="card-actions-grid">
                     <a href="/en/alphabet.html" class="btn-quick-tool"><i class="fa-solid fa-font"></i> 44 Âm IPA</a>
-                    <a href="/en/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i>
-                        Sổ từ vựng</a>
-                    <a href="/en/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i>
-                        Flashcard 3D</a>
-                    <a href="/en/practice/index.html" class="btn-quick-tool"><i class="fa-solid fa-gamepad"></i>
-                        Luyện tập & Quiz</a>
+                    <a href="/en/practice/vocab.html" class="btn-quick-tool"><i class="fa-solid fa-pen-to-square"></i> Sổ từ vựng</a>
+                    <a href="/en/practice/flashcards.html" class="btn-quick-tool"><i class="fa-solid fa-clone"></i> Flashcard 3D</a>
+                    <a href="/en/practice/index.html" class="btn-quick-tool"><i class="fa-solid fa-gamepad"></i> Luyện tập & Quiz</a>
                     <a href="/en/index.html" class="btn-main-enter">
                         Vào phòng học Tiếng Anh <i class="fa-solid fa-arrow-right"></i>
                     </a>
@@ -329,13 +429,15 @@
     <script src="/data/sample-en.js"></script>
     <script src="/js/ai-deck-creator.js"></script>
     <script src="/js/aisa-widget.js" defer></script>
-    <script src="/js/discord-presence.js?v=2.1.3" defer></script>
+    <script src="/js/discord-presence.js?v=2.1.4" defer></script>
     <script type="module" src="/js/auth.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const streak = window.studyStorage ? window.studyStorage.getStreak() : 1;
             const el = document.getElementById('streakNum');
             if (el) el.textContent = streak;
+            const heroStreak = document.getElementById('hero-streak-display');
+            if (heroStreak) heroStreak.textContent = `${streak} Ngày`;
         });
 
         function toggleDarkMode() {

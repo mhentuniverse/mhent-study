@@ -12,7 +12,7 @@ if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.
   });
   // Tuyệt đối không can thiệp fetch trên localhost/APK
 } else {
-  const CACHE_NAME = 'mhent-study-v2.1.3';
+  const CACHE_NAME = 'mhent-study-v2.1.4';
   const STATIC_ASSETS = [
     '/',
     '/index.html',

@@ -81,9 +81,10 @@ body.lyrics-theme .footer-brand-title {
 
 /* Layout */
 .lyrics-page-wrapper {
-    max-width: 1400px;
+    max-width: 1480px;
+    width: min(95%, 1480px);
     margin: 0 auto;
-    padding: 24px 20px 80px;
+    padding: 24px 0 80px;
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -229,14 +230,14 @@ body.lyrics-theme .footer-brand-title {
 /* Main Workspace: 2-Column Grid (Player & Track Info on left, Synced Karaoke on right) */
 .lyrics-workspace {
     display: grid;
-    grid-template-columns: 460px 1fr;
+    grid-template-columns: minmax(460px, 500px) 1fr;
     gap: 24px;
     min-height: 640px;
 }
 
 @media (min-width: 1400px) {
     .lyrics-workspace {
-        grid-template-columns: 480px 1fr;
+        grid-template-columns: 500px 1fr;
     }
 }
 
