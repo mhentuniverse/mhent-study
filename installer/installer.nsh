@@ -31,6 +31,11 @@
   !define MUI_LICENSEPAGE_TEXT_BOTTOM "Nếu bạn đồng ý với các điều khoản, chọn 'Tôi đồng ý' và nhấn Tiếp tục."
   !define MUI_LICENSEPAGE_CHECKBOX
 
+  ; Tùy chọn cài đặt kèm MHEnt. Link trên Trang Hoàn Tất
+  !define MUI_FINISHPAGE_SHOWREADME ""
+  !define MUI_FINISHPAGE_SHOWREADME_TEXT "Tải kèm MHEnt. Link (Cầu nối Discord & Hệ sinh thái MHEnt)"
+  !define MUI_FINISHPAGE_SHOWREADME_FUNCTION "InstallOrDownloadMHEntLink"
+
   ; Trang hoàn tất cài đặt
   !define MUI_FINISHPAGE_TITLE "Cài đặt hoàn tất! 🎉"
   !define MUI_FINISHPAGE_TEXT "MHEnt. Study đã được cài đặt thành công!$\r$\n$\r$\nBắt đầu hành trình học ngoại ngữ của bạn ngay bây giờ. Bộ thẻ từ vựng của 4 ngôn ngữ đang chờ bạn!$\r$\n$\r$\nNhấn Hoàn tất để đóng trình cài đặt."
@@ -38,11 +43,70 @@
   !define MUI_FINISHPAGE_LINK "Truy cập study.mhentuniverse.com"
   !define MUI_FINISHPAGE_LINK_LOCATION "https://study.mhentuniverse.com/download"
 
+  ; Biến trạng thái kiểm tra
+  Var DialogCompanion
+  Var CheckboxCompanion
+  Var CheckboxCompanionState
+  Var MHEntLinkTriggered
+
+  Function CompanionPageCreate
+    !insertmacro MUI_HEADER_TEXT "Phần mềm bổ trợ" "Tùy chọn tải kèm MHEnt. Link phục vụ đồng bộ Discord Rich Presence"
+    nsDialogs::Create 1018
+    Pop $DialogCompanion
+    ${If} $DialogCompanion == error
+      Abort
+    ${EndIf}
+
+    ${NSD_CreateLabel} 0 0 100% 32u "MHEnt. Study kết hợp cùng MHEnt. Link giúp bạn tự động hiển thị trạng thái học ngoại ngữ (Sổ từ vựng, Thẻ 3D, Nghe nhạc) trực tiếp lên hồ sơ Discord cá nhân và đồng bộ Cổng Định Danh MHEnt ID.$\r$\n$\r$\nBạn có muốn tải kèm MHEnt. Link không?"
+    Pop $0
+
+    ${NSD_CreateCheckbox} 0 45u 100% 15u "Tải và cài đặt kèm MHEnt. Link (Khuyên dùng)"
+    Pop $CheckboxCompanion
+
+    ; Mặc định chọn sẵn
+    ${NSD_SetState} $CheckboxCompanion ${BST_CHECKED}
+
+    nsDialogs::Show
+  FunctionEnd
+
+  Function CompanionPageLeave
+    ${NSD_GetState} $CheckboxCompanion $CheckboxCompanionState
+  FunctionEnd
+
+  ; Hàm kích hoạt mở hoặc tải MHEnt. Link
+  Function InstallOrDownloadMHEntLink
+    ${If} $MHEntLinkTriggered == "1"
+      Return
+    ${EndIf}
+    StrCpy $MHEntLinkTriggered "1"
+
+    ${if} ${FileExists} "$LOCALAPPDATA\Programs\MHEnt. Link\MHEnt. Link.exe"
+      ExecShell "open" "$LOCALAPPDATA\Programs\MHEnt. Link\MHEnt. Link.exe"
+    ${elseif} ${FileExists} "$PROGRAMFILES\MHEnt. Link\MHEnt. Link.exe"
+      ExecShell "open" "$PROGRAMFILES\MHEnt. Link\MHEnt. Link.exe"
+    ${elseif} ${FileExists} "$PROGRAMFILES64\MHEnt. Link\MHEnt. Link.exe"
+      ExecShell "open" "$PROGRAMFILES64\MHEnt. Link\MHEnt. Link.exe"
+    ${else}
+      ExecShell "open" "https://apps.mhentuniverse.com/link?download=true"
+    ${endif}
+  FunctionEnd
+
   ; Trang chào mừng cài đặt
   !macro customWelcomePage
     !define MUI_WELCOMEPAGE_TITLE "Chào mừng bạn đến với MHEnt. Study!"
     !define MUI_WELCOMEPAGE_TEXT "Trình cài đặt sẽ hướng dẫn bạn cài đặt $(^NameDA) lên máy tính.$\r$\n$\r$\nMHEnt. Study là không gian học ngoại ngữ đa vũ trụ — Tiếng Hàn, Nhật, Trung và Anh — với tính năng học offline và đồng bộ đám mây.$\r$\n$\r$\nNhấn Tiếp tục để bắt đầu cài đặt."
     !insertmacro MUI_PAGE_WELCOME
+  !macroend
+
+  ; Trang tùy chọn phần mềm đi kèm xuất hiện trước khi giải nén file
+  !macro customPageAfterChangeDir
+    Page custom CompanionPageCreate CompanionPageLeave
+  !macroend
+
+  !macro customInstall
+    ${If} $CheckboxCompanionState == 1
+      Call InstallOrDownloadMHEntLink
+    ${EndIf}
   !macroend
 
 !endif

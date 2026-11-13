@@ -3,7 +3,12 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const url = require('url');
-const { WebSocketServer } = require('ws');
+let WebSocketServer = null;
+try {
+  WebSocketServer = require('ws').WebSocketServer;
+} catch (e) {
+  console.warn('[MHEnt. Study] Module ws không khả dụng, WebSocket bridge nội bộ tạm tắt:', e.message);
+}
 const DiscordRPCManager = require('./discord-manager');
 
 let mainWindow = null;
@@ -195,7 +200,7 @@ function startLocalServer() {
 
         // Khởi động WebSocket Server phục vụ cầu nối Realtime 2 chiều cho Web Browser
         try {
-          if (!wss) {
+          if (WebSocketServer && !wss) {
             wss = new WebSocketServer({ server: localServer });
             let emptyClientsTimer = null;
 
@@ -262,7 +267,7 @@ function startLocalServer() {
 }
 
 function broadcastWs(msg) {
-  if (!wss) return;
+  if (!wss || !wss.clients) return;
   const raw = JSON.stringify(msg);
   for (const client of wss.clients) {
     if (client.readyState === 1) {
