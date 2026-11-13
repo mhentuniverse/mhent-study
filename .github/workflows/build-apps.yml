@@ -36,6 +36,19 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          if (Test-Path "companion/package.json") {
+            Write-Host "Building MHEnt Link Companion Installer..."
+            & node .\node_modules\electron-builder\cli.js --project companion --publish never
+            if (Test-Path "companion/dist") {
+              Get-ChildItem "companion\dist\*.exe" | ForEach-Object {
+                Copy-Item $_.FullName "installer\MHEnt-Link-Setup.exe" -Force
+                Copy-Item $_.FullName "dist\MHEnt.Link.Setup.exe" -Force
+                Copy-Item $_.FullName "dist\MHEnt-Link-Setup.exe" -Force
+              }
+            }
+          }
+
+          Write-Host "Building Unified 2-in-1 MHEnt Study & Link Installer..."
           $logPath = Join-Path $env:RUNNER_TEMP "windows-build.log"
           $output = & node .\node_modules\electron-builder\cli.js --publish never 2>&1
           $exitCode = $LASTEXITCODE
@@ -43,17 +56,6 @@ jobs:
           if ($exitCode -ne 0) {
             Write-Error "Windows build failed with exit code $exitCode"
             exit $exitCode
-          }
-
-          if (Test-Path "companion/package.json") {
-            Write-Host "Building MHEnt Link Companion Installer..."
-            & node .\node_modules\electron-builder\cli.js --project companion --publish never
-            if (Test-Path "companion/dist") {
-              Get-ChildItem "companion\dist\*.exe" | ForEach-Object {
-                Copy-Item $_.FullName "dist\MHEnt.Link.Setup.exe" -Force
-                Copy-Item $_.FullName "dist\MHEnt-Link-Setup.exe" -Force
-              }
-            }
           }
 
       - name: Upload Windows Executables
