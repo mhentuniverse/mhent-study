@@ -281,7 +281,12 @@
             const curSec = Math.floor(currentTime || 0);
             const durSec = Math.floor(duration || 0);
 
-            // Đúng chuẩn Spotify: Phải ĐANG PHÁT NHẠC thì mới lên Discord, dừng phát là xóa ngay
+            // Phong cách Spotify: Nếu tạm dừng hoặc dừng hẳn -> Xóa sạch Activity trên Discord ngay lập tức (Zero Latency)
+            if (this.pauseClearTimer) {
+                clearTimeout(this.pauseClearTimer);
+                this.pauseClearTimer = null;
+            }
+
             if (!isPlaying) {
                 this.clearActivity();
                 return;
