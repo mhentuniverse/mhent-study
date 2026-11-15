@@ -39,12 +39,6 @@ jobs:
           if (Test-Path "companion/package.json") {
             Write-Host "Building MHEnt Link Companion Installer..."
             & node .\node_modules\electron-builder\cli.js --project companion --publish never
-            if (Test-Path "companion/dist") {
-              Get-ChildItem "companion\dist\*.exe" | ForEach-Object {
-                Copy-Item $_.FullName "dist\MHEnt.Link.Setup.exe" -Force
-                Copy-Item $_.FullName "dist\MHEnt-Link-Setup.exe" -Force
-              }
-            }
           }
 
           Write-Host "Building MHEnt Study Installer..."
@@ -55,6 +49,20 @@ jobs:
           if ($exitCode -ne 0) {
             Write-Error "Windows build failed with exit code $exitCode"
             exit $exitCode
+          }
+
+          # Đồng bộ và chuẩn hóa tên file để phát hành cùng lúc trên GitHub Releases
+          if (-not (Test-Path "dist")) { New-Item -ItemType Directory -Path "dist" -Force }
+          if (Test-Path "companion/dist") {
+            Get-ChildItem "companion\dist\*.exe" | ForEach-Object {
+              Copy-Item $_.FullName "dist\MHEnt.Link.Setup.exe" -Force
+              Copy-Item $_.FullName "dist\MHEnt-Link-Setup.exe" -Force
+            }
+          }
+          $studySetup = Get-ChildItem "dist\MHEnt-Study-Setup-*.exe" | Select-Object -First 1
+          if ($studySetup) {
+            Copy-Item $studySetup.FullName "dist\MHEnt-Study-Setup.exe" -Force
+            Copy-Item $studySetup.FullName "dist\MHEnt.Study.Setup.exe" -Force
           }
 
       - name: Upload Windows Executables
