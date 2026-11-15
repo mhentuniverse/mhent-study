@@ -267,6 +267,27 @@ if (!gotTheLock) {
       }
     });
 
+    localServer.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.warn(`[MHEnt. Link Bridge] Cổng ${localServerPort} đang bận (EADDRINUSE). Đang chờ để kết nối lại...`);
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('link:status-update', {
+            serverPort: localServerPort,
+            portBusy: true,
+            discord: discordManager.getStatus(),
+            profile: loadSavedProfile(),
+            apps: scanInstalledApps()
+          });
+        }
+        setTimeout(() => {
+          try { localServer.close(); } catch(e) {}
+          startBridgeServer();
+        }, 3000);
+      } else {
+        console.error('[MHEnt. Link Bridge Server Error]:', err);
+      }
+    });
+
     localServer.listen(localServerPort, '127.0.0.1', () => {
       console.log(`[MHEnt. Link Bridge] Listening on http://127.0.0.1:${localServerPort}`);
 

@@ -183,7 +183,8 @@ function startLocalServer() {
       }
     });
 
-    const PREFERRED_PORT = 14128;
+    // Cổng riêng cho Static File Server nội bộ của Study Desktop (tránh xung đột với Cổng 14128 của MHEnt. Link)
+    const PREFERRED_PORT = 18288;
 
     function tryListen(port, attemptsLeft = 10) {
       const onError = (err) => {
