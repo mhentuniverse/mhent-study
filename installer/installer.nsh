@@ -63,13 +63,13 @@
     ${NSD_CreateLabel} 0 0 100% 12u "PHẦN MỀM ĐỒNG HÀNH BỔ TRỢ (TÙY CHỌN)"
     Pop $0
 
-    ${NSD_CreateLabel} 0 16u 100% 32u "MHEnt. Study kết hợp cùng MHEnt. Link giúp bạn tự động hiển thị trạng thái học tập (Sổ từ vựng, Thẻ ghi nhớ 3D, Nghe nhạc) trực tiếp lên hồ sơ Discord cá nhân và đồng bộ Cổng Định Danh MHEnt ID.$\r$\n$\r$\nBạn có muốn cài đặt kèm MHEnt. Link không?"
+    ${NSD_CreateLabel} 0 16u 100% 32u "MHEnt. Study kết hợp cùng MHEnt. Link giúp bạn tự động hiển thị trạng thái học tập (Sổ từ vựng, Thẻ ghi nhớ 3D, Nghe nhạc) trực tiếp lên hồ sơ Discord cá nhân và đồng bộ Cổng Định Danh MHEnt ID.$\r$\n$\r$\nBạn có muốn tải thêm MHEnt. Link không?"
     Pop $0
 
-    ${NSD_CreateCheckbox} 0 54u 100% 15u "Cài đặt kèm MHEnt. Link — Cầu nối Discord Rich Presence (Khuyên dùng)"
+    ${NSD_CreateCheckbox} 0 54u 100% 15u "Tải thêm MHEnt. Link (Cầu nối Discord Rich Presence)"
     Pop $CheckboxCompanion
 
-    ; Mặc định tích chọn sẵn
+    ; Mặc định bỏ chọn hoặc tích chọn tùy nhu cầu
     ${NSD_SetState} $CheckboxCompanion 1
 
     nsDialogs::Show
@@ -80,27 +80,16 @@
   FunctionEnd
 
   ; --------------------------------------------------------------
-  ; 2. ĐỔI TIÊU ĐỀ TRONG GIAI ĐOẠN CÀI ĐẶT (1/2 HOẶC ĐỘC LẬP)
+  ; 2. TIÊU ĐỀ TRONG GIAI ĐOẠN CÀI ĐẶT
   ; --------------------------------------------------------------
   Function instFilesShow
     FindWindow $0 "#32770" "" $hwndparent
-    ${If} $CheckboxCompanionState != 0
-      ; Giai đoạn 1/2: Đang cài đặt MHEnt. Study -- 1/2
-      GetDlgItem $1 $hwndparent 1037
-      SendMessage $1 ${WM_SETTEXT} 0 "STR:Đang cài đặt MHEnt. Study -- 1/2"
-      GetDlgItem $1 $hwndparent 1038
-      SendMessage $1 ${WM_SETTEXT} 0 "STR:Vui lòng chờ trong khi MHEnt. Study đang được trích xuất và cài đặt..."
-      GetDlgItem $1 $0 1006
-      SendMessage $1 ${WM_SETTEXT} 0 "STR:Đang cài đặt MHEnt. Study -- 1/2"
-    ${Else}
-      ; Không tick chọn MHEnt Link: Chỉ cài đặt MHEnt. Study
-      GetDlgItem $1 $hwndparent 1037
-      SendMessage $1 ${WM_SETTEXT} 0 "STR:Đang cài đặt MHEnt. Study"
-      GetDlgItem $1 $hwndparent 1038
-      SendMessage $1 ${WM_SETTEXT} 0 "STR:Vui lòng chờ trong khi MHEnt. Study đang được trích xuất và cài đặt..."
-      GetDlgItem $1 $0 1006
-      SendMessage $1 ${WM_SETTEXT} 0 "STR:Đang cài đặt MHEnt. Study"
-    ${EndIf}
+    GetDlgItem $1 $hwndparent 1037
+    SendMessage $1 ${WM_SETTEXT} 0 "STR:Đang cài đặt MHEnt. Study"
+    GetDlgItem $1 $hwndparent 1038
+    SendMessage $1 ${WM_SETTEXT} 0 "STR:Vui lòng chờ trong khi MHEnt. Study đang được trích xuất và cài đặt..."
+    GetDlgItem $1 $0 1006
+    SendMessage $1 ${WM_SETTEXT} 0 "STR:Đang cài đặt MHEnt. Study"
   FunctionEnd
 
   ; Trang chào mừng cài đặt
@@ -117,33 +106,15 @@
   !macroend
 
   ; --------------------------------------------------------------
-  ; 3. GIAI ĐOẠN 2/2: CÀI ĐẶT TỰ ĐỘNG MHENT. LINK (NINITE-STYLE)
+  ; 3. HOÀN TẤT CÀI ĐẶT: MỞ LIÊN KẾT TẢI MHENT. LINK NẾU ĐƯỢC CHỌN
   ; --------------------------------------------------------------
   !macro customInstall
     ${If} $CheckboxCompanionState != 0
-      ; Đổi giao diện sang: Đang cài đặt MHEnt. Link -- 2/2
-      GetDlgItem $1 $hwndparent 1037
-      SendMessage $1 ${WM_SETTEXT} 0 "STR:Đang cài đặt MHEnt. Link -- 2/2"
-      GetDlgItem $1 $hwndparent 1038
-      SendMessage $1 ${WM_SETTEXT} 0 "STR:Đang tự động thiết lập MHEnt. Link vào hệ thống..."
-      FindWindow $0 "#32770" "" $hwndparent
-      GetDlgItem $1 $0 1006
-      SendMessage $1 ${WM_SETTEXT} 0 "STR:Đang cài đặt MHEnt. Link -- 2/2"
-
       DetailPrint ""
       DetailPrint "========================================"
-      DetailPrint "Đang cài đặt MHEnt. Link -- 2/2 (Ninite Style)"
+      DetailPrint "Đang mở trang tải MHEnt. Link trên trình duyệt..."
       DetailPrint "========================================"
-
-      ; Trích xuất gói cài đặt MHEnt. Link tích hợp sẵn
-      DetailPrint "Đang trích xuất gói cài đặt MHEnt. Link tích hợp sẵn..."
-      InitPluginsDir
-      SetOutPath "$PLUGINSDIR"
-      File "${BUILD_RESOURCES_DIR}\MHEnt-Link-Setup.exe"
-
-      DetailPrint "Đang tự động cài đặt MHEnt. Link ngầm vào máy tính (Ninite-Style)..."
-      ExecWait '"$PLUGINSDIR\MHEnt-Link-Setup.exe" /S'
-      DetailPrint "MHEnt. Link đã được cài đặt hoàn tất!"
+      ExecShell "open" "https://apps.mhentuniverse.com/link"
     ${EndIf}
   !macroend
 

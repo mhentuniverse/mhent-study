@@ -26,12 +26,18 @@ try {
 } catch (e) {}
 
 // Đăng ký custom protocol mhentstudy:// cho Desktop để nhận đăng nhập từ Cổng Định Danh MHEnt ID
-if (process.defaultApp) {
-  if (process.argv.length >= 2) {
-    app.setAsDefaultProtocolClient('mhentstudy', process.execPath, [path.resolve(process.argv[1])]);
+try {
+  if (app && typeof app.setAsDefaultProtocolClient === 'function') {
+    if (process.defaultApp) {
+      if (process.argv.length >= 2) {
+        app.setAsDefaultProtocolClient('mhentstudy', process.execPath, [path.resolve(process.argv[1])]);
+      }
+    } else {
+      app.setAsDefaultProtocolClient('mhentstudy');
+    }
   }
-} else {
-  app.setAsDefaultProtocolClient('mhentstudy');
+} catch (e) {
+  console.warn('[MHEnt. Study] Không thể đăng ký custom protocol mhentstudy://', e.message);
 }
 
 const MIME_TYPES = {

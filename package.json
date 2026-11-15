@@ -60,6 +60,7 @@
       "!android/**",
       "!ios/**",
       "!www/**",
+      "!companion/**",
       "!.git/**",
       "!installer/**",
       "!node_modules/**",

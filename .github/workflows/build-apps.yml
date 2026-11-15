@@ -41,14 +41,13 @@ jobs:
             & node .\node_modules\electron-builder\cli.js --project companion --publish never
             if (Test-Path "companion/dist") {
               Get-ChildItem "companion\dist\*.exe" | ForEach-Object {
-                Copy-Item $_.FullName "installer\MHEnt-Link-Setup.exe" -Force
                 Copy-Item $_.FullName "dist\MHEnt.Link.Setup.exe" -Force
                 Copy-Item $_.FullName "dist\MHEnt-Link-Setup.exe" -Force
               }
             }
           }
 
-          Write-Host "Building Unified 2-in-1 MHEnt Study & Link Installer..."
+          Write-Host "Building MHEnt Study Installer..."
           $logPath = Join-Path $env:RUNNER_TEMP "windows-build.log"
           $output = & node .\node_modules\electron-builder\cli.js --publish never 2>&1
           $exitCode = $LASTEXITCODE
