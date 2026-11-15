@@ -104,9 +104,13 @@ function scanInstalledApps() {
 
   // Quét MHEnt Study (Bản Desktop đã cài)
   const studyCandidates = [
-    path.join(localAppData, 'Programs', 'mhent-study', 'MHEnt Study.exe'),
+    path.join(localAppData, 'Programs', 'MHEnt. Study', 'MHEnt. Study.exe'),
     path.join(localAppData, 'Programs', 'MHEnt Study', 'MHEnt Study.exe'),
+    path.join(localAppData, 'Programs', 'mhent-study', 'MHEnt. Study.exe'),
+    path.join(localAppData, 'Programs', 'mhent-study', 'MHEnt Study.exe'),
+    path.join(userProfile, 'Desktop', 'MHEnt. Study.lnk'),
     path.join(userProfile, 'Desktop', 'MHEnt Study.lnk'),
+    path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'MHEnt. Study.lnk'),
     path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'MHEnt Study.lnk')
   ];
   for (const p of studyCandidates) {
